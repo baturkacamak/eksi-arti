@@ -3,7 +3,35 @@
  * Entry point for options page functionality
  */
 
-import { logDebug, logError, logInfo } from './services/logging-service';
+// Default preferences configuration
+const DEFAULT_PREFERENCES = {
+    // General settings
+    enableNotifications: true,
+    notificationDuration: 5,
+    customMenuSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
+
+    // Blocking settings
+    defaultBlockType: 'u',
+    defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
+    requestDelay: 7,
+    retryDelay: 5,
+    maxRetries: 3,
+
+    // Appearance settings
+    theme: 'system',
+    notificationPosition: 'top-right',
+
+    // Advanced settings
+    saveOperationHistory: true,
+    enableDebugMode: false
+};
+
+// Storage keys
+const STORAGE_KEYS = {
+    PREFERENCES: 'eksi_blocker_preferences',
+    OPERATION_HISTORY: 'eksi_blocker_history',
+    CURRENT_OPERATION: 'eksi_blocker_state'
+};
 
 /**
  * Options Manager Class
@@ -11,7 +39,7 @@ import { logDebug, logError, logInfo } from './services/logging-service';
  */
 class OptionsPage {
     private isInitialized: boolean = false;
-    private preferences: any = {};
+    private preferences: any = { ...DEFAULT_PREFERENCES };
     private saveDebounceTimer: number | null = null;
     private savePending: boolean = false;
 
@@ -20,13 +48,11 @@ class OptionsPage {
      */
     async init() {
         try {
-            // Load preferences from background page
+            // Load preferences from storage
             await this.loadPreferences();
 
             // Populate UI with loaded preferences
             this.populateUI();
-
-            this.markDefaultSelects();
 
             // Set up event listeners for UI controls
             this.setupEventListeners();
@@ -38,41 +64,52 @@ class OptionsPage {
             this.displayVersion();
 
             this.isInitialized = true;
-            logInfo('Options page initialized');
+            this.logDebug('Options page initialized');
         } catch (error) {
-            logError('Error initializing options page', error);
+            this.logError('Error initializing options page', error);
             this.showStatus('Ayarlar yüklenemedi: ' + this.getErrorMessage(error), 'error');
         }
     }
 
     /**
-     * Load preferences via Chrome message passing
+     * Load preferences from storage
      */
     async loadPreferences() {
-        return new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage({ action: 'getPreferences' }, (response) => {
-                if (chrome.runtime.lastError) {
-                    const error = chrome.runtime.lastError.message || 'Unknown error';
-                    logError('Error fetching preferences', error);
-                    reject(new Error(error));
-                    return;
-                }
-
-                if (response && response.success) {
-                    this.preferences = response.data;
-                    logDebug('Preferences loaded from background', this.preferences);
-                    resolve(this.preferences);
-                } else {
-                    const error = response?.error || 'Failed to load preferences';
-                    logError('Error in preferences response', error);
-                    reject(new Error(error));
-                }
-            });
-        });
+        try {
+            const result = await this.getFromStorage(STORAGE_KEYS.PREFERENCES);
+            if (result && result[STORAGE_KEYS.PREFERENCES]) {
+                this.preferences = { ...DEFAULT_PREFERENCES, ...result[STORAGE_KEYS.PREFERENCES] };
+                this.logDebug('Preferences loaded successfully', this.preferences);
+            } else {
+                this.logDebug('No saved preferences found, using defaults', DEFAULT_PREFERENCES);
+                this.preferences = { ...DEFAULT_PREFERENCES };
+            }
+            return this.preferences;
+        } catch (error) {
+            this.logError('Error loading preferences from storage', error);
+            // Fall back to localStorage if chrome storage fails
+            this.preferences = this.loadFromLocalStorage() || { ...DEFAULT_PREFERENCES };
+            return this.preferences;
+        }
     }
 
     /**
-     * Save preferences via Chrome message passing
+     * Fallback: Load from localStorage
+     */
+    loadFromLocalStorage() {
+        try {
+            const savedPrefs = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
+            if (savedPrefs) {
+                return JSON.parse(savedPrefs);
+            }
+        } catch (error) {
+            this.logError('Error loading from localStorage', error);
+        }
+        return null;
+    }
+
+    /**
+     * Save preferences to storage
      */
     async savePreferences() {
         try {
@@ -90,57 +127,52 @@ class OptionsPage {
                     // Get current values from UI
                     this.collectValuesFromUI();
 
-                    // Show saving indicator (optional)
+                    // Show saving indicator
                     const statusElement = document.getElementById('status');
                     if (statusElement) {
                         statusElement.textContent = 'Kaydediliyor...';
                         statusElement.className = 'status saving visible';
                     }
 
-                    return new Promise((resolve, reject) => {
-                        chrome.runtime.sendMessage(
-                            { action: 'savePreferences', data: this.preferences },
-                            (response) => {
-                                if (chrome.runtime.lastError) {
-                                    const error = chrome.runtime.lastError.message || 'Unknown error';
-                                    logError('Error saving preferences', error);
-                                    this.showStatus('Ayarlar kaydedilemedi: ' + error, 'error');
-                                    this.savePending = false;
-                                    reject(new Error(error));
-                                    return;
-                                }
+                    // Save to storage
+                    await this.saveToStorage({ [STORAGE_KEYS.PREFERENCES]: this.preferences });
 
-                                if (response && response.success) {
-                                    logDebug('Preferences saved successfully');
-                                    this.showStatus('Kaydedildi', 'success');
+                    // Backup to localStorage
+                    this.backupToLocalStorage();
 
-                                    // Update theme if it has changed
-                                    this.updateTheme();
+                    this.logDebug('Preferences saved successfully', this.preferences);
+                    this.showStatus('Kaydedildi', 'success');
 
-                                    this.savePending = false;
-                                    resolve(true);
-                                } else {
-                                    const error = response?.error || 'Failed to save preferences';
-                                    logError('Error in save response', error);
-                                    this.showStatus('Ayarlar kaydedilemedi: ' + error, 'error');
-                                    this.savePending = false;
-                                    reject(new Error(error));
-                                }
-                            }
-                        );
-                    });
+                    // Update theme if it has changed
+                    this.updateTheme();
+
+                    this.savePending = false;
+                    return true;
                 } catch (error) {
                     this.savePending = false;
-                    logError('Error executing debounced save', error);
+                    this.logError('Error executing debounced save', error);
                     this.showStatus('Kaydedilemedi: ' + this.getErrorMessage(error), 'error');
+                    return false;
                 }
             }, 500);
 
+            return true;
         } catch (error) {
             this.savePending = false;
-            logError('Error preparing preferences to save', error);
+            this.logError('Error preparing preferences to save', error);
             this.showStatus('Ayarlar kaydedilemedi: ' + this.getErrorMessage(error), 'error');
-            throw error;
+            return false;
+        }
+    }
+
+    /**
+     * Backup to localStorage
+     */
+    backupToLocalStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
+        } catch (error) {
+            this.logError('Error backing up to localStorage', error);
         }
     }
 
@@ -150,43 +182,19 @@ class OptionsPage {
     async resetPreferences() {
         try {
             if (confirm('Tüm ayarlar varsayılan değerlere sıfırlanacak. Emin misiniz?')) {
-                return new Promise((resolve, reject) => {
-                    chrome.runtime.sendMessage({ action: 'resetPreferences' }, (response) => {
-                        if (chrome.runtime.lastError) {
-                            const error = chrome.runtime.lastError.message || 'Unknown error';
-                            logError('Error resetting preferences', error);
-                            this.showStatus('Ayarlar sıfırlanamadı: ' + error, 'error');
-                            reject(new Error(error));
-                            return;
-                        }
-
-                        if (response && response.success) {
-                            // Reload preferences to update UI
-                            this.loadPreferences()
-                                .then(() => {
-                                    this.populateUI();
-                                    this.updateTheme();
-                                    this.showStatus('Ayarlar varsayılan değerlere sıfırlandı', 'success');
-                                    resolve(true);
-                                })
-                                .catch(err => {
-                                    logError('Error reloading preferences after reset', err);
-                                    reject(err);
-                                });
-                        } else {
-                            const error = response?.error || 'Failed to reset preferences';
-                            logError('Error in reset response', error);
-                            this.showStatus('Ayarlar sıfırlanamadı: ' + error, 'error');
-                            reject(new Error(error));
-                        }
-                    });
-                });
+                this.preferences = { ...DEFAULT_PREFERENCES };
+                await this.saveToStorage({ [STORAGE_KEYS.PREFERENCES]: this.preferences });
+                localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
+                this.populateUI();
+                this.updateTheme();
+                this.showStatus('Ayarlar varsayılan değerlere sıfırlandı', 'success');
+                return true;
             }
             return false;
         } catch (error) {
-            logError('Error resetting preferences', error);
+            this.logError('Error resetting preferences', error);
             this.showStatus('Ayarlar sıfırlanamadı: ' + this.getErrorMessage(error), 'error');
-            throw error;
+            return false;
         }
     }
 
@@ -207,7 +215,7 @@ class OptionsPage {
 
             this.showStatus('Ayarlar dışa aktarıldı', 'success');
         } catch (error) {
-            logError('Error exporting settings', error);
+            this.logError('Error exporting settings', error);
             this.showStatus('Ayarlar dışa aktarılamadı: ' + this.getErrorMessage(error), 'error');
         }
     }
@@ -241,11 +249,12 @@ class OptionsPage {
                             throw new Error('Geçersiz ayar dosyası formatı');
                         }
 
-                        // Merge with current preferences
-                        this.preferences = { ...this.preferences, ...importedSettings };
+                        // Merge with defaults to ensure all required properties exist
+                        this.preferences = { ...DEFAULT_PREFERENCES, ...importedSettings };
 
                         // Save the imported settings
-                        await this.savePreferences();
+                        await this.saveToStorage({ [STORAGE_KEYS.PREFERENCES]: this.preferences });
+                        this.backupToLocalStorage();
 
                         // Update UI
                         this.populateUI();
@@ -253,14 +262,14 @@ class OptionsPage {
 
                         this.showStatus('Ayarlar içe aktarıldı', 'success');
                     } catch (error) {
-                        logError('Error parsing imported settings', error);
+                        this.logError('Error parsing imported settings', error);
                         this.showStatus('Ayarlar içe aktarılamadı: ' + this.getErrorMessage(error), 'error');
                     }
                 };
 
                 reader.readAsText(file);
             } catch (error) {
-                logError('Error importing settings', error);
+                this.logError('Error importing settings', error);
                 this.showStatus('Ayarlar içe aktarılamadı: ' + this.getErrorMessage(error), 'error');
             }
         };
@@ -293,9 +302,9 @@ class OptionsPage {
             this.setCheckboxValue('saveOperationHistory', this.preferences.saveOperationHistory);
             this.setCheckboxValue('enableDebugMode', this.preferences.enableDebugMode);
 
-            logDebug('UI populated with current preferences');
+            this.logDebug('UI populated with current preferences');
         } catch (error) {
-            logError('Error populating UI', error);
+            this.logError('Error populating UI', error);
         }
     }
 
@@ -328,41 +337,16 @@ class OptionsPage {
             this.preferences.saveOperationHistory = this.getCheckboxValue('saveOperationHistory');
             this.preferences.enableDebugMode = this.getCheckboxValue('enableDebugMode');
 
-            logDebug('Values collected from UI', this.preferences);
+            // Validate numeric values
+            this.preferences.notificationDuration = Math.max(1, Math.min(30, this.preferences.notificationDuration));
+            this.preferences.requestDelay = Math.max(2, Math.min(30, this.preferences.requestDelay));
+            this.preferences.retryDelay = Math.max(2, Math.min(30, this.preferences.retryDelay));
+            this.preferences.maxRetries = Math.max(1, Math.min(10, this.preferences.maxRetries));
+
+            this.logDebug('Values collected from UI', this.preferences);
         } catch (error) {
-            logError('Error collecting values from UI', error);
+            this.logError('Error collecting values from UI', error);
             throw error;
-        }
-    }
-
-    /**
-     * Mark select elements that have default values selected
-     */
-    private markDefaultSelects(): void {
-        try {
-            const selects = document.querySelectorAll('select');
-            selects.forEach(select => {
-                const defaultOption = select.options[0];
-                if (defaultOption && select.value === defaultOption.value) {
-                    select.classList.add('default-selected');
-                } else {
-                    select.classList.remove('default-selected');
-                }
-
-                // Add change listener to update the class
-                select.addEventListener('change', () => {
-                    const defaultOption = select.options[0];
-                    if (defaultOption && select.value === defaultOption.value) {
-                        select.classList.add('default-selected');
-                    } else {
-                        select.classList.remove('default-selected');
-                    }
-                });
-            });
-
-            logDebug('Default selects marked');
-        } catch (error) {
-            logError('Error marking default selects', error);
         }
     }
 
@@ -444,6 +428,14 @@ class OptionsPage {
                 });
             });
 
+            // Save button (for backward compatibility)
+            const saveButton = document.getElementById('saveOptions');
+            if (saveButton) {
+                saveButton.addEventListener('click', () => {
+                    this.savePreferences();
+                });
+            }
+
             // Reset button
             const resetButton = document.getElementById('resetSettings');
             if (resetButton) {
@@ -477,9 +469,16 @@ class OptionsPage {
                 });
             });
 
-            logDebug('Event listeners set up with auto-save functionality');
+            // Enter key to save
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    this.savePreferences();
+                }
+            });
+
+            this.logDebug('Event listeners set up with auto-save functionality');
         } catch (error) {
-            logError('Error setting up event listeners', error);
+            this.logError('Error setting up event listeners', error);
         }
     }
 
@@ -491,22 +490,42 @@ class OptionsPage {
             // Update active tab in navigation
             document.querySelectorAll('.nav-items li').forEach(item => {
                 item.classList.remove('active');
+                // Remove Tailwind active styles when we implement Tailwind
+                item.classList.remove('bg-primary-medium', 'border-primary');
+                // Add hover style
+                item.classList.add('hover:bg-primary-light');
             });
 
             const activeTab = document.querySelector(`.nav-items li[data-tab="${tabId}"]`);
-            if (activeTab) activeTab.classList.add('active');
+            if (activeTab) {
+                activeTab.classList.add('active');
+                // Add Tailwind active styles when we implement Tailwind
+                activeTab.classList.add('bg-primary-medium', 'border-l-primary');
+                // Remove hover to prevent style conflicts
+                activeTab.classList.remove('hover:bg-primary-light');
+            }
 
             // Show the selected tab content
             document.querySelectorAll('.tab-content').forEach(content => {
+                // For current CSS
                 content.classList.remove('active');
+                // For Tailwind (when implemented)
+                content.classList.add('hidden');
+                content.classList.remove('block');
             });
 
             const tabContent = document.getElementById(tabId);
-            if (tabContent) tabContent.classList.add('active');
+            if (tabContent) {
+                // For current CSS
+                tabContent.classList.add('active');
+                // For Tailwind (when implemented)
+                tabContent.classList.remove('hidden');
+                tabContent.classList.add('block');
+            }
 
-            logDebug(`Switched to tab: ${tabId}`);
+            this.logDebug(`Switched to tab: ${tabId}`);
         } catch (error) {
-            logError('Error switching tabs', error);
+            this.logError('Error switching tabs', error);
         }
     }
 
@@ -520,24 +539,47 @@ class OptionsPage {
             // Remove existing theme classes
             rootElement.classList.remove('system-theme', 'light-theme', 'dark-theme');
 
+            // For Tailwind dark mode support
+            rootElement.classList.remove('dark');
+
             // Apply selected theme
             switch (this.preferences.theme) {
                 case 'system':
                     rootElement.classList.add('system-theme');
+                    // Check system preference for Tailwind dark mode
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        rootElement.classList.add('dark');
+                    }
                     break;
                 case 'light':
                     rootElement.classList.add('light-theme');
                     break;
                 case 'dark':
                     rootElement.classList.add('dark-theme');
+                    rootElement.classList.add('dark'); // For Tailwind
                     break;
                 default:
                     rootElement.classList.add('system-theme');
+                    // Check system preference
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        rootElement.classList.add('dark');
+                    }
             }
 
-            logDebug(`Theme updated to: ${this.preferences.theme}`);
+            // Add a media query listener for system theme
+            if (this.preferences.theme === 'system') {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                    if (e.matches) {
+                        rootElement.classList.add('dark');
+                    } else {
+                        rootElement.classList.remove('dark');
+                    }
+                });
+            }
+
+            this.logDebug(`Theme updated to: ${this.preferences.theme}`);
         } catch (error) {
-            logError('Error updating theme', error);
+            this.logError('Error updating theme', error);
         }
     }
 
@@ -549,21 +591,27 @@ class OptionsPage {
             const versionElement = document.getElementById('version');
             if (!versionElement) return;
 
-            chrome.runtime.sendMessage({ action: 'getVersion' }, (response) => {
-                if (chrome.runtime.lastError) {
-                    logError('Error getting version', chrome.runtime.lastError);
-                    versionElement.textContent = '1.0.0'; // Fallback
-                    return;
-                }
+            try {
+                const manifest = chrome.runtime.getManifest();
+                versionElement.textContent = manifest.version;
+            } catch (chromeError) {
+                // Fallback to message passing if direct access fails
+                chrome.runtime.sendMessage({ action: 'getVersion' }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        this.logError('Error getting version', chrome.runtime.lastError);
+                        versionElement.textContent = '1.0.0'; // Fallback
+                        return;
+                    }
 
-                if (response && response.success) {
-                    versionElement.textContent = response.version;
-                } else {
-                    versionElement.textContent = '1.0.0'; // Fallback
-                }
-            });
+                    if (response && response.success) {
+                        versionElement.textContent = response.version;
+                    } else {
+                        versionElement.textContent = '1.0.0'; // Fallback
+                    }
+                });
+            }
         } catch (error) {
-            logError('Error displaying version', error);
+            this.logError('Error displaying version', error);
             // Fallback version display
             const versionElement = document.getElementById('version');
             if (versionElement) versionElement.textContent = '1.0.0';
@@ -579,7 +627,7 @@ class OptionsPage {
             if (!statusElement) return;
 
             statusElement.textContent = message;
-            statusElement.className = 'status ' + type + ' visible';
+            statusElement.className = `status ${type} visible`;
 
             // Hide status after shorter time for success messages (for better UX with auto-save)
             const timeout = type === 'success' ? 1500 : 3000;
@@ -591,9 +639,93 @@ class OptionsPage {
                 }
             }, timeout);
         } catch (error) {
-            logError('Error showing status', error);
+            this.logError('Error showing status', error);
             console.error(message);
         }
+    }
+
+    /**
+     * Chrome Storage API wrapper for saving
+     */
+    saveToStorage(data: Record<string, any>): Promise<void> {
+        return new Promise((resolve, reject) => {
+            try {
+                if (chrome.storage && chrome.storage.sync) {
+                    chrome.storage.sync.set(data, () => {
+                        if (chrome.runtime.lastError) {
+                            // If sync fails, try local
+                            chrome.storage.local.set(data, () => {
+                                if (chrome.runtime.lastError) {
+                                    reject(new Error(chrome.runtime.lastError.message || 'Chrome Storage Error'));
+                                } else {
+                                    resolve();
+                                }
+                            });
+                        } else {
+                            resolve();
+                        }
+                    });
+                } else if (chrome.storage && chrome.storage.local) {
+                    // If sync is not available, use local
+                    chrome.storage.local.set(data, () => {
+                        if (chrome.runtime.lastError) {
+                            reject(new Error(chrome.runtime.lastError.message || 'Chrome Storage Error'));
+                        } else {
+                            resolve();
+                        }
+                    });
+                } else {
+                    // Fallback to localStorage if Chrome API is not available
+                    Object.keys(data).forEach(key => {
+                        localStorage.setItem(key, JSON.stringify(data[key]));
+                    });
+                    resolve();
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Chrome Storage API wrapper for retrieving
+     */
+    getFromStorage(key: string): Promise<Record<string, any>> {
+        return new Promise((resolve, reject) => {
+            try {
+                if (chrome.storage && chrome.storage.sync) {
+                    chrome.storage.sync.get(key, (result) => {
+                        if (chrome.runtime.lastError) {
+                            // If sync fails, try local
+                            chrome.storage.local.get(key, (localResult) => {
+                                if (chrome.runtime.lastError) {
+                                    reject(new Error(chrome.runtime.lastError.message || 'Chrome Storage Error'));
+                                } else {
+                                    resolve(localResult);
+                                }
+                            });
+                        } else {
+                            resolve(result);
+                        }
+                    });
+                } else if (chrome.storage && chrome.storage.local) {
+                    // If sync is not available, use local
+                    chrome.storage.local.get(key, (result) => {
+                        if (chrome.runtime.lastError) {
+                            reject(new Error(chrome.runtime.lastError.message || 'Chrome Storage Error'));
+                        } else {
+                            resolve(result);
+                        }
+                    });
+                } else {
+                    // Fallback to localStorage if Chrome API is not available
+                    const value = localStorage.getItem(key);
+                    resolve({ [key]: value ? JSON.parse(value) : null });
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     /**
@@ -604,6 +736,26 @@ class OptionsPage {
             return error.message;
         }
         return String(error);
+    }
+
+    /**
+     * Debug logging
+     */
+    logDebug(message: string, data: any = null) {
+        if (this.preferences.enableDebugMode) {
+            if (data) {
+                console.log(`[Ekşi Artı Debug] ${message}`, data);
+            } else {
+                console.log(`[Ekşi Artı Debug] ${message}`);
+            }
+        }
+    }
+
+    /**
+     * Error logging
+     */
+    logError(message: string, error: any) {
+        console.error(`[Ekşi Artı Error] ${message}`, error);
     }
 }
 
