@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="options.css">
 </head>
 <body>
-<div class="container">
-    <header>
+<div class="container" role="application" aria-label="Ekşi Artı Ayarlar">
+    <header role="banner">
         <h1>
             <img src="icons/icon48.png" alt="Ekşi Artı Logo" class="logo">
             Ekşi Artı Ayarlar
@@ -18,79 +18,79 @@
     </header>
 
     <div class="options-container">
-        <div class="sidebar">
+        <div class="sidebar" role="navigation" aria-label="Ana Menü">
             <nav>
-                <ul class="nav-items">
-                    <li data-tab="general" class="active">
-                        <span class="material-icons">settings</span>
+                <ul class="nav-items" role="tablist">
+                    <li data-tab="general" class="active" role="tab" aria-selected="true" aria-controls="general" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">settings</span>
                         Genel
                     </li>
-                    <li data-tab="blocking">
-                        <span class="material-icons">block</span>
+                    <li data-tab="blocking" role="tab" aria-selected="false" aria-controls="blocking" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">block</span>
                         Engelleme
                     </li>
-                    <li data-tab="appearance">
-                        <span class="material-icons">palette</span>
+                    <li data-tab="appearance" role="tab" aria-selected="false" aria-controls="appearance" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">palette</span>
                         Görünüm
                     </li>
-                    <li data-tab="advanced">
-                        <span class="material-icons">tune</span>
+                    <li data-tab="advanced" role="tab" aria-selected="false" aria-controls="advanced" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">tune</span>
                         Gelişmiş
                     </li>
-                    <li data-tab="about">
-                        <span class="material-icons">info</span>
+                    <li data-tab="about" role="tab" aria-selected="false" aria-controls="about" tabindex="0">
+                        <span class="material-icons" aria-hidden="true">info</span>
                         Hakkında
                     </li>
                 </ul>
             </nav>
         </div>
 
-        <div class="content">
+        <div class="content" role="tabpanel">
             <!-- General Settings Tab -->
-            <section id="general" class="tab-content active">
-                <h2><span class="material-icons">settings</span> Genel Ayarlar</h2>
+            <section id="general" class="tab-content active" role="tabpanel" aria-labelledby="general-heading">
+                <h2 id="general-heading"><span class="material-icons" aria-hidden="true">settings</span> Genel Ayarlar</h2>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">notifications</span> Bildirimler</h3>
+                    <h3 id="notifications-heading"><span class="material-icons" aria-hidden="true">notifications</span> Bildirimler</h3>
                     <div class="option">
                         <label for="enableNotifications">Bildirimleri Göster
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notifications">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notifications" role="button" aria-describedby="tooltip-notifications" tabindex="0" aria-label="Bildirimler hakkında daha fazla bilgi">?</span>
                         </label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="enableNotifications" name="enableNotifications">
+                            <input type="checkbox" id="enableNotifications" name="enableNotifications" aria-describedby="tooltip-notifications">
                             <span class="slider"></span>
                         </div>
                     </div>
                     <div class="option">
                         <label for="notificationDuration">Bildirim Süresi (saniye)
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notification-duration">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notification-duration" role="button" aria-describedby="tooltip-notification-duration" tabindex="0" aria-label="Bildirim süresi hakkında daha fazla bilgi">?</span>
                         </label>
-                        <input type="number" id="notificationDuration" min="1" max="30" value="5">
+                        <input type="number" id="notificationDuration" min="1" max="30" value="5" aria-describedby="tooltip-notification-duration">
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">menu</span> Menü Seçenekleri</h3>
+                    <h3 id="menu-options-heading"><span class="material-icons" aria-hidden="true">menu</span> Menü Seçenekleri</h3>
                     <div class="option">
                         <label for="customMenuSelector">Özel Menü Seçici (CSS Selector)
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-menu-selector">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-menu-selector" role="button" aria-describedby="tooltip-menu-selector" tabindex="0" aria-label="Menü seçici hakkında daha fazla bilgi">?</span>
                         </label>
-                        <input type="text" id="customMenuSelector" placeholder=".feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu">
+                        <input type="text" id="customMenuSelector" placeholder=".feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu" aria-describedby="tooltip-menu-selector">
                     </div>
                 </div>
             </section>
 
             <!-- Blocking Settings Tab -->
-            <section id="blocking" class="tab-content">
-                <h2><span class="material-icons">block</span> Engelleme Ayarları</h2>
+            <section id="blocking" class="tab-content" role="tabpanel" aria-labelledby="blocking-heading" hidden>
+                <h2 id="blocking-heading"><span class="material-icons" aria-hidden="true">block</span> Engelleme Ayarları</h2>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">gavel</span> Varsayılan İşlem</h3>
+                    <h3 id="default-action-heading"><span class="material-icons" aria-hidden="true">gavel</span> Varsayılan İşlem</h3>
                     <div class="option">
                         <label for="defaultBlockType">Varsayılan Engelleme Türü
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-block-type">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-block-type" role="button" aria-describedby="tooltip-block-type" tabindex="0" aria-label="Engelleme türü hakkında daha fazla bilgi">?</span>
                         </label>
-                        <select id="defaultBlockType">
+                        <select id="defaultBlockType" aria-describedby="tooltip-block-type">
                             <option value="u">Sessiz Al</option>
                             <option value="m">Engelle</option>
                         </select>
@@ -98,57 +98,57 @@
                 </div>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">note</span> Not Şablonu</h3>
+                    <h3 id="note-template-heading"><span class="material-icons" aria-hidden="true">note</span> Not Şablonu</h3>
                     <div class="option">
                         <label for="defaultNoteTemplate">Engellenen Kullanıcılara Eklenecek Not
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-note-template">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-note-template" role="button" aria-describedby="tooltip-note-template" tabindex="0" aria-label="Not şablonu hakkında daha fazla bilgi">?</span>
                         </label>
-                        <textarea id="defaultNoteTemplate" rows="4" placeholder="{postTitle} için {actionType}. Entry: {entryLink}"></textarea>
-                        <div class="help-text">
-                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">help_outline</span>
+                        <textarea id="defaultNoteTemplate" rows="4" placeholder="{postTitle} için {actionType}. Entry: {entryLink}" aria-describedby="template-help-text tooltip-note-template"></textarea>
+                        <div class="help-text" id="template-help-text">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;" aria-hidden="true">help_outline</span>
                             Kullanılabilir Değişkenler: {postTitle}, {actionType}, {entryLink}, {date}
                         </div>
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">tune</span> Çalışma Parametreleri</h3>
+                    <h3 id="operation-params-heading"><span class="material-icons" aria-hidden="true">tune</span> Çalışma Parametreleri</h3>
                     <div class="option">
                         <label for="requestDelay">İstekler Arası Bekleme Süresi (saniye)
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-request-delay">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-request-delay" role="button" aria-describedby="tooltip-request-delay" tabindex="0" aria-label="İstek gecikmesi hakkında daha fazla bilgi">?</span>
                         </label>
-                        <input type="number" id="requestDelay" min="2" max="30" value="7">
-                        <div class="help-text">
-                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
+                        <input type="number" id="requestDelay" min="2" max="30" value="7" aria-describedby="request-delay-help tooltip-request-delay">
+                        <div class="help-text" id="request-delay-help">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;" aria-hidden="true">info</span>
                             Düşük değerler engelleme işlemini hızlandırır ancak site tarafından geçici engellere yol açabilir.
                         </div>
                     </div>
                     <div class="option">
                         <label for="retryDelay">Hata Sonrası Bekleme Süresi (saniye)
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-retry-delay">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-retry-delay" role="button" aria-describedby="tooltip-retry-delay" tabindex="0" aria-label="Yeniden deneme gecikmesi hakkında daha fazla bilgi">?</span>
                         </label>
-                        <input type="number" id="retryDelay" min="2" max="30" value="5">
+                        <input type="number" id="retryDelay" min="2" max="30" value="5" aria-describedby="tooltip-retry-delay">
                     </div>
                     <div class="option">
                         <label for="maxRetries">Maksimum Yeniden Deneme Sayısı
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-max-retries">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-max-retries" role="button" aria-describedby="tooltip-max-retries" tabindex="0" aria-label="Maksimum yeniden deneme sayısı hakkında daha fazla bilgi">?</span>
                         </label>
-                        <input type="number" id="maxRetries" min="1" max="10" value="3">
+                        <input type="number" id="maxRetries" min="1" max="10" value="3" aria-describedby="tooltip-max-retries">
                     </div>
                 </div>
             </section>
 
             <!-- Appearance Settings Tab -->
-            <section id="appearance" class="tab-content">
-                <h2><span class="material-icons">palette</span> Görünüm Ayarları</h2>
+            <section id="appearance" class="tab-content" role="tabpanel" aria-labelledby="appearance-heading" hidden>
+                <h2 id="appearance-heading"><span class="material-icons" aria-hidden="true">palette</span> Görünüm Ayarları</h2>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">style</span> Tema</h3>
+                    <h3 id="theme-heading"><span class="material-icons" aria-hidden="true">style</span> Tema</h3>
                     <div class="option">
                         <label for="theme">Tema Seçimi
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-theme">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-theme" role="button" aria-describedby="tooltip-theme" tabindex="0" aria-label="Tema seçimi hakkında daha fazla bilgi">?</span>
                         </label>
-                        <select id="theme">
+                        <select id="theme" aria-describedby="tooltip-theme">
                             <option value="system">Sistem Teması</option>
                             <option value="light">Açık Tema</option>
                             <option value="dark">Koyu Tema</option>
@@ -157,12 +157,12 @@
                 </div>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">notifications</span> Bildirim Konumu</h3>
+                    <h3 id="notification-position-heading"><span class="material-icons" aria-hidden="true">notifications</span> Bildirim Konumu</h3>
                     <div class="option">
                         <label for="notificationPosition">Bildirim Konumu
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notification-position">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notification-position" role="button" aria-describedby="tooltip-notification-position" tabindex="0" aria-label="Bildirim konumu hakkında daha fazla bilgi">?</span>
                         </label>
-                        <select id="notificationPosition">
+                        <select id="notificationPosition" aria-describedby="tooltip-notification-position">
                             <option value="top-right">Sağ Üst</option>
                             <option value="top-left">Sol Üst</option>
                             <option value="bottom-right">Sağ Alt</option>
@@ -173,55 +173,55 @@
             </section>
 
             <!-- Advanced Settings Tab -->
-            <section id="advanced" class="tab-content">
-                <h2><span class="material-icons">tune</span> Gelişmiş Ayarlar</h2>
+            <section id="advanced" class="tab-content" role="tabpanel" aria-labelledby="advanced-heading" hidden>
+                <h2 id="advanced-heading"><span class="material-icons" aria-hidden="true">tune</span> Gelişmiş Ayarlar</h2>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">speed</span> Performans</h3>
+                    <h3 id="performance-heading"><span class="material-icons" aria-hidden="true">speed</span> Performans</h3>
                     <div class="option">
                         <label for="saveOperationHistory">İşlem Geçmişini Sakla
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-operation-history">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-operation-history" role="button" aria-describedby="tooltip-operation-history" tabindex="0" aria-label="İşlem geçmişi hakkında daha fazla bilgi">?</span>
                         </label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="saveOperationHistory" name="saveOperationHistory">
+                            <input type="checkbox" id="saveOperationHistory" name="saveOperationHistory" aria-describedby="operation-history-help tooltip-operation-history">
                             <span class="slider"></span>
                         </div>
-                        <div class="help-text">
-                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
+                        <div class="help-text" id="operation-history-help">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;" aria-hidden="true">info</span>
                             Tamamlanan engelleme işlemlerinin geçmişini saklar, kapatılırsa daha az depolama alanı kullanılır.
                         </div>
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">save</span> Veri Yönetimi</h3>
+                    <h3 id="data-management-heading"><span class="material-icons" aria-hidden="true">save</span> Veri Yönetimi</h3>
                     <div class="option">
-                        <button id="exportSettings" class="btn">
-                            <span class="material-icons">file_download</span>
+                        <button id="exportSettings" class="btn" aria-label="Ayarları dışa aktar">
+                            <span class="material-icons" aria-hidden="true">file_download</span>
                             Ayarları Dışa Aktar
                         </button>
-                        <button id="importSettings" class="btn">
-                            <span class="material-icons">file_upload</span>
+                        <button id="importSettings" class="btn" aria-label="Ayarları içe aktar">
+                            <span class="material-icons" aria-hidden="true">file_upload</span>
                             Ayarları İçe Aktar
                         </button>
-                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <input type="file" id="importFile" accept=".json" style="display: none;" aria-label="İçe aktarılacak JSON dosyası seçin">
                     </div>
                     <div class="option">
-                        <button id="resetSettings" class="btn danger">
-                            <span class="material-icons">restore</span>
+                        <button id="resetSettings" class="btn danger" aria-label="Tüm ayarları varsayılan değerlerine sıfırla">
+                            <span class="material-icons" aria-hidden="true">restore</span>
                             Varsayılan Ayarlara Sıfırla
                         </button>
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3><span class="material-icons">bug_report</span> Hata Ayıklama</h3>
+                    <h3 id="debugging-heading"><span class="material-icons" aria-hidden="true">bug_report</span> Hata Ayıklama</h3>
                     <div class="option">
                         <label for="enableDebugMode">Hata Ayıklama Modu
-                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-debug-mode">?</span>
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-debug-mode" role="button" aria-describedby="tooltip-debug-mode" tabindex="0" aria-label="Hata ayıklama modu hakkında daha fazla bilgi">?</span>
                         </label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="enableDebugMode" name="enableDebugMode">
+                            <input type="checkbox" id="enableDebugMode" name="enableDebugMode" aria-describedby="tooltip-debug-mode">
                             <span class="slider"></span>
                         </div>
                     </div>
@@ -229,39 +229,39 @@
             </section>
 
             <!-- About Tab -->
-            <section id="about" class="tab-content">
-                <h2><span class="material-icons">info</span> Hakkında</h2>
+            <section id="about" class="tab-content" role="tabpanel" aria-labelledby="about-heading" hidden>
+                <h2 id="about-heading"><span class="material-icons" aria-hidden="true">info</span> Hakkında</h2>
 
                 <div class="about-content">
                     <div class="logo-container">
                         <img src="icons/icon128.png" alt="Ekşi Artı Logo" class="large-logo">
                     </div>
 
-                    <h3>Ekşi Artı</h3>
+                    <h3 id="about-title">Ekşi Artı</h3>
                     <p>Ekşisözlük deneyiminizi gelişmiş kullanıcı yönetimi özellikleriyle zenginleştiren bir eklenti.</p>
 
                     <div class="features">
-                        <h4><span class="material-icons">star</span> Özellikler</h4>
-                        <ul>
-                            <li><span class="material-icons">person_off</span> Toplu Kullanıcı Engelleme: Belirli bir entry'yi favorileyen çoklu kullanıcıları tek seferde engelleyin</li>
-                            <li><span class="material-icons">note_add</span> Özel Notlar: Engellenmiş kullanıcılara özelleştirilebilir şablonlarla otomatik not ekleyin</li>
-                            <li><span class="material-icons">play_for_work</span> Devam Desteği: Engelleme işlemlerini istediğiniz zaman duraklatın ve devam edin</li>
-                            <li><span class="material-icons">timer</span> Hız Sınırlaması Koruması: Sunucu aşırı yüklenmesini ve hesap sınırlamalarını önlemek için yerleşik gecikmeler</li>
+                        <h4 id="features-heading"><span class="material-icons" aria-hidden="true">star</span> Özellikler</h4>
+                        <ul aria-labelledby="features-heading">
+                            <li><span class="material-icons" aria-hidden="true">person_off</span> Toplu Kullanıcı Engelleme: Belirli bir entry'yi favorileyen çoklu kullanıcıları tek seferde engelleyin</li>
+                            <li><span class="material-icons" aria-hidden="true">note_add</span> Özel Notlar: Engellenmiş kullanıcılara özelleştirilebilir şablonlarla otomatik not ekleyin</li>
+                            <li><span class="material-icons" aria-hidden="true">play_for_work</span> Devam Desteği: Engelleme işlemlerini istediğiniz zaman duraklatın ve devam edin</li>
+                            <li><span class="material-icons" aria-hidden="true">timer</span> Hız Sınırlaması Koruması: Sunucu aşırı yüklenmesini ve hesap sınırlamalarını önlemek için yerleşik gecikmeler</li>
                         </ul>
                     </div>
 
                     <div class="credits">
-                        <p><span class="material-icons" style="font-size: 14px; vertical-align: middle;">code</span> Bu proje, Batur Kacamak'ın orijinal userscript'ine dayanmaktadır.</p>
-                        <p><span class="material-icons" style="font-size: 14px; vertical-align: middle;">copyright</span> MIT Lisansı altında lisanslanmıştır.</p>
+                        <p><span class="material-icons" style="font-size: 14px; vertical-align: middle;" aria-hidden="true">code</span> Bu proje, Batur Kacamak'ın orijinal userscript'ine dayanmaktadır.</p>
+                        <p><span class="material-icons" style="font-size: 14px; vertical-align: middle;" aria-hidden="true">copyright</span> MIT Lisansı altında lisanslanmıştır.</p>
                     </div>
 
                     <div class="links">
-                        <a href="https://github.com/baturkacamak/eksi-arti" target="_blank" class="btn">
-                            <span class="material-icons">code</span>
+                        <a href="https://github.com/baturkacamak/eksi-arti" target="_blank" class="btn" aria-label="GitHub projesini ziyaret et">
+                            <span class="material-icons" aria-hidden="true">code</span>
                             GitHub
                         </a>
-                        <a href="LICENSE" target="_blank" class="btn">
-                            <span class="material-icons">description</span>
+                        <a href="LICENSE" target="_blank" class="btn" aria-label="Lisans bilgilerini görüntüle">
+                            <span class="material-icons" aria-hidden="true">description</span>
                             Lisans
                         </a>
                     </div>
@@ -270,40 +270,40 @@
         </div>
     </div>
 
-    <footer>
+    <footer role="contentinfo">
         <div class="actions">
-            <div id="status" class="status"></div>
+            <div id="status" class="status" aria-live="polite"></div>
         </div>
     </footer>
 
 </div>
 
 <!-- Tooltip Contents (Hidden) -->
-<div id="tooltip-notifications" style="display: none;">
+<div id="tooltip-notifications" style="display: none;" role="tooltip">
     <h4>Bildirimleri Göster</h4>
     <p>Eklenti tarafından gerçekleştirilen işlemler hakkında bilgilendirme bildirimlerini gösterir veya gizler.</p>
     <div class="info">
-        <span class="material-icons">info</span>
+        <span class="material-icons" aria-hidden="true">info</span>
         <span>Bildirimleri kapatırsanız, işlem durumunu takip edemeyebilirsiniz.</span>
     </div>
 </div>
 
-<div id="tooltip-notification-duration" style="display: none;">
+<div id="tooltip-notification-duration" style="display: none;" role="tooltip">
     <h4>Bildirim Süresi</h4>
     <p>Bildirimlerin ekranda kalma süresi (saniye cinsinden).</p>
     <p>Daha kısa süreler daha az dikkat dağıtıcıdır, daha uzun süreler bildirimi okumanız için daha fazla zaman sağlar.</p>
 </div>
 
-<div id="tooltip-menu-selector" style="display: none;">
+<div id="tooltip-menu-selector" style="display: none;" role="tooltip">
     <h4>Özel Menü Seçici</h4>
     <p>Eklentinin "favorileyenleri engelle" menü öğesini ekleyeceği DOM öğesini belirten CSS seçicidir.</p>
     <div class="warning">
-        <span class="material-icons">warning</span>
+        <span class="material-icons" aria-hidden="true">warning</span>
         <span>Bu ayarı yalnızca menü öğesinin doğru şekilde görüntülenmediği durumlarda değiştirin.</span>
     </div>
 </div>
 
-<div id="tooltip-block-type" style="display: none;">
+<div id="tooltip-block-type" style="display: none;" role="tooltip">
     <h4>Varsayılan Engelleme Türü</h4>
     <p>Engelleme işlemlerinde kullanılacak varsayılan engelleme tipi:</p>
     <ul>
@@ -312,7 +312,7 @@
     </ul>
 </div>
 
-<div id="tooltip-note-template" style="display: none;">
+<div id="tooltip-note-template" style="display: none;" role="tooltip">
     <h4>Not Şablonu</h4>
     <p>Engellenen kullanıcılara otomatik olarak eklenecek notun şablonu.</p>
     <p>Şu değişkenleri kullanabilirsiniz:</p>
@@ -324,29 +324,29 @@
     </ul>
 </div>
 
-<div id="tooltip-request-delay" style="display: none;">
+<div id="tooltip-request-delay" style="display: none;" role="tooltip">
     <h4>İstekler Arası Bekleme Süresi</h4>
     <p>Her engelleme işlemi arasında beklenecek süre (saniye cinsinden).</p>
     <div class="warning">
-        <span class="material-icons">warning</span>
+        <span class="material-icons" aria-hidden="true">warning</span>
         <span>Düşük değerler işlemi hızlandırır ancak Ekşisözlük tarafından geçici IP engellemesine neden olabilir.</span>
     </div>
     <p>Önerilen değer: 5-10 saniye</p>
 </div>
 
-<div id="tooltip-retry-delay" style="display: none;">
+<div id="tooltip-retry-delay" style="display: none;" role="tooltip">
     <h4>Hata Sonrası Bekleme Süresi</h4>
     <p>Bir engelleme işlemi başarısız olduğunda, tekrar denemeden önce beklenecek süre (saniye cinsinden).</p>
     <p>Bu süre, site üzerindeki geçici sorunların çözülmesine zaman tanır.</p>
 </div>
 
-<div id="tooltip-max-retries" style="display: none;">
+<div id="tooltip-max-retries" style="display: none;" role="tooltip">
     <h4>Maksimum Yeniden Deneme Sayısı</h4>
     <p>Bir işlem başarısız olduğunda kaç kez tekrar deneneceğini belirler.</p>
     <p>Çok fazla yeniden deneme, işlemin çok uzun sürmesine neden olabilir.</p>
 </div>
 
-<div id="tooltip-theme" style="display: none;">
+<div id="tooltip-theme" style="display: none;" role="tooltip">
     <h4>Tema Seçimi</h4>
     <p>Eklenti arayüzünün görünümünü belirler:</p>
     <ul>
@@ -356,27 +356,27 @@
     </ul>
 </div>
 
-<div id="tooltip-notification-position" style="display: none;">
+<div id="tooltip-notification-position" style="display: none;" role="tooltip">
     <h4>Bildirim Konumu</h4>
     <p>Bildirimlerin ekranda gösterileceği pozisyon.</p>
     <p>Ekşisözlük'ün kendi bildirimleriyle çakışmayacak bir konum seçmeniz önerilir.</p>
 </div>
 
-<div id="tooltip-operation-history" style="display: none;">
+<div id="tooltip-operation-history" style="display: none;" role="tooltip">
     <h4>İşlem Geçmişini Sakla</h4>
     <p>Tamamlanan engelleme işlemlerinin kaydını tutar.</p>
     <p>Bu özellik, hangi kullanıcıları engellediğinizi takip etmenizi sağlar.</p>
     <div class="info">
-        <span class="material-icons">info</span>
+        <span class="material-icons" aria-hidden="true">info</span>
         <span>Depolama alanından tasarruf etmek için kapatabilirsiniz, ancak geçmiş işlemlerinize erişemezsiniz.</span>
     </div>
 </div>
 
-<div id="tooltip-debug-mode" style="display: none;">
+<div id="tooltip-debug-mode" style="display: none;" role="tooltip">
     <h4>Hata Ayıklama Modu</h4>
     <p>Tarayıcı konsolunda ayrıntılı hata ayıklama bilgilerini gösterir.</p>
     <div class="info">
-        <span class="material-icons">info</span>
+        <span class="material-icons" aria-hidden="true">info</span>
         <span>Bu özelliği yalnızca sorun giderme durumlarında veya geliştiricilerin talimatı üzerine etkinleştirin.</span>
     </div>
 </div>
