@@ -26,6 +26,8 @@ class OptionsPage {
             // Populate UI with loaded preferences
             this.populateUI();
 
+            this.markDefaultSelects();
+
             // Set up event listeners for UI controls
             this.setupEventListeners();
 
@@ -330,6 +332,37 @@ class OptionsPage {
         } catch (error) {
             logError('Error collecting values from UI', error);
             throw error;
+        }
+    }
+
+    /**
+     * Mark select elements that have default values selected
+     */
+    private markDefaultSelects(): void {
+        try {
+            const selects = document.querySelectorAll('select');
+            selects.forEach(select => {
+                const defaultOption = select.options[0];
+                if (defaultOption && select.value === defaultOption.value) {
+                    select.classList.add('default-selected');
+                } else {
+                    select.classList.remove('default-selected');
+                }
+
+                // Add change listener to update the class
+                select.addEventListener('change', () => {
+                    const defaultOption = select.options[0];
+                    if (defaultOption && select.value === defaultOption.value) {
+                        select.classList.add('default-selected');
+                    } else {
+                        select.classList.remove('default-selected');
+                    }
+                });
+            });
+
+            logDebug('Default selects marked');
+        } catch (error) {
+            logError('Error marking default selects', error);
         }
     }
 
