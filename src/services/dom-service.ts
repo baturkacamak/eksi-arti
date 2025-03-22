@@ -1,0 +1,82 @@
+export class DOMService {
+    /**
+     * Query selector wrapper
+     */
+    querySelector<T extends Element>(selector: string, context: Document | Element = document): T | null {
+        return context.querySelector<T>(selector);
+    }
+
+    /**
+     * Query selector all wrapper
+     */
+    querySelectorAll<T extends Element>(selector: string, context: Document | Element = document): NodeListOf<T> {
+        return context.querySelectorAll<T>(selector);
+    }
+
+    /**
+     * Create element wrapper
+     */
+    createElement<K extends keyof HTMLElementTagNameMap>(tagName: K): HTMLElementTagNameMap[K] {
+        return document.createElement(tagName);
+    }
+
+    /**
+     * Add class to element
+     */
+    addClass(element: Element, className: string): void {
+        element.classList.add(className);
+    }
+
+    /**
+     * Remove class from element
+     */
+    removeClass(element: Element, className: string): void {
+        element.classList.remove(className);
+    }
+
+    /**
+     * Check if element has class
+     */
+    hasClass(element: Element, className: string): boolean {
+        return element.classList.contains(className);
+    }
+
+    /**
+     * Toggle class on element
+     */
+    toggleClass(element: Element, className: string): void {
+        element.classList.toggle(className);
+    }
+
+    /**
+     * Append child element
+     */
+    appendChild(parent: Node, child: Node): void {
+        parent.appendChild(child);
+    }
+
+    /**
+     * Remove child element
+     */
+    removeChild(parent: Node, child: Node): void {
+        parent.removeChild(child);
+    }
+
+    /**
+     * Add event listener
+     */
+    addEventListener<K extends keyof HTMLElementEventMap>(
+        element: HTMLElement,
+        event: K,
+        callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    addEventListener(
+        element: HTMLElement,
+        event: string,
+        callback: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ): void {
+        element.addEventListener(event, callback, options);
+    }
+}
