@@ -127,6 +127,7 @@ header h1 {
     border-left: 3px solid transparent;
     display: flex;
     align-items: center;
+    user-select: none;
 }
 
 .nav-items li span {
