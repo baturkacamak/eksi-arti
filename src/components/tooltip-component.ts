@@ -312,57 +312,33 @@ export class TooltipComponent {
 
         const tooltipRect = tooltipElement.getBoundingClientRect();
 
-        // Calculate position
-        let left = 0;
-        let top = 0;
+        // Custom positioning for toggle switches and small inline elements
+        const adjustedPosition: Record<string, { left: number; top: number }> = {
+            top: {
+                left: triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2),
+                top: triggerRect.top - tooltipRect.height - options.offset
+            },
+            bottom: {
+                left: triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2),
+                top: triggerRect.bottom + options.offset
+            },
+            left: {
+                left: triggerRect.left - tooltipRect.width - options.offset,
+                top: triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2)
+            },
+            right: {
+                left: triggerRect.right + options.offset,
+                top: triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2)
+            }
+        };
 
-        switch (options.position) {
-            case 'top':
-                left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
-                top = triggerRect.top - tooltipRect.height - options.offset;
+        // Use adjusted positioning with fallback to center
+        const position = options.position;
+        let { left, top } = adjustedPosition[position];
 
-                // Position arrow
-                if (tooltipArrow) {
-                    tooltipArrow.style.left = '50%';
-                    tooltipArrow.style.top = '100%';
-                }
-                break;
-
-            case 'bottom':
-                left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
-                top = triggerRect.bottom + options.offset;
-
-                // Position arrow
-                if (tooltipArrow) {
-                    tooltipArrow.style.left = '50%';
-                    tooltipArrow.style.top = '0';
-                    tooltipArrow.style.transform = 'translateX(-50%) translateY(-100%) rotate(180deg)';
-                }
-                break;
-
-            case 'left':
-                left = triggerRect.left - tooltipRect.width - options.offset;
-                top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-
-                // Position arrow
-                if (tooltipArrow) {
-                    tooltipArrow.style.left = '100%';
-                    tooltipArrow.style.top = '50%';
-                    tooltipArrow.style.transform = 'translateY(-50%) rotate(-90deg)';
-                }
-                break;
-
-            case 'right':
-                left = triggerRect.right + options.offset;
-                top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-
-                // Position arrow
-                if (tooltipArrow) {
-                    tooltipArrow.style.left = '0';
-                    tooltipArrow.style.top = '50%';
-                    tooltipArrow.style.transform = 'translateX(-100%) translateY(-50%) rotate(90deg)';
-                }
-                break;
+        // Additional horizontal adjustment for small triggers
+        if (position === 'right') {
+            left += 10; // Nudge right tooltip slightly further away
         }
 
         // Keep tooltip within viewport
@@ -372,50 +348,40 @@ export class TooltipComponent {
         // Adjust horizontal position
         if (left < 10) {
             left = 10;
-
-            // Adjust arrow if needed
-            if (tooltipArrow && (options.position === 'top' || options.position === 'bottom')) {
-                const arrowLeft = triggerRect.left + (triggerRect.width / 2) - left;
-                tooltipArrow.style.left = `${arrowLeft}px`;
-                tooltipArrow.style.transform = options.position === 'bottom'
-                    ? 'translateY(-100%) rotate(180deg)'
-                    : '';
-            }
         } else if (left + tooltipRect.width > viewportWidth - 10) {
             left = viewportWidth - tooltipRect.width - 10;
-
-            // Adjust arrow if needed
-            if (tooltipArrow && (options.position === 'top' || options.position === 'bottom')) {
-                const arrowLeft = triggerRect.left + (triggerRect.width / 2) - left;
-                tooltipArrow.style.left = `${arrowLeft}px`;
-                tooltipArrow.style.transform = options.position === 'bottom'
-                    ? 'translateY(-100%) rotate(180deg)'
-                    : '';
-            }
         }
 
         // Adjust vertical position
         if (top < 10) {
             top = 10;
-
-            // Adjust arrow if needed
-            if (tooltipArrow && (options.position === 'left' || options.position === 'right')) {
-                const arrowTop = triggerRect.top + (triggerRect.height / 2) - top;
-                tooltipArrow.style.top = `${arrowTop}px`;
-                tooltipArrow.style.transform = options.position === 'right'
-                    ? 'translateX(-100%) rotate(90deg)'
-                    : 'rotate(-90deg)';
-            }
         } else if (top + tooltipRect.height > viewportHeight - 10) {
             top = viewportHeight - tooltipRect.height - 10;
+        }
 
-            // Adjust arrow if needed
-            if (tooltipArrow && (options.position === 'left' || options.position === 'right')) {
-                const arrowTop = triggerRect.top + (triggerRect.height / 2) - top;
-                tooltipArrow.style.top = `${arrowTop}px`;
-                tooltipArrow.style.transform = options.position === 'right'
-                    ? 'translateX(-100%) rotate(90deg)'
-                    : 'rotate(-90deg)';
+        // Position arrow
+        if (tooltipArrow) {
+            switch (position) {
+                case 'top':
+                    tooltipArrow.style.left = '50%';
+                    tooltipArrow.style.top = '100%';
+                    tooltipArrow.style.transform = '';
+                    break;
+                case 'bottom':
+                    tooltipArrow.style.left = '50%';
+                    tooltipArrow.style.top = '0';
+                    tooltipArrow.style.transform = 'translateX(-50%) translateY(-100%) rotate(180deg)';
+                    break;
+                case 'left':
+                    tooltipArrow.style.left = '100%';
+                    tooltipArrow.style.top = '50%';
+                    tooltipArrow.style.transform = 'translateY(-50%) rotate(-90deg)';
+                    break;
+                case 'right':
+                    tooltipArrow.style.left = '0';
+                    tooltipArrow.style.top = '50%';
+                    tooltipArrow.style.transform = 'translateX(-100%) translateY(-50%) rotate(90deg)';
+                    break;
             }
         }
 
@@ -617,7 +583,41 @@ export class TooltipComponent {
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             }
 
-            /* Tooltip close button */
+            /* Tooltip trigger styling */
+            .tooltip-trigger {
+                position: relative;
+                display: inline-flex;
+                cursor: help;
+                align-items: center;
+            }
+
+            .tooltip-trigger.icon-only {
+                width: 16px;
+                height: 16px;
+                justify-content: center;
+                align-items: center;
+                border-radius: 50%;
+                font-size: 12px;
+                background-color: rgba(128, 128, 128, 0.2);
+                margin-left: 5px;
+                transition: background-color 0.2s ease;
+                line-height: 1;
+                padding: 0;
+            }
+
+            .tooltip-trigger.icon-only:hover {
+                background-color: rgba(128, 128, 128, 0.3);
+            }
+
+            .tooltip-trigger.icon-only > * {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+            }
+
+            /* Close button styling */
             .tooltip-close-button {
                 position: absolute;
                 top: 4px;
@@ -649,7 +649,7 @@ export class TooltipComponent {
                 background-color: rgba(0, 0, 0, 0.1);
             }
 
-            /* Tooltip content styling */
+            /* Tooltip content sections */
             .tooltip-content h4 {
                 margin-top: 0;
                 margin-bottom: 8px;
@@ -674,60 +674,10 @@ export class TooltipComponent {
                 margin-bottom: 4px;
             }
 
-            /* Warning section */
-            .tooltip-content .warning {
-                display: flex;
-                align-items: flex-start;
-                padding: 8px;
-                margin: 8px 0;
-                border-radius: 4px;
-                font-size: 12px;
-            }
-
-            .tooltip-theme-dark .tooltip-content .warning {
-                background-color: rgba(255, 152, 0, 0.2);
-                border-left: 3px solid #ff9800;
-            }
-
-            .tooltip-theme-light .tooltip-content .warning {
-                background-color: rgba(255, 152, 0, 0.1);
-                border-left: 3px solid #ff9800;
-            }
-
-            .tooltip-content .warning .material-icons {
-                font-size: 16px;
-                margin-right: 6px;
-                color: #ff9800;
-            }
-
-            /* Success section */
+            /* Info, warning, and other sections */
+            .tooltip-content .info,
+            .tooltip-content .warning,
             .tooltip-content .success {
-                display: flex;
-                align-items: flex-start;
-                padding: 8px;
-                margin: 8px 0;
-                border-radius: 4px;
-                font-size: 12px;
-            }
-
-            .tooltip-theme-dark .tooltip-content .success {
-                background-color: rgba(129, 193, 75, 0.2);
-                border-left: 3px solid #81c14b;
-            }
-
-            .tooltip-theme-light .tooltip-content .success {
-                background-color: rgba(129, 193, 75, 0.1);
-                border-left: 3px solid #81c14b;
-            }
-
-            .tooltip-content .success .material-icons {
-                font-size: 16px;
-                margin-right: 6px;
-                color: #81c14b;
-            }
-
-            /* Info section */
-            .tooltip-content .info {
                 display: flex;
                 align-items: flex-start;
                 padding: 8px;
@@ -746,10 +696,43 @@ export class TooltipComponent {
                 border-left: 3px solid #2196f3;
             }
 
-            .tooltip-content .info .material-icons {
+            .tooltip-theme-dark .tooltip-content .warning {
+                background-color: rgba(255, 152, 0, 0.2);
+                border-left: 3px solid #ff9800;
+            }
+
+            .tooltip-theme-light .tooltip-content .warning {
+                background-color: rgba(255, 152, 0, 0.1);
+                border-left: 3px solid #ff9800;
+            }
+
+            .tooltip-theme-dark .tooltip-content .success {
+                background-color: rgba(129, 193, 75, 0.2);
+                border-left: 3px solid #81c14b;
+            }
+
+            .tooltip-theme-light .tooltip-content .success {
+                background-color: rgba(129, 193, 75, 0.1);
+                border-left: 3px solid #81c14b;
+            }
+
+            .tooltip-content .info .material-icons,
+            .tooltip-content .warning .material-icons,
+            .tooltip-content .success .material-icons {
                 font-size: 16px;
                 margin-right: 6px;
+            }
+
+            .tooltip-content .info .material-icons {
                 color: #2196f3;
+            }
+
+            .tooltip-content .warning .material-icons {
+                color: #ff9800;
+            }
+
+            .tooltip-content .success .material-icons {
+                color: #81c14b;
             }
 
             /* Code styling */
@@ -771,29 +754,6 @@ export class TooltipComponent {
                 color: #333;
             }
 
-            /* Tooltip trigger styling */
-            .tooltip-trigger {
-                position: relative;
-                display: inline-flex;
-                cursor: help;
-            }
-
-            .tooltip-trigger.icon-only {
-                width: 16px;
-                height: 16px;
-                justify-content: center;
-                align-items: center;
-                border-radius: 50%;
-                font-size: 12px;
-                background-color: rgba(128, 128, 128, 0.2);
-                margin-left: 5px;
-                transition: background-color 0.2s ease;
-            }
-
-            .tooltip-trigger.icon-only:hover {
-                background-color: rgba(128, 128, 128, 0.3);
-            }
-
             /* Dark mode adjustments */
             @media (prefers-color-scheme: dark) {
                 .tooltip-theme-light .tooltip-content {
@@ -813,6 +773,21 @@ export class TooltipComponent {
                 .tooltip-theme-light .tooltip-content code {
                     background-color: rgba(255, 255, 255, 0.1);
                     color: #e0e0e0;
+                }
+
+                .tooltip-theme-light .tooltip-content .info {
+                    background-color: rgba(33, 150, 243, 0.2);
+                    border-left-color: #2196f3;
+                }
+
+                .tooltip-theme-light .tooltip-content .warning {
+                    background-color: rgba(255, 152, 0, 0.2);
+                    border-left-color: #ff9800;
+                }
+
+                .tooltip-theme-light .tooltip-content .success {
+                    background-color: rgba(129, 193, 75, 0.2);
+                    border-left-color: #81c14b;
                 }
             }
         `;
