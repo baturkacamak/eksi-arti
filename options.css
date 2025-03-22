@@ -212,6 +212,12 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(129, 193, 75, 0.2);
 }
 
+/* Status indicator styling */
+.status.saving {
+    background-color: rgba(33, 150, 243, 0.1);
+    color: #2196f3;
+}
+
 /* Toggle Switch */
 .toggle-switch {
     position: relative;
@@ -228,6 +234,11 @@ textarea:focus {
     position: absolute;
     z-index: 1;
     cursor: pointer;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: var(--primary-color);
+    transition: background-color 0.3s ease;
 }
 
 .slider {
@@ -251,8 +262,8 @@ textarea:focus {
     left: 3px;
     bottom: 3px;
     background-color: white;
-    transition: .3s;
     border-radius: 50%;
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 input:checked + .slider {
@@ -314,6 +325,8 @@ footer {
     margin-top: auto;
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
 }
 
 .actions {
@@ -326,12 +339,15 @@ footer {
     padding: 8px 12px;
     border-radius: 4px;
     font-weight: 500;
-    transition: opacity 0.3s ease;
+    font-size: 13px;
+    transition: opacity 0.3s ease, transform 0.2s ease;
     opacity: 0;
+    transform: translateY(8px);
 }
 
 .status.visible {
     opacity: 1;
+    transform: translateY(0);
 }
 
 .status.success {
@@ -342,6 +358,21 @@ footer {
 .status.error {
     background-color: rgba(229, 57, 53, 0.1);
     color: var(--danger);
+}
+
+/* Enhanced visual feedback for inputs when changed */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(129, 193, 75, 0.2);
+}
+
+input[type="text"]:not(:focus):not(:placeholder-shown),
+input[type="number"]:not(:focus):not(:placeholder-shown),
+select:not(:focus):not(.default-selected),
+textarea:not(:focus):not(:placeholder-shown) {
+    border-color: var(--primary-color);
+    transition: border-color 0.3s ease;
 }
 
 /* About Tab Specific Styles */
@@ -403,3 +434,4 @@ footer {
         border-bottom: 3px solid var(--primary-color);
     }
 }
+

@@ -12,6 +12,8 @@ import { logDebug, logError, logInfo } from './services/logging-service';
 class OptionsPage {
     private isInitialized: boolean = false;
     private preferences: any = {};
+    private saveDebounceTimer: number | null = null;
+    private savePending: boolean = false;
 
     /**
      * Initialize the options page
@@ -72,39 +74,68 @@ class OptionsPage {
      */
     async savePreferences() {
         try {
-            // Get current values from UI
-            this.collectValuesFromUI();
+            // Set pending flag
+            this.savePending = true;
 
-            return new Promise((resolve, reject) => {
-                chrome.runtime.sendMessage(
-                    { action: 'savePreferences', data: this.preferences },
-                    (response) => {
-                        if (chrome.runtime.lastError) {
-                            const error = chrome.runtime.lastError.message || 'Unknown error';
-                            logError('Error saving preferences', error);
-                            this.showStatus('Ayarlar kaydedilemedi: ' + error, 'error');
-                            reject(new Error(error));
-                            return;
-                        }
+            // Clear any existing timer
+            if (this.saveDebounceTimer !== null) {
+                window.clearTimeout(this.saveDebounceTimer);
+            }
 
-                        if (response && response.success) {
-                            logDebug('Preferences saved successfully');
-                            this.showStatus('Ayarlar başarıyla kaydedildi', 'success');
+            // Set new timer for debouncing (500ms)
+            this.saveDebounceTimer = window.setTimeout(async () => {
+                try {
+                    // Get current values from UI
+                    this.collectValuesFromUI();
 
-                            // Update theme if it has changed
-                            this.updateTheme();
-
-                            resolve(true);
-                        } else {
-                            const error = response?.error || 'Failed to save preferences';
-                            logError('Error in save response', error);
-                            this.showStatus('Ayarlar kaydedilemedi: ' + error, 'error');
-                            reject(new Error(error));
-                        }
+                    // Show saving indicator (optional)
+                    const statusElement = document.getElementById('status');
+                    if (statusElement) {
+                        statusElement.textContent = 'Kaydediliyor...';
+                        statusElement.className = 'status saving visible';
                     }
-                );
-            });
+
+                    return new Promise((resolve, reject) => {
+                        chrome.runtime.sendMessage(
+                            { action: 'savePreferences', data: this.preferences },
+                            (response) => {
+                                if (chrome.runtime.lastError) {
+                                    const error = chrome.runtime.lastError.message || 'Unknown error';
+                                    logError('Error saving preferences', error);
+                                    this.showStatus('Ayarlar kaydedilemedi: ' + error, 'error');
+                                    this.savePending = false;
+                                    reject(new Error(error));
+                                    return;
+                                }
+
+                                if (response && response.success) {
+                                    logDebug('Preferences saved successfully');
+                                    this.showStatus('Kaydedildi', 'success');
+
+                                    // Update theme if it has changed
+                                    this.updateTheme();
+
+                                    this.savePending = false;
+                                    resolve(true);
+                                } else {
+                                    const error = response?.error || 'Failed to save preferences';
+                                    logError('Error in save response', error);
+                                    this.showStatus('Ayarlar kaydedilemedi: ' + error, 'error');
+                                    this.savePending = false;
+                                    reject(new Error(error));
+                                }
+                            }
+                        );
+                    });
+                } catch (error) {
+                    this.savePending = false;
+                    logError('Error executing debounced save', error);
+                    this.showStatus('Kaydedilemedi: ' + this.getErrorMessage(error), 'error');
+                }
+            }, 500);
+
         } catch (error) {
+            this.savePending = false;
             logError('Error preparing preferences to save', error);
             this.showStatus('Ayarlar kaydedilemedi: ' + this.getErrorMessage(error), 'error');
             throw error;
@@ -364,13 +395,21 @@ class OptionsPage {
      */
     setupEventListeners() {
         try {
-            // Save button
-            const saveButton = document.getElementById('saveOptions');
-            if (saveButton) {
-                saveButton.addEventListener('click', () => {
+            // Auto-save functionality for input, select, and textarea elements
+            const inputElements = document.querySelectorAll('input[type="text"], input[type="number"], select, textarea');
+            inputElements.forEach(element => {
+                element.addEventListener('change', () => {
                     this.savePreferences();
                 });
-            }
+            });
+
+            // Auto-save functionality for checkboxes
+            const checkboxElements = document.querySelectorAll('input[type="checkbox"]');
+            checkboxElements.forEach(element => {
+                element.addEventListener('change', () => {
+                    this.savePreferences();
+                });
+            });
 
             // Reset button
             const resetButton = document.getElementById('resetSettings');
@@ -405,14 +444,7 @@ class OptionsPage {
                 });
             });
 
-            // Enter key to save
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                    this.savePreferences();
-                }
-            });
-
-            logDebug('Event listeners set up');
+            logDebug('Event listeners set up with auto-save functionality');
         } catch (error) {
             logError('Error setting up event listeners', error);
         }
@@ -508,7 +540,7 @@ class OptionsPage {
     /**
      * Show status message
      */
-    showStatus(message: string, type: 'success' | 'error' = 'success') {
+    showStatus(message: string, type: 'success' | 'error' | 'saving' = 'success') {
         try {
             const statusElement = document.getElementById('status');
             if (!statusElement) return;
@@ -516,10 +548,15 @@ class OptionsPage {
             statusElement.textContent = message;
             statusElement.className = 'status ' + type + ' visible';
 
-            // Hide status after 3 seconds
+            // Hide status after shorter time for success messages (for better UX with auto-save)
+            const timeout = type === 'success' ? 1500 : 3000;
+
             setTimeout(() => {
-                if (statusElement) statusElement.className = 'status';
-            }, 3000);
+                // Only clear if we're not in the middle of another pending save
+                if (!this.savePending || type !== 'success') {
+                    if (statusElement) statusElement.className = 'status';
+                }
+            }, timeout);
         } catch (error) {
             logError('Error showing status', error);
             console.error(message);
