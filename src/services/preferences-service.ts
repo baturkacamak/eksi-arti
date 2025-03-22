@@ -1,5 +1,5 @@
 import { BlockerPreferences } from '../types';
-import { BlockType, PREFERENCES_STORAGE_KEY } from '../constants';
+import { BlockType, STORAGE_KEYS } from '../constants';
 import { StorageService } from './storage-service';
 import { NotificationComponent } from '../components/notification-component';
 
@@ -9,7 +9,7 @@ export class PreferencesService {
     private defaultPreferences: BlockerPreferences = {
         defaultBlockType: BlockType.MUTE,
         defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
-        preferenceStorageKey: PREFERENCES_STORAGE_KEY,
+        preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
         menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu'
     };
 
@@ -22,7 +22,7 @@ export class PreferencesService {
      */
     getPreferences(): BlockerPreferences {
         try {
-            const savedPreferences = StorageService.load<Partial<BlockerPreferences>>(PREFERENCES_STORAGE_KEY);
+            const savedPreferences = StorageService.load<Partial<BlockerPreferences>>(STORAGE_KEYS.PREFERENCES);
             if (savedPreferences) {
                 return {...this.defaultPreferences, ...savedPreferences};
             }
@@ -41,7 +41,7 @@ export class PreferencesService {
             const updatedPreferences = {...this.getPreferences(), ...newPreferences};
 
             const success = StorageService.save(
-                PREFERENCES_STORAGE_KEY,
+                STORAGE_KEYS.PREFERENCES,
                 updatedPreferences
             );
 

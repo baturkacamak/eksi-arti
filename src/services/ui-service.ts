@@ -4,7 +4,7 @@ import { BlockOptionsModal } from '../components/block-options-modal';
 import { ResumeModal } from '../components/resume-modal';
 import { StorageService } from './storage-service';
 import { NotificationComponent } from '../components/notification-component';
-import { STORAGE_KEY } from '../constants';
+import { STORAGE_KEYS } from '../constants';
 import { BlockerState } from '../types';
 import { PreferencesService } from './preferences-service';
 
@@ -99,7 +99,7 @@ export class UIService {
             e.stopPropagation();
 
             // Check if there's an existing operation
-            const savedState = StorageService.load<BlockerState>(STORAGE_KEY);
+            const savedState = StorageService.load<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION);
             if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
                 try {
                     const resumeModal = new ResumeModal(entryId, savedState);
@@ -252,7 +252,7 @@ export class UIService {
      * Check for saved state and show notification if exists
      */
     private checkForSavedState(): void {
-        const savedState = StorageService.load<BlockerState>(STORAGE_KEY);
+        const savedState = StorageService.load<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION);
         if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
             const notification = new NotificationComponent();
             const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';

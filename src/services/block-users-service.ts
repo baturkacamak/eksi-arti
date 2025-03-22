@@ -3,7 +3,7 @@ import { HtmlParserService } from './html-parser-service';
 import { NotificationComponent } from '../components/notification-component';
 import { StorageService } from './storage-service';
 import { PreferencesService } from './preferences-service';
-import { BlockType, STORAGE_KEY, Endpoints } from '../constants';
+import { BlockType, STORAGE_KEYS, Endpoints } from '../constants';
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
@@ -56,7 +56,7 @@ export class BlockUsersService {
             processedUsers: string[];
             blockType: BlockType;
             totalUserCount: number;
-        }>(STORAGE_KEY);
+        }>(STORAGE_KEYS.CURRENT_OPERATION);
 
         if (savedState && savedState.entryId === this.entryId) {
             this.processedUsers = new Set(savedState.processedUsers || []);
@@ -72,7 +72,7 @@ export class BlockUsersService {
      * Save current processing state
      */
     saveState(): void {
-        StorageService.save(STORAGE_KEY, {
+        StorageService.save(STORAGE_KEYS.CURRENT_OPERATION, {
             entryId: this.entryId,
             blockType: this.blockType,
             processedUsers: Array.from(this.processedUsers),
@@ -85,7 +85,7 @@ export class BlockUsersService {
      * Clear saved state
      */
     clearState(): void {
-        StorageService.remove(STORAGE_KEY);
+        StorageService.remove(STORAGE_KEYS.CURRENT_OPERATION);
     }
 
     /**

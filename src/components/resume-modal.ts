@@ -3,7 +3,7 @@ import { BlockerState } from '../types';
 import { BlockUsersService } from '../services/block-users-service';
 import { BlockOptionsModal } from './block-options-modal';
 import { StorageService } from '../services/storage-service';
-import { STORAGE_KEY } from '../constants';
+import { STORAGE_KEYS } from '../constants';
 
 export class ResumeModal extends ModalComponent {
     private entryId: string;
@@ -74,7 +74,7 @@ export class ResumeModal extends ModalComponent {
 
         const newButton = this.createOptionButton('Yeni İşlem Başlat', 'secondary', () => {
             this.close();
-            StorageService.remove(STORAGE_KEY);
+            StorageService.remove(STORAGE_KEYS.CURRENT_OPERATION);
             const optionsModal = new BlockOptionsModal(this.entryId);
             optionsModal.show();
         });

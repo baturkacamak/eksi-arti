@@ -1,6 +1,6 @@
 import { ModalComponent } from './modal-component';
 import { BlockerPreferences } from '../types';
-import { BlockType, PREFERENCES_STORAGE_KEY } from '../constants';
+import { BlockType, STORAGE_KEYS } from '../constants';
 import { PreferencesService } from '../services/preferences-service';
 import { NotificationComponent } from './notification-component';
 

@@ -5,7 +5,7 @@
 
 import { storageService, StorageArea } from './enhanced-storage-service';
 import { logger, logError, logDebug } from './logging-service';
-import { BlockType, PREFERENCES_STORAGE_KEY } from '../constants';
+import { BlockType, STORAGE_KEYS } from '../constants';
 
 // Preferences interface
 export interface ExtensionPreferences {
@@ -57,7 +57,7 @@ const DEFAULT_PREFERENCES: ExtensionPreferences = {
     enableDebugMode: false,
 
     // Legacy support
-    preferenceStorageKey: PREFERENCES_STORAGE_KEY,
+    preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
     menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu'
 };
 
@@ -111,7 +111,7 @@ class PreferencesManager {
      */
     public async loadPreferences(): Promise<ExtensionPreferences> {
         try {
-            const result = await storageService.getItem<ExtensionPreferences>(PREFERENCES_STORAGE_KEY);
+            const result = await storageService.getItem<ExtensionPreferences>(STORAGE_KEYS.PREFERENCES);
 
             if (result.success && result.data) {
                 // Merge with defaults to ensure all properties exist
@@ -143,7 +143,7 @@ class PreferencesManager {
             }
 
             // Save to storage
-            const result = await storageService.setItem(PREFERENCES_STORAGE_KEY, this.preferences);
+            const result = await storageService.setItem(STORAGE_KEYS.PREFERENCES, this.preferences);
 
             if (result.success) {
                 logDebug('Preferences saved', { preferences: this.preferences, source: result.source });
@@ -171,7 +171,7 @@ class PreferencesManager {
     public async resetPreferences(): Promise<boolean> {
         try {
             this.preferences = { ...DEFAULT_PREFERENCES };
-            const result = await storageService.setItem(PREFERENCES_STORAGE_KEY, this.preferences);
+            const result = await storageService.setItem(STORAGE_KEYS.PREFERENCES, this.preferences);
 
             if (result.success) {
                 logDebug('Preferences reset to defaults');

@@ -2,36 +2,7 @@
  * Ekşi Artı Options Page
  * Entry point for options page functionality
  */
-
-// Default preferences configuration
-const DEFAULT_PREFERENCES = {
-    // General settings
-    enableNotifications: true,
-    notificationDuration: 5,
-    customMenuSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
-
-    // Blocking settings
-    defaultBlockType: 'u',
-    defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
-    requestDelay: 7,
-    retryDelay: 5,
-    maxRetries: 3,
-
-    // Appearance settings
-    theme: 'system',
-    notificationPosition: 'top-right',
-
-    // Advanced settings
-    saveOperationHistory: true,
-    enableDebugMode: false
-};
-
-// Storage keys
-const STORAGE_KEYS = {
-    PREFERENCES: 'eksi_blocker_preferences',
-    OPERATION_HISTORY: 'eksi_blocker_history',
-    CURRENT_OPERATION: 'eksi_blocker_state'
-};
+import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
 
 /**
  * Options Manager Class
@@ -39,7 +10,7 @@ const STORAGE_KEYS = {
  */
 class OptionsPage {
     private isInitialized: boolean = false;
-    private preferences: any = { ...DEFAULT_PREFERENCES };
+    private preferences: any = {...DEFAULT_PREFERENCES};
     private saveDebounceTimer: number | null = null;
     private savePending: boolean = false;
 
@@ -78,17 +49,17 @@ class OptionsPage {
         try {
             const result = await this.getFromStorage(STORAGE_KEYS.PREFERENCES);
             if (result && result[STORAGE_KEYS.PREFERENCES]) {
-                this.preferences = { ...DEFAULT_PREFERENCES, ...result[STORAGE_KEYS.PREFERENCES] };
+                this.preferences = {...DEFAULT_PREFERENCES, ...result[STORAGE_KEYS.PREFERENCES]};
                 this.logDebug('Preferences loaded successfully', this.preferences);
             } else {
                 this.logDebug('No saved preferences found, using defaults', DEFAULT_PREFERENCES);
-                this.preferences = { ...DEFAULT_PREFERENCES };
+                this.preferences = {...DEFAULT_PREFERENCES};
             }
             return this.preferences;
         } catch (error) {
             this.logError('Error loading preferences from storage', error);
             // Fall back to localStorage if chrome storage fails
-            this.preferences = this.loadFromLocalStorage() || { ...DEFAULT_PREFERENCES };
+            this.preferences = this.loadFromLocalStorage() || {...DEFAULT_PREFERENCES};
             return this.preferences;
         }
     }
@@ -135,7 +106,7 @@ class OptionsPage {
                     }
 
                     // Save to storage
-                    await this.saveToStorage({ [STORAGE_KEYS.PREFERENCES]: this.preferences });
+                    await this.saveToStorage({[STORAGE_KEYS.PREFERENCES]: this.preferences});
 
                     // Backup to localStorage
                     this.backupToLocalStorage();
@@ -182,8 +153,8 @@ class OptionsPage {
     async resetPreferences() {
         try {
             if (confirm('Tüm ayarlar varsayılan değerlere sıfırlanacak. Emin misiniz?')) {
-                this.preferences = { ...DEFAULT_PREFERENCES };
-                await this.saveToStorage({ [STORAGE_KEYS.PREFERENCES]: this.preferences });
+                this.preferences = {...DEFAULT_PREFERENCES};
+                await this.saveToStorage({[STORAGE_KEYS.PREFERENCES]: this.preferences});
                 localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
                 this.populateUI();
                 this.updateTheme();
@@ -250,10 +221,10 @@ class OptionsPage {
                         }
 
                         // Merge with defaults to ensure all required properties exist
-                        this.preferences = { ...DEFAULT_PREFERENCES, ...importedSettings };
+                        this.preferences = {...DEFAULT_PREFERENCES, ...importedSettings};
 
                         // Save the imported settings
-                        await this.saveToStorage({ [STORAGE_KEYS.PREFERENCES]: this.preferences });
+                        await this.saveToStorage({[STORAGE_KEYS.PREFERENCES]: this.preferences});
                         this.backupToLocalStorage();
 
                         // Update UI
@@ -596,7 +567,7 @@ class OptionsPage {
                 versionElement.textContent = manifest.version;
             } catch (chromeError) {
                 // Fallback to message passing if direct access fails
-                chrome.runtime.sendMessage({ action: 'getVersion' }, (response) => {
+                chrome.runtime.sendMessage({action: 'getVersion'}, (response) => {
                     if (chrome.runtime.lastError) {
                         this.logError('Error getting version', chrome.runtime.lastError);
                         versionElement.textContent = '1.0.0'; // Fallback
@@ -720,7 +691,7 @@ class OptionsPage {
                 } else {
                     // Fallback to localStorage if Chrome API is not available
                     const value = localStorage.getItem(key);
-                    resolve({ [key]: value ? JSON.parse(value) : null });
+                    resolve({[key]: value ? JSON.parse(value) : null});
                 }
             } catch (error) {
                 reject(error);
