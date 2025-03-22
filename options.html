@@ -21,11 +21,26 @@
         <div class="sidebar">
             <nav>
                 <ul class="nav-items">
-                    <li data-tab="general" class="active">Genel</li>
-                    <li data-tab="blocking">Engelleme</li>
-                    <li data-tab="appearance">Görünüm</li>
-                    <li data-tab="advanced">Gelişmiş</li>
-                    <li data-tab="about">Hakkında</li>
+                    <li data-tab="general" class="active">
+                        <span class="material-icons">settings</span>
+                        Genel
+                    </li>
+                    <li data-tab="blocking">
+                        <span class="material-icons">block</span>
+                        Engelleme
+                    </li>
+                    <li data-tab="appearance">
+                        <span class="material-icons">palette</span>
+                        Görünüm
+                    </li>
+                    <li data-tab="advanced">
+                        <span class="material-icons">tune</span>
+                        Gelişmiş
+                    </li>
+                    <li data-tab="about">
+                        <span class="material-icons">info</span>
+                        Hakkında
+                    </li>
                 </ul>
             </nav>
         </div>
@@ -33,10 +48,10 @@
         <div class="content">
             <!-- General Settings Tab -->
             <section id="general" class="tab-content active">
-                <h2>Genel Ayarlar</h2>
+                <h2><span class="material-icons">settings</span> Genel Ayarlar</h2>
 
                 <div class="option-group">
-                    <h3>Bildirimler</h3>
+                    <h3><span class="material-icons">notifications</span> Bildirimler</h3>
                     <div class="option">
                         <label for="enableNotifications">Bildirimleri Göster</label>
                         <div class="toggle-switch">
@@ -51,7 +66,7 @@
                 </div>
 
                 <div class="option-group">
-                    <h3>Menü Seçenekleri</h3>
+                    <h3><span class="material-icons">menu</span> Menü Seçenekleri</h3>
                     <div class="option">
                         <label for="customMenuSelector">Özel Menü Seçici (CSS Selector)</label>
                         <input type="text" id="customMenuSelector" placeholder=".feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu">
@@ -61,10 +76,10 @@
 
             <!-- Blocking Settings Tab -->
             <section id="blocking" class="tab-content">
-                <h2>Engelleme Ayarları</h2>
+                <h2><span class="material-icons">block</span> Engelleme Ayarları</h2>
 
                 <div class="option-group">
-                    <h3>Varsayılan İşlem</h3>
+                    <h3><span class="material-icons">gavel</span> Varsayılan İşlem</h3>
                     <div class="option">
                         <label for="defaultBlockType">Varsayılan Engelleme Türü</label>
                         <select id="defaultBlockType">
@@ -75,22 +90,24 @@
                 </div>
 
                 <div class="option-group">
-                    <h3>Not Şablonu</h3>
+                    <h3><span class="material-icons">note</span> Not Şablonu</h3>
                     <div class="option">
                         <label for="defaultNoteTemplate">Engellenen Kullanıcılara Eklenecek Not</label>
                         <textarea id="defaultNoteTemplate" rows="4" placeholder="{postTitle} için {actionType}. Entry: {entryLink}"></textarea>
                         <div class="help-text">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">help_outline</span>
                             Kullanılabilir Değişkenler: {postTitle}, {actionType}, {entryLink}, {date}
                         </div>
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3>Çalışma Parametreleri</h3>
+                    <h3><span class="material-icons">tune</span> Çalışma Parametreleri</h3>
                     <div class="option">
                         <label for="requestDelay">İstekler Arası Bekleme Süresi (saniye)</label>
                         <input type="number" id="requestDelay" min="2" max="30" value="7">
                         <div class="help-text">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
                             Düşük değerler engelleme işlemini hızlandırır ancak site tarafından geçici engellere yol açabilir.
                         </div>
                     </div>
@@ -107,10 +124,10 @@
 
             <!-- Appearance Settings Tab -->
             <section id="appearance" class="tab-content">
-                <h2>Görünüm Ayarları</h2>
+                <h2><span class="material-icons">palette</span> Görünüm Ayarları</h2>
 
                 <div class="option-group">
-                    <h3>Tema</h3>
+                    <h3><span class="material-icons">style</span> Tema</h3>
                     <div class="option">
                         <label for="theme">Tema Seçimi</label>
                         <select id="theme">
@@ -122,7 +139,7 @@
                 </div>
 
                 <div class="option-group">
-                    <h3>Bildirim Konumu</h3>
+                    <h3><span class="material-icons">notifications</span> Bildirim Konumu</h3>
                     <div class="option">
                         <label for="notificationPosition">Bildirim Konumu</label>
                         <select id="notificationPosition">
@@ -137,10 +154,10 @@
 
             <!-- Advanced Settings Tab -->
             <section id="advanced" class="tab-content">
-                <h2>Gelişmiş Ayarlar</h2>
+                <h2><span class="material-icons">tune</span> Gelişmiş Ayarlar</h2>
 
                 <div class="option-group">
-                    <h3>Performans</h3>
+                    <h3><span class="material-icons">speed</span> Performans</h3>
                     <div class="option">
                         <label for="saveOperationHistory">İşlem Geçmişini Sakla</label>
                         <div class="toggle-switch">
@@ -148,25 +165,35 @@
                             <span class="slider"></span>
                         </div>
                         <div class="help-text">
+                            <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
                             Tamamlanan engelleme işlemlerinin geçmişini saklar, kapatılırsa daha az depolama alanı kullanılır.
                         </div>
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3>Veri Yönetimi</h3>
+                    <h3><span class="material-icons">save</span> Veri Yönetimi</h3>
                     <div class="option">
-                        <button id="exportSettings" class="btn">Ayarları Dışa Aktar</button>
-                        <button id="importSettings" class="btn">Ayarları İçe Aktar</button>
+                        <button id="exportSettings" class="btn">
+                            <span class="material-icons">file_download</span>
+                            Ayarları Dışa Aktar
+                        </button>
+                        <button id="importSettings" class="btn">
+                            <span class="material-icons">file_upload</span>
+                            Ayarları İçe Aktar
+                        </button>
                         <input type="file" id="importFile" accept=".json" style="display: none;">
                     </div>
                     <div class="option">
-                        <button id="resetSettings" class="btn danger">Varsayılan Ayarlara Sıfırla</button>
+                        <button id="resetSettings" class="btn danger">
+                            <span class="material-icons">restore</span>
+                            Varsayılan Ayarlara Sıfırla
+                        </button>
                     </div>
                 </div>
 
                 <div class="option-group">
-                    <h3>Hata Ayıklama</h3>
+                    <h3><span class="material-icons">bug_report</span> Hata Ayıklama</h3>
                     <div class="option">
                         <label for="enableDebugMode">Hata Ayıklama Modu</label>
                         <div class="toggle-switch">
@@ -179,7 +206,7 @@
 
             <!-- About Tab -->
             <section id="about" class="tab-content">
-                <h2>Hakkında</h2>
+                <h2><span class="material-icons">info</span> Hakkında</h2>
 
                 <div class="about-content">
                     <div class="logo-container">
@@ -190,23 +217,29 @@
                     <p>Ekşisözlük deneyiminizi gelişmiş kullanıcı yönetimi özellikleriyle zenginleştiren bir eklenti.</p>
 
                     <div class="features">
-                        <h4>Özellikler</h4>
+                        <h4><span class="material-icons">star</span> Özellikler</h4>
                         <ul>
-                            <li>Toplu Kullanıcı Engelleme: Belirli bir entry'yi favorileyen çoklu kullanıcıları tek seferde engelleyin</li>
-                            <li>Özel Notlar: Engellenmiş kullanıcılara özelleştirilebilir şablonlarla otomatik not ekleyin</li>
-                            <li>Devam Desteği: Engelleme işlemlerini istediğiniz zaman duraklatın ve devam edin</li>
-                            <li>Hız Sınırlaması Koruması: Sunucu aşırı yüklenmesini ve hesap sınırlamalarını önlemek için yerleşik gecikmeler</li>
+                            <li><span class="material-icons">person_off</span> Toplu Kullanıcı Engelleme: Belirli bir entry'yi favorileyen çoklu kullanıcıları tek seferde engelleyin</li>
+                            <li><span class="material-icons">note_add</span> Özel Notlar: Engellenmiş kullanıcılara özelleştirilebilir şablonlarla otomatik not ekleyin</li>
+                            <li><span class="material-icons">play_for_work</span> Devam Desteği: Engelleme işlemlerini istediğiniz zaman duraklatın ve devam edin</li>
+                            <li><span class="material-icons">timer</span> Hız Sınırlaması Koruması: Sunucu aşırı yüklenmesini ve hesap sınırlamalarını önlemek için yerleşik gecikmeler</li>
                         </ul>
                     </div>
 
                     <div class="credits">
-                        <p>Bu proje, Batur Kacamak'ın orijinal userscript'ine dayanmaktadır.</p>
-                        <p>MIT Lisansı altında lisanslanmıştır.</p>
+                        <p><span class="material-icons" style="font-size: 14px; vertical-align: middle;">code</span> Bu proje, Batur Kacamak'ın orijinal userscript'ine dayanmaktadır.</p>
+                        <p><span class="material-icons" style="font-size: 14px; vertical-align: middle;">copyright</span> MIT Lisansı altında lisanslanmıştır.</p>
                     </div>
 
                     <div class="links">
-                        <a href="https://github.com/baturkacamak/eksi-arti" target="_blank" class="btn">GitHub</a>
-                        <a href="LICENSE" target="_blank" class="btn">Lisans</a>
+                        <a href="https://github.com/baturkacamak/eksi-arti" target="_blank" class="btn">
+                            <span class="material-icons">code</span>
+                            GitHub
+                        </a>
+                        <a href="LICENSE" target="_blank" class="btn">
+                            <span class="material-icons">description</span>
+                            Lisans
+                        </a>
                     </div>
                 </div>
             </section>

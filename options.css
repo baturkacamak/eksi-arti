@@ -125,6 +125,13 @@ header h1 {
     cursor: pointer;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
+    display: flex;
+    align-items: center;
+}
+
+.nav-items li span {
+    margin-right: 8px;
+    font-size: 18px;
 }
 
 .nav-items li:hover {
@@ -160,6 +167,13 @@ h2 {
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+}
+
+h2 span {
+    margin-right: 8px;
+    color: var(--primary-color);
 }
 
 .option-group {
@@ -170,6 +184,14 @@ h3 {
     font-size: 16px;
     margin-bottom: 15px;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+h3 span {
+    margin-right: 8px;
+    font-size: 18px;
+    color: var(--primary-color);
 }
 
 .option {
@@ -186,6 +208,12 @@ h3 {
     margin-top: 6px;
     font-size: 12px;
     color: var(--light-text-color);
+    display: flex;
+    align-items: center;
+}
+
+.help-text span {
+    margin-right: 4px;
 }
 
 /* Form Elements */
@@ -289,9 +317,15 @@ input:checked + .slider:before {
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
     margin-right: 8px;
+}
+
+.btn span {
+    margin-right: 8px;
+    font-size: 18px;
 }
 
 .btn:hover {
@@ -394,6 +428,30 @@ textarea:not(:focus):not(:placeholder-shown) {
 .features ul {
     margin-left: 20px;
     line-height: 1.8;
+    list-style-type: none;
+}
+
+.features ul li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.features ul li span {
+    margin-right: 8px;
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.features h4 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.features h4 span {
+    color: var(--primary-color);
+    margin-right: 8px;
 }
 
 .credits {
@@ -402,8 +460,32 @@ textarea:not(:focus):not(:placeholder-shown) {
     color: var(--light-text-color);
 }
 
+.credits p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
 .links {
     margin-top: 20px;
+}
+
+/* Material Icons specific styles */
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
 }
 
 /* Responsive Adjustments */
@@ -427,6 +509,7 @@ textarea:not(:focus):not(:placeholder-shown) {
         text-align: center;
         border-left: none;
         border-bottom: 3px solid transparent;
+        justify-content: center;
     }
 
     .nav-items li.active {
@@ -434,4 +517,3 @@ textarea:not(:focus):not(:placeholder-shown) {
         border-bottom: 3px solid var(--primary-color);
     }
 }
-
