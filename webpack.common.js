@@ -3,7 +3,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        content: './src/content.ts'
+        content: './src/content.ts',
+        background: './src/background.ts',
+        options: './src/options.ts'
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -25,7 +27,9 @@ module.exports = {
         new CopyWebpackPlugin({
             patterns: [
                 { from: 'icons', to: 'icons' },
-                { from: 'manifest.json', to: 'manifest.json' }
+                { from: 'manifest.json', to: 'manifest.json' },
+                { from: 'options.html', to: 'options.html' },
+                { from: 'options.css', to: 'options.css' }
             ],
         }),
     ],

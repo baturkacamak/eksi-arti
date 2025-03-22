@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekşi Artı Ayarlar</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>
+            <img src="icons/icon48.png" alt="Ekşi Artı Logo" class="logo">
+            Ekşi Artı Ayarlar
+        </h1>
+        <div class="version">v<span id="version"></span></div>
+    </header>
+
+    <div class="options-container">
+        <div class="sidebar">
+            <nav>
+                <ul class="nav-items">
+                    <li data-tab="general" class="active">Genel</li>
+                    <li data-tab="blocking">Engelleme</li>
+                    <li data-tab="appearance">Görünüm</li>
+                    <li data-tab="advanced">Gelişmiş</li>
+                    <li data-tab="about">Hakkında</li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="content">
+            <!-- General Settings Tab -->
+            <section id="general" class="tab-content active">
+                <h2>Genel Ayarlar</h2>
+
+                <div class="option-group">
+                    <h3>Bildirimler</h3>
+                    <div class="option">
+                        <label for="enableNotifications">Bildirimleri Göster</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="enableNotifications" name="enableNotifications">
+                            <span class="slider"></span>
+                        </div>
+                    </div>
+                    <div class="option">
+                        <label for="notificationDuration">Bildirim Süresi (saniye)</label>
+                        <input type="number" id="notificationDuration" min="1" max="30" value="5">
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <h3>Menü Seçenekleri</h3>
+                    <div class="option">
+                        <label for="customMenuSelector">Özel Menü Seçici (CSS Selector)</label>
+                        <input type="text" id="customMenuSelector" placeholder=".feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Blocking Settings Tab -->
+            <section id="blocking" class="tab-content">
+                <h2>Engelleme Ayarları</h2>
+
+                <div class="option-group">
+                    <h3>Varsayılan İşlem</h3>
+                    <div class="option">
+                        <label for="defaultBlockType">Varsayılan Engelleme Türü</label>
+                        <select id="defaultBlockType">
+                            <option value="u">Sessiz Al</option>
+                            <option value="m">Engelle</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <h3>Not Şablonu</h3>
+                    <div class="option">
+                        <label for="defaultNoteTemplate">Engellenen Kullanıcılara Eklenecek Not</label>
+                        <textarea id="defaultNoteTemplate" rows="4" placeholder="{postTitle} için {actionType}. Entry: {entryLink}"></textarea>
+                        <div class="help-text">
+                            Kullanılabilir Değişkenler: {postTitle}, {actionType}, {entryLink}, {date}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <h3>Çalışma Parametreleri</h3>
+                    <div class="option">
+                        <label for="requestDelay">İstekler Arası Bekleme Süresi (saniye)</label>
+                        <input type="number" id="requestDelay" min="2" max="30" value="7">
+                        <div class="help-text">
+                            Düşük değerler engelleme işlemini hızlandırır ancak site tarafından geçici engellere yol açabilir.
+                        </div>
+                    </div>
+                    <div class="option">
+                        <label for="retryDelay">Hata Sonrası Bekleme Süresi (saniye)</label>
+                        <input type="number" id="retryDelay" min="2" max="30" value="5">
+                    </div>
+                    <div class="option">
+                        <label for="maxRetries">Maksimum Yeniden Deneme Sayısı</label>
+                        <input type="number" id="maxRetries" min="1" max="10" value="3">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Appearance Settings Tab -->
+            <section id="appearance" class="tab-content">
+                <h2>Görünüm Ayarları</h2>
+
+                <div class="option-group">
+                    <h3>Tema</h3>
+                    <div class="option">
+                        <label for="theme">Tema Seçimi</label>
+                        <select id="theme">
+                            <option value="system">Sistem Teması</option>
+                            <option value="light">Açık Tema</option>
+                            <option value="dark">Koyu Tema</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <h3>Bildirim Konumu</h3>
+                    <div class="option">
+                        <label for="notificationPosition">Bildirim Konumu</label>
+                        <select id="notificationPosition">
+                            <option value="top-right">Sağ Üst</option>
+                            <option value="top-left">Sol Üst</option>
+                            <option value="bottom-right">Sağ Alt</option>
+                            <option value="bottom-left">Sol Alt</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Advanced Settings Tab -->
+            <section id="advanced" class="tab-content">
+                <h2>Gelişmiş Ayarlar</h2>
+
+                <div class="option-group">
+                    <h3>Performans</h3>
+                    <div class="option">
+                        <label for="saveOperationHistory">İşlem Geçmişini Sakla</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="saveOperationHistory" name="saveOperationHistory">
+                            <span class="slider"></span>
+                        </div>
+                        <div class="help-text">
+                            Tamamlanan engelleme işlemlerinin geçmişini saklar, kapatılırsa daha az depolama alanı kullanılır.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <h3>Veri Yönetimi</h3>
+                    <div class="option">
+                        <button id="exportSettings" class="btn">Ayarları Dışa Aktar</button>
+                        <button id="importSettings" class="btn">Ayarları İçe Aktar</button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                    </div>
+                    <div class="option">
+                        <button id="resetSettings" class="btn danger">Varsayılan Ayarlara Sıfırla</button>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <h3>Hata Ayıklama</h3>
+                    <div class="option">
+                        <label for="enableDebugMode">Hata Ayıklama Modu</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="enableDebugMode" name="enableDebugMode">
+                            <span class="slider"></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Tab -->
+            <section id="about" class="tab-content">
+                <h2>Hakkında</h2>
+
+                <div class="about-content">
+                    <div class="logo-container">
+                        <img src="icons/icon128.png" alt="Ekşi Artı Logo" class="large-logo">
+                    </div>
+
+                    <h3>Ekşi Artı</h3>
+                    <p>Ekşisözlük deneyiminizi gelişmiş kullanıcı yönetimi özellikleriyle zenginleştiren bir eklenti.</p>
+
+                    <div class="features">
+                        <h4>Özellikler</h4>
+                        <ul>
+                            <li>Toplu Kullanıcı Engelleme: Belirli bir entry'yi favorileyen çoklu kullanıcıları tek seferde engelleyin</li>
+                            <li>Özel Notlar: Engellenmiş kullanıcılara özelleştirilebilir şablonlarla otomatik not ekleyin</li>
+                            <li>Devam Desteği: Engelleme işlemlerini istediğiniz zaman duraklatın ve devam edin</li>
+                            <li>Hız Sınırlaması Koruması: Sunucu aşırı yüklenmesini ve hesap sınırlamalarını önlemek için yerleşik gecikmeler</li>
+                        </ul>
+                    </div>
+
+                    <div class="credits">
+                        <p>Bu proje, Batur Kacamak'ın orijinal userscript'ine dayanmaktadır.</p>
+                        <p>MIT Lisansı altında lisanslanmıştır.</p>
+                    </div>
+
+                    <div class="links">
+                        <a href="https://github.com/baturkacamak/eksi-arti" target="_blank" class="btn">GitHub</a>
+                        <a href="LICENSE" target="_blank" class="btn">Lisans</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <footer>
+        <div class="actions">
+            <button id="saveOptions" class="btn primary">Kaydet</button>
+            <div id="status" class="status"></div>
+        </div>
+    </footer>
+</div>
+
+<script src="options.js"></script>
+</body>
+</html>

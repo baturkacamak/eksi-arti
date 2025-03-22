@@ -50,7 +50,7 @@
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/eksi-arti.git
+git clone https://github.com/baturkacamak/eksi-arti.git
 cd eksi-arti
 
 # Install dependencies
