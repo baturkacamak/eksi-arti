@@ -3,6 +3,7 @@
  * Entry point for options page functionality
  */
 import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
+import {TooltipComponent} from "./components/tooltip-component";
 
 /**
  * Options Manager Class
@@ -33,6 +34,8 @@ class OptionsPage {
 
             // Display extension version
             this.displayVersion();
+
+            this.initializeTooltips();
 
             this.isInitialized = true;
             this.logDebug('Options page initialized');
@@ -497,6 +500,21 @@ class OptionsPage {
             this.logDebug(`Switched to tab: ${tabId}`);
         } catch (error) {
             this.logError('Error switching tabs', error);
+        }
+    }
+
+    /**
+     * Initialize tooltips
+     */
+    initializeTooltips() {
+        try {
+            // Create and initialize the TooltipComponent
+            const tooltipComponent = new TooltipComponent();
+            tooltipComponent.initializeTooltips();
+
+            console.log('[Ekşi Artı] Tooltips initialized using TooltipComponent');
+        } catch (error) {
+            console.error('Error initializing tooltips:', error);
         }
     }
 

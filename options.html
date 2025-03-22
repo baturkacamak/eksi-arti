@@ -53,14 +53,18 @@
                 <div class="option-group">
                     <h3><span class="material-icons">notifications</span> Bildirimler</h3>
                     <div class="option">
-                        <label for="enableNotifications">Bildirimleri Göster</label>
+                        <label for="enableNotifications">Bildirimleri Göster
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notifications">?</span>
+                        </label>
                         <div class="toggle-switch">
                             <input type="checkbox" id="enableNotifications" name="enableNotifications">
                             <span class="slider"></span>
                         </div>
                     </div>
                     <div class="option">
-                        <label for="notificationDuration">Bildirim Süresi (saniye)</label>
+                        <label for="notificationDuration">Bildirim Süresi (saniye)
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notification-duration">?</span>
+                        </label>
                         <input type="number" id="notificationDuration" min="1" max="30" value="5">
                     </div>
                 </div>
@@ -68,7 +72,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">menu</span> Menü Seçenekleri</h3>
                     <div class="option">
-                        <label for="customMenuSelector">Özel Menü Seçici (CSS Selector)</label>
+                        <label for="customMenuSelector">Özel Menü Seçici (CSS Selector)
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-menu-selector">?</span>
+                        </label>
                         <input type="text" id="customMenuSelector" placeholder=".feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu">
                     </div>
                 </div>
@@ -81,7 +87,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">gavel</span> Varsayılan İşlem</h3>
                     <div class="option">
-                        <label for="defaultBlockType">Varsayılan Engelleme Türü</label>
+                        <label for="defaultBlockType">Varsayılan Engelleme Türü
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-block-type">?</span>
+                        </label>
                         <select id="defaultBlockType">
                             <option value="u">Sessiz Al</option>
                             <option value="m">Engelle</option>
@@ -92,7 +100,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">note</span> Not Şablonu</h3>
                     <div class="option">
-                        <label for="defaultNoteTemplate">Engellenen Kullanıcılara Eklenecek Not</label>
+                        <label for="defaultNoteTemplate">Engellenen Kullanıcılara Eklenecek Not
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-note-template">?</span>
+                        </label>
                         <textarea id="defaultNoteTemplate" rows="4" placeholder="{postTitle} için {actionType}. Entry: {entryLink}"></textarea>
                         <div class="help-text">
                             <span class="material-icons" style="font-size: 14px; vertical-align: middle;">help_outline</span>
@@ -104,7 +114,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">tune</span> Çalışma Parametreleri</h3>
                     <div class="option">
-                        <label for="requestDelay">İstekler Arası Bekleme Süresi (saniye)</label>
+                        <label for="requestDelay">İstekler Arası Bekleme Süresi (saniye)
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-request-delay">?</span>
+                        </label>
                         <input type="number" id="requestDelay" min="2" max="30" value="7">
                         <div class="help-text">
                             <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
@@ -112,11 +124,15 @@
                         </div>
                     </div>
                     <div class="option">
-                        <label for="retryDelay">Hata Sonrası Bekleme Süresi (saniye)</label>
+                        <label for="retryDelay">Hata Sonrası Bekleme Süresi (saniye)
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-retry-delay">?</span>
+                        </label>
                         <input type="number" id="retryDelay" min="2" max="30" value="5">
                     </div>
                     <div class="option">
-                        <label for="maxRetries">Maksimum Yeniden Deneme Sayısı</label>
+                        <label for="maxRetries">Maksimum Yeniden Deneme Sayısı
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-max-retries">?</span>
+                        </label>
                         <input type="number" id="maxRetries" min="1" max="10" value="3">
                     </div>
                 </div>
@@ -129,7 +145,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">style</span> Tema</h3>
                     <div class="option">
-                        <label for="theme">Tema Seçimi</label>
+                        <label for="theme">Tema Seçimi
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-theme">?</span>
+                        </label>
                         <select id="theme">
                             <option value="system">Sistem Teması</option>
                             <option value="light">Açık Tema</option>
@@ -141,7 +159,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">notifications</span> Bildirim Konumu</h3>
                     <div class="option">
-                        <label for="notificationPosition">Bildirim Konumu</label>
+                        <label for="notificationPosition">Bildirim Konumu
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-notification-position">?</span>
+                        </label>
                         <select id="notificationPosition">
                             <option value="top-right">Sağ Üst</option>
                             <option value="top-left">Sol Üst</option>
@@ -159,7 +179,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">speed</span> Performans</h3>
                     <div class="option">
-                        <label for="saveOperationHistory">İşlem Geçmişini Sakla</label>
+                        <label for="saveOperationHistory">İşlem Geçmişini Sakla
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-operation-history">?</span>
+                        </label>
                         <div class="toggle-switch">
                             <input type="checkbox" id="saveOperationHistory" name="saveOperationHistory">
                             <span class="slider"></span>
@@ -195,7 +217,9 @@
                 <div class="option-group">
                     <h3><span class="material-icons">bug_report</span> Hata Ayıklama</h3>
                     <div class="option">
-                        <label for="enableDebugMode">Hata Ayıklama Modu</label>
+                        <label for="enableDebugMode">Hata Ayıklama Modu
+                            <span class="tooltip-trigger icon-only" data-tooltip-content="tooltip-debug-mode">?</span>
+                        </label>
                         <div class="toggle-switch">
                             <input type="checkbox" id="enableDebugMode" name="enableDebugMode">
                             <span class="slider"></span>
@@ -253,6 +277,110 @@
     </footer>
 
 </div>
+
+<!-- Tooltip Contents (Hidden) -->
+<div id="tooltip-notifications" style="display: none;">
+    <h4>Bildirimleri Göster</h4>
+    <p>Eklenti tarafından gerçekleştirilen işlemler hakkında bilgilendirme bildirimlerini gösterir veya gizler.</p>
+    <div class="info">
+        <span class="material-icons">info</span>
+        <span>Bildirimleri kapatırsanız, işlem durumunu takip edemeyebilirsiniz.</span>
+    </div>
+</div>
+
+<div id="tooltip-notification-duration" style="display: none;">
+    <h4>Bildirim Süresi</h4>
+    <p>Bildirimlerin ekranda kalma süresi (saniye cinsinden).</p>
+    <p>Daha kısa süreler daha az dikkat dağıtıcıdır, daha uzun süreler bildirimi okumanız için daha fazla zaman sağlar.</p>
+</div>
+
+<div id="tooltip-menu-selector" style="display: none;">
+    <h4>Özel Menü Seçici</h4>
+    <p>Eklentinin "favorileyenleri engelle" menü öğesini ekleyeceği DOM öğesini belirten CSS seçicidir.</p>
+    <div class="warning">
+        <span class="material-icons">warning</span>
+        <span>Bu ayarı yalnızca menü öğesinin doğru şekilde görüntülenmediği durumlarda değiştirin.</span>
+    </div>
+</div>
+
+<div id="tooltip-block-type" style="display: none;">
+    <h4>Varsayılan Engelleme Türü</h4>
+    <p>Engelleme işlemlerinde kullanılacak varsayılan engelleme tipi:</p>
+    <ul>
+        <li><strong>Sessiz Al</strong>: Kullanıcının entryleri görünür kalır ancak bildirimlerde görünmez</li>
+        <li><strong>Engelle</strong>: Kullanıcının entryleri tamamen gizlenir</li>
+    </ul>
+</div>
+
+<div id="tooltip-note-template" style="display: none;">
+    <h4>Not Şablonu</h4>
+    <p>Engellenen kullanıcılara otomatik olarak eklenecek notun şablonu.</p>
+    <p>Şu değişkenleri kullanabilirsiniz:</p>
+    <ul>
+        <li><code>{postTitle}</code> - Engellenen entry'nin başlığı</li>
+        <li><code>{actionType}</code> - Engelleme türü ("sessiz alındı" veya "engellendi")</li>
+        <li><code>{entryLink}</code> - Engellenen entry'nin bağlantısı</li>
+        <li><code>{date}</code> - İşlem tarihi</li>
+    </ul>
+</div>
+
+<div id="tooltip-request-delay" style="display: none;">
+    <h4>İstekler Arası Bekleme Süresi</h4>
+    <p>Her engelleme işlemi arasında beklenecek süre (saniye cinsinden).</p>
+    <div class="warning">
+        <span class="material-icons">warning</span>
+        <span>Düşük değerler işlemi hızlandırır ancak Ekşisözlük tarafından geçici IP engellemesine neden olabilir.</span>
+    </div>
+    <p>Önerilen değer: 5-10 saniye</p>
+</div>
+
+<div id="tooltip-retry-delay" style="display: none;">
+    <h4>Hata Sonrası Bekleme Süresi</h4>
+    <p>Bir engelleme işlemi başarısız olduğunda, tekrar denemeden önce beklenecek süre (saniye cinsinden).</p>
+    <p>Bu süre, site üzerindeki geçici sorunların çözülmesine zaman tanır.</p>
+</div>
+
+<div id="tooltip-max-retries" style="display: none;">
+    <h4>Maksimum Yeniden Deneme Sayısı</h4>
+    <p>Bir işlem başarısız olduğunda kaç kez tekrar deneneceğini belirler.</p>
+    <p>Çok fazla yeniden deneme, işlemin çok uzun sürmesine neden olabilir.</p>
+</div>
+
+<div id="tooltip-theme" style="display: none;">
+    <h4>Tema Seçimi</h4>
+    <p>Eklenti arayüzünün görünümünü belirler:</p>
+    <ul>
+        <li><strong>Sistem Teması</strong>: Cihazınızın sistem ayarlarına göre otomatik değişir</li>
+        <li><strong>Açık Tema</strong>: Her zaman açık renkli tema kullanır</li>
+        <li><strong>Koyu Tema</strong>: Her zaman koyu renkli tema kullanır</li>
+    </ul>
+</div>
+
+<div id="tooltip-notification-position" style="display: none;">
+    <h4>Bildirim Konumu</h4>
+    <p>Bildirimlerin ekranda gösterileceği pozisyon.</p>
+    <p>Ekşisözlük'ün kendi bildirimleriyle çakışmayacak bir konum seçmeniz önerilir.</p>
+</div>
+
+<div id="tooltip-operation-history" style="display: none;">
+    <h4>İşlem Geçmişini Sakla</h4>
+    <p>Tamamlanan engelleme işlemlerinin kaydını tutar.</p>
+    <p>Bu özellik, hangi kullanıcıları engellediğinizi takip etmenizi sağlar.</p>
+    <div class="info">
+        <span class="material-icons">info</span>
+        <span>Depolama alanından tasarruf etmek için kapatabilirsiniz, ancak geçmiş işlemlerinize erişemezsiniz.</span>
+    </div>
+</div>
+
+<div id="tooltip-debug-mode" style="display: none;">
+    <h4>Hata Ayıklama Modu</h4>
+    <p>Tarayıcı konsolunda ayrıntılı hata ayıklama bilgilerini gösterir.</p>
+    <div class="info">
+        <span class="material-icons">info</span>
+        <span>Bu özelliği yalnızca sorun giderme durumlarında veya geliştiricilerin talimatı üzerine etkinleştirin.</span>
+    </div>
+</div>
+
 <script src="options.js"></script>
 </body>
 </html>
