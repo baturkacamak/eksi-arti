@@ -5,10 +5,12 @@ import { storageService } from '../services/storage-service';
 import { STORAGE_KEYS } from '../constants';
 import { logError, logDebug } from "../services/logging-service";
 import { preferencesManager } from "../services/preferences-manager";
+import {ButtonComponent, ButtonSize, ButtonVariant} from "./button-component";
 
 export class NotificationComponent {
     private cssHandler: CSSService;
     private domHandler: DOMService;
+    private buttonComponent: ButtonComponent;
     private notificationElement: HTMLElement | null = null;
     private timeoutId: number | null = null;
     private countdownIntervalId: number | null = null;
@@ -18,6 +20,7 @@ export class NotificationComponent {
     constructor() {
         this.cssHandler = new CSSService();
         this.domHandler = new DOMService();
+        this.buttonComponent = new ButtonComponent();
         this.initAnimations();
         this.loadNotificationDuration();
     }
@@ -150,12 +153,10 @@ export class NotificationComponent {
             }
         }
 
-        // Set initial text with icon
+        // Set initial text with Material Icons
         let remainingSeconds = seconds;
         this.countdownElement.innerHTML = `
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 5px;">
-        <path d="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" fill="#a0e577"/>
-      </svg>
+      <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 12px; color: #a0e577;">schedule</span>
       Sonraki işlem için bekleniyor: <strong>${remainingSeconds}</strong> saniye
     `;
 
@@ -170,9 +171,7 @@ export class NotificationComponent {
 
             if (this.countdownElement) {
                 this.countdownElement.innerHTML = `
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 5px;">
-            <path d="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" fill="#a0e577"/>
-          </svg>
+          <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 12px; color: #a0e577;">schedule</span>
           Sonraki işlem için bekleniyor: <strong>${remainingSeconds}</strong> saniye
         `;
             }
@@ -206,14 +205,12 @@ export class NotificationComponent {
         // Default position class - will be updated based on preferences
         this.domHandler.addClass(this.notificationElement, 'position-top-right');
 
-        // Create a header with icon
+        // Create a header with Material Icons
         const headerElement = this.domHandler.createElement('div');
         this.domHandler.addClass(headerElement, 'eksi-notification-header');
         headerElement.innerHTML = `
       <div class="eksi-notification-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" fill="#81c14b"/>
-        </svg>
+        <span class="material-icons" style="color: #81c14b; font-size: 16px;">check_circle</span>
       </div>
       <div class="eksi-notification-title">Ekşi Kullanıcı İşlemi</div>
     `;
@@ -243,15 +240,20 @@ export class NotificationComponent {
     }
 
     /**
-     * Create close button for notification
+     * Create close button for notification using ButtonComponent
      */
     private createCloseButton(): void {
-        const closeButton = this.domHandler.createElement('button');
-        closeButton.innerHTML = '×';
-        this.domHandler.addClass(closeButton, 'eksi-close-button');
-        this.domHandler.addEventListener(closeButton, 'click', () => {
-            this.removeWithTransition();
+        const closeButton = this.buttonComponent.create({
+            text: '',
+            icon: 'close',
+            size: ButtonSize.SMALL,
+            ariaLabel: 'Bildirimi kapat',
+            onClick: () => {
+                this.removeWithTransition();
+            },
+            className: 'eksi-close-button'
         });
+
         this.domHandler.appendChild(this.notificationElement!, closeButton);
     }
 
@@ -288,7 +290,7 @@ export class NotificationComponent {
     }
 
     /**
-     * Add stop button to notification
+     * Add stop button to notification using ButtonComponent
      */
     addStopButton(clickHandler: () => void): void {
         if (!this.notificationElement) return;
@@ -302,16 +304,15 @@ export class NotificationComponent {
             this.domHandler.removeChild(buttonsContainer, existingButton);
         }
 
-        const stopButton = this.domHandler.createElement('button');
-        stopButton.innerHTML = `
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 5px;">
-        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-      </svg>
-      Durdur
-    `;
-        this.domHandler.addClass(stopButton, 'eksi-notification-button');
-        this.domHandler.addClass(stopButton, 'stop');
-        this.domHandler.addEventListener(stopButton, 'click', clickHandler);
+        // Create a stop button using ButtonComponent
+        const stopButton = this.buttonComponent.create({
+            text: 'Durdur',
+            icon: 'close',
+            variant: ButtonVariant.DANGER,
+            size: ButtonSize.SMALL,
+            onClick: clickHandler,
+            className: 'eksi-notification-stop-button'
+        });
 
         this.domHandler.appendChild(buttonsContainer, stopButton);
     }
@@ -477,63 +478,34 @@ export class NotificationComponent {
           margin-top: 15px;
       }
 
-      /* Button styling */
-      .eksi-notification-button {
-          padding: 8px 14px;
-          border: none;
-          border-radius: 4px;
-          background-color: #444;
-          color: white;
-          cursor: pointer;
-          font-size: 13px;
-          transition: all 0.2s ease;
-          font-weight: 500;
-      }
-
-      .eksi-notification-button:hover {
-          background-color: #555;
-          transform: translateY(-1px);
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-      }
-
-      .eksi-notification-button:active {
-          transform: translateY(0);
-          box-shadow: none;
-      }
-
-      .eksi-notification-button.stop {
-          background-color: #e55353;
-      }
-
-      .eksi-notification-button.stop:hover {
-          background-color: #f06464;
-      }
-
-      /* Close button styling */
+      /* Custom styling for close button from ButtonComponent */
       .eksi-close-button {
-          position: absolute;
-          right: 12px;
-          top: 12px;
-          z-index: 20;
-          cursor: pointer;
-          padding: 4px;
-          font-size: 18px;
-          line-height: 1;
-          color: #999;
-          transition: color 0.2s ease;
-          background: none;
-          border: none;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
+          position: absolute !important;
+          right: 12px !important;
+          top: 12px !important;
+          z-index: 20 !important;
+          width: 24px !important;
+          height: 24px !important;
+          min-width: unset !important;
+          padding: 0 !important;
+          background-color: transparent !important;
+          box-shadow: none !important;
+          border: none !important;
+          color: #999 !important;
       }
 
       .eksi-close-button:hover {
-          color: #fff;
-          background-color: rgba(255, 255, 255, 0.1);
+          color: #fff !important;
+          background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      .eksi-close-button .material-icons {
+          font-size: 18px !important;
+      }
+
+      /* Custom styling for notification stop button */
+      .eksi-notification-stop-button {
+          /* Add any specific styling needed for the stop button */
       }
 
       /* Header styling */
