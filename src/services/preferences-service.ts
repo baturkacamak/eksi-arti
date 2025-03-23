@@ -44,23 +44,6 @@ export class PreferencesService {
     }
 
     /**
-     * Get preferences synchronously (for backward compatibility)
-     */
-    getPreferencesSync(): BlockerPreferences {
-        try {
-            // Fallback to older static method for synchronous access
-            const savedPreferences = StorageService.load<Partial<BlockerPreferences>>(STORAGE_KEYS.PREFERENCES);
-            if (savedPreferences) {
-                return { ...this.defaultPreferences, ...savedPreferences };
-            }
-            return this.defaultPreferences;
-        } catch (error) {
-            logError('Error loading preferences synchronously', error, 'PreferencesService');
-            return this.defaultPreferences;
-        }
-    }
-
-    /**
      * Save user preferences
      */
     async savePreferences(newPreferences: Partial<BlockerPreferences>): Promise<boolean> {
@@ -93,49 +76,27 @@ export class PreferencesService {
     }
 
     /**
-     * Save preferences synchronously (for backward compatibility)
-     */
-    savePreferencesSync(newPreferences: Partial<BlockerPreferences>): boolean {
-        try {
-            // Get current preferences
-            const currentPreferences = this.getPreferencesSync();
-            const updatedPreferences = { ...currentPreferences, ...newPreferences };
-
-            // Fallback to older static method for synchronous saving
-            const success = StorageService.save(
-                STORAGE_KEYS.PREFERENCES,
-                updatedPreferences
-            );
-
-            if (success) {
-                this.notification.show('Tercihler kaydedildi.', { timeout: 3 });
-            } else {
-                this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
-            }
-
-            return success;
-        } catch (error) {
-            logError('Error saving preferences synchronously', error, 'PreferencesService');
-            this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
-            return false;
-        }
-    }
-
-    /**
      * Generate custom note using template
      */
-    generateCustomNote(postTitle: string, entryId: string, blockType: BlockType): string {
-        // Get preferences synchronously since this method is likely called in a synchronous context
-        const preferences = this.getPreferencesSync();
-        const actionType = blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
+    async generateCustomNote(postTitle: string, entryId: string, blockType: BlockType): Promise<string> {
+        try {
+            // Get preferences asynchronously for better reliability
+            const preferences = await this.getPreferences();
+            const actionType = blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
 
-        return preferences.defaultNoteTemplate
-            .replace('{postTitle}', postTitle)
-            .replace('{actionType}', actionType)
-            .replace('{entryLink}', `https://eksisozluk.com/entry/${entryId}`);
+            return preferences.defaultNoteTemplate
+                .replace('{postTitle}', postTitle)
+                .replace('{actionType}', actionType)
+                .replace('{entryLink}', `https://eksisozluk.com/entry/${entryId}`);
+        } catch (error) {
+            // In case of error, use default template
+            logError('Error generating custom note', error, 'PreferencesService');
+            const actionType = blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
+
+            return this.defaultPreferences.defaultNoteTemplate
+                .replace('{postTitle}', postTitle)
+                .replace('{actionType}', actionType)
+                .replace('{entryLink}', `https://eksisozluk.com/entry/${entryId}`);
+        }
     }
 }
-
-// You'll need to import these from storage-service.ts to make the sync methods work
-// This is for backward compatibility
-import { StorageService } from './storage-service';

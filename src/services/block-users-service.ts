@@ -354,6 +354,9 @@ export class BlockUsersService {
     /**
      * Add a note to a user
      */
+    /**
+     * Add a note to a user
+     */
     private async addNoteToUser(userUrl: string, userId: string, postTitle: string): Promise<boolean> {
         if (!userId || !this.entryId) {
             throw new Error('User ID and Entry ID are required for adding note');
@@ -362,7 +365,9 @@ export class BlockUsersService {
         try {
             const username = this.getUsernameFromUrl(userUrl);
             const noteUrl = Endpoints.ADD_NOTE.replace('{username}', username);
-            const noteText = this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType);
+
+            // Await the result of generateCustomNote which now returns a Promise<string>
+            const noteText = await this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType);
 
             const data = `who=${userId}&usernote=${encodeURIComponent(noteText)}`;
             await this.remoteRequest.post(noteUrl, data);
