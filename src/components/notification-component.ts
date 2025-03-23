@@ -62,6 +62,12 @@ export class NotificationComponent {
      * Show notification
      */
     async show(message: string, options: NotificationOptions = {}): Promise<void> {
+        const preferences = await preferencesManager.getPreferences();
+
+        if (!preferences.enableNotifications) {
+            return;
+        }
+
         // Ensure we have the latest notification duration
         await this.loadNotificationDuration();
 
