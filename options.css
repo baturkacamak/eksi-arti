@@ -487,6 +487,7 @@ textarea:not(:focus):not(:placeholder-shown) {
     direction: ltr;
     -webkit-font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
+    user-select: none;
 }
 
 /* Responsive Adjustments */

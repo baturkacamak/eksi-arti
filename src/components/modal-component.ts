@@ -1,15 +1,18 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import {logError} from "../services/logging-service";
+import { ButtonComponent, ButtonVariant, ButtonSize } from './button-component';
+import { logError } from "../services/logging-service";
 
 export class ModalComponent {
     protected domHandler: DOMService;
     protected cssHandler: CSSService;
+    protected buttonComponent: ButtonComponent;
     protected modalElement: HTMLElement | null = null;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.buttonComponent = new ButtonComponent();
         this.applyModalStyles();
     }
 
@@ -45,17 +48,18 @@ export class ModalComponent {
     }
 
     /**
-     * Create an option button for the modal
+     * Create an option button for the modal using the ButtonComponent
      */
-    protected createOptionButton(text: string, className: string, clickHandler: () => void): HTMLButtonElement {
-        const button = this.domHandler.createElement('button');
-        this.domHandler.addClass(button, 'eksi-option-button');
-        if (className) {
-            this.domHandler.addClass(button, className);
-        }
-        button.textContent = text;
-        this.domHandler.addEventListener(button, 'click', clickHandler);
-        return button;
+    protected createOptionButton(text: string, variant: ButtonVariant = ButtonVariant.DEFAULT, clickHandler: () => void, icon?: string): HTMLButtonElement {
+        return this.buttonComponent.create({
+            text,
+            variant,
+            size: ButtonSize.MEDIUM,
+            icon,
+            iconPosition: 'left',
+            onClick: clickHandler,
+            className: 'eksi-modal-button'
+        });
     }
 
     /**
@@ -135,52 +139,27 @@ export class ModalComponent {
         margin-bottom: 16px;
       }
 
-      .eksi-option-button {
-        padding: 12px 16px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        text-align: left;
-        font-size: 14px;
-        background-color: #f5f5f5;
-        transition: all 0.2s ease;
+      /* Preferences Modal Specific Styles */
+      .eksi-modal-options label {
+        display: block;
+        margin-bottom: 8px;
         font-weight: 500;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      
+      .eksi-modal-options select,
+      .eksi-modal-options textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      
+      .eksi-modal-buttons {
         display: flex;
-        align-items: center;
-      }
-
-      .eksi-option-button:hover {
-        background-color: #eaeaea;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-      }
-
-      .eksi-option-button:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      }
-
-      .eksi-option-button.primary {
-        background-color: #81c14b;
-        color: white;
-        box-shadow: 0 2px 5px rgba(129, 193, 75, 0.3);
-      }
-
-      .eksi-option-button.primary:hover {
-        background-color: #72ad42;
-        box-shadow: 0 4px 10px rgba(129, 193, 75, 0.4);
-      }
-
-      .eksi-option-button.secondary {
-        background-color: #ff7063;
-        color: white;
-        box-shadow: 0 2px 5px rgba(255, 112, 99, 0.3);
-      }
-
-      .eksi-option-button.secondary:hover {
-        background-color: #f05a4f;
-        box-shadow: 0 4px 10px rgba(255, 112, 99, 0.4);
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
       }
 
       /* Resume Modal Specific Styles */
@@ -231,27 +210,46 @@ export class ModalComponent {
         background-color: #81c14b;
         border-radius: 4px;
       }
-
-      /* Preferences Modal Specific Styles */
-      .eksi-modal-options label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 500;
+      
+      /* Modal button specific styling */
+      .eksi-modal-button {
+        min-width: 100px;
       }
       
-      .eksi-modal-options select,
-      .eksi-modal-options textarea {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-      
-      .eksi-modal-buttons {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        .eksi-modal-content {
+          background-color: #292a2d;
+          color: #e0e0e0;
+        }
+        
+        .eksi-modal-title {
+          color: #f0f0f0;
+          border-bottom-color: #444;
+        }
+        
+        .eksi-modal-options select,
+        .eksi-modal-options textarea {
+          background-color: #333;
+          color: #e0e0e0;
+          border-color: #444;
+        }
+        
+        .eksi-modal-stats {
+          background-color: #333;
+        }
+        
+        .eksi-stat-label {
+          color: #aaa;
+        }
+        
+        .eksi-stat-value {
+          color: #e0e0e0;
+        }
+        
+        .eksi-modal-progress-container {
+          background-color: #444;
+        }
       }
     `;
 

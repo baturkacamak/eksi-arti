@@ -4,6 +4,7 @@ import { BlockUsersService } from '../services/block-users-service';
 import { BlockOptionsModal } from './block-options-modal';
 import { STORAGE_KEYS } from '../constants';
 import { storageService } from '../services/storage-service';
+import { ButtonVariant } from './button-component';
 
 export class ResumeModal extends ModalComponent {
     private entryId: string;
@@ -34,77 +35,80 @@ export class ResumeModal extends ModalComponent {
       Devam Eden İşlem
     `;
 
-        const message = this.domHandler.createElement('p');
-        message.innerHTML = `<div class="eksi-modal-message">
-      Entry <strong>${this.savedState.entryId}</strong> için devam eden bir işlem var.
+        // Calculate progress percentage
+        const processedCount = this.savedState.processedUsers.length;
+        const totalCount = this.savedState.totalUserCount;
+        const progressPercentage = Math.round((processedCount / totalCount) * 100);
+        const remainingCount = totalCount - processedCount;
+
+        const message = this.domHandler.createElement('div');
+        this.domHandler.addClass(message, 'eksi-modal-message');
+        message.innerHTML = `
+      <p>Entry <strong>${this.savedState.entryId}</strong> için devam eden bir işlem var.</p>
+      
       <div class="eksi-modal-stats">
         <div class="eksi-stat">
-          <span class="eksi-stat-label">Toplam Kullanıcı:</span>
-          <span class="eksi-stat-value">${this.savedState.totalUserCount}</span>
+          <span class="eksi-stat-label">Toplam Kullanıcı</span>
+          <span class="eksi-stat-value">${totalCount}</span>
         </div>
         <div class="eksi-stat">
-          <span class="eksi-stat-label">İşlenen Kullanıcı:</span>
-          <span class="eksi-stat-value">${this.savedState.processedUsers.length}</span>
+          <span class="eksi-stat-label">İşlenen Kullanıcı</span>
+          <span class="eksi-stat-value">${processedCount}</span>
         </div>
         <div class="eksi-stat">
-          <span class="eksi-stat-label">Kalan Kullanıcı:</span>
-          <span class="eksi-stat-value">${this.savedState.totalUserCount - this.savedState.processedUsers.length}</span>
+          <span class="eksi-stat-label">Kalan Kullanıcı</span>
+          <span class="eksi-stat-value">${remainingCount}</span>
         </div>
       </div>
+      
       <div class="eksi-modal-progress-container">
-        <div class="eksi-modal-progress-bar" style="width: ${Math.round((this.savedState.processedUsers.length / this.savedState.totalUserCount) * 100)}%;"></div>
+        <div class="eksi-modal-progress-bar" style="width: ${progressPercentage}%;"></div>
       </div>
-    </div>`;
-
-        const optionsContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(optionsContainer, 'eksi-modal-options');
-
-        const resumeButton = this.createOptionButton('Devam Et', 'primary', () => {
-            this.close();
-            const blockUsers = new BlockUsersService();
-            blockUsers.setBlockType(this.savedState.blockType);
-            blockUsers.blockUsers(this.savedState.entryId);
-        });
-        resumeButton.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px;">
-        <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
-      </svg>
-      Devam Et
+      <div class="eksi-modal-progress-text">
+        İşlem %${progressPercentage} tamamlandı
+      </div>
     `;
 
-        const newButton = this.createOptionButton('Yeni İşlem Başlat', 'secondary', () => {
-            this.close();
+        const buttonsContainer = this.domHandler.createElement('div');
+        this.domHandler.addClass(buttonsContainer, 'eksi-modal-buttons');
 
-            // The removeItem method has built-in fallbacks, so no need for try/catch
-            storageService.removeItem(STORAGE_KEYS.CURRENT_OPERATION);
+        // Create resume button using ButtonComponent
+        const resumeButton = this.createOptionButton(
+            'Devam Et',
+            ButtonVariant.PRIMARY,
+            () => {
+                this.handleResumeOperation();
+            },
+            'play_arrow'
+        );
 
-            const optionsModal = new BlockOptionsModal(this.entryId);
-            optionsModal.show();
-        });
-        newButton.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px;">
-        <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
-      </svg>
-      Yeni İşlem Başlat
-    `;
+        // Create new operation button using ButtonComponent
+        const newButton = this.createOptionButton(
+            'Yeni İşlem Başlat',
+            ButtonVariant.SECONDARY,
+            () => {
+                this.handleNewOperation();
+            },
+            'add'
+        );
 
-        const cancelButton = this.createOptionButton('İptal', '', () => {
-            this.close();
-        });
-        cancelButton.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px;">
-        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#555"/>
-      </svg>
-      İptal
-    `;
+        // Create cancel button using ButtonComponent
+        const cancelButton = this.createOptionButton(
+            'İptal',
+            ButtonVariant.DEFAULT,
+            () => {
+                this.close();
+            },
+            'close'
+        );
 
-        this.domHandler.appendChild(optionsContainer, resumeButton);
-        this.domHandler.appendChild(optionsContainer, newButton);
-        this.domHandler.appendChild(optionsContainer, cancelButton);
+        this.domHandler.appendChild(buttonsContainer, resumeButton);
+        this.domHandler.appendChild(buttonsContainer, newButton);
+        this.domHandler.appendChild(buttonsContainer, cancelButton);
 
         this.domHandler.appendChild(modalContent, modalTitle);
         this.domHandler.appendChild(modalContent, message);
-        this.domHandler.appendChild(modalContent, optionsContainer);
+        this.domHandler.appendChild(modalContent, buttonsContainer);
         this.domHandler.appendChild(this.modalElement, modalContent);
 
         // Close modal when clicking outside content
@@ -113,5 +117,55 @@ export class ResumeModal extends ModalComponent {
                 this.close();
             }
         });
+    }
+
+    /**
+     * Handle resuming the operation
+     */
+    private handleResumeOperation(): void {
+        // Show loading state on the button
+        const resumeButton = this.modalElement?.querySelector('.eksi-button-primary') as HTMLButtonElement;
+        if (resumeButton) {
+            // Create temporary instance to handle the button
+            const tempButtonComponent = this.buttonComponent;
+            // Cast to any to access the buttonElement property
+            (tempButtonComponent as any).buttonElement = resumeButton;
+            tempButtonComponent.setLoading(true, 'Devam Ediliyor...');
+        }
+
+        // Short delay for better visual feedback
+        setTimeout(() => {
+            this.close();
+            const blockUsers = new BlockUsersService();
+            blockUsers.setBlockType(this.savedState.blockType);
+            blockUsers.blockUsers(this.savedState.entryId);
+        }, 500);
+    }
+
+    /**
+     * Handle starting a new operation
+     */
+    private handleNewOperation(): void {
+        // Show loading state on the button
+        const newButton = this.modalElement?.querySelector('.eksi-button-secondary') as HTMLButtonElement;
+        if (newButton) {
+            // Create temporary instance to handle the button
+            const tempButtonComponent = this.buttonComponent;
+            // Cast to any to access the buttonElement property
+            (tempButtonComponent as any).buttonElement = newButton;
+            tempButtonComponent.setLoading(true, 'Hazırlanıyor...');
+        }
+
+        // Short delay for better visual feedback
+        setTimeout(async () => {
+            this.close();
+
+            // Remove the existing operation from storage
+            await storageService.removeItem(STORAGE_KEYS.CURRENT_OPERATION);
+
+            // Show the options modal to start a new operation
+            const optionsModal = new BlockOptionsModal(this.entryId);
+            optionsModal.show();
+        }, 500);
     }
 }

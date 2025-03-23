@@ -1,9 +1,10 @@
-import { ModalComponent } from './modal-component';
-import { BlockerPreferences } from '../types';
-import { BlockType, STORAGE_KEYS } from '../constants';
-import { PreferencesService } from '../services/preferences-service';
-import { NotificationComponent } from './notification-component';
+import {ModalComponent} from './modal-component';
+import {BlockerPreferences} from '../types';
+import {BlockType} from '../constants';
+import {PreferencesService} from '../services/preferences-service';
+import {NotificationComponent} from './notification-component';
 import {logError} from "../services/logging-service";
+import {ButtonVariant} from "./button-component";
 
 export class PreferencesModal extends ModalComponent {
     private preferences: BlockerPreferences | null = null;
@@ -92,11 +93,11 @@ export class PreferencesModal extends ModalComponent {
         const buttonsContainer = this.domHandler.createElement('div');
         this.domHandler.addClass(buttonsContainer, 'eksi-modal-buttons');
 
-        const saveButton = this.createOptionButton('Kaydet', 'primary', () => {
+        const saveButton = this.createOptionButton('Kaydet', ButtonVariant.PRIMARY, () => {
             this.savePreferences();
         });
 
-        const cancelButton = this.createOptionButton('İptal', '', () => {
+        const cancelButton = this.createOptionButton('İptal', ButtonVariant.DANGER, () => {
             this.close();
         });
 
