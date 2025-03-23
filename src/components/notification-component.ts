@@ -3,7 +3,8 @@ import { CSSService } from '../services/css-service';
 import { NotificationOptions, BlockerPreferences } from '../types';
 import { storageService } from '../services/storage-service';
 import { STORAGE_KEYS } from '../constants';
-import {logError} from "../services/logging-service";
+import { logError, logDebug } from "../services/logging-service";
+import { preferencesManager } from "../services/preferences-manager";
 
 export class NotificationComponent {
     private cssHandler: CSSService;
@@ -12,11 +13,26 @@ export class NotificationComponent {
     private timeoutId: number | null = null;
     private countdownIntervalId: number | null = null;
     private countdownElement: HTMLElement | null = null;
+    private defaultDuration: number = 5; // Default duration in seconds
 
     constructor() {
         this.cssHandler = new CSSService();
         this.domHandler = new DOMService();
         this.initAnimations();
+        this.loadNotificationDuration();
+    }
+
+    /**
+     * Load notification duration from preferences
+     */
+    private async loadNotificationDuration(): Promise<void> {
+        try {
+            const preferences = await preferencesManager.getPreferences();
+            this.defaultDuration = preferences.notificationDuration || 5;
+            logDebug('Loaded notification duration from preferences:', this.defaultDuration);
+        } catch (error) {
+            logError('Error loading notification duration:', error);
+        }
     }
 
     /**
@@ -43,6 +59,9 @@ export class NotificationComponent {
      * Show notification
      */
     async show(message: string, options: NotificationOptions = {}): Promise<void> {
+        // Ensure we have the latest notification duration
+        await this.loadNotificationDuration();
+
         this.applyStyles();
 
         if (!this.notificationElement) {
@@ -54,7 +73,9 @@ export class NotificationComponent {
             this.updateMessage(message);
         }
 
-        this.setAutoCloseTimeout(options.timeout);
+        // Use the provided timeout or fall back to the default duration from preferences
+        const timeout = options.timeout !== undefined ? options.timeout : this.defaultDuration;
+        this.setAutoCloseTimeout(timeout);
     }
 
     /**
@@ -305,7 +326,7 @@ export class NotificationComponent {
     /**
      * Set auto-close timeout
      */
-    private setAutoCloseTimeout(timeout: number = 10): void {
+    private setAutoCloseTimeout(timeout: number = 5): void {
         if (this.timeoutId) {
             window.clearTimeout(this.timeoutId);
         }

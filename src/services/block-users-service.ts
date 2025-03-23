@@ -2,7 +2,7 @@ import { HttpService, HttpError } from './http-service';
 import { HtmlParserService } from './html-parser-service';
 import { NotificationComponent } from '../components/notification-component';
 import { storageService, StorageArea } from './storage-service';
-import { PreferencesService } from './preferences-service';
+import { preferencesManager } from './preferences-manager';
 import { BlockType, STORAGE_KEYS, Endpoints } from '../constants';
 import { logger, logDebug, logError } from './logging-service';
 
@@ -10,14 +10,13 @@ export class BlockUsersService {
     private remoteRequest: HttpService;
     private htmlParser: HtmlParserService;
     private notification: NotificationComponent;
-    private preferencesService: PreferencesService;
 
     private totalUserCount: number = 0;
     private currentBlocked: number = 1;
     private timeout: number = 30;
-    private retryDelay: number = 5; // Seconds to wait between retries
-    private requestDelay: number = 7; // Seconds between regular requests to avoid rate limiting
-    private maxRetries: number = 3; // Maximum number of retries
+    private retryDelay: number = 5; // Default seconds to wait between retries
+    private requestDelay: number = 7; // Default seconds between regular requests to avoid rate limiting
+    private maxRetries: number = 3; // Default maximum number of retries
     private blockType: BlockType = BlockType.MUTE; // Default to mute
     private entryId: string | null = null;
     private processedUsers: Set<string> = new Set();
@@ -31,7 +30,34 @@ export class BlockUsersService {
         this.remoteRequest = new HttpService();
         this.htmlParser = new HtmlParserService();
         this.notification = new NotificationComponent();
-        this.preferencesService = new PreferencesService();
+        this.loadOperationParams();
+    }
+
+    /**
+     * Load operation parameters from preferences
+     */
+    private async loadOperationParams(): Promise<void> {
+        try {
+            // Initialize preferences if needed
+            await preferencesManager.initialize();
+
+            // Get preferences
+            const preferences = preferencesManager.getPreferences();
+
+            // Update operation parameters from preferences
+            this.requestDelay = preferences.requestDelay || 7;
+            this.retryDelay = preferences.retryDelay || 5;
+            this.maxRetries = preferences.maxRetries || 3;
+
+            logDebug('Operation parameters loaded', {
+                requestDelay: this.requestDelay,
+                retryDelay: this.retryDelay,
+                maxRetries: this.maxRetries
+            }, 'BlockUsersService');
+        } catch (error) {
+            logError('Error loading operation parameters:', error, 'BlockUsersService');
+            // Use default values if there's an error
+        }
     }
 
     /**
@@ -156,6 +182,9 @@ export class BlockUsersService {
     async blockUsers(entryId: string): Promise<void> {
         try {
             this.entryId = entryId;
+
+            // Load updated settings from preferences
+            await this.loadOperationParams();
 
             // Load previous state if exists
             const hasState = await this.loadState();
@@ -286,6 +315,7 @@ export class BlockUsersService {
             // Add a delay between processing users to avoid rate limiting
             // Only delay if we're not at the end and not aborting
             if (userIndex < this.pendingUsers.length && !this.abortProcessing) {
+                // Use the configurable request delay from preferences
                 this.notification.updateDelayCountdown(this.requestDelay);
                 await this.delay(this.requestDelay);
             }
@@ -354,9 +384,6 @@ export class BlockUsersService {
     /**
      * Add a note to a user
      */
-    /**
-     * Add a note to a user
-     */
     private async addNoteToUser(userUrl: string, userId: string, postTitle: string): Promise<boolean> {
         if (!userId || !this.entryId) {
             throw new Error('User ID and Entry ID are required for adding note');
@@ -366,8 +393,17 @@ export class BlockUsersService {
             const username = this.getUsernameFromUrl(userUrl);
             const noteUrl = Endpoints.ADD_NOTE.replace('{username}', username);
 
-            // Await the result of generateCustomNote which now returns a Promise<string>
-            const noteText = await this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType);
+            // Get the preferences to use the custom note template
+            const preferences = preferencesManager.getPreferences();
+            const noteTemplate = preferences.defaultNoteTemplate;
+
+            // Generate custom note with the template from preferences
+            const actionType = this.blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
+            const noteText = noteTemplate
+                .replace('{postTitle}', postTitle)
+                .replace('{actionType}', actionType)
+                .replace('{entryLink}', `https://eksisozluk.com/entry/${this.entryId}`)
+                .replace('{date}', new Date().toLocaleString('tr-TR'));
 
             const data = `who=${userId}&usernote=${encodeURIComponent(noteText)}`;
             await this.remoteRequest.post(noteUrl, data);
@@ -380,6 +416,7 @@ export class BlockUsersService {
 
     /**
      * Retry an operation with exponential backoff
+     * Uses maxRetries from preferences
      */
     private async retryOperation<T>(operation: () => Promise<T>): Promise<T> {
         let attempts = 0;
@@ -392,7 +429,10 @@ export class BlockUsersService {
                 if (attempts >= this.maxRetries) {
                     throw error;
                 }
-                await this.delay(this.retryDelay * Math.pow(1.5, attempts - 1)); // Exponential backoff
+
+                // Use the configurable retry delay from preferences with exponential backoff
+                const delayTime = this.retryDelay * Math.pow(1.5, attempts - 1);
+                await this.delay(delayTime);
             }
         }
 

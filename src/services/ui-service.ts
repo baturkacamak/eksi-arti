@@ -1,32 +1,34 @@
-import { DOMService } from './dom-service';
-import { CSSService } from './css-service';
+import { DOMService } from '../services/dom-service';
+import { CSSService } from '../services/css-service';
 import { BlockOptionsModal } from '../components/block-options-modal';
 import { ResumeModal } from '../components/resume-modal';
 import { StorageService } from './storage-service';
 import { NotificationComponent } from '../components/notification-component';
 import { STORAGE_KEYS } from '../constants';
 import { BlockerState } from '../types';
-import { PreferencesService } from './preferences-service';
-import {logError, logInfo} from "./logging-service";
+import { preferencesManager } from './preferences-manager';
+import { logError, logInfo, logDebug } from "./logging-service";
 
 export class UIService {
     private domHandler: DOMService;
     private cssHandler: CSSService;
-    private preferencesService: PreferencesService;
     private initialized: boolean = false;
     private observer: MutationObserver | null = null;
+    private menuItemSelector: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
-        this.preferencesService = new PreferencesService();
     }
 
     /**
      * Initialize the UI
      */
-    initialize(): void {
+    async initialize(): Promise<void> {
         try {
+            // Get preferences first to ensure we have the correct menu selector
+            await this.loadMenuSelector();
+
             setTimeout(async () => {
                 await this.addMenuItemToDropdown();
                 this.observeDOMChanges();
@@ -41,8 +43,33 @@ export class UIService {
     }
 
     /**
+     * Load menu selector from preferences
+     */
+    private async loadMenuSelector(): Promise<void> {
+        try {
+            // Initialize preferences manager if not already
+            await preferencesManager.initialize();
+
+            // Get preferences
+            const preferences = preferencesManager.getPreferences();
+
+            // Use custom selector if provided and not empty, otherwise use default
+            this.menuItemSelector = preferences.customMenuSelector && preferences.customMenuSelector.trim() !== ''
+                ? preferences.customMenuSelector
+                : preferences.menuItemSelector;
+
+            logDebug('Using menu selector:', this.menuItemSelector);
+        } catch (error) {
+            logError('Error loading menu selector from preferences:', error);
+            // Fallback to default selector
+            this.menuItemSelector = '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu';
+        }
+    }
+
+    /**
      * Create menu item elements
      */
+    // In ui-service.ts, update the createMenuItemElements method
     private createMenuItemElements(): HTMLLIElement {
         const newItem = this.domHandler.createElement('li');
         const newAnchor = this.domHandler.createElement('a');
@@ -51,11 +78,9 @@ export class UIService {
         newAnchor.setAttribute('title', 'favorileyenleri engelle');
         newAnchor.setAttribute('aria-label', 'favorileyenleri engelle');
 
-        // Create an icon for the menu item
+        // Create an icon for the menu item using Material Icons
         newAnchor.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 5px;">
-        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.59 20 12C20 16.42 16.42 20 12 20ZM12 10.5C12.83 10.5 13.5 11.17 13.5 12C13.5 12.83 12.83 13.5 12 13.5C11.17 13.5 10.5 12.83 10.5 12C10.5 11.17 11.17 10.5 12 10.5ZM5.5 10.5C6.33 10.5 7 11.17 7 12C7 12.83 6.33 13.5 5.5 13.5C4.67 13.5 4 12.83 4 12C4 11.17 4.67 10.5 5.5 10.5ZM18.5 10.5C19.33 10.5 20 11.17 20 12C20 12.83 19.33 13.5 18.5 13.5C17.67 13.5 17 12.83 17 12C17 11.17 17.67 10.5 18.5 10.5Z" fill="currentColor"/>
-      </svg>
+      <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 14px;">more_horiz</span>
       favorileyenleri engelle
     `;
 
@@ -132,15 +157,18 @@ export class UIService {
 
     /**
      * Add menu items to dropdowns
-     * Now async to properly await preferences
+     * Now uses the stored menu selector from preferences
      */
     private async addMenuItemToDropdown(): Promise<void> {
         try {
-            // Use await with getPreferences() to get the resolved value from the Promise
-            const preferences = await this.preferencesService.getPreferences();
-            const dropdownMenus = this.domHandler.querySelectorAll<HTMLUListElement>(preferences.menuItemSelector);
+            // Make sure we have the latest menu selector
+            await this.loadMenuSelector();
+
+            // Use the menu selector from preferences
+            const dropdownMenus = this.domHandler.querySelectorAll<HTMLUListElement>(this.menuItemSelector);
 
             if (!dropdownMenus || dropdownMenus.length === 0) {
+                logDebug('No dropdown menus found with selector:', this.menuItemSelector);
                 return; // No dropdown menus found
             }
 
@@ -170,6 +198,7 @@ export class UIService {
             });
 
             this.initialized = true;
+            logDebug('Menu items added to dropdowns');
         } catch (err) {
             logError('Error in addMenuItemToDropdown:', err);
         }
@@ -177,6 +206,7 @@ export class UIService {
 
     /**
      * Observe DOM changes to add menu items to new elements
+     * Uses the stored menu selector from preferences
      */
     private observeDOMChanges(): void {
         try {
@@ -203,21 +233,25 @@ export class UIService {
                             for (const node of mutation.addedNodes) {
                                 if (!node || !('nodeType' in node)) continue;
 
-                                if (node.nodeType === 1 && (
-                                    // @ts-ignore - we're checking if it's an Element first
-                                    (node.querySelector && node.querySelector('.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu')) ||
-                                    // @ts-ignore
-                                    (node.classList && (
-                                        // @ts-ignore
-                                        node.classList.contains('dropdown-menu') ||
-                                        // @ts-ignore
-                                        node.classList.contains('toggles-menu') ||
-                                        // @ts-ignore
-                                        node.classList.contains('feedback-container')
-                                    ))
-                                )) {
-                                    shouldUpdate = true;
-                                    break;
+                                if (node.nodeType === 1) {
+                                    // Use the menu selector from preferences to check for new dropdown menus
+                                    const selector = this.menuItemSelector;
+
+                                    // Generic check for potential dropdown menu elements
+                                    const potentialMenuContainer = (node as Element).querySelector &&
+                                        ((node as Element).querySelector(selector) ||
+                                            (node as Element).matches && (node as Element).matches(selector));
+
+                                    // Check if node itself is a dropdown-menu or contains relevant classes
+                                    const hasRelevantClasses = (node as Element).classList &&
+                                        ((node as Element).classList.contains('dropdown-menu') ||
+                                            (node as Element).classList.contains('toggles-menu') ||
+                                            (node as Element).classList.contains('feedback-container'));
+
+                                    if (potentialMenuContainer || hasRelevantClasses) {
+                                        shouldUpdate = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -243,6 +277,8 @@ export class UIService {
                 childList: true,
                 subtree: true,
             });
+
+            logDebug('DOM observer started');
         } catch (err) {
             logError('Error setting up MutationObserver:', err);
 
