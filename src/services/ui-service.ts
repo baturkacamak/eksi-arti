@@ -7,6 +7,7 @@ import { NotificationComponent } from '../components/notification-component';
 import { STORAGE_KEYS } from '../constants';
 import { BlockerState } from '../types';
 import { PreferencesService } from './preferences-service';
+import {logError, logInfo} from "./logging-service";
 
 export class UIService {
     private domHandler: DOMService;
@@ -32,10 +33,10 @@ export class UIService {
                 this.checkForSavedState();
 
                 // Add version info to console
-                console.info('Ekşi Artı v1.0.0 loaded.');
+                logInfo('Ekşi Artı v1.0.0 loaded.');
             }, 500);
         } catch (err) {
-            console.error('Error initializing UI service:', err);
+            logError('Error initializing UI service:', err);
         }
     }
 
@@ -106,7 +107,7 @@ export class UIService {
                     document.body.style.overflow = 'hidden';
                     resumeModal.show();
                 } catch (err) {
-                    console.error('Error showing resume modal:', err);
+                    logError('Error showing resume modal:', err);
                 }
             } else {
                 try {
@@ -114,7 +115,7 @@ export class UIService {
                     document.body.style.overflow = 'hidden';
                     optionsModal.show();
                 } catch (err) {
-                    console.error('Error showing options modal:', err);
+                    logError('Error showing options modal:', err);
                 }
             }
         });
@@ -164,13 +165,13 @@ export class UIService {
                     const menuItem = this.createMenuItem(entryId);
                     this.domHandler.appendChild(dropdownMenu, menuItem);
                 } catch (err) {
-                    console.error('Error adding menu item to dropdown:', err);
+                    logError('Error adding menu item to dropdown:', err);
                 }
             });
 
             this.initialized = true;
         } catch (err) {
-            console.error('Error in addMenuItemToDropdown:', err);
+            logError('Error in addMenuItemToDropdown:', err);
         }
     }
 
@@ -189,7 +190,7 @@ export class UIService {
                 try {
                     if (!this.initialized) {
                         this.addMenuItemToDropdown().catch(err => {
-                            console.error('Error adding menu items:', err);
+                            logError('Error adding menu items:', err);
                         });
                         return;
                     }
@@ -228,12 +229,12 @@ export class UIService {
                         // Add a small delay to ensure the DOM is fully updated
                         setTimeout(() => {
                             this.addMenuItemToDropdown().catch(err => {
-                                console.error('Error adding menu items in observer:', err);
+                                logError('Error adding menu items in observer:', err);
                             });
                         }, 100);
                     }
                 } catch (err) {
-                    console.error('Error in MutationObserver callback:', err);
+                    logError('Error in MutationObserver callback:', err);
                 }
             });
 
@@ -243,13 +244,13 @@ export class UIService {
                 subtree: true,
             });
         } catch (err) {
-            console.error('Error setting up MutationObserver:', err);
+            logError('Error setting up MutationObserver:', err);
 
             // Fallback to periodic checking if MutationObserver fails
             setInterval(() => {
                 if (document.readyState === 'complete') {
                     this.addMenuItemToDropdown().catch(err => {
-                        console.error('Error adding menu items in interval:', err);
+                        logError('Error adding menu items in interval:', err);
                     });
                 }
             }, 2000);

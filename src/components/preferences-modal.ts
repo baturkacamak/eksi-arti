@@ -3,6 +3,7 @@ import { BlockerPreferences } from '../types';
 import { BlockType, STORAGE_KEYS } from '../constants';
 import { PreferencesService } from '../services/preferences-service';
 import { NotificationComponent } from './notification-component';
+import {logError} from "../services/logging-service";
 
 export class PreferencesModal extends ModalComponent {
     private preferences: BlockerPreferences | null = null;
@@ -39,7 +40,7 @@ export class PreferencesModal extends ModalComponent {
             // Then call the parent show method
             super.show();
         } catch (error) {
-            console.error('Error loading preferences:', error);
+            logError('Error loading preferences:', error);
             this.notification.show('Tercihler yüklenemedi.', { timeout: 5 });
         }
     }
@@ -49,7 +50,7 @@ export class PreferencesModal extends ModalComponent {
      */
     protected createElement(): void {
         if (!this.isLoaded || !this.preferences) {
-            console.error('Preferences not loaded yet');
+            logError('Preferences not loaded yet');
             return;
         }
 
@@ -120,7 +121,7 @@ export class PreferencesModal extends ModalComponent {
      */
     private async savePreferences(): Promise<void> {
         if (!this.preferences) {
-            console.error('Cannot save preferences: preferences not loaded');
+            logError('Cannot save preferences: preferences not loaded');
             return;
         }
 
@@ -139,7 +140,7 @@ export class PreferencesModal extends ModalComponent {
                 this.notification.show('Tercihler kaydedildi.', { timeout: 3 });
                 this.close();
             } catch (error) {
-                console.error('Error saving preferences:', error);
+                logError('Error saving preferences:', error);
                 this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
             }
         }

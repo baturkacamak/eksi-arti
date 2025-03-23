@@ -3,6 +3,7 @@ import { CSSService } from '../services/css-service';
 import { NotificationOptions, BlockerPreferences } from '../types';
 import { storageService } from '../services/storage-service';
 import { STORAGE_KEYS } from '../constants';
+import {logError} from "../services/logging-service";
 
 export class NotificationComponent {
     private cssHandler: CSSService;
@@ -80,7 +81,7 @@ export class NotificationComponent {
             // Apply the selected position
             this.domHandler.addClass(this.notificationElement, `position-${position}`);
         } catch (error) {
-            console.error('Error applying notification position from storage:', error);
+            logError('Error applying notification position from storage:', error);
             // Default to top-right if there's an error
             if (this.notificationElement) {
                 this.domHandler.addClass(this.notificationElement, 'position-top-right');

@@ -1,4 +1,5 @@
 import { DOMService } from './dom-service';
+import {logError} from "./logging-service";
 
 export class HtmlParserService {
     private domHandler: DOMService;
@@ -42,11 +43,11 @@ export class HtmlParserService {
             if (input) {
                 return input.value;
             } else {
-                console.error('User ID input not found in profile HTML');
+                logError('User ID input not found in profile HTML');
                 return null;
             }
         } catch (error) {
-            console.error('Error parsing user ID from profile:', error);
+            logError('Error parsing user ID from profile:', error);
             return null;
         }
     }

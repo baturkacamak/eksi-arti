@@ -1,4 +1,5 @@
 import { UIService } from './services/ui-service';
+import {logError} from "./services/logging-service";
 
 /**
  * Main initialization function for the extension
@@ -8,7 +9,7 @@ function init(): void {
         const uiService = new UIService();
         uiService.initialize();
     } catch (err) {
-        console.error('Error initializing Ekşi Artı extension:', err);
+        logError('Error initializing Ekşi Artı extension:', err);
     }
 }
 

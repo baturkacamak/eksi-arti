@@ -4,6 +4,7 @@
  */
 import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
 import {TooltipComponent} from "./components/tooltip-component";
+import {logError, logInfo} from "./services/logging-service";
 
 /**
  * Options Manager Class
@@ -512,9 +513,9 @@ class OptionsPage {
             const tooltipComponent = new TooltipComponent();
             tooltipComponent.initializeTooltips();
 
-            console.log('[Ekşi Artı] Tooltips initialized using TooltipComponent');
+            logInfo('[Ekşi Artı] Tooltips initialized using TooltipComponent');
         } catch (error) {
-            console.error('Error initializing tooltips:', error);
+            logError('Error initializing tooltips:', error);
         }
     }
 
@@ -629,7 +630,7 @@ class OptionsPage {
             }, timeout);
         } catch (error) {
             this.logError('Error showing status', error);
-            console.error(message);
+            logError(message);
         }
     }
 
@@ -733,9 +734,9 @@ class OptionsPage {
     logDebug(message: string, data: any = null) {
         if (this.preferences.enableDebugMode) {
             if (data) {
-                console.log(`[Ekşi Artı Debug] ${message}`, data);
+                logInfo(`[Ekşi Artı Debug] ${message}`, data);
             } else {
-                console.log(`[Ekşi Artı Debug] ${message}`);
+                logInfo(`[Ekşi Artı Debug] ${message}`);
             }
         }
     }
@@ -744,7 +745,7 @@ class OptionsPage {
      * Error logging
      */
     logError(message: string, error: any) {
-        console.error(`[Ekşi Artı Error] ${message}`, error);
+        logError(`[Ekşi Artı Error] ${message}`, error);
     }
 }
 

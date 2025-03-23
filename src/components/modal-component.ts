@@ -1,5 +1,6 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
+import {logError} from "../services/logging-service";
 
 export class ModalComponent {
     protected domHandler: DOMService;
@@ -23,7 +24,7 @@ export class ModalComponent {
             // Add keydown listener for Escape key to close modal
             document.addEventListener('keydown', this.handleEscapeKey);
         } catch (err) {
-            console.error('Error showing modal:', err);
+            logError('Error showing modal:', err);
         }
     }
 

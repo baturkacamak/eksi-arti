@@ -226,7 +226,7 @@ export class BlockUsersService {
                 await this.saveState(); // Save progress for later continuation
             }
         } catch (error) {
-            console.error('Error in blockUsers:', error);
+            logError('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
             this.notification.show(
@@ -269,7 +269,7 @@ export class BlockUsersService {
                 await this.saveState(); // Save state after each successful processing
             } catch (error) {
                 this.errorCount++;
-                console.error(`Error processing user ${username}:`, error);
+                logError(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
                     this.notification.show(`Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.`, {timeout: 10});
@@ -310,7 +310,7 @@ export class BlockUsersService {
 
             return true;
         } catch (error) {
-            console.error(`Failed to process user ${username}:`, error);
+            logError(`Failed to process user ${username}:`, error);
             throw error;
         }
     }

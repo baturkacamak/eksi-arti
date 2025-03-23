@@ -98,7 +98,7 @@ export class StorageService {
                 return true;
             }
         } catch (e) {
-            console.error('Error saving to storage:', e);
+            logError('Error saving to storage:', e);
             return false;
         }
     }
@@ -121,7 +121,7 @@ export class StorageService {
                 return value ? JSON.parse(value) : defaultValue;
             }
         } catch (e) {
-            console.error('Error loading from storage:', e);
+            logError('Error loading from storage:', e);
             return defaultValue;
         }
     }
@@ -143,7 +143,7 @@ export class StorageService {
                 return true;
             }
         } catch (e) {
-            console.error('Error removing from storage:', e);
+            logError('Error removing from storage:', e);
             return false;
         }
     }
