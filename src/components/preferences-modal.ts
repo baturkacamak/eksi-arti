@@ -42,7 +42,7 @@ export class PreferencesModal extends ModalComponent {
             super.show();
         } catch (error) {
             logError('Error loading preferences:', error);
-            this.notification.show('Tercihler yüklenemedi.', { timeout: 5 });
+            await this.notification.show('Tercihler yüklenemedi.', {timeout: 5});
         }
     }
 
@@ -138,11 +138,11 @@ export class PreferencesModal extends ModalComponent {
 
             try {
                 await this.preferencesService.savePreferences(updatedPreferences);
-                this.notification.show('Tercihler kaydedildi.', { timeout: 3 });
+                await this.notification.show('Tercihler kaydedildi.', {timeout: 3});
                 this.close();
             } catch (error) {
                 logError('Error saving preferences:', error);
-                this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
+                await this.notification.show('Tercihler kaydedilemedi.', {timeout: 5});
             }
         }
     }

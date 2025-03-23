@@ -166,12 +166,12 @@ export class BlockUsersService {
      */
     async fetchFavorites(entryId: string): Promise<string[]> {
         try {
-            this.notification.show('Favori listesi yükleniyor...', {timeout: 60});
+            await this.notification.show('Favori listesi yükleniyor...', {timeout: 60});
             const html = await this.remoteRequest.get(`${Endpoints.FAVORITES}?entryId=${entryId}`);
             return this.htmlParser.parseFavoritesHtml(html);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
-            this.notification.show('Favori listesi yüklenemedi: ' + message, {timeout: 10});
+            await this.notification.show('Favori listesi yüklenemedi: ' + message, {timeout: 10});
             throw error;
         }
     }
@@ -204,7 +204,7 @@ export class BlockUsersService {
             });
 
             if (this.pendingUsers.length === 0) {
-                this.notification.show(
+                await this.notification.show(
                     `<div class="eksi-notification-success">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" fill="#81c14b"/>
@@ -216,16 +216,16 @@ export class BlockUsersService {
                 return;
             }
 
-            this.notification.show(`${this.pendingUsers.length} kullanıcı işlenecek...`, {timeout: 10});
+            await this.notification.show(`${this.pendingUsers.length} kullanıcı işlenecek...`);
 
             this.isProcessing = true;
             this.abortProcessing = false;
             this.errorCount = 0;
 
             // Create a Stop button in the notification
-            this.notification.addStopButton(() => {
+            this.notification.addStopButton(async () => {
                 this.abortProcessing = true;
-                this.notification.show(
+                await this.notification.show(
                     `<div class="eksi-notification-warning">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM13 7H11V13H13V7ZM13 15H11V17H13V15Z" fill="#ff9800"/>
@@ -241,14 +241,13 @@ export class BlockUsersService {
             await this.processBatch(postTitle);
 
             if (!this.abortProcessing) {
-                this.notification.show(
+                await this.notification.show(
                     `<div class="eksi-notification-success">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" fill="#81c14b"/>
             </svg>
             İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.
-          </div>`,
-                    {timeout: 10},
+          </div>`
                 );
                 await this.clearState(); // Clear saved state after successful completion
             } else {
@@ -258,7 +257,7 @@ export class BlockUsersService {
             logError('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
-            this.notification.show(
+            await this.notification.show(
                 `<div class="eksi-notification-error">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM7.12 14.88L9.12 16.88L16.88 9.12L14.88 7.12L7.12 14.88Z" fill="#e53935"/>
@@ -301,7 +300,7 @@ export class BlockUsersService {
                 logError(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
-                    this.notification.show(`Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.`, {timeout: 10});
+                    await this.notification.show(`Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.`, {timeout: 10});
                     this.abortProcessing = true;
                     break;
                 }
@@ -453,13 +452,13 @@ export class BlockUsersService {
     /**
      * Update notification message
      */
-    private updateNotificationMessage(): void {
+    private async updateNotificationMessage(): Promise<void> {
         const actionType = this.getBlockTypeText();
         const total = this.totalUserCount;
         const processed = this.processedUsers.size;
         const remaining = this.pendingUsers.length - (this.currentBlocked - 1 - processed);
 
-        this.notification.show(
+        await this.notification.show(
             `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: ` +
             `<strong>${processed}</strong> / <strong>${total}</strong> (Kalan: ${remaining})`,
             {timeout: 60}
