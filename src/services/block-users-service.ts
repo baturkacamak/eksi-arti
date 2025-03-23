@@ -5,11 +5,13 @@ import { storageService, StorageArea } from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { BlockType, STORAGE_KEYS, Endpoints } from '../constants';
 import { logger, logDebug, logError } from './logging-service';
+import {ButtonComponent, ButtonSize, ButtonVariant} from "../components/button-component";
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
     private htmlParser: HtmlParserService;
     private notification: NotificationComponent;
+    private buttonComponent: ButtonComponent;
 
     private totalUserCount: number = 0;
     private currentBlocked: number = 1;
@@ -30,6 +32,7 @@ export class BlockUsersService {
         this.remoteRequest = new HttpService();
         this.htmlParser = new HtmlParserService();
         this.notification = new NotificationComponent();
+        this.buttonComponent = new ButtonComponent();
         this.loadOperationParams();
     }
 
@@ -206,11 +209,9 @@ export class BlockUsersService {
             if (this.pendingUsers.length === 0) {
                 await this.notification.show(
                     `<div class="eksi-notification-success">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" fill="#81c14b"/>
-            </svg>
+            <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
             Tüm kullanıcılar zaten işlendi.
-          </div>`,
+        </div>`,
                     {timeout: 5},
                 );
                 return;
@@ -227,11 +228,9 @@ export class BlockUsersService {
                 this.abortProcessing = true;
                 await this.notification.show(
                     `<div class="eksi-notification-warning">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM13 7H11V13H13V7ZM13 15H11V17H13V15Z" fill="#ff9800"/>
-            </svg>
+            <span class="material-icons" style="color: #ff9800; margin-right: 8px;">warning</span>
             İşlem durduruldu.
-          </div>`,
+        </div>`,
                     {timeout: 5},
                 );
             });
@@ -243,15 +242,14 @@ export class BlockUsersService {
             if (!this.abortProcessing) {
                 await this.notification.show(
                     `<div class="eksi-notification-success">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" fill="#81c14b"/>
-            </svg>
-            İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.
-          </div>`
+                        <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
+                        İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.
+                    </div>`,
+                    {timeout: 5}
                 );
-                await this.clearState(); // Clear saved state after successful completion
+                await this.clearState();
             } else {
-                await this.saveState(); // Save progress for later continuation
+                await this.saveState();
             }
         } catch (error) {
             logError('Error in blockUsers:', error);
@@ -259,12 +257,10 @@ export class BlockUsersService {
 
             await this.notification.show(
                 `<div class="eksi-notification-error">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM7.12 14.88L9.12 16.88L16.88 9.12L14.88 7.12L7.12 14.88Z" fill="#e53935"/>
-          </svg>
-          Hata oluştu: ${errorMessage}
-        </div>`,
-                {timeout: 10},
+                    <span class="material-icons" style="color: #e53935; margin-right: 8px;">error</span>
+                    Hata oluştu: ${errorMessage}
+                </div>`,
+                {timeout: 10}
             );
 
             await this.saveState(); // Save progress on error
@@ -280,41 +276,45 @@ export class BlockUsersService {
     private async processBatch(postTitle: string): Promise<void> {
         let userIndex = 0;
 
-        // Process users sequentially with proper delays to avoid rate limiting
+        // Add stop button at the start of processing
+        this.addStopButton();
+
         while (userIndex < this.pendingUsers.length && !this.abortProcessing && this.errorCount < this.maxErrors) {
             const userUrl = this.pendingUsers[userIndex];
             const username = this.getUsernameFromUrl(userUrl);
 
             if (this.processedUsers.has(username)) {
                 userIndex++;
-                continue; // Skip already processed user
+                continue;
             }
 
             try {
                 await this.processUser(userUrl, postTitle);
                 this.processedUsers.add(username);
                 this.updateNotification();
-                await this.saveState(); // Save state after each successful processing
+                await this.saveState();
             } catch (error) {
                 this.errorCount++;
                 logError(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
-                    await this.notification.show(`Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.`, {timeout: 10});
+                    await this.notification.show(
+                        `<div class="eksi-notification-error">
+                            <span class="material-icons" style="color: #e53935; margin-right: 8px;">error_outline</span>
+                            Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.
+                        </div>`,
+                        {timeout: 10}
+                    );
                     this.abortProcessing = true;
                     break;
                 }
 
-                // Short extra delay after an error to give the server some rest
                 await this.delay(this.retryDelay);
             }
 
             userIndex++;
 
-            // Add a delay between processing users to avoid rate limiting
-            // Only delay if we're not at the end and not aborting
             if (userIndex < this.pendingUsers.length && !this.abortProcessing) {
-                // Use the configurable request delay from preferences
                 this.notification.updateDelayCountdown(this.requestDelay);
                 await this.delay(this.requestDelay);
             }
@@ -458,13 +458,45 @@ export class BlockUsersService {
         const processed = this.processedUsers.size;
         const remaining = this.pendingUsers.length - (this.currentBlocked - 1 - processed);
 
-        await this.notification.show(
-            `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: ` +
-            `<strong>${processed}</strong> / <strong>${total}</strong> (Kalan: ${remaining})`,
-            {timeout: 60}
-        );
+        // Create a more dynamic notification message with icons
+        const notificationContent = `
+            <div class="eksi-notification-status">
+                <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle_outline</span>
+                ${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
+                <strong>${processed}</strong> / <strong>${total}</strong> 
+                (Kalan: ${remaining})
+            </div>
+        `;
+
+        await this.notification.show(notificationContent, {timeout: 60});
 
         this.currentBlocked = processed + 1;
+    }
+
+    /**
+     * Add stop button
+     */
+    private addStopButton(): void {
+        const stopButton = this.buttonComponent.create({
+            text: 'Durdur',
+            variant: ButtonVariant.DANGER,
+            size: ButtonSize.SMALL,
+            icon: 'stop',
+            onClick: async () => {
+                this.abortProcessing = true;
+                await this.notification.show(
+                    `<div class="eksi-notification-warning">
+                        <span class="material-icons" style="color: #ff9800; margin-right: 8px;">warning</span>
+                        İşlem durduruldu.
+                    </div>`,
+                    {timeout: 5}
+                );
+            }
+        });
+
+        this.notification.addStopButton(async () => {
+            stopButton.click(); // Trigger the programmatic click
+        });
     }
 
     /**
