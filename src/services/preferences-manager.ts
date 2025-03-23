@@ -3,9 +3,9 @@
  * Central service for managing extension preferences
  */
 
-import { storageService, StorageArea } from './enhanced-storage-service';
 import { logger, logError, logDebug } from './logging-service';
 import { BlockType, STORAGE_KEYS } from '../constants';
+import {storageService} from "./storage-service";
 
 // Preferences interface
 export interface ExtensionPreferences {

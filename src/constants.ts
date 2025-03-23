@@ -2,7 +2,6 @@ export enum BlockType {
     MUTE = 'u', // Sessiz alma
     BLOCK = 'm', // Engelleme
 }
-
 // Default preferences configuration
 export const DEFAULT_PREFERENCES = {
     // General settings
