@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+    prefix: 'eksi-',
     content: [
         "./src/**/*.{ts,tsx,js,jsx}",
         "./options.html",
