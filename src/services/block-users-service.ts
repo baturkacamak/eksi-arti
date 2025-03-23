@@ -1,9 +1,10 @@
 import { HttpService, HttpError } from './http-service';
 import { HtmlParserService } from './html-parser-service';
 import { NotificationComponent } from '../components/notification-component';
-import { StorageService } from './storage-service';
+import { storageService, StorageArea } from './storage-service';
 import { PreferencesService } from './preferences-service';
 import { BlockType, STORAGE_KEYS, Endpoints } from '../constants';
+import { logger, logDebug, logError } from './logging-service';
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
@@ -48,44 +49,90 @@ export class BlockUsersService {
     }
 
     /**
-     * Load previously saved processing state
+     * Load previously saved processing state using Chrome storage API with fallbacks
      */
-    loadState(): boolean {
-        const savedState = StorageService.load<{
-            entryId: string;
-            processedUsers: string[];
-            blockType: BlockType;
-            totalUserCount: number;
-        }>(STORAGE_KEYS.CURRENT_OPERATION);
+    async loadState(): Promise<boolean> {
+        try {
+            // Use the instance method that leverages Chrome storage API with proper fallbacks
+            const result = await storageService.getItem<{
+                entryId: string;
+                processedUsers: string[];
+                blockType: BlockType;
+                totalUserCount: number;
+            }>(STORAGE_KEYS.CURRENT_OPERATION);
 
-        if (savedState && savedState.entryId === this.entryId) {
-            this.processedUsers = new Set(savedState.processedUsers || []);
-            this.currentBlocked = (savedState.processedUsers || []).length + 1;
-            this.blockType = savedState.blockType;
-            return true;
+            // If successful and data exists
+            if (result.success && result.data && result.data.entryId === this.entryId) {
+                logDebug('Loaded saved state from storage', {
+                    source: result.source,
+                    data: result.data
+                }, 'BlockUsersService');
+
+                this.processedUsers = new Set(result.data.processedUsers || []);
+                this.currentBlocked = (result.data.processedUsers || []).length + 1;
+                this.blockType = result.data.blockType;
+                return true;
+            }
+
+            logDebug('No saved state found or entry ID mismatch', {
+                currentEntryId: this.entryId,
+                result
+            }, 'BlockUsersService');
+            return false;
+        } catch (error) {
+            logError('Error loading state', error, 'BlockUsersService');
+            return false;
         }
-
-        return false;
     }
 
     /**
-     * Save current processing state
+     * Save current processing state using Chrome storage API with fallbacks
      */
-    saveState(): void {
-        StorageService.save(STORAGE_KEYS.CURRENT_OPERATION, {
-            entryId: this.entryId,
-            blockType: this.blockType,
-            processedUsers: Array.from(this.processedUsers),
-            totalUserCount: this.totalUserCount,
-            timestamp: Date.now(),
-        });
+    async saveState(): Promise<void> {
+        try {
+            const stateData = {
+                entryId: this.entryId,
+                blockType: this.blockType,
+                processedUsers: Array.from(this.processedUsers),
+                totalUserCount: this.totalUserCount,
+                timestamp: Date.now(),
+            };
+
+            // Use the instance method that leverages Chrome storage API with proper fallbacks
+            const result = await storageService.setItem(
+                STORAGE_KEYS.CURRENT_OPERATION,
+                stateData,
+                StorageArea.LOCAL
+            );
+
+            logDebug('Saved state to storage', {
+                source: result.source,
+                success: result.success,
+                data: stateData
+            }, 'BlockUsersService');
+        } catch (error) {
+            logError('Failed to save state', error, 'BlockUsersService');
+        }
     }
 
     /**
-     * Clear saved state
+     * Clear saved state using Chrome storage API with fallbacks
      */
-    clearState(): void {
-        StorageService.remove(STORAGE_KEYS.CURRENT_OPERATION);
+    async clearState(): Promise<void> {
+        try {
+            // Use the instance method to remove the item
+            const result = await storageService.removeItem(
+                STORAGE_KEYS.CURRENT_OPERATION,
+                StorageArea.LOCAL
+            );
+
+            logDebug('Cleared state from storage', {
+                source: result.source,
+                success: result.success
+            }, 'BlockUsersService');
+        } catch (error) {
+            logError('Failed to clear state', error, 'BlockUsersService');
+        }
     }
 
     /**
@@ -109,7 +156,10 @@ export class BlockUsersService {
     async blockUsers(entryId: string): Promise<void> {
         try {
             this.entryId = entryId;
-            if (!this.loadState()) {
+
+            // Load previous state if exists
+            const hasState = await this.loadState();
+            if (!hasState) {
                 this.processedUsers = new Set();
                 this.currentBlocked = 1;
             }
@@ -171,9 +221,9 @@ export class BlockUsersService {
           </div>`,
                     {timeout: 10},
                 );
-                this.clearState(); // Clear saved state after successful completion
+                await this.clearState(); // Clear saved state after successful completion
             } else {
-                this.saveState(); // Save progress for later continuation
+                await this.saveState(); // Save progress for later continuation
             }
         } catch (error) {
             console.error('Error in blockUsers:', error);
@@ -189,7 +239,7 @@ export class BlockUsersService {
                 {timeout: 10},
             );
 
-            this.saveState(); // Save progress on error
+            await this.saveState(); // Save progress on error
             throw error;
         } finally {
             this.isProcessing = false;
@@ -216,7 +266,7 @@ export class BlockUsersService {
                 await this.processUser(userUrl, postTitle);
                 this.processedUsers.add(username);
                 this.updateNotification();
-                this.saveState(); // Save state after each successful processing
+                await this.saveState(); // Save state after each successful processing
             } catch (error) {
                 this.errorCount++;
                 console.error(`Error processing user ${username}:`, error);

@@ -6,9 +6,38 @@
 import { logger, logDebug, logError, logInfo, logWarn } from './logging-service';
 
 // Storage areas
+/**
+ * Enum defining different storage areas that can be used for data persistence
+ */
 export enum StorageArea {
+    /**
+     * SYNC storage (chrome.storage.sync)
+     * - Data is synchronized across user's devices where they're signed in with the same Google account
+     * - Limited to ~100KB of data per item (subject to Chrome's limits)
+     * - Good for small user preferences and settings that should follow the user
+     * - May have slower performance than LOCAL storage
+     * - Has daily write operation quota limits (~1800 operations/day)
+     */
     SYNC = 'sync',
+
+    /**
+     * LOCAL storage (chrome.storage.local)
+     * - Data is stored only on the current device
+     * - Can store larger amounts of data (up to 5MB per extension)
+     * - Good for device-specific data or larger datasets
+     * - Generally faster than SYNC storage
+     * - No synchronization between devices
+     */
     LOCAL = 'local',
+
+    /**
+     * MEMORY storage (in-memory Map object)
+     * - Data is stored only in memory during the current browser session
+     * - Data is lost when the extension is reloaded or browser is closed
+     * - Extremely fast access
+     * - Used primarily as a fallback when other storage methods fail
+     * - Good for temporary caching or when persistence is not critical
+     */
     MEMORY = 'memory'
 }
 
