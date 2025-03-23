@@ -5,21 +5,54 @@ import { PreferencesService } from '../services/preferences-service';
 import { NotificationComponent } from './notification-component';
 
 export class PreferencesModal extends ModalComponent {
-    private preferences: BlockerPreferences;
+    private preferences: BlockerPreferences | null = null;
     private preferencesService: PreferencesService;
     private notification: NotificationComponent;
+    private isLoaded: boolean = false;
 
     constructor() {
         super();
         this.preferencesService = new PreferencesService();
         this.notification = new NotificationComponent();
-        this.preferences = this.preferencesService.getPreferences();
+        // Initialize with default values, will be replaced when loaded
+        this.preferences = null;
+    }
+
+    /**
+     * Load preferences asynchronously
+     */
+    private async loadPreferences(): Promise<BlockerPreferences> {
+        if (!this.preferences) {
+            this.preferences = await this.preferencesService.getPreferences();
+            this.isLoaded = true;
+        }
+        return this.preferences;
+    }
+
+    /**
+     * Override the show method to load preferences before showing the modal
+     */
+    async show(): Promise<void> {
+        try {
+            // Load preferences first
+            await this.loadPreferences();
+            // Then call the parent show method
+            super.show();
+        } catch (error) {
+            console.error('Error loading preferences:', error);
+            this.notification.show('Tercihler yüklenemedi.', { timeout: 5 });
+        }
     }
 
     /**
      * Create preferences modal element
      */
     protected createElement(): void {
+        if (!this.isLoaded || !this.preferences) {
+            console.error('Preferences not loaded yet');
+            return;
+        }
+
         this.modalElement = this.domHandler.createElement('div');
         this.domHandler.addClass(this.modalElement, 'eksi-modal');
 
@@ -85,20 +118,30 @@ export class PreferencesModal extends ModalComponent {
     /**
      * Save user preferences
      */
-    private savePreferences(): void {
+    private async savePreferences(): Promise<void> {
+        if (!this.preferences) {
+            console.error('Cannot save preferences: preferences not loaded');
+            return;
+        }
+
         const blockTypeSelect = this.modalElement!.querySelector<HTMLSelectElement>('#defaultBlockType');
         const noteTemplateTextarea = this.modalElement!.querySelector<HTMLTextAreaElement>('#noteTemplate');
 
         if (blockTypeSelect && noteTemplateTextarea) {
-            const newPreferences = {
+            const updatedPreferences = {
                 ...this.preferences,
                 defaultBlockType: blockTypeSelect.value as BlockType,
                 defaultNoteTemplate: noteTemplateTextarea.value
             };
 
-            this.preferencesService.savePreferences(newPreferences);
-            this.notification.show('Tercihler kaydedildi.', { timeout: 3 });
-            this.close();
+            try {
+                await this.preferencesService.savePreferences(updatedPreferences);
+                this.notification.show('Tercihler kaydedildi.', { timeout: 3 });
+                this.close();
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+                this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
+            }
         }
     }
 }

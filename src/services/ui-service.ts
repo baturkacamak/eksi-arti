@@ -26,8 +26,8 @@ export class UIService {
      */
     initialize(): void {
         try {
-            setTimeout(() => {
-                this.addMenuItemToDropdown();
+            setTimeout(async () => {
+                await this.addMenuItemToDropdown();
                 this.observeDOMChanges();
                 this.checkForSavedState();
 
@@ -131,10 +131,12 @@ export class UIService {
 
     /**
      * Add menu items to dropdowns
+     * Now async to properly await preferences
      */
-    private addMenuItemToDropdown(): void {
+    private async addMenuItemToDropdown(): Promise<void> {
         try {
-            const preferences = this.preferencesService.getPreferences();
+            // Use await with getPreferences() to get the resolved value from the Promise
+            const preferences = await this.preferencesService.getPreferences();
             const dropdownMenus = this.domHandler.querySelectorAll<HTMLUListElement>(preferences.menuItemSelector);
 
             if (!dropdownMenus || dropdownMenus.length === 0) {
@@ -186,7 +188,9 @@ export class UIService {
             this.observer = new MutationObserver((mutations) => {
                 try {
                     if (!this.initialized) {
-                        this.addMenuItemToDropdown();
+                        this.addMenuItemToDropdown().catch(err => {
+                            console.error('Error adding menu items:', err);
+                        });
                         return;
                     }
 
@@ -223,7 +227,9 @@ export class UIService {
                     if (shouldUpdate) {
                         // Add a small delay to ensure the DOM is fully updated
                         setTimeout(() => {
-                            this.addMenuItemToDropdown();
+                            this.addMenuItemToDropdown().catch(err => {
+                                console.error('Error adding menu items in observer:', err);
+                            });
                         }, 100);
                     }
                 } catch (err) {
@@ -242,7 +248,9 @@ export class UIService {
             // Fallback to periodic checking if MutationObserver fails
             setInterval(() => {
                 if (document.readyState === 'complete') {
-                    this.addMenuItemToDropdown();
+                    this.addMenuItemToDropdown().catch(err => {
+                        console.error('Error adding menu items in interval:', err);
+                    });
                 }
             }, 2000);
         }
