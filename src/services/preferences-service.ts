@@ -1,21 +1,18 @@
 import { BlockerPreferences } from '../types';
 import { BlockType, STORAGE_KEYS } from '../constants';
 import { storageService, StorageArea } from './storage-service';
-import { NotificationComponent } from '../components/notification-component';
 import { logger, logDebug, logError } from './logging-service';
 
 export class PreferencesService {
-    private notification: NotificationComponent;
-
     private defaultPreferences: BlockerPreferences = {
         defaultBlockType: BlockType.MUTE,
         defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
         preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
-        menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu'
+        menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
+        notificationPosition: 'top-right'
     };
 
     constructor() {
-        this.notification = new NotificationComponent();
     }
 
     /**
@@ -61,16 +58,13 @@ export class PreferencesService {
 
             if (result.success) {
                 logDebug('Preferences saved successfully', { data: updatedPreferences, source: result.source }, 'PreferencesService');
-                this.notification.show('Tercihler kaydedildi.', { timeout: 3 });
                 return true;
             } else {
                 logError('Failed to save preferences', result.error, 'PreferencesService');
-                this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
                 return false;
             }
         } catch (error) {
             logError('Error saving preferences', error, 'PreferencesService');
-            this.notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
             return false;
         }
     }
@@ -97,6 +91,18 @@ export class PreferencesService {
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
                 .replace('{entryLink}', `https://eksisozluk.com/entry/${entryId}`);
+        }
+    }
+
+    /**
+     * Show notification about saved preferences
+     * This method should be called externally with a notification instance
+     */
+    showSavedNotification(notification: any, success: boolean): void {
+        if (success) {
+            notification.show('Tercihler kaydedildi.', { timeout: 3 });
+        } else {
+            notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
         }
     }
 }

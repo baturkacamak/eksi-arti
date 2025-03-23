@@ -1,6 +1,8 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { NotificationOptions } from '../types';
+import { NotificationOptions, BlockerPreferences } from '../types';
+import { storageService } from '../services/storage-service';
+import { STORAGE_KEYS } from '../constants';
 
 export class NotificationComponent {
     private cssHandler: CSSService;
@@ -39,18 +41,51 @@ export class NotificationComponent {
     /**
      * Show notification
      */
-    show(message: string, options: NotificationOptions = {}): void {
+    async show(message: string, options: NotificationOptions = {}): Promise<void> {
         this.applyStyles();
 
         if (!this.notificationElement) {
             this.createElement(message);
             this.createCloseButton();
+            await this.applyPositionFromStorage();
             this.appendNotificationToDOM();
         } else {
             this.updateMessage(message);
         }
 
         this.setAutoCloseTimeout(options.timeout);
+    }
+
+    /**
+     * Apply position based on user preferences from storage
+     */
+    private async applyPositionFromStorage(): Promise<void> {
+        try {
+            if (!this.notificationElement) return;
+
+            // Get preferences directly from storage, avoiding PreferencesService
+            const result = await storageService.getItem<Partial<BlockerPreferences>>(STORAGE_KEYS.PREFERENCES);
+            let position = 'top-right'; // Default position
+
+            if (result.success && result.data && result.data.notificationPosition) {
+                position = result.data.notificationPosition;
+            }
+
+            // Reset position classes
+            this.domHandler.removeClass(this.notificationElement, 'position-top-right');
+            this.domHandler.removeClass(this.notificationElement, 'position-top-left');
+            this.domHandler.removeClass(this.notificationElement, 'position-bottom-right');
+            this.domHandler.removeClass(this.notificationElement, 'position-bottom-left');
+
+            // Apply the selected position
+            this.domHandler.addClass(this.notificationElement, `position-${position}`);
+        } catch (error) {
+            console.error('Error applying notification position from storage:', error);
+            // Default to top-right if there's an error
+            if (this.notificationElement) {
+                this.domHandler.addClass(this.notificationElement, 'position-top-right');
+            }
+        }
     }
 
     /**
@@ -146,6 +181,8 @@ export class NotificationComponent {
 
         this.notificationElement = this.domHandler.createElement('div');
         this.domHandler.addClass(this.notificationElement, 'eksi-notification-container');
+        // Default position class - will be updated based on preferences
+        this.domHandler.addClass(this.notificationElement, 'position-top-right');
 
         // Create a header with icon
         const headerElement = this.domHandler.createElement('div');
@@ -334,8 +371,6 @@ export class NotificationComponent {
       /* Base notification container */
       .eksi-notification-container {
           position: fixed;
-          top: 20px;
-          right: 20px;
           background-color: #2c2c2c;
           color: #fff;
           padding: 1.4rem;
@@ -349,6 +384,27 @@ export class NotificationComponent {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       }
 
+      /* Position classes */
+      .eksi-notification-container.position-top-right {
+          top: 20px;
+          right: 20px;
+      }
+
+      .eksi-notification-container.position-top-left {
+          top: 20px;
+          left: 20px;
+      }
+
+      .eksi-notification-container.position-bottom-right {
+          bottom: 20px;
+          right: 20px;
+      }
+
+      .eksi-notification-container.position-bottom-left {
+          bottom: 20px;
+          left: 20px;
+      }
+
       /* Notification states */
       .eksi-notification-container.show {
           opacity: 1;
@@ -358,8 +414,18 @@ export class NotificationComponent {
 
       .eksi-notification-container.hidden {
           opacity: 0;
-          transform: translateY(-20px);
           max-height: 0;
+      }
+
+      /* Position-specific animations */
+      .position-top-left.hidden,
+      .position-top-right.hidden {
+          transform: translateY(-20px);
+      }
+
+      .position-bottom-left.hidden,
+      .position-bottom-right.hidden {
+          transform: translateY(20px);
       }
 
       /* Message styling */
