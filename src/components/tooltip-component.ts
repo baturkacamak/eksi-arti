@@ -190,13 +190,20 @@ export class TooltipComponent {
             // Create tooltip element
             const tooltipElement = this.createTooltipElement(tooltipContent, options);
 
-            // Position the tooltip
-            this.positionTooltip(tooltipElement, triggerElement, options);
+            // Set initial state - invisible but taking up space in DOM
+            tooltipElement.style.opacity = '0';
+            tooltipElement.style.visibility = 'visible';
 
-            // Add to DOM
+            // Add to DOM first so dimensions can be calculated
             this.domHandler.appendChild(document.body, tooltipElement);
 
-            // Show with animation
+            // Force a layout calculation
+            void tooltipElement.offsetWidth;
+
+            // Now position with accurate dimensions
+            this.positionTooltip(tooltipElement, triggerElement, options);
+
+            // Show with animation after positioning
             requestAnimationFrame(() => {
                 this.domHandler.addClass(tooltipElement, 'tooltip-visible');
             });
@@ -305,10 +312,6 @@ export class TooltipComponent {
         tooltipElement.style.position = 'fixed';
         tooltipElement.style.left = '0';
         tooltipElement.style.top = '0';
-
-        // Force DOM reflow to get tooltip dimensions
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        tooltipElement.offsetHeight;
 
         const tooltipRect = tooltipElement.getBoundingClientRect();
 
