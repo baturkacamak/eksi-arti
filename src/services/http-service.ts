@@ -1,5 +1,5 @@
-import { RequestHeaders } from '../types';
-import { logError, logDebug } from './logging-service';
+import {RequestHeaders} from '../types';
+import {logDebug, logError} from './logging-service';
 
 export class HttpError extends Error {
     constructor(
@@ -23,11 +23,12 @@ export class HttpService {
         data: string | null = null,
         headers: RequestHeaders = {}
     ): Promise<string> {
+        const browserHeaders = this.getRandomizedBrowserHeaders(headers);
         // Try using the modern Fetch API first
         if (typeof fetch === 'function') {
             try {
-                logDebug('Using Fetch API for request', { method, url });
-                return await this.makeFetchRequest(method, url, data, headers);
+                logDebug('Using Fetch API for request', {method, url});
+                return await this.makeFetchRequest(method, url, data, browserHeaders);
             } catch (error) {
                 logError('Fetch request failed, falling back to XMLHttpRequest', error);
                 // If fetch fails for any reason, fall back to XMLHttpRequest
@@ -37,8 +38,8 @@ export class HttpService {
         // Fall back to XMLHttpRequest
         if (typeof XMLHttpRequest === 'function') {
             try {
-                logDebug('Using XMLHttpRequest for request', { method, url });
-                return await this.makeXHRRequest(method, url, data, headers);
+                logDebug('Using XMLHttpRequest for request', {method, url});
+                return await this.makeXHRRequest(method, url, data, browserHeaders);
             } catch (error) {
                 logError('XMLHttpRequest failed, falling back to legacy methods', error);
                 // If XMLHttpRequest fails, fall back to even older methods
@@ -48,7 +49,7 @@ export class HttpService {
         // Last resort for very old environments: JSONP for GET requests
         if (method.toUpperCase() === 'GET') {
             try {
-                logDebug('Using JSONP fallback for GET request', { url });
+                logDebug('Using JSONP fallback for GET request', {url});
                 return await this.makeJSONPRequest(url);
             } catch (error) {
                 logError('JSONP request failed', error);
@@ -59,7 +60,7 @@ export class HttpService {
         // For POST without XMLHttpRequest, try iframe approach
         if (method.toUpperCase() === 'POST' && typeof document !== 'undefined') {
             try {
-                logDebug('Using iframe fallback for POST request', { url });
+                logDebug('Using iframe fallback for POST request', {url});
                 return await this.makeIframePostRequest(url, data);
             } catch (error) {
                 logError('Iframe POST request failed', error);
@@ -68,6 +69,62 @@ export class HttpService {
         }
 
         throw new HttpError('No suitable request method available', 0);
+    }
+
+    private getRandomizedBrowserHeaders(customHeaders: RequestHeaders = {}): RequestHeaders {
+        // List of common user agents
+        const userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ];
+
+        // List of Accept-Language variations
+        const acceptLanguages = [
+            'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+            'tr,tr-TR;q=0.9,en;q=0.8',
+            'en-US,en;q=0.9,tr;q=0.8',
+            'tr;q=0.9,en-US;q=0.8,en;q=0.7'
+        ];
+
+        // Random Chrome versions for sec-ch-ua
+        const chromeVersions = ['110', '111', '112', '113', '114', '115', '116', '117', '118', '119', '120'];
+        const randomChromeVersion = chromeVersions[Math.floor(Math.random() * chromeVersions.length)];
+
+        // Create basic headers with some randomization
+        const browserHeaders: RequestHeaders = {
+            'User-Agent': userAgents[Math.floor(Math.random() * userAgents.length)],
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': acceptLanguages[Math.floor(Math.random() * acceptLanguages.length)],
+            'Cache-Control': Math.random() > 0.5 ? 'no-cache' : 'max-age=0',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+            'sec-ch-ua': `"Not_A Brand";v="8", "Chromium";v="${randomChromeVersion}"`,
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': Math.random() > 0.7 ? '"Windows"' : (Math.random() > 0.5 ? '"macOS"' : '"Linux"')
+        };
+
+        // Randomly omit some headers to create variation
+        const headersToRandomlyOmit = ['Cache-Control', 'Pragma', 'Sec-Fetch-User'];
+        headersToRandomlyOmit.forEach(header => {
+            if (Math.random() > 0.7) {
+                delete browserHeaders[header];
+            }
+        });
+
+        // Add a random Accept-Encoding
+        if (Math.random() > 0.5) {
+            browserHeaders['Accept-Encoding'] = 'gzip, deflate, br';
+        }
+
+        // Merge with custom headers
+        return {...browserHeaders, ...customHeaders};
     }
 
     /**
@@ -164,7 +221,7 @@ export class HttpService {
         resolve: (value: string) => void,
         reject: (reason: HttpError) => void
     ): void {
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     resolve(xhr.responseText);
@@ -197,7 +254,7 @@ export class HttpService {
             script.src = jsonpUrl;
 
             // Define the callback function
-            (window as any)[callbackName] = function(data: any) {
+            (window as any)[callbackName] = function (data: any) {
                 // Clean up
                 document.body.removeChild(script);
                 delete (window as any)[callbackName];
@@ -207,7 +264,7 @@ export class HttpService {
             };
 
             // Handle errors
-            script.onerror = function() {
+            script.onerror = function () {
                 // Clean up
                 document.body.removeChild(script);
                 delete (window as any)[callbackName];
@@ -266,7 +323,7 @@ export class HttpService {
             }
 
             // Handle iframe load
-            iframe.onload = function() {
+            iframe.onload = function () {
                 try {
                     // Try to access iframe content (may fail due to same-origin policy)
                     const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
@@ -291,7 +348,7 @@ export class HttpService {
             };
 
             // Handle errors
-            iframe.onerror = function() {
+            iframe.onerror = function () {
                 document.body.removeChild(iframe);
                 document.body.removeChild(form);
                 reject(new HttpError('Iframe request failed', 0));
