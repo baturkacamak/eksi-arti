@@ -69,9 +69,9 @@ class BackgroundBlockingService {
     /**
      * Start blocking users for a specific entry
      */
-    async startBlocking(entryId: string, blockType: BlockType, userUrls: string[], postTitle: string): Promise<void> {
+    async startBlocking(entryId: string, blockType: BlockType, postTitle: string): Promise<void> {
         if (this.isProcessing) {
-            this.sendMessageToActiveTab({
+            await this.sendMessageToActiveTab({
                 action: 'showNotification',
                 message: 'Başka bir engelleme işlemi zaten devam ediyor.',
                 messageType: 'warning',
@@ -86,6 +86,15 @@ class BackgroundBlockingService {
             this.abortProcessing = false;
             this.errorCount = 0;
 
+            await this.sendMessageToActiveTab({
+                action: 'showNotification',
+                message: 'Favori listesi yükleniyor...',
+                timeout: 60
+            });
+
+            // Fetch the favorites list
+            const userUrls = await this.fetchFavoritesInBackground(entryId);
+
             // Set up operation data
             this.currentOperation = {
                 entryId,
@@ -99,7 +108,7 @@ class BackgroundBlockingService {
             this.pendingUsers = [...userUrls];
 
             // Notify user about starting the operation
-            this.sendMessageToActiveTab({
+            await this.sendMessageToActiveTab({
                 action: 'showNotification',
                 message: `${userUrls.length} kullanıcı işlenecek...`,
                 showStopButton: true,
@@ -111,7 +120,7 @@ class BackgroundBlockingService {
             await this.processBatch(postTitle);
 
             if (!this.abortProcessing) {
-                this.sendMessageToActiveTab({
+                await this.sendMessageToActiveTab({
                     action: 'showNotification',
                     message: `İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText(blockType)}.`,
                     messageType: 'success',
@@ -609,7 +618,47 @@ function setupMessageListeners() {
         try {
             logDebug('Message received', { message, sender });
 
+            // Handle all message types in a single switch statement
             switch (message.action) {
+                case 'startBlocking':
+                    // Start a new blocking operation
+                    blockingService.startBlocking(
+                        message.entryId,
+                        message.blockType,
+                        message.postTitle
+                    ).then(() => {
+                        sendResponse({ success: true });
+                    }).catch(error => {
+                        logError('Error in startBlocking', error);
+                        sendResponse({
+                            success: false,
+                            error: error instanceof Error ? error.message : 'Unknown error'
+                        });
+                    });
+                    return true; // Indicates we will call sendResponse asynchronously
+
+                case 'resumeBlocking':
+                    // Resume a previously started operation
+                    blockingService.resumeBlocking(
+                        message.savedState,
+                        message.postTitle
+                    ).then(() => {
+                        sendResponse({ success: true });
+                    }).catch(error => {
+                        logError('Error in resumeBlocking', error);
+                        sendResponse({
+                            success: false,
+                            error: error instanceof Error ? error.message : 'Unknown error'
+                        });
+                    });
+                    return true; // Indicates we will call sendResponse asynchronously
+
+                case 'stopBlocking':
+                    // Stop the current blocking operation
+                    blockingService.stopBlocking();
+                    sendResponse({ success: true });
+                    break;
+
                 case 'getPreferences':
                     // Send current preferences
                     sendResponse({
