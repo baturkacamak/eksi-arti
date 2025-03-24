@@ -3,34 +3,52 @@ import { logError, logDebug } from "./logging-service";
 
 export class HtmlParserService {
     private domHandler: DOMService;
+    private useDOMParser: boolean;
 
     constructor() {
         this.domHandler = new DOMService();
+        // Check once if DOMParser is available
+        this.useDOMParser = typeof DOMParser !== 'undefined';
+        logDebug(`HtmlParserService initialized. Using DOMParser: ${this.useDOMParser}`);
     }
 
     /**
-     * Parse HTML string into DOM document with fallback
+     * Parse HTML and process with provided handler function
+     * @param html HTML string to parse
+     * @param domHandler Function to process the parsed DOM
+     * @param fallbackHandler Function to use if DOM parsing fails
+     * @returns Result of either the domHandler or fallbackHandler
      */
-    parseHtml(html: string): Document | null {
-        try {
-            // Try DOMParser first
-            return new DOMParser().parseFromString(html, 'text/html');
-        } catch (error) {
-            // Don't log error, just return null to trigger fallback
-            return null;
+    parseHtml<T>(
+        html: string,
+        domHandler: (doc: Document) => T | null,
+        fallbackHandler: (html: string) => T | null
+    ): T | null {
+        if (this.useDOMParser) {
+            try {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const result = domHandler(doc);
+                if (result !== null) {
+                    return result;
+                }
+                // If domHandler returns null, fall back to regex
+            } catch (error) {
+                logDebug('DOMParser failed, falling back to regex', error);
+            }
         }
+
+        // Use fallback regex approach
+        return fallbackHandler(html);
     }
 
     /**
      * Parse favorites HTML to extract user URLs
      */
     parseFavoritesHtml(html: string): string[] {
-        try {
-            // Try DOMParser approach first
-            const doc = this.parseHtml(html);
-
-            if (doc) {
-                // If DOMParser worked, proceed with DOM methods
+        return this.parseHtml(
+            html,
+            // DOM handler
+            (doc) => {
                 const anchors = doc.querySelectorAll('li a');
                 const userUrls: string[] = [];
 
@@ -41,18 +59,30 @@ export class HtmlParserService {
                     }
                 });
 
-                if (userUrls.length > 0) {
-                    return userUrls;
-                }
-            }
+                return userUrls.length > 0 ? userUrls : null;
+            },
+            // Fallback handler
+            (html) => this.fallbackParseFavoritesHtml(html)
+        ) || [];
+    }
 
-            // If DOMParser failed or returned no results, silently fall back to regex
-            return this.fallbackParseFavoritesHtml(html);
-        } catch (error) {
-            // If all parsing attempts fail, then log error and use regex
-            logDebug('DOM parsing failed, using regex fallback', error);
-            return this.fallbackParseFavoritesHtml(html);
-        }
+    /**
+     * Parse user ID from profile HTML
+     */
+    parseUserIdFromProfile(html: string): string | null {
+        return this.parseHtml(
+            html,
+            // DOM handler
+            (doc) => {
+                const input = doc.querySelector('#who');
+                if (input && input instanceof HTMLInputElement && input.value) {
+                    return input.value;
+                }
+                return null;
+            },
+            // Fallback handler
+            (html) => this.fallbackParseUserIdFromProfile(html)
+        );
     }
 
     /**
@@ -81,30 +111,6 @@ export class HtmlParserService {
             // Only log error if all fallbacks fail
             logError('All favorites parsing methods failed', error);
             return [];
-        }
-    }
-
-    /**
-     * Parse user ID from profile HTML
-     */
-    parseUserIdFromProfile(html: string): string | null {
-        try {
-            // Try DOMParser approach first
-            const doc = this.parseHtml(html);
-
-            if (doc) {
-                const input = doc.querySelector('#who');
-                if (input && input instanceof HTMLInputElement && input.value) {
-                    return input.value;
-                }
-            }
-
-            // If DOMParser failed or returned no results, silently fall back to regex
-            return this.fallbackParseUserIdFromProfile(html);
-        } catch (error) {
-            // If all parsing attempts fail, then use regex fallback
-            logDebug('DOM parsing failed, using regex fallback for user ID', error);
-            return this.fallbackParseUserIdFromProfile(html);
         }
     }
 
