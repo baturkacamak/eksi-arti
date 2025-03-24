@@ -1,7 +1,8 @@
-// In src/content.ts
+// Modified src/content.ts
 import { UIService } from './services/ui-service';
 import { logError } from './services/logging-service';
 import { CSSService } from './services/css-service';
+import { NotificationHandler } from './services/notification-handler';
 
 /**
  * Inject Material Icons font
@@ -49,6 +50,11 @@ function init(): void {
     try {
         // Inject Material Icons first
         injectMaterialIcons();
+
+        // Initialize notification handler to receive notifications
+        // from background script
+        const notificationHandler = NotificationHandler.getInstance();
+        notificationHandler.initialize();
 
         // Then initialize the UI
         const uiService = new UIService();

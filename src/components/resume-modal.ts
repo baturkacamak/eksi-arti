@@ -1,19 +1,23 @@
+// Complete src/components/resume-modal.ts
 import { ModalComponent } from './modal-component';
 import { BlockerState } from '../types';
-import { BlockUsersService } from '../services/block-users-service';
+import { UIService } from '../services/ui-service';
 import { BlockOptionsModal } from './block-options-modal';
 import { STORAGE_KEYS } from '../constants';
-import { storageService } from '../services/storage-service';
+import { storageService, StorageArea } from '../services/storage-service';
 import { ButtonVariant } from './button-component';
+import { logError } from '../services/logging-service';
 
 export class ResumeModal extends ModalComponent {
     private entryId: string;
     private savedState: BlockerState;
+    private uiService: UIService;
 
     constructor(entryId: string, savedState: BlockerState) {
         super();
         this.entryId = entryId;
         this.savedState = savedState;
+        this.uiService = new UIService();
     }
 
     /**
@@ -121,51 +125,65 @@ export class ResumeModal extends ModalComponent {
 
     /**
      * Handle resuming the operation
+     * Modified to use background script
      */
     private handleResumeOperation(): void {
-        // Show loading state on the button
-        const resumeButton = this.modalElement?.querySelector('.eksi-button-primary') as HTMLButtonElement;
-        if (resumeButton) {
-            // Create temporary instance to handle the button
-            const tempButtonComponent = this.buttonComponent;
-            // Cast to any to access the buttonElement property
-            (tempButtonComponent as any).buttonElement = resumeButton;
-            tempButtonComponent.setLoading(true, 'Devam Ediliyor...');
-        }
+        try {
+            // Show loading state on the button
+            const resumeButton = this.modalElement?.querySelector('.eksi-button-primary') as HTMLButtonElement;
+            if (resumeButton) {
+                // Create temporary instance to handle the button
+                const tempButtonComponent = this.buttonComponent;
+                // Cast to any to access the buttonElement property
+                (tempButtonComponent as any).buttonElement = resumeButton;
+                tempButtonComponent.setLoading(true, 'Devam Ediliyor...');
+            }
 
-        // Short delay for better visual feedback
-        setTimeout(() => {
+            // Short delay for better visual feedback
+            setTimeout(() => {
+                this.close();
+                // Resume operation in background script
+                this.uiService.resumeBlockingInBackground(this.savedState);
+            }, 500);
+        } catch (error) {
+            logError('Error during resume operation:', error);
             this.close();
-            const blockUsers = new BlockUsersService();
-            blockUsers.setBlockType(this.savedState.blockType);
-            blockUsers.blockUsers(this.savedState.entryId);
-        }, 500);
+        }
     }
 
     /**
      * Handle starting a new operation
      */
-    private handleNewOperation(): void {
-        // Show loading state on the button
-        const newButton = this.modalElement?.querySelector('.eksi-button-secondary') as HTMLButtonElement;
-        if (newButton) {
-            // Create temporary instance to handle the button
-            const tempButtonComponent = this.buttonComponent;
-            // Cast to any to access the buttonElement property
-            (tempButtonComponent as any).buttonElement = newButton;
-            tempButtonComponent.setLoading(true, 'Hazırlanıyor...');
-        }
+    private async handleNewOperation(): Promise<void> {
+        try {
+            // Show loading state on the button
+            const newButton = this.modalElement?.querySelector('.eksi-button-secondary') as HTMLButtonElement;
+            if (newButton) {
+                // Create temporary instance to handle the button
+                const tempButtonComponent = this.buttonComponent;
+                // Cast to any to access the buttonElement property
+                (tempButtonComponent as any).buttonElement = newButton;
+                tempButtonComponent.setLoading(true, 'Hazırlanıyor...');
+            }
 
-        // Short delay for better visual feedback
-        setTimeout(async () => {
+            // Short delay for better visual feedback
+            setTimeout(async () => {
+                try {
+                    this.close();
+
+                    // Remove the existing operation from storage
+                    await storageService.removeItem(STORAGE_KEYS.CURRENT_OPERATION, StorageArea.LOCAL);
+
+                    // Show the options modal to start a new operation
+                    const optionsModal = new BlockOptionsModal(this.entryId);
+                    optionsModal.show();
+                } catch (innerError) {
+                    logError('Error showing options modal:', innerError);
+                }
+            }, 500);
+        } catch (error) {
+            logError('Error during new operation setup:', error);
             this.close();
-
-            // Remove the existing operation from storage
-            await storageService.removeItem(STORAGE_KEYS.CURRENT_OPERATION);
-
-            // Show the options modal to start a new operation
-            const optionsModal = new BlockOptionsModal(this.entryId);
-            optionsModal.show();
-        }, 500);
+        }
     }
 }

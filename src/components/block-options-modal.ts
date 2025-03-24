@@ -1,14 +1,17 @@
+// Modified src/components/block-options-modal.ts
 import { ModalComponent } from './modal-component';
 import { BlockType } from '../constants';
-import { BlockUsersService } from '../services/block-users-service';
+import { UIService } from '../services/ui-service';
 import { ButtonVariant } from './button-component';
 
 export class BlockOptionsModal extends ModalComponent {
     private entryId: string;
+    private uiService: UIService;
 
     constructor(entryId: string) {
         super();
         this.entryId = entryId;
+        this.uiService = new UIService();
     }
 
     /**
@@ -81,6 +84,7 @@ export class BlockOptionsModal extends ModalComponent {
 
     /**
      * Handle user selecting a block option
+     * Modified to use background script
      */
     private handleOptionSelected(blockType: BlockType): void {
         // Show loading state on button
@@ -104,10 +108,11 @@ export class BlockOptionsModal extends ModalComponent {
 
         // Short delay for better visual feedback
         setTimeout(() => {
-            const blockUsers = new BlockUsersService();
-            blockUsers.setBlockType(blockType);
-            blockUsers.blockUsers(this.entryId);
+            // Close the modal
             this.close();
+
+            // Start blocking in background
+            this.uiService.startBlockingInBackground(this.entryId, blockType);
         }, 300);
     }
 }

@@ -1,17 +1,20 @@
+// Modified src/services/ui-service.ts
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { BlockOptionsModal } from '../components/block-options-modal';
 import { ResumeModal } from '../components/resume-modal';
-import { StorageService } from './storage-service';
+import { StorageService, storageService, StorageArea } from './storage-service';
 import { NotificationComponent } from '../components/notification-component';
 import { STORAGE_KEYS } from '../constants';
 import { BlockerState } from '../types';
 import { preferencesManager } from './preferences-manager';
 import { logError, logInfo, logDebug } from "./logging-service";
+import { HtmlParserService } from './html-parser-service';
 
 export class UIService {
     private domHandler: DOMService;
     private cssHandler: CSSService;
+    private htmlParser: HtmlParserService;
     private initialized: boolean = false;
     private observer: MutationObserver | null = null;
     private menuItemSelector: string = '';
@@ -19,6 +22,7 @@ export class UIService {
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.htmlParser = new HtmlParserService();
     }
 
     /**
@@ -117,15 +121,18 @@ export class UIService {
 
     /**
      * Add event listener to menu item
+     * Modified to communicate with background script
      */
     private addMenuItemEventListener(entryId: string, menuItem: HTMLElement): void {
-        this.domHandler.addEventListener(menuItem, 'click', (e) => {
+        this.domHandler.addEventListener(menuItem, 'click', async (e) => {
             // First, prevent default behavior to ensure the click isn't hijacked
             e.preventDefault();
             e.stopPropagation();
 
             // Check if there's an existing operation
-            const savedState = StorageService.load<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION);
+            const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+            const savedState = result.success && result.data ? result.data : null;
+
             if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
                 try {
                     const resumeModal = new ResumeModal(entryId, savedState);
@@ -296,25 +303,91 @@ export class UIService {
     /**
      * Check for saved state and show notification if exists
      */
-    private checkForSavedState(): void {
-        const savedState = StorageService.load<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION);
-        if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
-            const notification = new NotificationComponent();
-            const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
+    private async checkForSavedState(): Promise<void> {
+        try {
+            const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+            const savedState = result.success && result.data ? result.data : null;
 
-            notification.show(
-                `<div class="eksi-notification-info">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#42a5f5"/>
-          </svg>
-          Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
-          <div class="eksi-tooltip">
-            <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
-            <span class="eksi-tooltiptext">Menüden "favorileyenleri engelle" seçeneği ile devam edebilirsiniz.</span>
-          </div>
-        </div>`,
-                {timeout: 15},
-            );
+            if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
+                const notification = new NotificationComponent();
+                const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
+
+                notification.show(
+                    `<div class="eksi-notification-info">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#42a5f5"/>
+                        </svg>
+                        Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
+                        <div class="eksi-tooltip">
+                            <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
+                            <span class="eksi-tooltiptext">Menüden "favorileyenleri engelle" seçeneği ile devam edebilirsiniz.</span>
+                        </div>
+                    </div>`,
+                    {timeout: 15},
+                );
+            }
+        } catch (error) {
+            logError('Error checking saved state:', error);
+        }
+    }
+
+    /**
+     * Fetch favorites and start blocking in background
+     * Used by BlockOptionsModal to start a new blocking operation
+     */
+    async startBlockingInBackground(entryId: string, blockType: string): Promise<void> {
+        try {
+            const notification = new NotificationComponent();
+            await notification.show('Favori listesi yükleniyor...', { timeout: 60 });
+
+            // Fetch the favorites list
+            const response = await fetch(`https://eksisozluk.com/entry/favorileyenler?entryId=${entryId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const html = await response.text();
+            const userUrls = this.htmlParser.parseFavoritesHtml(html);
+            const postTitle = this.htmlParser.parsePostTitle();
+
+            // Send message to background script to start blocking
+            await chrome.runtime.sendMessage({
+                action: 'startBlocking',
+                entryId,
+                blockType,
+                userUrls,
+                postTitle
+            });
+
+        } catch (error) {
+            logError('Error starting blocking in background:', error);
+            const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
+            const notification = new NotificationComponent();
+            await notification.show('Favori listesi yüklenemedi: ' + message, { timeout: 10 });
+        }
+    }
+
+    /**
+     * Resume blocking in background
+     * Used by ResumeModal to resume a blocking operation
+     */
+    async resumeBlockingInBackground(savedState: BlockerState): Promise<void> {
+        try {
+            const postTitle = this.htmlParser.parsePostTitle();
+
+            // Send message to background script to resume blocking
+            await chrome.runtime.sendMessage({
+                action: 'resumeBlocking',
+                savedState,
+                postTitle
+            });
+
+        } catch (error) {
+            logError('Error resuming blocking in background:', error);
+            const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
+            const notification = new NotificationComponent();
+            await notification.show('İşlem devam ettirilemedi: ' + message, { timeout: 10 });
         }
     }
 
