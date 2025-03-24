@@ -338,25 +338,17 @@ export class UIService {
     async startBlockingInBackground(entryId: string, blockType: string): Promise<void> {
         try {
             const notification = new NotificationComponent();
-            await notification.show('Favori listesi yükleniyor...', { timeout: 60 });
+            await notification.show('Engelleme işlemi başlatılıyor...', { timeout: 5 });
 
-            // Fetch the favorites list
-            const response = await fetch(`https://eksisozluk.com/entry/favorileyenler?entryId=${entryId}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            const html = await response.text();
-            const userUrls = this.htmlParser.parseFavoritesHtml(html);
+            // Get the post title
             const postTitle = this.htmlParser.parsePostTitle();
 
-            // Send message to background script to start blocking
+            // Send only the necessary information to the background script
+            // Let the background script fetch the favorites list
             await chrome.runtime.sendMessage({
                 action: 'startBlocking',
                 entryId,
                 blockType,
-                userUrls,
                 postTitle
             });
 
@@ -364,7 +356,7 @@ export class UIService {
             logError('Error starting blocking in background:', error);
             const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
             const notification = new NotificationComponent();
-            await notification.show('Favori listesi yüklenemedi: ' + message, { timeout: 10 });
+            await notification.show('İşlem başlatılamadı: ' + message, { timeout: 10 });
         }
     }
 
