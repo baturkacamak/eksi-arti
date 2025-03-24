@@ -18,37 +18,64 @@ export class HtmlParserService {
     /**
      * Parse favorites HTML to extract user URLs
      */
-    parseFavoritesHtml(html: string): string[] {
-        const doc = this.parseHtml(html);
-        const anchorTags = this.domHandler.querySelectorAll<HTMLAnchorElement>('li a', doc);
-        const hrefs: string[] = [];
+    public parseFavoritesHtml(html: string): string[] {
+        try {
+            // Create a parser
+            const doc = this.parseHtml(html)
 
-        anchorTags.forEach((a) => {
-            if (a.href.includes('biri')) {
-                hrefs.push(a.href);
-            }
-        });
+            // Extract all links
+            const anchors = doc.querySelectorAll('li a');
+            const userUrls: string[] = [];
 
-        return hrefs;
+            anchors.forEach((a) => {
+                const href = a.getAttribute('href');
+                if (href && href.includes('biri')) {
+                    userUrls.push('https://eksisozluk.com' + href);
+                }
+            });
+
+            return userUrls;
+        } catch (error) {
+            logError('Error parsing favorites HTML:', error);
+            // Fallback to regex parsing if DOMParser fails
+            return this.fallbackParseFavoritesHtml(html);
+        }
+    }
+
+    /**
+     * Fallback method using regex to parse favorites HTML
+     */
+    private fallbackParseFavoritesHtml(html: string): string[] {
+        const userUrls: string[] = [];
+        const regex = /<a\s+href="(\/biri\/[^"]+)"/g;
+        let match;
+
+        while ((match = regex.exec(html)) !== null) {
+            userUrls.push('https://eksisozluk.com' + match[1]);
+        }
+
+        return userUrls;
     }
 
     /**
      * Parse user ID from profile HTML
      */
-    parseUserIdFromProfile(html: string): string | null {
+    public parseUserIdFromProfile(html: string): string | null {
         try {
-            const doc = this.parseHtml(html);
-            const input = this.domHandler.querySelector<HTMLInputElement>('#who', doc);
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
 
-            if (input) {
+            const input = doc.querySelector('#who');
+            if (input && input instanceof HTMLInputElement) {
                 return input.value;
-            } else {
-                logError('User ID input not found in profile HTML');
-                return null;
             }
+
+            return null;
         } catch (error) {
             logError('Error parsing user ID from profile:', error);
-            return null;
+            // Fallback to regex parsing
+            const idMatch = html.match(/<input[^>]*id="who"[^>]*value="([^"]+)"/);
+            return idMatch ? idMatch[1] : null;
         }
     }
 
