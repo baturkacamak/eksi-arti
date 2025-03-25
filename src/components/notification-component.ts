@@ -1,27 +1,39 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { NotificationOptions, BlockerPreferences } from '../types';
-import { storageService } from '../services/storage-service';
-import { STORAGE_KEYS } from '../constants';
-import { logError, logDebug } from "../services/logging-service";
+import { NotificationOptions } from '../types';
 import { preferencesManager } from "../services/preferences-manager";
-import {ButtonComponent, ButtonSize, ButtonVariant} from "./button-component";
+import { logError, logDebug } from "../services/logging-service";
+
+// Position options for notifications
+export type NotificationPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+
+// Notification appearance theme
+export type NotificationTheme = 'default' | 'success' | 'error' | 'warning' | 'info';
+
+// Extended notification options
+export interface ExtendedNotificationOptions extends NotificationOptions {
+    position?: NotificationPosition;
+    theme?: NotificationTheme;
+    closable?: boolean;
+    timeout?: number;
+    width?: string;
+    onClose?: () => void;
+}
 
 export class NotificationComponent {
     private cssHandler: CSSService;
     private domHandler: DOMService;
-    private buttonComponent: ButtonComponent;
     private notificationElement: HTMLElement | null = null;
     private timeoutId: number | null = null;
-    private countdownIntervalId: number | null = null;
-    private countdownElement: HTMLElement | null = null;
     private defaultDuration: number = 5; // Default duration in seconds
+    private contentContainer: HTMLElement | null = null;
+    private footerContainer: HTMLElement | null = null;
 
     constructor() {
         this.cssHandler = new CSSService();
         this.domHandler = new DOMService();
-        this.buttonComponent = new ButtonComponent();
         this.initAnimations();
+        this.applyStyles();
         this.loadNotificationDuration();
     }
 
@@ -39,12 +51,12 @@ export class NotificationComponent {
     }
 
     /**
-     * Initialize animations for modals and notifications
+     * Initialize animations for notifications
      */
     private initAnimations(): void {
         const style = document.createElement('style');
         style.textContent = `
-      @keyframes eksiModalSlideIn {
+      @keyframes eksiNotificationSlideIn {
         from {
           opacity: 0;
           transform: translateY(20px);
@@ -60,179 +72,130 @@ export class NotificationComponent {
 
     /**
      * Show notification
+     * @param content HTML content or string message
+     * @param options Notification options
+     * @returns The notification element for further customization
      */
-    async show(message: string, options: NotificationOptions = {}): Promise<void> {
-        const preferences = await preferencesManager.getPreferences();
-
-        if (!preferences.enableNotifications) {
-            return;
-        }
-
-        // Ensure we have the latest notification duration
-        await this.loadNotificationDuration();
-
-        this.applyStyles();
-
-        if (!this.notificationElement) {
-            this.createElement(message);
-            this.createCloseButton();
-            await this.applyPositionFromStorage();
-            this.appendNotificationToDOM();
-        } else {
-            this.updateMessage(message);
-        }
-
-        // Use the provided timeout or fall back to the default duration from preferences
-        const timeout = options.timeout !== undefined ? options.timeout : this.defaultDuration;
-        this.setAutoCloseTimeout(timeout);
-    }
-
-    /**
-     * Apply position based on user preferences from storage
-     */
-    private async applyPositionFromStorage(): Promise<void> {
+    async show(content: string, options: ExtendedNotificationOptions = {}): Promise<HTMLElement | null> {
         try {
-            if (!this.notificationElement) return;
+            const preferences = await preferencesManager.getPreferences();
 
-            // Get preferences directly from storage, avoiding PreferencesService
-            const result = await storageService.getItem<Partial<BlockerPreferences>>(STORAGE_KEYS.PREFERENCES);
-            let position = 'top-right'; // Default position
-
-            if (result.success && result.data && result.data.notificationPosition) {
-                position = result.data.notificationPosition;
+            if (!preferences.enableNotifications) {
+                return null;
             }
 
-            // Reset position classes
-            this.domHandler.removeClass(this.notificationElement, 'position-top-right');
-            this.domHandler.removeClass(this.notificationElement, 'position-top-left');
-            this.domHandler.removeClass(this.notificationElement, 'position-bottom-right');
-            this.domHandler.removeClass(this.notificationElement, 'position-bottom-left');
+            // Ensure we have the latest notification duration
+            await this.loadNotificationDuration();
 
-            // Apply the selected position
-            this.domHandler.addClass(this.notificationElement, `position-${position}`);
+            // If notification already exists, update its content
+            if (this.notificationElement) {
+                this.updateContent(content);
+            } else {
+                // Create a new notification
+                this.createElement(content, options);
+                this.appendNotificationToDOM();
+            }
+
+            // Use the provided timeout or fall back to the default duration from preferences
+            const timeout = options.timeout !== undefined ? options.timeout : this.defaultDuration;
+            this.setAutoCloseTimeout(timeout, options.onClose);
+
+            // Show with transition
+            this.showWithTransition();
+
+            return this.notificationElement;
         } catch (error) {
-            logError('Error applying notification position from storage:', error);
-            // Default to top-right if there's an error
-            if (this.notificationElement) {
-                this.domHandler.addClass(this.notificationElement, 'position-top-right');
-            }
+            logError('Error showing notification:', error);
+            return null;
         }
     }
 
     /**
-     * Update notification message
+     * Update notification content
      */
-    updateMessage(message: string): void {
-        if (this.notificationElement) {
-            const messageElement = this.domHandler.querySelector<HTMLElement>('.eksi-notification-message', this.notificationElement);
-            if (messageElement) {
-                messageElement.innerHTML = message;
-            }
-        }
-    }
-
-    /**
-     * Update countdown display
-     */
-    updateDelayCountdown(seconds: number): void {
-        // Clear any existing countdown interval first
-        this.clearCountdown();
-
-        // Create countdown element if it doesn't exist
-        if (!this.countdownElement) {
-            this.countdownElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.countdownElement, 'eksi-notification-countdown');
-
-            if (this.notificationElement) {
-                // Find the progress container
-                const progressContainer = this.domHandler.querySelector<HTMLElement>('.eksi-progress-container', this.notificationElement);
-
-                if (progressContainer && progressContainer.parentNode) {
-                    progressContainer.parentNode.insertBefore(this.countdownElement, progressContainer.nextSibling);
-                } else {
-                    // Fallback to insert after message
-                    const messageElement = this.domHandler.querySelector<HTMLElement>('.eksi-notification-message', this.notificationElement);
-                    if (messageElement && messageElement.parentNode) {
-                        messageElement.parentNode.insertBefore(this.countdownElement, messageElement.nextSibling);
-                    }
-                }
-            }
-        }
-
-        // Set initial text with Material Icons
-        let remainingSeconds = seconds;
-        this.countdownElement.innerHTML = `
-      <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 12px; color: #a0e577;">schedule</span>
-      Sonraki işlem için bekleniyor: <strong>${remainingSeconds}</strong> saniye
-    `;
-
-        // Start the countdown
-        this.countdownIntervalId = window.setInterval(() => {
-            remainingSeconds--;
-
-            if (remainingSeconds <= 0) {
-                this.clearCountdown();
-                return;
-            }
-
-            if (this.countdownElement) {
-                this.countdownElement.innerHTML = `
-          <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 12px; color: #a0e577;">schedule</span>
-          Sonraki işlem için bekleniyor: <strong>${remainingSeconds}</strong> saniye
-        `;
-            }
-        }, 1000);
-    }
-
-    /**
-     * Clear countdown timer
-     */
-    clearCountdown(): void {
-        if (this.countdownIntervalId) {
-            clearInterval(this.countdownIntervalId);
-            this.countdownIntervalId = null;
-        }
-
-        if (this.countdownElement) {
-            this.countdownElement.textContent = '';
+    updateContent(content: string): void {
+        if (this.notificationElement && this.contentContainer) {
+            this.contentContainer.innerHTML = content;
         }
     }
 
     /**
      * Create notification element
      */
-    private createElement(message: string): void {
+    private createElement(content: string, options: ExtendedNotificationOptions): void {
         if (this.notificationElement) {
             this.removeExistingNotification();
         }
 
         this.notificationElement = this.domHandler.createElement('div');
         this.domHandler.addClass(this.notificationElement, 'eksi-notification-container');
-        // Default position class - will be updated based on preferences
-        this.domHandler.addClass(this.notificationElement, 'position-top-right');
 
-        // Create a header with Material Icons
+        // Add theme class
+        const theme = options.theme || 'default';
+        this.domHandler.addClass(this.notificationElement, `eksi-notification-theme-${theme}`);
+
+        // Add position class - default or from options
+        const position = options.position || 'top-right';
+        this.domHandler.addClass(this.notificationElement, `position-${position}`);
+
+        // Set custom width if provided
+        if (options.width) {
+            this.notificationElement.style.width = options.width;
+        }
+
+        // Create a header with title
         const headerElement = this.domHandler.createElement('div');
         this.domHandler.addClass(headerElement, 'eksi-notification-header');
         headerElement.innerHTML = `
       <div class="eksi-notification-icon">
-        <span class="material-icons" style="color: #81c14b; font-size: 16px;">check_circle</span>
+        <span class="material-icons" aria-hidden="true">info</span>
       </div>
-      <div class="eksi-notification-title">Ekşi Kullanıcı İşlemi</div>
+      <div class="eksi-notification-title">Ekşi Artı</div>
     `;
 
-        const messageElement = this.domHandler.createElement('p');
-        this.domHandler.addClass(messageElement, 'eksi-notification-message');
-        messageElement.innerHTML = message;
+        // Add close button if closable
+        if (options.closable !== false) {
+            const closeButton = this.domHandler.createElement('button');
+            this.domHandler.addClass(closeButton, 'eksi-notification-close');
+            closeButton.innerHTML = '×';
+            closeButton.setAttribute('aria-label', 'Kapat');
 
-        const buttonsContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(buttonsContainer, 'eksi-notification-buttons');
+            this.domHandler.addEventListener(closeButton, 'click', () => {
+                this.removeWithTransition(options.onClose);
+            });
 
+            this.domHandler.appendChild(headerElement, closeButton);
+        }
+
+        // Create content container
+        this.contentContainer = this.domHandler.createElement('div');
+        this.domHandler.addClass(this.contentContainer, 'eksi-notification-content');
+        this.contentContainer.innerHTML = content;
+
+        // Create footer container for additional controls
+        this.footerContainer = this.domHandler.createElement('div');
+        this.domHandler.addClass(this.footerContainer, 'eksi-notification-footer');
+
+        // Assemble notification
         this.domHandler.appendChild(this.notificationElement, headerElement);
-        this.domHandler.appendChild(this.notificationElement, messageElement);
-        this.domHandler.appendChild(this.notificationElement, buttonsContainer);
+        this.domHandler.appendChild(this.notificationElement, this.contentContainer);
+        this.domHandler.appendChild(this.notificationElement, this.footerContainer);
+    }
 
-        this.showWithTransition();
+    /**
+     * Get the content container element
+     * This can be used by external components to add their content
+     */
+    getContentContainer(): HTMLElement | null {
+        return this.contentContainer;
+    }
+
+    /**
+     * Get the footer container element
+     * This can be used by external components to add buttons, progress bars, etc.
+     */
+    getFooterContainer(): HTMLElement | null {
+        return this.footerContainer;
     }
 
     /**
@@ -242,105 +205,32 @@ export class NotificationComponent {
         if (this.notificationElement && this.notificationElement.parentNode) {
             this.notificationElement.parentNode.removeChild(this.notificationElement);
             this.notificationElement = null;
+            this.contentContainer = null;
+            this.footerContainer = null;
         }
-    }
-
-    /**
-     * Create close button for notification using ButtonComponent
-     */
-    private createCloseButton(): void {
-        const closeButton = this.buttonComponent.create({
-            text: '',
-            icon: 'close',
-            size: ButtonSize.SMALL,
-            ariaLabel: 'Bildirimi kapat',
-            onClick: () => {
-                this.removeWithTransition();
-            },
-            className: 'eksi-close-button'
-        });
-
-        this.domHandler.appendChild(this.notificationElement!, closeButton);
-    }
-
-    /**
-     * Add progress bar to notification
-     */
-    addProgressBar(current: number, total: number): void {
-        // Remove existing progress bar if any
-        const existingContainer = this.domHandler.querySelector<HTMLElement>('.eksi-progress-container', this.notificationElement!);
-        if (existingContainer) {
-            existingContainer.parentNode?.removeChild(existingContainer);
-        }
-
-        // Calculate percentage
-        const percentage = Math.min(100, Math.round((current / total) * 100));
-
-        // Create progress container
-        const progressContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(progressContainer, 'eksi-progress-container');
-
-        // Create progress bar
-        const progressBar = this.domHandler.createElement('div');
-        this.domHandler.addClass(progressBar, 'eksi-progress-bar');
-        progressBar.style.width = `${percentage}%`;
-
-        // Append to container
-        this.domHandler.appendChild(progressContainer, progressBar);
-
-        // Insert after message
-        const messageElement = this.domHandler.querySelector<HTMLElement>('.eksi-notification-message', this.notificationElement!);
-        if (messageElement && messageElement.parentNode) {
-            messageElement.parentNode.insertBefore(progressContainer, messageElement.nextSibling);
-        }
-    }
-
-    /**
-     * Add stop button to notification using ButtonComponent
-     */
-    addStopButton(clickHandler: () => void): void {
-        if (!this.notificationElement) return;
-
-        const buttonsContainer = this.domHandler.querySelector<HTMLElement>('.eksi-notification-buttons', this.notificationElement);
-        if (!buttonsContainer) return;
-
-        // Remove existing stop button if any
-        const existingButton = this.domHandler.querySelector<HTMLButtonElement>('.eksi-notification-button.stop', buttonsContainer);
-        if (existingButton) {
-            this.domHandler.removeChild(buttonsContainer, existingButton);
-        }
-
-        // Create a stop button using ButtonComponent
-        const stopButton = this.buttonComponent.create({
-            text: 'Durdur',
-            icon: 'close',
-            variant: ButtonVariant.DANGER,
-            size: ButtonSize.SMALL,
-            onClick: clickHandler,
-            className: 'eksi-notification-stop-button'
-        });
-
-        this.domHandler.appendChild(buttonsContainer, stopButton);
     }
 
     /**
      * Append notification to DOM
      */
     private appendNotificationToDOM(): void {
-        this.domHandler.appendChild(document.body, this.notificationElement!);
+        if (this.notificationElement) {
+            this.domHandler.appendChild(document.body, this.notificationElement);
+        }
     }
 
     /**
      * Set auto-close timeout
      */
-    private setAutoCloseTimeout(timeout: number = 5): void {
+    private setAutoCloseTimeout(timeout: number = 5, onClose?: () => void): void {
         if (this.timeoutId) {
             window.clearTimeout(this.timeoutId);
+            this.timeoutId = null;
         }
 
         if (timeout > 0) {
             this.timeoutId = window.setTimeout(() => {
-                this.removeWithTransition();
+                this.removeWithTransition(onClose);
             }, timeout * 1000);
         }
     }
@@ -348,11 +238,8 @@ export class NotificationComponent {
     /**
      * Remove notification with transition
      */
-    removeWithTransition(): void {
+    removeWithTransition(onClose?: () => void): void {
         if (!this.notificationElement) return;
-
-        // Clear any active countdown
-        this.clearCountdown();
 
         // Clear auto-close timeout
         if (this.timeoutId) {
@@ -367,7 +254,13 @@ export class NotificationComponent {
             if (this.notificationElement && this.notificationElement.parentNode) {
                 this.notificationElement.parentNode.removeChild(this.notificationElement);
                 this.notificationElement = null;
-                this.countdownElement = null;
+                this.contentContainer = null;
+                this.footerContainer = null;
+
+                // Call onClose callback if provided
+                if (onClose) {
+                    onClose();
+                }
             }
         };
 
@@ -396,236 +289,178 @@ export class NotificationComponent {
      * Apply CSS styles for notifications
      */
     private applyStyles(): void {
-        const defaultCSS = `
+        const notificationStyles = `
       /* Base notification container */
       .eksi-notification-container {
-          position: fixed;
-          background-color: #2c2c2c;
-          color: #fff;
-          padding: 1.4rem;
-          border-radius: 8px;
-          font-size: 14px;
-          z-index: 100000;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-          min-width: 320px;
-          border-left: 4px solid #81c14b;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        position: fixed;
+        background-color: #2c2c2c;
+        color: #fff;
+        padding: 1.4rem;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 100000;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        min-width: 320px;
+        border-left: 4px solid #81c14b;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       }
 
       /* Position classes */
       .eksi-notification-container.position-top-right {
-          top: 20px;
-          right: 20px;
+        top: 20px;
+        right: 20px;
       }
 
       .eksi-notification-container.position-top-left {
-          top: 20px;
-          left: 20px;
+        top: 20px;
+        left: 20px;
       }
 
       .eksi-notification-container.position-bottom-right {
-          bottom: 20px;
-          right: 20px;
+        bottom: 20px;
+        right: 20px;
       }
 
       .eksi-notification-container.position-bottom-left {
-          bottom: 20px;
-          left: 20px;
+        bottom: 20px;
+        left: 20px;
       }
 
       /* Notification states */
       .eksi-notification-container.show {
-          opacity: 1;
-          transform: translateY(0);
-          max-height: 100%;
+        opacity: 1;
+        transform: translateY(0);
       }
 
       .eksi-notification-container.hidden {
-          opacity: 0;
-          max-height: 0;
+        opacity: 0;
       }
 
       /* Position-specific animations */
       .position-top-left.hidden,
       .position-top-right.hidden {
-          transform: translateY(-20px);
+        transform: translateY(-20px);
       }
 
       .position-bottom-left.hidden,
       .position-bottom-right.hidden {
-          transform: translateY(20px);
-      }
-
-      /* Message styling */
-      .eksi-notification-message {
-          padding: 0;
-          margin: 0 0 12px 0;
-          line-height: 1.5;
-      }
-
-      /* Countdown timer styling */
-      .eksi-notification-countdown {
-          font-size: 12px;
-          color: #a0e577;
-          margin: 8px 0;
-          font-style: italic;
-          padding: 6px 10px;
-          background-color: rgba(129, 193, 75, 0.1);
-          border-radius: 4px;
-          display: inline-block;
-      }
-
-      /* Button container */
-      .eksi-notification-buttons {
-          display: flex;
-          justify-content: flex-end;
-          gap: 10px;
-          margin-top: 15px;
-      }
-
-      /* Custom styling for close button from ButtonComponent */
-      .eksi-close-button {
-          position: absolute !important;
-          right: 12px !important;
-          top: 12px !important;
-          z-index: 20 !important;
-          width: 24px !important;
-          height: 24px !important;
-          min-width: unset !important;
-          padding: 0 !important;
-          background-color: transparent !important;
-          box-shadow: none !important;
-          border: none !important;
-          color: #999 !important;
-      }
-
-      .eksi-close-button:hover {
-          color: #fff !important;
-          background-color: rgba(255, 255, 255, 0.1) !important;
-      }
-
-      .eksi-close-button .material-icons {
-          font-size: 18px !important;
-      }
-
-      /* Custom styling for notification stop button */
-      .eksi-notification-stop-button {
-          /* Add any specific styling needed for the stop button */
+        transform: translateY(20px);
       }
 
       /* Header styling */
       .eksi-notification-header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 12px;
-          padding-bottom: 10px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
       }
 
       .eksi-notification-icon {
-          margin-right: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: rgba(129, 193, 75, 0.15);
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
+        margin-right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(129, 193, 75, 0.15);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
       }
 
       .eksi-notification-title {
-          font-weight: 600;
-          font-size: 15px;
-          color: #81c14b;
+        font-weight: 600;
+        font-size: 15px;
+        color: #81c14b;
       }
 
-      /* Progress bar */
-      .eksi-progress-container {
-          width: 100%;
-          height: 6px;
-          background-color: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-          margin: 15px 0;
-          overflow: hidden;
+      /* Content container */
+      .eksi-notification-content {
+        padding: 0;
+        margin: 0 0 12px 0;
+        line-height: 1.5;
       }
 
-      .eksi-progress-bar {
-          height: 100%;
-          background-color: #81c14b;
-          border-radius: 3px;
-          transition: width 0.3s ease;
-          width: 0%;
+      /* Footer container */
+      .eksi-notification-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
-      /* Status messages */
-      .eksi-notification-success,
-      .eksi-notification-error,
-      .eksi-notification-warning {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          border-radius: 4px;
-          margin-bottom: 10px;
-          line-height: 1.5;
+      /* Close button */
+      .eksi-notification-close {
+        position: absolute;
+        right: 0;
+        top: 0;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 24px;
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
       }
 
-      .eksi-notification-success {
-          background-color: rgba(129, 193, 75, 0.1);
+      .eksi-notification-close:hover {
+        color: rgba(255, 255, 255, 0.9);
       }
 
-      .eksi-notification-error {
-          background-color: rgba(229, 57, 53, 0.1);
+      /* Theme variations */
+      .eksi-notification-theme-success {
+        border-left-color: #43a047;
       }
-
-      .eksi-notification-warning {
-          background-color: rgba(255, 152, 0, 0.1);
+      
+      .eksi-notification-theme-success .eksi-notification-icon {
+        background-color: rgba(67, 160, 71, 0.15);
       }
-
-      /* Tooltip styles */
-      .eksi-tooltip {
-          position: relative;
-          display: inline-block;
-          cursor: help;
+      
+      .eksi-notification-theme-success .eksi-notification-title {
+        color: #43a047;
       }
-
-      .eksi-tooltip .eksi-tooltiptext {
-          visibility: hidden;
-          width: 200px;
-          background-color: #333;
-          color: #fff;
-          text-align: center;
-          border-radius: 6px;
-          padding: 8px;
-          position: absolute;
-          z-index: 1;
-          bottom: 125%;
-          left: 50%;
-          margin-left: -100px;
-          opacity: 0;
-          transition: opacity 0.3s;
-          font-size: 12px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      
+      .eksi-notification-theme-error {
+        border-left-color: #e53935;
       }
-
-      .eksi-tooltip .eksi-tooltiptext::after {
-          content: "";
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          margin-left: -5px;
-          border-width: 5px;
-          border-style: solid;
-          border-color: #333 transparent transparent transparent;
+      
+      .eksi-notification-theme-error .eksi-notification-icon {
+        background-color: rgba(229, 57, 53, 0.15);
       }
-
-      .eksi-tooltip:hover .eksi-tooltiptext {
-          visibility: visible;
-          opacity: 1;
+      
+      .eksi-notification-theme-error .eksi-notification-title {
+        color: #e53935;
+      }
+      
+      .eksi-notification-theme-warning {
+        border-left-color: #ffa000;
+      }
+      
+      .eksi-notification-theme-warning .eksi-notification-icon {
+        background-color: rgba(255, 160, 0, 0.15);
+      }
+      
+      .eksi-notification-theme-warning .eksi-notification-title {
+        color: #ffa000;
+      }
+      
+      .eksi-notification-theme-info {
+        border-left-color: #1e88e5;
+      }
+      
+      .eksi-notification-theme-info .eksi-notification-icon {
+        background-color: rgba(30, 136, 229, 0.15);
+      }
+      
+      .eksi-notification-theme-info .eksi-notification-title {
+        color: #1e88e5;
       }
     `;
 
-        this.cssHandler.addCSS(defaultCSS);
+        this.cssHandler.addCSS(notificationStyles);
     }
 }

@@ -1,19 +1,23 @@
-import {HttpService} from './http-service';
-import {HtmlParserService} from './html-parser-service';
-import {NotificationComponent} from '../components/notification-component';
-import {StorageArea, storageService} from './storage-service';
-import {preferencesManager} from './preferences-manager';
-import {BlockType, Endpoints, STORAGE_KEYS} from '../constants';
-import {logDebug, logError} from './logging-service';
-import {ButtonComponent} from "../components/button-component";
-import {PreferencesService} from "./preferences-service";
-import {delay} from "./utilities";
+/**
+ * BlockUsersService
+ * Service to manage blocking users who favorited a specific entry
+ */
+import { HttpService } from './http-service';
+import { HtmlParserService } from './html-parser-service';
+import { StorageArea, storageService } from './storage-service';
+import { preferencesManager } from './preferences-manager';
+import { BlockType, Endpoints, STORAGE_KEYS } from '../constants';
+import { logDebug, logError, logInfo } from './logging-service';
+import { ButtonVariant } from "../components/button-component";
+import { PreferencesService } from "./preferences-service";
+import { delay } from "./utilities";
+import { NotificationService } from './notification-service';
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
     private htmlParser: HtmlParserService;
-    private notification: NotificationComponent;
-    private buttonComponent: ButtonComponent;
+    private notificationService: NotificationService;
+    private preferencesService: PreferencesService;
 
     private totalUserCount: number = 0;
     private currentBlocked: number = 1;
@@ -29,13 +33,11 @@ export class BlockUsersService {
     private abortProcessing: boolean = false;
     private errorCount: number = 0;
     private maxErrors: number = 10; // Maximum errors before aborting
-    private preferencesService: PreferencesService;
 
     constructor() {
         this.remoteRequest = new HttpService();
         this.htmlParser = new HtmlParserService();
-        this.notification = new NotificationComponent();
-        this.buttonComponent = new ButtonComponent();
+        this.notificationService = new NotificationService();
         this.preferencesService = new PreferencesService();
         this.loadOperationParams();
     }
@@ -82,7 +84,7 @@ export class BlockUsersService {
     }
 
     /**
-     * Load previously saved processing state using Chrome storage API with fallbacks
+     * Load previously saved processing state
      */
     async loadState(): Promise<boolean> {
         try {
@@ -119,7 +121,7 @@ export class BlockUsersService {
     }
 
     /**
-     * Save current processing state using Chrome storage API with fallbacks
+     * Save current processing state
      */
     async saveState(): Promise<void> {
         try {
@@ -149,7 +151,7 @@ export class BlockUsersService {
     }
 
     /**
-     * Clear saved state using Chrome storage API with fallbacks
+     * Clear saved state
      */
     async clearState(): Promise<void> {
         try {
@@ -173,12 +175,19 @@ export class BlockUsersService {
      */
     async fetchFavorites(entryId: string): Promise<string[]> {
         try {
-            await this.notification.show('Favori listesi yükleniyor...', {timeout: 60});
+            await this.notificationService.show('Favori listesi yükleniyor...', {
+                theme: 'info',
+                timeout: 60
+            });
+
             const html = await this.remoteRequest.get(`${Endpoints.FAVORITES}?entryId=${entryId}`);
             return this.htmlParser.parseFavoritesHtml(html);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
-            await this.notification.show('Favori listesi yüklenemedi: ' + message, {timeout: 10});
+            await this.notificationService.show(`Favori listesi yüklenemedi: ${message}`, {
+                theme: 'error',
+                timeout: 10
+            });
             throw error;
         }
     }
@@ -211,31 +220,52 @@ export class BlockUsersService {
             });
 
             if (this.pendingUsers.length === 0) {
-                await this.notification.show(
-                    `<div class="eksi-notification-success">
+                // Show success notification with no progress bar
+                await this.notificationService.show(
+                    `<div style="display: flex; align-items: center">
             <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
-            Tüm kullanıcılar zaten işlendi.
-        </div>`,
-                    {timeout: 5},
+            <span>Tüm kullanıcılar zaten işlendi.</span>
+          </div>`,
+                    {
+                        theme: 'success',
+                        timeout: 5
+                    }
                 );
                 return;
             }
 
-            await this.notification.show(`${this.pendingUsers.length} kullanıcı işlenecek...`);
+            // Show initial notification with progress bar
+            await this.notificationService.show(
+                `${this.pendingUsers.length} kullanıcı işlenecek...`,
+                {
+                    progress: {
+                        current: 0,
+                        total: this.pendingUsers.length,
+                        options: {
+                            height: '8px',
+                            animated: true,
+                            striped: true
+                        }
+                    }
+                }
+            );
 
             this.isProcessing = true;
             this.abortProcessing = false;
             this.errorCount = 0;
 
-            // Create a Stop button in the notification
-            this.notification.addStopButton(async () => {
+            // Add stop button
+            this.notificationService.addStopButton(async () => {
                 this.abortProcessing = true;
-                await this.notification.show(
-                    `<div class="eksi-notification-warning">
+                await this.notificationService.show(
+                    `<div style="display: flex; align-items: center">
             <span class="material-icons" style="color: #ff9800; margin-right: 8px;">warning</span>
-            İşlem durduruldu.
-        </div>`,
-                    {timeout: 5},
+            <span>İşlem durduruldu.</span>
+          </div>`,
+                    {
+                        theme: 'warning',
+                        timeout: 5
+                    }
                 );
             });
 
@@ -244,12 +274,15 @@ export class BlockUsersService {
             await this.processBatch(postTitle);
 
             if (!this.abortProcessing) {
-                await this.notification.show(
-                    `<div class="eksi-notification-success">
-                        <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
-                        İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.
-                    </div>`,
-                    {timeout: 5}
+                await this.notificationService.show(
+                    `<div style="display: flex; align-items: center">
+            <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
+            <span>İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.</span>
+          </div>`,
+                    {
+                        theme: 'success',
+                        timeout: 5
+                    }
                 );
                 await this.clearState();
             } else {
@@ -259,12 +292,15 @@ export class BlockUsersService {
             logError('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
-            await this.notification.show(
-                `<div class="eksi-notification-error">
-                    <span class="material-icons" style="color: #e53935; margin-right: 8px;">error</span>
-                    Hata oluştu: ${errorMessage}
-                </div>`,
-                {timeout: 10}
+            await this.notificationService.show(
+                `<div style="display: flex; align-items: center">
+          <span class="material-icons" style="color: #e53935; margin-right: 8px;">error</span>
+          <span>Hata oluştu: ${errorMessage}</span>
+        </div>`,
+                {
+                    theme: 'error',
+                    timeout: 10
+                }
             );
 
             await this.saveState(); // Save progress on error
@@ -292,19 +328,22 @@ export class BlockUsersService {
             try {
                 await this.processUser(userUrl, postTitle);
                 this.processedUsers.add(username);
-                this.updateNotification();
+                this.updateProgress();
                 await this.saveState();
             } catch (error) {
                 this.errorCount++;
                 logError(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
-                    await this.notification.show(
-                        `<div class="eksi-notification-error">
-                            <span class="material-icons" style="color: #e53935; margin-right: 8px;">error_outline</span>
-                            Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.
-                        </div>`,
-                        {timeout: 10}
+                    await this.notificationService.show(
+                        `<div style="display: flex; align-items: center">
+              <span class="material-icons" style="color: #e53935; margin-right: 8px;">error_outline</span>
+              <span>Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.</span>
+            </div>`,
+                        {
+                            theme: 'error',
+                            timeout: 10
+                        }
                     );
                     this.abortProcessing = true;
                     break;
@@ -316,7 +355,33 @@ export class BlockUsersService {
             userIndex++;
 
             if (userIndex < this.pendingUsers.length && !this.abortProcessing) {
-                this.notification.updateDelayCountdown(this.requestDelay);
+                // Show countdown for next user
+                this.notificationService.show(
+                    `<div style="display: flex; align-items: center">
+            <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
+            <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
+          </div>`,
+                    {
+                        progress: {
+                            current: this.processedUsers.size,
+                            total: this.totalUserCount,
+                            options: {
+                                height: '8px',
+                                animated: true,
+                                striped: true
+                            }
+                        },
+                        countdown: {
+                            seconds: this.requestDelay,
+                            options: {
+                                label: 'Sonraki işlem için bekleniyor:',
+                                onComplete: () => {
+                                    logDebug('Countdown completed');
+                                }
+                            }
+                        }
+                    }
+                );
                 await delay(this.requestDelay);
             }
         }
@@ -406,7 +471,6 @@ export class BlockUsersService {
 
     /**
      * Retry an operation with exponential backoff
-     * Uses maxRetries from preferences
      */
     private async retryOperation<T>(operation: () => Promise<T>): Promise<T> {
         let attempts = 0;
@@ -430,37 +494,45 @@ export class BlockUsersService {
     }
 
     /**
-     * Update notification with progress info
+     * Update progress display
      */
-    private updateNotification(): void {
+    private updateProgress(): void {
         const processed = this.processedUsers.size;
         const total = this.totalUserCount;
 
-        this.updateNotificationMessage();
-        this.notification.addProgressBar(processed, total);
+        const actionType = this.getBlockTypeText();
+        const remaining = this.pendingUsers.length - (this.currentBlocked - 1 - processed);
+
+        // Update notification content with progress
+        this.notificationService.updateContent(
+            `<div style="display: flex; align-items: center">
+        <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
+        <span>${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
+        <strong>${processed}</strong> / <strong>${total}</strong> 
+        (Kalan: ${remaining})</span>
+      </div>`
+        );
+
+        // Update progress bar
+        this.notificationService.updateProgress(processed, total);
+
+        this.currentBlocked = processed + 1;
     }
 
     /**
-     * Update notification message
+     * Check if a blocking operation is currently in progress
      */
-    private async updateNotificationMessage(): Promise<void> {
-        const actionType = this.getBlockTypeText();
-        const total = this.totalUserCount;
-        const processed = this.processedUsers.size;
-        const remaining = this.pendingUsers.length - (this.currentBlocked - 1 - processed);
+    isBlockingInProgress(): boolean {
+        return this.isProcessing;
+    }
 
-        // Create a more dynamic notification message with icons
-        const notificationContent = `
-            <div class="eksi-notification-status">
-                <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle_outline</span>
-                ${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
-                <strong>${processed}</strong> / <strong>${total}</strong> 
-                (Kalan: ${remaining})
-            </div>
-        `;
-
-        await this.notification.show(notificationContent, {timeout: 60});
-
-        this.currentBlocked = processed + 1;
+    /**
+     * Cancel the current blocking operation
+     */
+    cancelOperation(): void {
+        if (this.isProcessing) {
+            this.abortProcessing = true;
+            logInfo('User requested to cancel the blocking operation');
+        }
     }
 }
