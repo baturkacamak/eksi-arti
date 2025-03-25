@@ -9,6 +9,7 @@ import {ProgressBarComponent, ProgressBarOptions} from '../components/progress-b
 import {CountdownComponent, CountdownOptions} from '../components/countdown-component';
 import {ButtonComponent, ButtonProps, ButtonSize, ButtonVariant} from '../components/button-component';
 import {logError} from './logging-service';
+import {preferencesManager} from "./preferences-manager";
 
 // Combined options for the notification service
 export interface NotificationServiceOptions extends ExtendedNotificationOptions {
@@ -45,8 +46,20 @@ export class NotificationService {
      */
     async show(content: string, options: NotificationServiceOptions = {}): Promise<void> {
         try {
+            // Get preferences for notification position
+            const preferences = await preferencesManager.getPreferences();
+
+            // Determine notification position (from options or preferences)
+            const position = options.position || preferences.notificationPosition || 'top-right';
+
+            // Modify options to include position
+            const modifiedOptions = {
+                ...options,
+                position: position
+            };
+
             // First show the basic notification
-            const notificationElement = await this.notificationComponent.show(content, options);
+            const notificationElement = await this.notificationComponent.show(content, modifiedOptions);
 
             if (!notificationElement) {
                 return; // Notification settings disabled or error occurred
