@@ -103,11 +103,11 @@ export class BlockOptionsModal extends ModalComponent {
         }
 
         // Short delay for better visual feedback
-        setTimeout(() => {
+        setTimeout(async () => {
             const blockUsers = new BlockUsersService();
             blockUsers.setBlockType(blockType);
-            blockUsers.blockUsers(this.entryId);
             this.close();
+            await blockUsers.blockUsers(this.entryId);
         }, 300);
     }
 }

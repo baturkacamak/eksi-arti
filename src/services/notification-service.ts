@@ -32,6 +32,8 @@ export class NotificationService {
     private activeProgressBar: HTMLElement | null = null;
     private activeCountdown: HTMLElement | null = null;
     private activeButtons: HTMLElement[] = [];
+    private hasProgressBar: boolean = false;
+    private hasCountdown: boolean = false;
 
     constructor() {
         this.notificationComponent = new NotificationComponent();
@@ -89,6 +91,14 @@ export class NotificationService {
      */
     private addProgressBar(container: HTMLElement, current: number, total: number, options: ProgressBarOptions = {}): void {
         try {
+            // Clear any existing progress bar first
+            if (this.hasProgressBar && this.activeProgressBar) {
+                if (this.activeProgressBar.parentNode === container) {
+                    container.removeChild(this.activeProgressBar);
+                }
+                this.activeProgressBar = null;
+            }
+
             // Create progress bar component if not already created
             if (!this.progressBarComponent) {
                 this.progressBarComponent = new ProgressBarComponent();
@@ -99,6 +109,7 @@ export class NotificationService {
 
             // Add to container
             this.domAppendElement(container, this.activeProgressBar);
+            this.hasProgressBar = true;
 
             // Update the progress value
             this.updateProgress(current, total);
@@ -121,6 +132,14 @@ export class NotificationService {
      */
     private addCountdown(container: HTMLElement, seconds: number, options: CountdownOptions = {}): void {
         try {
+            // Clear any existing countdown first
+            if (this.hasCountdown && this.activeCountdown) {
+                if (this.activeCountdown.parentNode === container) {
+                    container.removeChild(this.activeCountdown);
+                }
+                this.activeCountdown = null;
+            }
+
             // Create countdown component if not already created
             if (!this.countdownComponent) {
                 this.countdownComponent = new CountdownComponent();
@@ -131,6 +150,7 @@ export class NotificationService {
 
             // Add to container
             this.domAppendElement(container, this.activeCountdown);
+            this.hasCountdown = true;
         } catch (error) {
             logError('Error adding countdown:', error);
         }

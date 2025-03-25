@@ -315,6 +315,7 @@ export class BlockUsersService {
      */
     private async processBatch(postTitle: string): Promise<void> {
         let userIndex = 0;
+        let notificationShown = false;
 
         while (userIndex < this.pendingUsers.length && !this.abortProcessing && this.errorCount < this.maxErrors) {
             const userUrl = this.pendingUsers[userIndex];
@@ -355,33 +356,47 @@ export class BlockUsersService {
             userIndex++;
 
             if (userIndex < this.pendingUsers.length && !this.abortProcessing) {
-                // Show countdown for next user
-                this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-            <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
-            <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
-          </div>`,
-                    {
-                        progress: {
-                            current: this.processedUsers.size,
-                            total: this.totalUserCount,
-                            options: {
-                                height: '8px',
-                                animated: true,
-                                striped: true
-                            }
-                        },
-                        countdown: {
-                            seconds: this.requestDelay,
-                            options: {
-                                label: 'Sonraki işlem için bekleniyor:',
-                                onComplete: () => {
-                                    logDebug('Countdown completed');
+                if (!notificationShown) {
+                    // Only create a new notification if we don't have one
+                    this.notificationService.show(
+                        `<div style="display: flex; align-items: center">
+                  <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
+                  <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
+                </div>`,
+                        {
+                            progress: {
+                                current: this.processedUsers.size,
+                                total: this.totalUserCount,
+                                options: {
+                                    height: '8px',
+                                    animated: true,
+                                    striped: true
+                                }
+                            },
+                            countdown: {
+                                seconds: this.requestDelay,
+                                options: {
+                                    label: 'Sonraki işlem için bekleniyor:',
+                                    onComplete: () => {
+                                        logDebug('Countdown completed');
+                                    }
                                 }
                             }
                         }
-                    }
-                );
+                    );
+                    notificationShown = true;
+                } else {
+                    // Just update the existing notification
+                    this.notificationService.updateContent(
+                        `<div style="display: flex; align-items: center">
+                  <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
+                  <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
+                </div>`
+                    );
+                    this.notificationService.updateProgress(this.processedUsers.size, this.totalUserCount);
+                    this.notificationService.updateCountdown(this.requestDelay);
+                }
+
                 await delay(this.requestDelay);
             }
         }
