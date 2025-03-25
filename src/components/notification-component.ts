@@ -87,10 +87,28 @@ export class NotificationComponent {
             // Ensure we have the latest notification duration
             await this.loadNotificationDuration();
 
+            // Determine notification position (from options or preferences)
+            const position = options.position || preferences.notificationPosition || 'top-right';
+
             // If notification already exists, update its content
             if (this.notificationElement) {
+                // Update position class
+                if (this.notificationElement.classList.contains('position-top-right')) {
+                    this.notificationElement.classList.remove('position-top-right');
+                } else if (this.notificationElement.classList.contains('position-top-left')) {
+                    this.notificationElement.classList.remove('position-top-left');
+                } else if (this.notificationElement.classList.contains('position-bottom-right')) {
+                    this.notificationElement.classList.remove('position-bottom-right');
+                } else if (this.notificationElement.classList.contains('position-bottom-left')) {
+                    this.notificationElement.classList.remove('position-bottom-left');
+                }
+                this.notificationElement.classList.add(`position-${position}`);
+
                 this.updateContent(content);
             } else {
+                // Merge position into options
+                options.position = position;
+
                 // Create a new notification
                 this.createElement(content, options);
                 this.appendNotificationToDOM();
