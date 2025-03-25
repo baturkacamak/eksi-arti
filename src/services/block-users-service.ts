@@ -7,6 +7,7 @@ import {BlockType, Endpoints, STORAGE_KEYS} from '../constants';
 import {logDebug, logError} from './logging-service';
 import {ButtonComponent} from "../components/button-component";
 import {PreferencesService} from "./preferences-service";
+import {delay} from "./utilities";
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
@@ -239,7 +240,7 @@ export class BlockUsersService {
             });
 
             // Start processing after a short delay
-            await this.delay(2);
+            await delay(2);
             await this.processBatch(postTitle);
 
             if (!this.abortProcessing) {
@@ -309,14 +310,14 @@ export class BlockUsersService {
                     break;
                 }
 
-                await this.delay(this.retryDelay);
+                await delay(this.retryDelay);
             }
 
             userIndex++;
 
             if (userIndex < this.pendingUsers.length && !this.abortProcessing) {
                 this.notification.updateDelayCountdown(this.requestDelay);
-                await this.delay(this.requestDelay);
+                await delay(this.requestDelay);
             }
         }
     }
@@ -421,7 +422,7 @@ export class BlockUsersService {
 
                 // Use the configurable retry delay from preferences with exponential backoff
                 const delayTime = this.retryDelay * Math.pow(1.5, attempts - 1);
-                await this.delay(delayTime);
+                await delay(delayTime);
             }
         }
 
@@ -461,12 +462,5 @@ export class BlockUsersService {
         await this.notification.show(notificationContent, {timeout: 60});
 
         this.currentBlocked = processed + 1;
-    }
-
-    /**
-     * Promise-based delay function
-     */
-    private delay(seconds: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
     }
 }
