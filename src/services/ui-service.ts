@@ -9,6 +9,7 @@ import { BlockerState } from '../types';
 import { preferencesManager } from './preferences-manager';
 import { logError, logInfo, logDebug } from "./logging-service";
 import {NotificationService} from "./notification-service";
+import {IconComponent} from "../components/icon-component";
 
 export class UIService {
     private domHandler: DOMService;
@@ -16,10 +17,12 @@ export class UIService {
     private initialized: boolean = false;
     private observer: MutationObserver | null = null;
     private menuItemSelector: string = '';
+    private iconComponent: IconComponent;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.iconComponent = new IconComponent();
     }
 
     /**
@@ -79,11 +82,19 @@ export class UIService {
         newAnchor.setAttribute('title', 'favorileyenleri engelle');
         newAnchor.setAttribute('aria-label', 'favorileyenleri engelle');
 
-        // Create an icon for the menu item using Material Icons
-        newAnchor.innerHTML = `
-      <span class="material-icons" style="vertical-align: middle; margin-right: 5px; font-size: 14px;">more_horiz</span>
-      favorileyenleri engelle
-    `;
+        // Create the icon element using IconComponent
+        const iconElement = this.iconComponent.create({
+            name: 'more_horiz',
+            size: 14,
+            className: 'eksi-menu-icon'
+        });
+
+        // Add icon to anchor
+        this.domHandler.appendChild(newAnchor, iconElement);
+
+        // Add text node
+        const textNode = document.createTextNode(' favorileyenleri engelle');
+        this.domHandler.appendChild(newAnchor, textNode);
 
         // Add a custom CSS class for styling
         this.domHandler.addClass(newAnchor, 'eksi-block-users-link');
@@ -313,9 +324,11 @@ export class UIService {
             // Show the notification with more concise wording
             await notificationService.show(
                 `<div class="eksi-notification-info">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#42a5f5"/>
-                    </svg>
+                    ${this.iconComponent.create({
+                        name: 'info',
+                        color: '#42a5f5',
+                        size: 'medium'
+                    }).outerHTML}
                     Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
                     <div>
                         <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi

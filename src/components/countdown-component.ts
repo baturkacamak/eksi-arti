@@ -5,16 +5,17 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { logError } from "../services/logging-service";
+import {IconComponent, IconProps} from "./icon-component";
 
 export interface CountdownOptions {
     autoStart?: boolean;
     showIcon?: boolean;
+    icon?: IconProps | null;
     showLabel?: boolean;
     label?: string;
     className?: string;
     onComplete?: () => void;
     onTick?: (secondsRemaining: number) => void;
-    iconName?: string;
     textFormat?: (seconds: number) => string;
 }
 
@@ -27,25 +28,38 @@ export class CountdownComponent {
     private remainingSeconds: number = 0;
     private options: CountdownOptions = {};
     private static stylesApplied = false;
+    private iconComponent: IconComponent;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.iconComponent = new IconComponent();
         this.applyCountdownStyles();
     }
 
     /**
      * Create a countdown element
      */
+    /**
+     * Create a countdown element
+     */
     create(seconds: number, options: CountdownOptions = {}): HTMLElement {
         try {
             this.remainingSeconds = Math.max(0, seconds);
+
+            // Default icon props if not provided
+            const defaultIconProps: IconProps = {
+                name: 'schedule',
+                size: 'small',
+                color: '#81c14b'
+            };
+
             this.options = {
                 autoStart: true,
                 showIcon: true,
+                icon: defaultIconProps,
                 showLabel: true,
                 label: 'Sonraki işlem için bekleniyor:',
-                iconName: 'schedule',
                 ...options
             };
 
@@ -58,18 +72,34 @@ export class CountdownComponent {
                 this.domHandler.addClass(this.countdownElement, this.options.className);
             }
 
-            // Create content with icon if requested
+            // Create content
             let content = '';
 
-            if (this.options.showIcon) {
-                const iconName = this.options.iconName || 'schedule';
-                content += `<span class="material-icons eksi-countdown-icon" aria-hidden="true">${iconName}</span>`;
+            // Add icon if requested
+            if (this.options.showIcon && this.options.icon) {
+                const iconElement = this.iconComponent.create({
+                    ...this.options.icon,
+                    className: 'eksi-countdown-icon'
+                });
+
+                // If countdownElement is already in DOM, append directly
+                if (this.countdownElement.isConnected) {
+                    this.domHandler.appendChild(this.countdownElement, iconElement);
+                } else {
+                    // Otherwise, we'll add it via innerHTML later
+                    content += this.iconComponent.create({
+                        ...this.options.icon,
+                        className: 'eksi-countdown-icon'
+                    }).outerHTML;
+                }
             }
 
+            // Add label if requested
             if (this.options.showLabel && this.options.label) {
                 content += `<span class="eksi-countdown-label">${this.options.label}</span>`;
             }
 
+            // Add time element
             content += `<span class="eksi-countdown-time"><strong>${this.formatTime(this.remainingSeconds)}</strong></span>`;
 
             this.countdownElement.innerHTML = content;
@@ -210,27 +240,33 @@ export class CountdownComponent {
     /**
      * Set the icon
      */
-    setIcon(iconName: string): void {
+    setIcon(iconProps: IconProps): void {
         if (!this.countdownElement) return;
 
         const iconElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownElement);
 
         if (iconElement) {
-            iconElement.textContent = iconName;
+            // Replace existing icon
+            const newIconElement = this.iconComponent.create({
+                ...iconProps,
+                className: 'eksi-countdown-icon'
+            });
+
+            iconElement.parentNode?.replaceChild(newIconElement, iconElement);
         } else if (this.options.showIcon) {
             // Create icon if it doesn't exist
-            const newIconElement = this.domHandler.createElement('span');
-            this.domHandler.addClass(newIconElement, 'material-icons');
-            this.domHandler.addClass(newIconElement, 'eksi-countdown-icon');
-            newIconElement.setAttribute('aria-hidden', 'true');
-            newIconElement.textContent = iconName;
+            const newIconElement = this.iconComponent.create({
+                ...iconProps,
+                className: 'eksi-countdown-icon'
+            });
 
             // Insert at beginning
             this.countdownElement.insertBefore(newIconElement, this.countdownElement.firstChild);
         }
 
-        this.options.iconName = iconName;
+        this.options.icon = iconProps;
     }
+
 
     /**
      * Show or hide the icon
@@ -240,8 +276,8 @@ export class CountdownComponent {
 
         const iconElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownElement);
 
-        if (show && !iconElement && this.options.iconName) {
-            this.setIcon(this.options.iconName);
+        if (show && !iconElement && this.options.icon) {
+            this.setIcon(this.options.icon);
         } else if (!show && iconElement && iconElement.parentNode) {
             iconElement.parentNode.removeChild(iconElement);
         }

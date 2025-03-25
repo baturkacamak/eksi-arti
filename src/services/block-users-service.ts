@@ -12,12 +12,14 @@ import { ButtonVariant } from "../components/button-component";
 import { PreferencesService } from "./preferences-service";
 import { delay } from "./utilities";
 import { NotificationService } from './notification-service';
+import {IconComponent} from "../components/icon-component";
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
     private htmlParser: HtmlParserService;
     private notificationService: NotificationService;
     private preferencesService: PreferencesService;
+    private iconComponent: IconComponent;
 
     private totalUserCount: number = 0;
     private currentBlocked: number = 1;
@@ -39,6 +41,7 @@ export class BlockUsersService {
         this.htmlParser = new HtmlParserService();
         this.notificationService = new NotificationService();
         this.preferencesService = new PreferencesService();
+        this.iconComponent = new IconComponent();
         this.loadOperationParams();
     }
 
@@ -223,9 +226,9 @@ export class BlockUsersService {
                 // Show success notification with no progress bar
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-            <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
-            <span>Tüm kullanıcılar zaten işlendi.</span>
-          </div>`,
+                        ${this.iconComponent.create({ name: 'check_circle', color: '#81c14b', size: 'medium' }).outerHTML}
+                        <span>Tüm kullanıcılar zaten işlendi.</span>
+                    </div>`,
                     {
                         theme: 'success',
                         timeout: 5
@@ -259,9 +262,9 @@ export class BlockUsersService {
                 this.abortProcessing = true;
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-            <span class="material-icons" style="color: #ff9800; margin-right: 8px;">warning</span>
-            <span>İşlem durduruldu.</span>
-          </div>`,
+                        ${this.iconComponent.create({ name: 'warning', color: '#ff9800', size: 'medium' }).outerHTML}
+                        <span>İşlem durduruldu.</span>
+                    </div>`,
                     {
                         theme: 'warning',
                         timeout: 5
@@ -276,9 +279,9 @@ export class BlockUsersService {
             if (!this.abortProcessing) {
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-            <span class="material-icons" style="color: #81c14b; margin-right: 8px;">check_circle</span>
-            <span>İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.</span>
-          </div>`,
+                        ${this.iconComponent.create({ name: 'check_circle', color: '#81c14b', size: 'medium' }).outerHTML}
+                        <span>İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.</span>
+                    </div>`,
                     {
                         theme: 'success',
                         timeout: 5
@@ -294,9 +297,9 @@ export class BlockUsersService {
 
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
-          <span class="material-icons" style="color: #e53935; margin-right: 8px;">error</span>
-          <span>Hata oluştu: ${errorMessage}</span>
-        </div>`,
+                    ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
+                    <span>Hata oluştu: ${errorMessage}</span>
+                </div>`,
                 {
                     theme: 'error',
                     timeout: 10
@@ -338,9 +341,9 @@ export class BlockUsersService {
                 if (this.errorCount >= this.maxErrors) {
                     await this.notificationService.show(
                         `<div style="display: flex; align-items: center">
-              <span class="material-icons" style="color: #e53935; margin-right: 8px;">error_outline</span>
-              <span>Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.</span>
-            </div>`,
+                            ${this.iconComponent.create({ name: 'error_outline', color: '#e53935', size: 'medium' }).outerHTML}
+                            <span>Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.</span>
+                        </div>`,
                         {
                             theme: 'error',
                             timeout: 10
@@ -360,9 +363,9 @@ export class BlockUsersService {
                     // Only create a new notification if we don't have one
                     this.notificationService.show(
                         `<div style="display: flex; align-items: center">
-                  <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
-                  <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
-                </div>`,
+                            ${this.iconComponent.create({ name: 'person', color: '#81c14b', size: 'medium' }).outerHTML}
+                            <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
+                        </div>`,
                         {
                             progress: {
                                 current: this.processedUsers.size,
@@ -389,9 +392,9 @@ export class BlockUsersService {
                     // Just update the existing notification
                     this.notificationService.updateContent(
                         `<div style="display: flex; align-items: center">
-                  <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
-                  <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
-                </div>`
+                            ${this.iconComponent.create({ name: 'person', color: '#81c14b', size: 'medium' }).outerHTML}
+                            <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
+                        </div>`
                     );
                     this.notificationService.updateProgress(this.processedUsers.size, this.totalUserCount);
                     this.notificationService.updateCountdown(this.requestDelay);
@@ -521,11 +524,11 @@ export class BlockUsersService {
         // Update notification content with progress
         this.notificationService.updateContent(
             `<div style="display: flex; align-items: center">
-        <span class="material-icons" style="color: #81c14b; margin-right: 8px;">person</span>
-        <span>${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
-        <strong>${processed}</strong> / <strong>${total}</strong> 
-        (Kalan: ${remaining})</span>
-      </div>`
+                ${this.iconComponent.create({ name: 'person', color: '#81c14b', size: 'medium' }).outerHTML}
+                <span>${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
+                <strong>${processed}</strong> / <strong>${total}</strong> 
+                (Kalan: ${remaining})</span>
+            </div>`
         );
 
         // Update progress bar
