@@ -1,11 +1,12 @@
-import { HttpService, HttpError } from './http-service';
-import { HtmlParserService } from './html-parser-service';
-import { NotificationComponent } from '../components/notification-component';
-import { storageService, StorageArea } from './storage-service';
-import { preferencesManager } from './preferences-manager';
-import { BlockType, STORAGE_KEYS, Endpoints } from '../constants';
-import { logger, logDebug, logError } from './logging-service';
-import {ButtonComponent, ButtonSize, ButtonVariant} from "../components/button-component";
+import {HttpService} from './http-service';
+import {HtmlParserService} from './html-parser-service';
+import {NotificationComponent} from '../components/notification-component';
+import {StorageArea, storageService} from './storage-service';
+import {preferencesManager} from './preferences-manager';
+import {BlockType, Endpoints, STORAGE_KEYS} from '../constants';
+import {logDebug, logError} from './logging-service';
+import {ButtonComponent} from "../components/button-component";
+import {PreferencesService} from "./preferences-service";
 
 export class BlockUsersService {
     private remoteRequest: HttpService;
@@ -27,12 +28,14 @@ export class BlockUsersService {
     private abortProcessing: boolean = false;
     private errorCount: number = 0;
     private maxErrors: number = 10; // Maximum errors before aborting
+    private preferencesService: PreferencesService;
 
     constructor() {
         this.remoteRequest = new HttpService();
         this.htmlParser = new HtmlParserService();
         this.notification = new NotificationComponent();
         this.buttonComponent = new ButtonComponent();
+        this.preferencesService = new PreferencesService();
         this.loadOperationParams();
     }
 
@@ -276,9 +279,6 @@ export class BlockUsersService {
     private async processBatch(postTitle: string): Promise<void> {
         let userIndex = 0;
 
-        // Add stop button at the start of processing
-        this.addStopButton();
-
         while (userIndex < this.pendingUsers.length && !this.abortProcessing && this.errorCount < this.maxErrors) {
             const userUrl = this.pendingUsers[userIndex];
             const username = this.getUsernameFromUrl(userUrl);
@@ -392,17 +392,7 @@ export class BlockUsersService {
             const username = this.getUsernameFromUrl(userUrl);
             const noteUrl = Endpoints.ADD_NOTE.replace('{username}', username);
 
-            // Get the preferences to use the custom note template
-            const preferences = preferencesManager.getPreferences();
-            const noteTemplate = preferences.defaultNoteTemplate;
-
-            // Generate custom note with the template from preferences
-            const actionType = this.blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
-            const noteText = noteTemplate
-                .replace('{postTitle}', postTitle)
-                .replace('{actionType}', actionType)
-                .replace('{entryLink}', `https://eksisozluk.com/entry/${this.entryId}`)
-                .replace('{date}', new Date().toLocaleString('tr-TR'));
+            const noteText = await this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType);
 
             const data = `who=${userId}&usernote=${encodeURIComponent(noteText)}`;
             await this.remoteRequest.post(noteUrl, data);
@@ -471,32 +461,6 @@ export class BlockUsersService {
         await this.notification.show(notificationContent, {timeout: 60});
 
         this.currentBlocked = processed + 1;
-    }
-
-    /**
-     * Add stop button
-     */
-    private addStopButton(): void {
-        const stopButton = this.buttonComponent.create({
-            text: 'Durdur',
-            variant: ButtonVariant.DANGER,
-            size: ButtonSize.SMALL,
-            icon: 'stop',
-            onClick: async () => {
-                this.abortProcessing = true;
-                await this.notification.show(
-                    `<div class="eksi-notification-warning">
-                        <span class="material-icons" style="color: #ff9800; margin-right: 8px;">warning</span>
-                        İşlem durduruldu.
-                    </div>`,
-                    {timeout: 5}
-                );
-            }
-        });
-
-        this.notification.addStopButton(async () => {
-            stopButton.click(); // Trigger the programmatic click
-        });
     }
 
     /**

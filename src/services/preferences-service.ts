@@ -1,5 +1,5 @@
 import { BlockerPreferences } from '../types';
-import { BlockType, STORAGE_KEYS } from '../constants';
+import {BlockType, SITE_DOMAIN, STORAGE_KEYS} from '../constants';
 import { storageService, StorageArea } from './storage-service';
 import { logger, logDebug, logError } from './logging-service';
 
@@ -76,12 +76,12 @@ export class PreferencesService {
         try {
             // Get preferences asynchronously for better reliability
             const preferences = await this.getPreferences();
-            const actionType = blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
+            const actionType = blockType === BlockType.MUTE ? 'sessize alındı' : 'engellendi';
 
             return preferences.defaultNoteTemplate
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
-                .replace('{entryLink}', `https://eksisozluk.com/entry/${entryId}`);
+                .replace('{entryLink}', `https://${SITE_DOMAIN}/entry/${entryId}`);
         } catch (error) {
             // In case of error, use default template
             logError('Error generating custom note', error, 'PreferencesService');
@@ -90,7 +90,7 @@ export class PreferencesService {
             return this.defaultPreferences.defaultNoteTemplate
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
-                .replace('{entryLink}', `https://eksisozluk.com/entry/${entryId}`);
+                .replace('{entryLink}', `https://${SITE_DOMAIN}/entry/${entryId}`);
         }
     }
 

@@ -1,8 +1,8 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
+import { DOMService } from './dom-service';
+import { CSSService } from './css-service';
 import { BlockOptionsModal } from '../components/block-options-modal';
 import { ResumeModal } from '../components/resume-modal';
-import { StorageService } from './storage-service';
+import {StorageArea, storageService, StorageService} from './storage-service';
 import { NotificationComponent } from '../components/notification-component';
 import { STORAGE_KEYS } from '../constants';
 import { BlockerState } from '../types';
@@ -119,13 +119,14 @@ export class UIService {
      * Add event listener to menu item
      */
     private addMenuItemEventListener(entryId: string, menuItem: HTMLElement): void {
-        this.domHandler.addEventListener(menuItem, 'click', (e) => {
+        this.domHandler.addEventListener(menuItem, 'click', async (e) => {
             // First, prevent default behavior to ensure the click isn't hijacked
             e.preventDefault();
             e.stopPropagation();
 
             // Check if there's an existing operation
-            const savedState = StorageService.load<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION);
+            const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+            const savedState = result.success && result.data ? result.data : null;
             if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
                 try {
                     const resumeModal = new ResumeModal(entryId, savedState);
@@ -296,8 +297,9 @@ export class UIService {
     /**
      * Check for saved state and show notification if exists
      */
-    private checkForSavedState(): void {
-        const savedState = StorageService.load<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION);
+    private async checkForSavedState(): Promise<void>  {
+        const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+        const savedState = result.success && result.data ? result.data : null;
         if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
             const notification = new NotificationComponent();
             const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
