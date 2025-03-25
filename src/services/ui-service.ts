@@ -8,6 +8,7 @@ import { STORAGE_KEYS } from '../constants';
 import { BlockerState } from '../types';
 import { preferencesManager } from './preferences-manager';
 import { logError, logInfo, logDebug } from "./logging-service";
+import {NotificationService} from "./notification-service";
 
 export class UIService {
     private domHandler: DOMService;
@@ -32,7 +33,7 @@ export class UIService {
             setTimeout(async () => {
                 await this.addMenuItemToDropdown();
                 this.observeDOMChanges();
-                this.checkForSavedState();
+                await this.checkForSavedState();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
@@ -297,26 +298,37 @@ export class UIService {
     /**
      * Check for saved state and show notification if exists
      */
-    private async checkForSavedState(): Promise<void>  {
+    /**
+     * Check for saved state and show notification if exists
+     */
+    private async checkForSavedState(): Promise<void> {
         const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
         const savedState = result.success && result.data ? result.data : null;
+
         if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
-            const notification = new NotificationComponent();
+            // Create a notification service instead of the basic component
+            const notificationService = new NotificationService();
             const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
 
-            notification.show(
+            // Show the notification with more concise wording
+            await notificationService.show(
                 `<div class="eksi-notification-info">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#42a5f5"/>
-          </svg>
-          Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
-          <div class="eksi-tooltip">
-            <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
-            <span class="eksi-tooltiptext">Menüden "favorileyenleri engelle" seçeneği ile devam edebilirsiniz.</span>
-          </div>
-        </div>`,
-                {timeout: 15},
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#42a5f5"/>
+                    </svg>
+                    Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
+                    <div>
+                        <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
+                    </div>
+                </div>`,
+                {
+                    timeout: 0, // Don't auto-close this notification since it has an action button
+                    width: '380px' // Set explicit width to ensure it's not too wide
+                }
             );
+
+            // Add a continue button to the notification
+            notificationService.addContinueButton(savedState.entryId);
         }
     }
 

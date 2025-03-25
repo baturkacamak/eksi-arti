@@ -319,9 +319,13 @@ export class NotificationComponent {
         z-index: 100000;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-        min-width: 320px;
+        min-width: 280px;
+        max-width: 420px; /* Add max-width to limit notification width */
+        width: auto; /* Allow notification to size based on content up to max-width */
         border-left: 4px solid #81c14b;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        overflow-wrap: break-word; /* Ensure text wraps properly within container */
+        word-break: break-word; /* Help with long words */
       }
 
       /* Position classes */
@@ -407,6 +411,20 @@ export class NotificationComponent {
         gap: 10px;
       }
 
+      /* Button container styles */
+      .eksi-notification-button-container {
+        width: 100%;
+      }
+
+      /* Make continue button more prominent */
+      .eksi-notification-continue-button {
+        width: 100% !important;
+        margin-top: 8px;
+        padding: 10px !important;
+        text-align: center;
+        font-weight: 600 !important;
+      }
+
       /* Close button */
       .eksi-notification-close {
         position: absolute;
@@ -476,6 +494,49 @@ export class NotificationComponent {
       
       .eksi-notification-theme-info .eksi-notification-title {
         color: #1e88e5;
+      }
+
+      /* Utility tooltip for the notification */
+      .eksi-tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        margin-top: 4px;
+      }
+
+      .eksi-tooltip .eksi-tooltiptext {
+        visibility: hidden;
+        width: 220px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .eksi-tooltip .eksi-tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+      }
+
+      .eksi-tooltip:hover .eksi-tooltiptext {
+        visibility: visible;
+        opacity: 1;
       }
     `;
 

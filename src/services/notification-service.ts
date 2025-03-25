@@ -1,15 +1,12 @@
-/**
- * NotificationService
- * Service that composes and manages notifications, progress bars, and countdowns
- * This service follows the Composition pattern, using the individual components
- * instead of extending them
- */
-import {ExtendedNotificationOptions, NotificationComponent} from '../components/notification-component';
-import {ProgressBarComponent, ProgressBarOptions} from '../components/progress-bar-component';
-import {CountdownComponent, CountdownOptions} from '../components/countdown-component';
-import {ButtonComponent, ButtonProps, ButtonSize, ButtonVariant} from '../components/button-component';
-import {logError} from './logging-service';
-import {preferencesManager} from "./preferences-manager";
+import { ExtendedNotificationOptions, NotificationComponent } from '../components/notification-component';
+import { ProgressBarComponent, ProgressBarOptions } from '../components/progress-bar-component';
+import { CountdownComponent, CountdownOptions } from '../components/countdown-component';
+import { ButtonComponent, ButtonProps, ButtonSize, ButtonVariant } from '../components/button-component';
+import { logError } from './logging-service';
+import { preferencesManager } from "./preferences-manager";
+import { StorageArea, storageService } from './storage-service';
+import { STORAGE_KEYS } from '../constants';
+import { BlockerState } from '../types';
 
 // Combined options for the notification service
 export interface NotificationServiceOptions extends ExtendedNotificationOptions {
@@ -218,6 +215,58 @@ export class NotificationService {
             size: ButtonSize.SMALL,
             onClick: clickHandler,
             className: 'eksi-notification-stop-button'
+        };
+
+        // Pass an array containing the ButtonProps object
+        this.addButtons(footerContainer, [buttonProps]);
+    }
+
+    /**
+     * Add a continue button to the notification for resuming operations
+     */
+    addContinueButton(entryId: string, clickHandler?: () => void): void {
+        if (!this.notificationComponent) return;
+
+        const footerContainer = this.notificationComponent.getFooterContainer();
+        if (!footerContainer) return;
+
+        // Create default click handler if none provided
+        const defaultClickHandler = async () => {
+            // Close the notification
+            this.close();
+
+            try {
+                // Get the saved state
+                const result = await storageService.getItem<BlockerState>(
+                    STORAGE_KEYS.CURRENT_OPERATION,
+                    undefined,
+                    StorageArea.LOCAL
+                );
+
+                if (result.success && result.data) {
+                    // Dynamically import the resume modal component
+                    const { ResumeModal } = await import('../components/resume-modal');
+
+                    // Show the resume modal
+                    const resumeModal = new ResumeModal(entryId, result.data);
+                    document.body.style.overflow = 'hidden';
+                    resumeModal.show();
+                } else {
+                    logError('No saved operation state found');
+                }
+            } catch (error) {
+                logError('Error loading resume modal:', error);
+            }
+        };
+
+        const buttonProps: ButtonProps = {
+            text: 'Devam Et',
+            icon: 'play_arrow',
+            variant: ButtonVariant.PRIMARY,
+            size: ButtonSize.MEDIUM,
+            onClick: clickHandler || defaultClickHandler,
+            className: 'eksi-notification-continue-button',
+            fullWidth: true // Make button full width for better visibility
         };
 
         // Pass an array containing the ButtonProps object
