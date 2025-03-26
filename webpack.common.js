@@ -29,7 +29,8 @@ module.exports = {
                 { from: 'icons', to: 'icons' },
                 { from: 'manifest.json', to: 'manifest.json' },
                 { from: 'options.html', to: 'options.html' },
-                { from: 'options.css', to: 'options.css' }
+                { from: 'options.css', to: 'options.css' },
+                { from: 'node_modules/html2canvas/dist/html2canvas.min.js', to: 'lib/' }
             ],
         }),
     ],

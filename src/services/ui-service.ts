@@ -10,6 +10,7 @@ import {logDebug, logError, logInfo} from "./logging-service";
 import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/icon-component";
 import {CopyButtonComponent} from "../components/copy-button-component";
+import {ScreenshotButtonComponent} from "../components/ScreenshotButtonComponent";
 
 export class UIService {
     private domHandler: DOMService;
@@ -19,12 +20,14 @@ export class UIService {
     private menuItemSelector: string = '';
     private iconComponent: IconComponent;
     private copyButtonComponent: CopyButtonComponent;
+    private screenshotButtonComponent: ScreenshotButtonComponent;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
         this.copyButtonComponent = new CopyButtonComponent();
+        this.screenshotButtonComponent = new ScreenshotButtonComponent();
     }
 
     /**
@@ -40,6 +43,7 @@ export class UIService {
                 this.observeDOMChanges();
                 await this.checkForSavedState();
                 this.copyButtonComponent.initialize();
+                this.screenshotButtonComponent.initialize();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
@@ -351,10 +355,25 @@ export class UIService {
     /**
      * Cleanup resources
      */
+    /**
+     * Cleanup resources
+     */
     dispose(): void {
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
+        }
+
+        // Clean up components
+        if (this.copyButtonComponent) {
+            // Call destroy method if it exists
+            if ('destroy' in this.copyButtonComponent) {
+                (this.copyButtonComponent as any).destroy();
+            }
+        }
+
+        if (this.screenshotButtonComponent) {
+            this.screenshotButtonComponent.destroy();
         }
     }
 }
