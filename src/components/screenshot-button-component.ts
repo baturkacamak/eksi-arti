@@ -73,7 +73,7 @@ export class ScreenshotButtonComponent {
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                margin: 0 5px;
+                margin: 0 0 0 15px;
                 padding: 4px;
                 border-radius: 4px;
                 transition: all 0.2s ease;
@@ -168,33 +168,20 @@ export class ScreenshotButtonComponent {
 
             // Position the button in the control area
             // Find the first control element to position relative to
-            const firstControl = controlsContainer.querySelector('.eksico');
+            // Position the button in the control area
+            // Find the first control element to insert after
+            const firstControl = controlsContainer.querySelector('.feedback-container');
             if (firstControl && firstControl.parentNode) {
-                // Get the icon container parent similar to other controls
-                const iconContainer = this.domHandler.createElement('a');
-                iconContainer.style.margin = '0 3px';
-                iconContainer.appendChild(screenshotButton);
-
-                // Insert after the copy button if present, otherwise after the first control
-                const copyButton = controlsContainer.querySelector('.eksi-copy-button');
-                if (copyButton && copyButton.parentNode) {
-                    const copyParent = copyButton.parentNode;
-                    if (copyParent.nextSibling) {
-                        copyParent.parentNode?.insertBefore(iconContainer, copyParent.nextSibling);
-                    } else {
-                        copyParent.parentNode?.appendChild(iconContainer);
-                    }
+                // Insert after the first control element
+                const parent = firstControl.parentNode;
+                if (parent.nextSibling) {
+                    parent.parentNode?.insertBefore(screenshotButton, parent.nextSibling);
                 } else {
-                    const parent = firstControl.parentNode;
-                    if (parent.nextSibling) {
-                        parent.parentNode?.insertBefore(iconContainer, parent.nextSibling);
-                    } else {
-                        parent.parentNode?.appendChild(iconContainer);
-                    }
+                    parent.parentNode?.appendChild(screenshotButton);
                 }
             } else {
                 // Fallback: insert at the beginning of controls container
-                controlsContainer.appendChild(screenshotButton);
+                controlsContainer.insertBefore(screenshotButton, controlsContainer.firstChild);
             }
 
             // Store reference to this button

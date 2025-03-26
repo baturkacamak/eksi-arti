@@ -10,7 +10,7 @@ import {logDebug, logError, logInfo} from "./logging-service";
 import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/icon-component";
 import {CopyButtonComponent} from "../components/copy-button-component";
-import {ScreenshotButtonComponent} from "../components/ScreenshotButtonComponent";
+import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
 
 export class UIService {
     private domHandler: DOMService;
