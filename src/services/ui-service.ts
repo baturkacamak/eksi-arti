@@ -11,6 +11,7 @@ import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/icon-component";
 import {CopyButtonComponent} from "../components/copy-button-component";
 import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
+import {EntrySorterComponent} from "../components/entry-sorter-component";
 
 export class UIService {
     private domHandler: DOMService;
@@ -21,6 +22,7 @@ export class UIService {
     private iconComponent: IconComponent;
     private copyButtonComponent: CopyButtonComponent;
     private screenshotButtonComponent: ScreenshotButtonComponent;
+    private entrySorterComponent: EntrySorterComponent;
 
     constructor() {
         this.domHandler = new DOMService();
@@ -28,6 +30,7 @@ export class UIService {
         this.iconComponent = new IconComponent();
         this.copyButtonComponent = new CopyButtonComponent();
         this.screenshotButtonComponent = new ScreenshotButtonComponent();
+        this.entrySorterComponent = new EntrySorterComponent();
     }
 
     /**
@@ -44,6 +47,10 @@ export class UIService {
                 await this.checkForSavedState();
                 this.copyButtonComponent.initialize();
                 this.screenshotButtonComponent.initialize();
+                // Check if we're on an entries page and initialize the sorter
+                if (this.isEntriesPage()) {
+                    this.entrySorterComponent.initialize();
+                }
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
@@ -352,9 +359,11 @@ export class UIService {
         }
     }
 
-    /**
-     * Cleanup resources
-     */
+    // Add a method to check if we're on an entries page
+    private isEntriesPage(): boolean {
+        return !!document.querySelector('#entry-item-list');
+    }
+
     /**
      * Cleanup resources
      */
@@ -374,6 +383,10 @@ export class UIService {
 
         if (this.screenshotButtonComponent) {
             this.screenshotButtonComponent.destroy();
+        }
+
+        if (this.entrySorterComponent) {
+            this.entrySorterComponent.destroy();
         }
     }
 }
