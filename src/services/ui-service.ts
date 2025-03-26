@@ -1,15 +1,15 @@
-import { DOMService } from './dom-service';
-import { CSSService } from './css-service';
-import { BlockOptionsModal } from '../components/block-options-modal';
-import { ResumeModal } from '../components/resume-modal';
-import {StorageArea, storageService, StorageService} from './storage-service';
-import { NotificationComponent } from '../components/notification-component';
-import { STORAGE_KEYS } from '../constants';
-import { BlockerState } from '../types';
-import { preferencesManager } from './preferences-manager';
-import { logError, logInfo, logDebug } from "./logging-service";
+import {DOMService} from './dom-service';
+import {CSSService} from './css-service';
+import {BlockOptionsModal} from '../components/block-options-modal';
+import {ResumeModal} from '../components/resume-modal';
+import {StorageArea, storageService} from './storage-service';
+import {STORAGE_KEYS} from '../constants';
+import {BlockerState} from '../types';
+import {preferencesManager} from './preferences-manager';
+import {logDebug, logError, logInfo} from "./logging-service";
 import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/icon-component";
+import {CopyButtonComponent} from "../components/copy-button-component";
 
 export class UIService {
     private domHandler: DOMService;
@@ -18,11 +18,13 @@ export class UIService {
     private observer: MutationObserver | null = null;
     private menuItemSelector: string = '';
     private iconComponent: IconComponent;
+    private copyButtonComponent: CopyButtonComponent;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
+        this.copyButtonComponent = new CopyButtonComponent();
     }
 
     /**
@@ -37,6 +39,7 @@ export class UIService {
                 await this.addMenuItemToDropdown();
                 this.observeDOMChanges();
                 await this.checkForSavedState();
+                this.copyButtonComponent.initialize();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
@@ -325,10 +328,10 @@ export class UIService {
             await notificationService.show(
                 `<div class="eksi-notification-info">
                     ${this.iconComponent.create({
-                        name: 'info',
-                        color: '#42a5f5',
-                        size: 'medium'
-                    }).outerHTML}
+                    name: 'info',
+                    color: '#42a5f5',
+                    size: 'medium'
+                }).outerHTML}
                     Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
                     <div>
                         <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
