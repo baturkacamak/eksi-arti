@@ -89,25 +89,6 @@ export class ScreenshotButtonComponent {
                 background-color: rgba(142, 158, 217, 0.25);
             }
             
-            .eksi-screenshot-button::after {
-                content: "Ekran Görüntüsü (Ekşi+)";
-                position: absolute;
-                bottom: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: rgba(0, 0, 0, 0.8);
-                color: white;
-                font-size: 12px;
-                padding: 4px 8px;
-                border-radius: 4px;
-                opacity: 0;
-                visibility: hidden;
-                transition: opacity 0.2s, visibility 0.2s;
-                pointer-events: none;
-                white-space: nowrap;
-                margin-bottom: 5px;
-            }
-            
             .eksi-screenshot-button:hover::after {
                 opacity: 1;
                 visibility: visible;
@@ -370,9 +351,6 @@ export class ScreenshotButtonComponent {
 
             // Remove processing animation
             this.domHandler.removeClass(iconElement, 'eksi-screenshot-processing');
-
-            // Use IconComponent to show success state
-            this.iconComponent.showSuccessState(iconElement, 1500);
 
             // Reset to camera icon after success animation
             setTimeout(() => {
