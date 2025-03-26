@@ -273,6 +273,10 @@ class OptionsPage {
             this.setSelectValue('theme', this.preferences.theme);
             this.setSelectValue('notificationPosition', this.preferences.notificationPosition);
 
+            // Add vote monitoring settings here
+            this.setCheckboxValue('voteMonitoringEnabled', this.preferences.voteMonitoringEnabled);
+            this.setInputValue('voteMonitoringInterval', this.preferences.voteMonitoringInterval);
+
             // Advanced Settings
             this.setCheckboxValue('saveOperationHistory', this.preferences.saveOperationHistory);
             this.setCheckboxValue('enableDebugMode', this.preferences.enableDebugMode);
@@ -303,6 +307,10 @@ class OptionsPage {
             this.preferences.requestDelay = this.getNumberValue('requestDelay', 2, 30, 7);
             this.preferences.retryDelay = this.getNumberValue('retryDelay', 2, 30, 5);
             this.preferences.maxRetries = this.getNumberValue('maxRetries', 1, 10, 3);
+
+            // Vote monitoring settings
+            this.preferences.voteMonitoringEnabled = this.getCheckboxValue('voteMonitoringEnabled');
+            this.preferences.voteMonitoringInterval = this.getNumberValue('voteMonitoringInterval', 1, 60, 1);
 
             // Appearance Settings
             this.preferences.theme = this.getSelectValue('theme');

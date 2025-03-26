@@ -2,6 +2,7 @@
 import { UIService } from './services/ui-service';
 import { logError } from './services/logging-service';
 import { CSSService } from './services/css-service';
+import {voteMonitoringService} from "./services/vote-monitoring-service";
 
 /**
  * Inject Material Icons font
@@ -49,6 +50,9 @@ function init(): void {
     try {
         // Inject Material Icons first
         injectMaterialIcons();
+
+        // Initialize vote monitoring service
+        voteMonitoringService.initialize();
 
         // Then initialize the UI
         const uiService = new UIService();

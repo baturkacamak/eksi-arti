@@ -5,6 +5,126 @@
 
 import { preferencesManager } from './services/preferences-manager';
 import { logger, logDebug, logError } from './services/logging-service';
+import {getCurrentDomain} from "./constants";
+
+/**
+ * Set up vote monitoring
+ */
+function setupVoteMonitoring() {
+    // Set up alarm for checking votes
+    chrome.alarms.create('checkForNewVote', {
+        periodInMinutes: 1 // Default to 1 minute
+    });
+
+    // Listen for alarm events
+    chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm.name === 'checkForNewVote') {
+            checkForNewVote();
+        }
+    });
+
+    // Listen for changes to the monitoring settings
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.username) {
+            // Store username
+            chrome.storage.local.set({'userNick': message.username});
+            logDebug('Username updated', { username: message.username });
+        }
+
+        if (message.action === 'updateVoteMonitoring') {
+            if (message.interval) {
+                // Update alarm interval
+                chrome.alarms.create('checkForNewVote', {
+                    periodInMinutes: message.interval
+                });
+                logDebug('Vote monitoring interval updated', { interval: message.interval });
+            }
+
+            if (message.enabled !== undefined) {
+                if (message.enabled) {
+                    // Ensure alarm is set up
+                    chrome.alarms.create('checkForNewVote', {
+                        periodInMinutes: 1 // Default or we could get the current interval from storage
+                    });
+                } else {
+                    // Clear the alarm if disabled
+                    chrome.alarms.clear('checkForNewVote');
+                }
+                logDebug('Vote monitoring enabled state updated', { enabled: message.enabled });
+            }
+        }
+    });
+}
+
+/**
+ * Check for new votes on the user's entries
+ */
+async function checkForNewVote() {
+    try {
+        // Get username from storage
+        const storage = await chrome.storage.local.get(['userNick', 'voteMonitoringEnabled']);
+
+        if (!storage.userNick || storage.voteMonitoringEnabled === false) {
+            return; // Exit if no username or feature is disabled
+        }
+
+        const userNick = storage.userNick;
+        const baseUrl = `https://${getCurrentDomain()}/son-oylananlari?nick=${userNick}&p=1`;
+        const timestamp = Date.now();
+        const urlWithTimestamp = `${baseUrl}&_=${timestamp}`;
+
+        // Use HttpService pattern but we need direct fetch for background
+        const response = await fetch(urlWithTimestamp, {
+            headers: {
+                'accept': '*/*',
+                'accept-language': 'en-US,en;q=0.9,tr;q=0.8',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'x-requested-with': 'XMLHttpRequest'
+            },
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include'
+        });
+
+        const html = await response.text();
+
+        // Parse out the entry title
+        const match = html.match(/<h1 id="title" data-title="([^"]+)" data-id="\d+"/);
+
+        if (match && match[1]) {
+            const currentTitle = match[1];
+
+            // Get previous title from storage
+            const titleStorage = await chrome.storage.local.get(['previousTitle']);
+            const previousTitle = titleStorage.previousTitle || '';
+
+            // If there's a change, show notification
+            if (previousTitle && currentTitle !== previousTitle) {
+                logDebug('New vote detected', {
+                    currentTitle,
+                    previousTitle
+                });
+
+                // Create notification
+                chrome.notifications.create('', {
+                    type: 'basic',
+                    iconUrl: 'icons/icon128.png',
+                    title: 'Yeni Oy Bildirim',
+                    message: `Yeni oy: ${currentTitle}`
+                });
+            }
+
+            // Update stored title
+            chrome.storage.local.set({'previousTitle': currentTitle});
+        }
+    } catch (error) {
+        logError('Error checking for new votes', error);
+    }
+}
+
 
 /**
  * Initialize extension
@@ -17,6 +137,9 @@ async function initializeExtension() {
 
         // Set up logger based on preferences
         logger.setDebugMode(preferences.enableDebugMode);
+
+        // Set up vote monitoring
+        setupVoteMonitoring();
 
         logDebug('Extension initialized successfully', { version: chrome.runtime.getManifest().version });
 

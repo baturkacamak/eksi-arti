@@ -213,6 +213,32 @@
                         </select>
                     </div>
                 </div>
+
+                <div class="option-group">
+                    <h3>
+                        <span class="material-icons">notifications</span>
+                        Oy Bildirimleri
+                    </h3>
+                    <div class="option">
+                        <label for="voteMonitoringEnabled">Oy Bildirimlerini Etkinleştir</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="voteMonitoringEnabled" checked>
+                            <span class="slider"></span>
+                        </div>
+                        <div class="help-text">
+                            <span class="material-icons">info</span>
+                            Entrylerinize gelen oylar için bildirim alın
+                        </div>
+                    </div>
+                    <div class="option">
+                        <label for="voteMonitoringInterval">Kontrol Aralığı (dakika)</label>
+                        <input type="number" id="voteMonitoringInterval" min="1" max="60" value="1">
+                        <div class="help-text">
+                            <span class="material-icons">schedule</span>
+                            Ne sıklıkla yeni oylar kontrol edilecek
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- Advanced Settings Tab -->

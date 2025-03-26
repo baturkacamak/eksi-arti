@@ -32,7 +32,9 @@
   },
   "permissions": [
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "alarms",
+    "notifications"
   ],
   "web_accessible_resources": [
     {

@@ -29,6 +29,10 @@ export interface ExtensionPreferences {
     saveOperationHistory: boolean;
     enableDebugMode: boolean;
 
+    // Vote monitoring settings
+    voteMonitoringEnabled: boolean;
+    voteMonitoringInterval: number;
+
     // Other
     preferenceStorageKey: string;
     menuItemSelector: string;
@@ -55,6 +59,10 @@ const DEFAULT_PREFERENCES: ExtensionPreferences = {
     // Advanced settings
     saveOperationHistory: true,
     enableDebugMode: false,
+
+    // Vote monitoring defaults
+    voteMonitoringEnabled: true,
+    voteMonitoringInterval: 1,
 
     // Legacy support
     preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
