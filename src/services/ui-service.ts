@@ -14,6 +14,7 @@ import {ScreenshotButtonComponent} from "../components/screenshot-button-compone
 import {EntrySorterComponent} from "../components/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
+import {quickSearchComponent} from "../components/quick-search-component";
 
 export class UIService {
     private domHandler: DOMService;
@@ -61,6 +62,8 @@ export class UIService {
 
                 // Initialize trash service - it will only activate on the trash page
                 TrashService.getInstance().initialize();
+
+                quickSearchComponent.initialize();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
