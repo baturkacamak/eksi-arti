@@ -6,12 +6,14 @@
 
 import { DOMService } from './dom-service';
 import { logDebug, logError, logInfo } from './logging-service';
+import { observerService } from './observer-service';
+import { pageUtils } from './page-utils-service';
 
 export class AccessibilityService {
     private static instance: AccessibilityService;
     private domHandler: DOMService;
-    private observer: MutationObserver | null = null;
     private initialized: boolean = false;
+    private observerId: string = '';
 
     private readonly SELECTORS = {
         ENTRY_LIST: '#entry-item-list',
@@ -41,15 +43,43 @@ export class AccessibilityService {
                 return;
             }
 
-            const entryList = document.querySelector(this.SELECTORS.ENTRY_LIST);
-            if (entryList) {
-                this.enhanceAccessibility();
-                this.setupMutationObserver();
-                this.initialized = true;
-                logDebug('Accessibility service initialized', {}, 'AccessibilityService');
-            } else {
+            if (!pageUtils.isEntryListPage()) {
                 logDebug('No entry list found, skipping accessibility initialization', {}, 'AccessibilityService');
+                return;
             }
+
+            // Process existing elements
+            this.enhanceAccessibility();
+
+            // Set up observer for new elements
+            this.observerId = observerService.observe({
+                selector: this.SELECTORS.HIDEABLE_ELEMENTS,
+                handler: (elements) => {
+                    elements.forEach(element => {
+                        if (!element.hasAttribute('aria-hidden')) {
+                            element.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+
+                    // Also observe dropdown menus that might be outside the entry list
+                    const dropdownMenus = document.querySelectorAll('.dropdown-menu:not([aria-hidden])');
+                    dropdownMenus.forEach(menu => {
+                        if (!menu.hasAttribute('aria-hidden')) {
+                            menu.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+
+                    if (elements.length > 0) {
+                        logInfo(`Enhanced accessibility for ${elements.length} elements`, {}, 'AccessibilityService');
+                    }
+                },
+                processExisting: false, // We've already processed existing elements above
+                root: document.body, // Observe the entire document
+                subtree: true
+            });
+
+            this.initialized = true;
+            logDebug('Accessibility service initialized', {}, 'AccessibilityService');
         } catch (error) {
             logError('Error initializing accessibility service', error, 'AccessibilityService');
         }
@@ -89,46 +119,11 @@ export class AccessibilityService {
     }
 
     /**
-     * Set up mutation observer to enhance accessibility for dynamically added elements
-     */
-    private setupMutationObserver(): void {
-        try {
-            // Disconnect existing observer if any
-            if (this.observer) {
-                this.observer.disconnect();
-                this.observer = null;
-            }
-
-            // Create new observer
-            this.observer = new MutationObserver((mutations) => {
-                const hasRelevantChanges = mutations.some(({ addedNodes, removedNodes }) =>
-                    addedNodes.length || removedNodes.length
-                );
-
-                if (hasRelevantChanges && document.querySelector(this.SELECTORS.ENTRY_LIST)) {
-                    this.enhanceAccessibility();
-                }
-            });
-
-            // Start observing
-            this.observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            logDebug('Mutation observer set up for accessibility enhancements', {}, 'AccessibilityService');
-        } catch (error) {
-            logError('Error setting up mutation observer', error, 'AccessibilityService');
-        }
-    }
-
-    /**
      * Clean up resources
      */
     public dispose(): void {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
+        if (this.observerId) {
+            observerService.unobserve(this.observerId);
         }
         this.initialized = false;
         logDebug('Accessibility service disposed', {}, 'AccessibilityService');
