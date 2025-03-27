@@ -304,14 +304,20 @@ export class ScreenshotButtonComponent {
             e.preventDefault();
             e.stopPropagation();
             this.domHandler.removeClass(optionsMenu, 'visible');
-            this.captureEntryScreenshot(entry, optionsMenu.parentElement, 'download');
+            const parentElement = optionsMenu.parentElement;
+            if (parentElement) {
+                this.captureEntryScreenshot(entry, parentElement, 'download');
+            }
         });
 
         this.domHandler.addEventListener(clipboardOption, 'click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.domHandler.removeClass(optionsMenu, 'visible');
-            this.captureEntryScreenshot(entry, optionsMenu.parentElement, 'clipboard');
+            const parentElement = optionsMenu.parentElement;
+            if (parentElement) {
+                this.captureEntryScreenshot(entry, parentElement, 'clipboard');
+            }
         });
 
         // Add options to menu
@@ -472,19 +478,23 @@ export class ScreenshotButtonComponent {
         try {
             // Modern approach using Clipboard API
             if (navigator.clipboard && navigator.clipboard.write) {
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        throw new Error('Could not create blob from canvas');
-                    }
+                return new Promise<void>((resolve, reject) => {
+                    canvas.toBlob(async (blob) => {
+                        if (!blob) {
+                            reject(new Error('Could not create blob from canvas'));
+                            return;
+                        }
 
-                    try {
-                        const item = new ClipboardItem({ 'image/png': blob });
-                        await navigator.clipboard.write([item]);
-                        logDebug('Image copied to clipboard using Clipboard API');
-                    } catch (error) {
-                        throw error;
-                    }
-                }, 'image/png');
+                        try {
+                            const item = new ClipboardItem({ 'image/png': blob });
+                            await navigator.clipboard.write([item]);
+                            logDebug('Image copied to clipboard using Clipboard API');
+                            resolve();
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }, 'image/png');
+                });
             }
             // Legacy approach using deprecated execCommand (fallback)
             else {
@@ -503,6 +513,10 @@ export class ScreenshotButtonComponent {
                 const range = document.createRange();
                 range.selectNode(img);
                 const selection = window.getSelection();
+                if (!selection) {
+                    throw new Error('Could not get window selection object');
+                }
+
                 selection.removeAllRanges();
                 selection.addRange(range);
 
