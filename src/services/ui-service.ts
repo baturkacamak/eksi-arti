@@ -12,6 +12,7 @@ import {IconComponent} from "../components/icon-component";
 import {CopyButtonComponent} from "../components/copy-button-component";
 import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
 import {EntrySorterComponent} from "../components/entry-sorter-component";
+import {PostManagementService} from "./post-management-service";
 
 export class UIService {
     private domHandler: DOMService;
@@ -23,6 +24,7 @@ export class UIService {
     private copyButtonComponent: CopyButtonComponent;
     private screenshotButtonComponent: ScreenshotButtonComponent;
     private entrySorterComponent: EntrySorterComponent;
+    private postManagementService: PostManagementService;
 
     constructor() {
         this.domHandler = new DOMService();
@@ -31,6 +33,7 @@ export class UIService {
         this.copyButtonComponent = new CopyButtonComponent();
         this.screenshotButtonComponent = new ScreenshotButtonComponent();
         this.entrySorterComponent = new EntrySorterComponent();
+        this.postManagementService = new PostManagementService();
     }
 
     /**
@@ -51,6 +54,9 @@ export class UIService {
                 if (this.isEntriesPage()) {
                     this.entrySorterComponent.initialize();
                 }
+
+                // Initialize post management service for user profiles
+                this.postManagementService.initialize();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
