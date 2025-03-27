@@ -1,117 +1,127 @@
 # Ekşi Artı
 
-**Ekşi Artı** is a Chrome extension that enhances the Ekşisözlük experience with advanced user management features.
+**Ekşi Artı**, Ekşi Sözlük deneyimini geliştiren gelişmiş bir Chrome uzantısıdır. Kullanıcı yönetimi ve içerik kontrolü için çeşitli araçlar sunar.
 
-## Features
+## 🌟 Özellikler
 
-- **Bulk User Blocking**: Block or mute multiple users who have favorited a specific post with just a few clicks
-- **Custom Notes**: Automatically add notes to blocked users with customizable templates
-- **Resume Support**: Pause and resume blocking operations at any time
-- **Rate Limiting Protection**: Built-in delays to prevent server overloading and account limitations
+### Toplu Kullanıcı Engelleme
+- Bir entry'i favorileyen kullanıcıları kolayca toplu olarak engelleyebilir veya sessize alabilirsiniz
+- Sessiz alma (yazılarını görürsünüz) veya tamamen engelleme seçenekleri
+- Özel not ekleme imkanı
 
-## Installation
+### Gelişmiş İşlem Kontrolü
+- İşlemi istediğiniz anda duraklatabilir ve daha sonra devam ettirebilirsiniz
+- Sunucu yükünü azaltmak için yerleşik gecikme koruması
+- Detaylı ilerleme bildirimleri
 
-### From Chrome Web Store (Coming Soon)
-1. Visit the Chrome Web Store
-2. Search for "Ekşi Artı" or go directly to our extension page (link to be provided)
-3. Click "Add to Chrome"
+### Ek Özellikler
+- Giriş sayfası için özel arama
+- Yazarları renklendirme ve not alma
+- Entry'leri ekran görüntüsü olarak kaydetme
+- Hızlı kopyalama ve ekran görüntüsü alma düğmeleri
+- Çöp kutusu yönetimi
+- Entry sıralama araçları
 
-### Manual Installation (Developer Mode)
-1. Download this repository as a ZIP file or clone it
-2. Extract the ZIP file if needed
-3. Build the extension:
-   ```
+## 📥 Kurulum
+
+### Chrome Web Mağazası'ndan Kurulum (Yakında)
+1. Chrome Web Mağazası'na gidin
+2. "Ekşi Artı" yazarak arayın
+3. "Chrome'a Ekle" düğmesine tıklayın
+
+### Manuel Kurulum (Geliştirici Modu)
+1. Projeyi ZIP olarak indirin veya klonlayın
+2. Gerekirse ZIP dosyasını çıkarın
+3. Uzantıyı derleyin:
+   ```bash
    npm install
    npm run build
    ```
-   This will create a packaged extension file in the `builds` folder (e.g., `eksi-arti-v1.0.0.zip`)
-4. In Chrome, go to `chrome://extensions`
-5. Enable "Developer mode" in the top right
-6. You can either:
-   - Click "Load unpacked" and select the `dist` folder
-   - Drag and drop the generated ZIP file from the `builds` folder into the Chrome extensions page
+   Bu komut `builds` klasöründe paketlenmiş bir uzantı dosyası oluşturacaktır
 
-## Usage
+4. Chrome'da `chrome://extensions/` sayfasına gidin
+5. Sağ üstte "Geliştirici modu"nu etkinleştirin
+6. İki seçenekten birini uygulayın:
+   - "Paketlenmemiş öğe yükle"ye tıklayın ve `dist` klasörünü seçin
+   - `builds` klasöründeki ZIP dosyasını Chrome uzantıları sayfasına sürükleyip bırakın
 
-1. Navigate to any entry on Ekşisözlük
-2. Click the "..." menu on the entry
-3. Select "favorileyenleri engelle" option
-4. Choose to either:
-   - "Sessiz Al" (Mute) - You can still see their entries but they won't appear in notifications
-   - "Engelle" (Block) - Completely block the users
-5. The extension will process all users who have favorited the entry
+## 🚀 Kullanım
 
-## Development
+1. Herhangi bir Ekşi Sözlük entry sayfasına gidin
+2. Entry'nin "..." menüsüne tıklayın
+3. "favorileyenleri engelle" seçeneğini seçin
+4. Şunları yapabilirsiniz:
+   - "Sessiz Al" - Kullanıcının entry'lerini görmeye devam edin, bildirimlere dahil olmaz
+   - "Engelle" - Kullanıcıyı tamamen engelleyin
 
-### Prerequisites
+## 🛠 Geliştirme
+
+### Gereksinimler
 - Node.js (v14+)
-- npm or yarn
+- npm veya yarn
 
-### Setup
+### Kurulum ve Çalıştırma
 ```bash
-# Clone the repository
-git clone https://github.com/baturkacamak/eksi-arti.git
+# Depoyu klonlayın
+git clone https://github.com/kullanici/eksi-arti.git
 cd eksi-arti
 
-# Install dependencies
+# Bağımlılıkları yükleyin
 npm install
 
-# Start development mode with watch (auto-rebuild on changes)
+# Geliştirme modunda izleme
 npm run watch
 ```
 
-### Testing in Chrome
-1. Go to `chrome://extensions/` in Chrome
-2. Enable "Developer mode" in the top-right corner
-3. Click "Load unpacked" and select the `dist` folder from your project
-4. Any changes you make while running `npm run watch` will be built automatically
-5. After changes, click the refresh button on your extension in Chrome to see updates
+### Chrome'da Test Etme
+1. Chrome'da `chrome://extensions/` sayfasına gidin
+2. Sağ üstte "Geliştirici modu"nu etkinleştirin
+3. "Paketlenmemiş öğe yükle"ye tıklayın ve proje `dist` klasörünü seçin
+4. `npm run watch` çalışırken yaptığınız değişiklikler otomatik olarak derlenecektir
+5. Değişikliklerden sonra Chrome'daki uzantıyı yenilemek için yenile düğmesine tıklayın
 
-### Building for Production
-
+### Üretim İçin Derleme
 ```bash
-# Build for production (minified, no source maps)
+# Üretim için derleme (minified, kaynak haritası yok)
 npm run build
 
-# Build and package as ZIP for distribution
+# Dağıtım için ZIP olarak paketleme
 npm run build:zip
 ```
 
-### Project Structure
-```
-eksi-arti/
-├── dist/             # Compiled files (generated)
-├── icons/            # Extension icons
-├── src/              # Source code
-│   ├── components/   # UI components
-│   ├── services/     # Service classes
-│   ├── content.ts    # Content script
-│   ├── constants.ts  # Constants and enums
-│   └── types.ts      # TypeScript interfaces
-├── tests/            # Test files
-├── manifest.json     # Extension manifest
-├── package.json      # Project dependencies
-└── tsconfig.json     # TypeScript configuration
-```
-
-## Testing
-
-The project is set up with Jest for testing. Run tests with:
-
+## 🧪 Test
 ```bash
 npm test
 ```
 
-Tests are located in the `tests/` directory and follow the same structure as the source code.
+## 📂 Proje Yapısı
+```
+eksi-arti/
+├── dist/             # Derlenmiş dosyalar
+├── icons/            # Uzantı simgeleri
+├── src/              # Kaynak kod
+│   ├── components/   # UI bileşenleri
+│   ├── services/     # Servis sınıfları
+│   ├── content.ts    # İçerik betiği
+│   ├── constants.ts  # Sabitler ve numaralandırmalar
+│   └── types.ts      # TypeScript arayüzleri
+├── tests/            # Test dosyaları
+├── manifest.json     # Uzantı manifestosu
+└── package.json      # Proje bağımlılıkları
+```
 
-## License
+## 📋 Katkıda Bulunma
+1. Projeyi forklayın
+2. Kendi branch'ınızı oluşturun (`git checkout -b ozellik/harika-eklenti`)
+3. Değişikliklerinizi commit edin (`git commit -m 'Harika bir özellik ekledim'`)
+4. Branch'ınıza push yapın (`git push origin ozellik/harika-eklenti`)
+5. Bir Pull Request açın
 
-MIT License - See LICENSE file for details
+## 📄 Lisans
+MIT Lisansı altında yayımlanmıştır. Detaylar için LICENSE dosyasına bakın.
 
-## Acknowledgements
+## 🙏 Teşekkür
+Bu proje, Batur Kacamak'ın orijinal userscript'i temel alınarak geliştirilmiştir.
 
-This project is based on the original userscript by Batur Kacamak, rewritten and expanded as a Chrome extension.
-
-## Disclaimer
-
-This extension is not officially affiliated with Ekşisözlük. Use it at your own discretion and be respectful of site rules and etiquette.
+## ⚠️ Sorumluluk Reddi
+Bu uzantı Ekşi Sözlük ile resmi olarak ilişkili değildir. Kullanırken site kurallarına ve görgü kurallarına özen gösterin.
