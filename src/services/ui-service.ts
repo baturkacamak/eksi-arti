@@ -13,6 +13,7 @@ import {CopyButtonComponent} from "../components/copy-button-component";
 import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
 import {EntrySorterComponent} from "../components/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
+import {TrashService} from "./trash-service";
 
 export class UIService {
     private domHandler: DOMService;
@@ -57,6 +58,9 @@ export class UIService {
 
                 // Initialize post management service for user profiles
                 this.postManagementService.initialize();
+
+                // Initialize trash service - it will only activate on the trash page
+                TrashService.getInstance().initialize();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');
