@@ -2,7 +2,7 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { logError, logDebug } from '../services/logging-service';
-import {entryControlsService} from "../services/entry-controls-service";
+import {containerService} from "../services/container-service";
 
 /**
  * CopyButtonComponent
@@ -114,7 +114,7 @@ export class CopyButtonComponent {
             if (!entryId || this.copyButtons.has(entryId)) return;
 
             // Get container from the singleton service
-            const container = entryControlsService.getContainer(entry);
+            const container = containerService.getEntryControlsContainer(entry);
 
             // Create copy button
             const copyButton = this.createCopyButton(entry.querySelector('.content')?.textContent || '');

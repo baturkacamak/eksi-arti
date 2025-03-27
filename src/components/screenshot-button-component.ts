@@ -3,7 +3,7 @@ import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { logError, logDebug } from '../services/logging-service';
 import html2canvas from 'html2canvas';
-import {entryControlsService} from "../services/entry-controls-service";
+import {containerService} from "../services/container-service";
 
 /**
  * ScreenshotButtonComponent
@@ -201,7 +201,8 @@ export class ScreenshotButtonComponent {
             if (!entryId || this.screenshotButtons.has(entryId)) return;
 
             // Get container from the singleton service
-            const container = entryControlsService.getContainer(entry);
+            const container = containerService.getEntryControlsContainer(entry);
+
 
             // Create screenshot button
             const screenshotButton = this.createScreenshotButton(entry);
