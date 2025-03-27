@@ -5,6 +5,8 @@ import { IconComponent } from './icon-component';
 import { TooltipComponent } from './tooltip-component';
 import { logError, logDebug } from '../services/logging-service';
 import { debounce } from '../services/utilities';
+import {observerService} from "../services/observer-service";
+import {pageUtils} from "../services/page-utils-service";
 
 /**
  * QuickSearchComponent
@@ -38,6 +40,7 @@ export class QuickSearchComponent {
         'î': 'i', 'û': 'u',
         'İ': 'I', 'I': 'İ'
     };
+    private observerId: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
@@ -53,28 +56,32 @@ export class QuickSearchComponent {
     public initialize(): void {
         try {
             // Only initialize on entry list pages
-            if (!this.isEntryListPage()) {
+            if (!pageUtils.isEntryListPage()) {
                 return;
             }
 
             this.createSearchToolbar();
             this.setupKeyboardShortcuts();
-            this.observePageChanges();
 
-            // Initialize tooltip
+            // Create search help tooltip
             this.createSearchHelpTooltip();
+
+            // Observe for new content to search
+            this.observerId = observerService.observe({
+                selector: '#entry-item-list .content, #topic .content',
+                handler: () => {
+                    // Only re-run search if the searchbar is active and has content
+                    if (this.isActive && this.searchInput && this.searchInput.value.trim()) {
+                        this.performSearch();
+                    }
+                },
+                processExisting: false // Only process new content
+            });
 
             logDebug('Quick search component initialized');
         } catch (error) {
             logError('Error initializing quick search component:', error);
         }
-    }
-
-    /**
-     * Check if current page is an entry list page
-     */
-    private isEntryListPage(): boolean {
-        return !!document.querySelector('#entry-item-list, #topic');
     }
 
     /**
@@ -649,38 +656,6 @@ export class QuickSearchComponent {
     }
 
     /**
-     * Observe page changes
-     */
-    private observePageChanges(): void {
-        try {
-            this.observer = new MutationObserver(mutations => {
-                // Check if content was added
-                const hasNewContent = mutations.some(mutation =>
-                    mutation.type === 'childList' && mutation.addedNodes.length > 0
-                );
-
-                if (hasNewContent && this.searchInput && this.searchInput.value.trim() && this.isActive) {
-                    // Re-run search to include new content
-                    this.performSearch();
-                }
-            });
-
-            // Observe the entry list for changes
-            const entryList = document.querySelector('#entry-item-list, #topic');
-            if (entryList) {
-                this.observer.observe(entryList, {
-                    childList: true,
-                    subtree: true
-                });
-            }
-
-            logDebug('Page observer set up for quick search');
-        } catch (error) {
-            logError('Error setting up page observer:', error);
-        }
-    }
-
-    /**
      * Apply CSS styles for quick search
      */
     private applyStyles(): void {
@@ -806,10 +781,16 @@ export class QuickSearchComponent {
         QuickSearchComponent.stylesApplied = true;
     }
 
+
     /**
      * Cleanup resources
      */
     public destroy(): void {
+        // Unregister from observer service
+        if (this.observerId) {
+            observerService.unobserve(this.observerId);
+        }
+
         // Remove search container
         if (this.searchContainer && this.searchContainer.parentNode) {
             this.searchContainer.parentNode.removeChild(this.searchContainer);
@@ -817,11 +798,6 @@ export class QuickSearchComponent {
 
         // Clear highlights
         this.clearHighlights();
-
-        // Disconnect observer
-        if (this.observer) {
-            this.observer.disconnect();
-        }
 
         // Remove tooltip
         const tooltip = document.getElementById(this.searchTooltipId);

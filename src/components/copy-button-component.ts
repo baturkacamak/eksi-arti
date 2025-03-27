@@ -3,6 +3,7 @@ import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { logError, logDebug } from '../services/logging-service';
 import {containerService} from "../services/container-service";
+import {observerService} from "../services/observer-service";
 
 /**
  * CopyButtonComponent
@@ -15,6 +16,7 @@ export class CopyButtonComponent {
     private copyButtons: Map<string, HTMLElement> = new Map();
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;
+    private observerId: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
@@ -28,8 +30,19 @@ export class CopyButtonComponent {
      */
     public initialize(): void {
         try {
-            this.addCopyButtonsToEntries();
-            this.observeNewEntries();
+            this.observerId = observerService.observe({
+                selector: 'li[data-id]',
+                handler: (entries) => {
+                    entries.forEach(entry => {
+                        if (!this.copyButtons.has(entry.getAttribute('data-id') || '')) {
+                            this.addCopyButtonToEntry(entry as HTMLElement);
+                        }
+                    });
+                },
+                processExisting: true
+            });
+
+            this.applyStyles();
             logDebug('Copy button component initialized');
         } catch (error) {
             logError('Error initializing copy button component:', error);
@@ -279,45 +292,5 @@ export class CopyButtonComponent {
 
         // Remove from transition tracking
         this.inTransition.delete(button);
-    }
-
-    /**
-     * Observe DOM for new entries to add copy buttons
-     */
-    private observeNewEntries(): void {
-        try {
-            const observer = new MutationObserver((mutations) => {
-                let shouldCheckForNewEntries = false;
-
-                for (const mutation of mutations) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                        for (const node of mutation.addedNodes) {
-                            if (node instanceof HTMLElement) {
-                                // Check if the added node is an entry or contains entries
-                                if (node.matches('li[data-id]') || node.querySelector('li[data-id]')) {
-                                    shouldCheckForNewEntries = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (shouldCheckForNewEntries) break;
-                }
-
-                if (shouldCheckForNewEntries) {
-                    // Small delay to ensure the DOM is fully updated
-                    setTimeout(() => this.addCopyButtonsToEntries(), 100);
-                }
-            });
-
-            // Start observing the document body for DOM changes
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        } catch (error) {
-            logError('Error setting up mutation observer:', error);
-        }
     }
 }

@@ -16,6 +16,7 @@ import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
 import {QuickSearchComponent, quickSearchComponent} from "../components/quick-search-component";
 import {AuthorHighlighterService} from "./author-highlighter-service";
+import {observerService} from "./observer-service";
 
 export class UIService {
     private domHandler: DOMService;
@@ -30,6 +31,7 @@ export class UIService {
     private postManagementService: PostManagementService;
     private quickSearchComponent: QuickSearchComponent;
     private authorHighlighterService: AuthorHighlighterService;
+    private menuObserverId: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
@@ -51,12 +53,46 @@ export class UIService {
             // Get preferences first to ensure we have the correct menu selector
             await this.loadMenuSelector();
 
+            // Initialize observer service
+            observerService.initialize();
+
             setTimeout(async () => {
-                await this.addMenuItemToDropdown();
-                this.observeDOMChanges();
+                // Register for menu changes
+                this.menuObserverId = observerService.observe({
+                    selector: this.menuItemSelector,
+                    handler: (dropdownMenus) => {
+                        dropdownMenus.forEach((dropdownMenu) => {
+                            try {
+                                // Check if this menu already has our custom option
+                                const existingItem = this.domHandler.querySelector('li a[aria-label="favorileyenleri engelle"]', dropdownMenu);
+                                if (existingItem) {
+                                    return; // Skip this menu if our option already exists
+                                }
+
+                                const entryItem = dropdownMenu.closest('li[data-id]');
+                                if (!entryItem) {
+                                    return; // Skip if we can't find the entry ID
+                                }
+
+                                const entryId = entryItem.getAttribute('data-id');
+                                if (!entryId) {
+                                    return; // Skip if entry ID is empty
+                                }
+
+                                const menuItem = this.createMenuItem(entryId);
+                                this.domHandler.appendChild(dropdownMenu, menuItem);
+                            } catch (err) {
+                                logError('Error adding menu item to dropdown:', err);
+                            }
+                        });
+                    },
+                    processExisting: true
+                });
+
                 await this.checkForSavedState();
                 this.copyButtonComponent.initialize();
                 this.screenshotButtonComponent.initialize();
+
                 // Check if we're on an entries page and initialize the sorter
                 if (this.isEntriesPage()) {
                     this.entrySorterComponent.initialize();
@@ -252,95 +288,6 @@ export class UIService {
     }
 
     /**
-     * Observe DOM changes to add menu items to new elements
-     * Uses the stored menu selector from preferences
-     */
-    private observeDOMChanges(): void {
-        try {
-            // Disconnect existing observer if any
-            if (this.observer) {
-                this.observer.disconnect();
-            }
-
-            // Use MutationObserver to watch for new elements
-            this.observer = new MutationObserver((mutations) => {
-                try {
-                    if (!this.initialized) {
-                        this.addMenuItemToDropdown().catch(err => {
-                            logError('Error adding menu items:', err);
-                        });
-                        return;
-                    }
-
-                    let shouldUpdate = false;
-
-                    for (const mutation of mutations) {
-                        // Check for new nodes that might contain our target elements
-                        if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                            for (const node of mutation.addedNodes) {
-                                if (!node || !('nodeType' in node)) continue;
-
-                                if (node.nodeType === 1) {
-                                    // Use the menu selector from preferences to check for new dropdown menus
-                                    const selector = this.menuItemSelector;
-
-                                    // Generic check for potential dropdown menu elements
-                                    const potentialMenuContainer = (node as Element).querySelector &&
-                                        ((node as Element).querySelector(selector) ||
-                                            (node as Element).matches && (node as Element).matches(selector));
-
-                                    // Check if node itself is a dropdown-menu or contains relevant classes
-                                    const hasRelevantClasses = (node as Element).classList &&
-                                        ((node as Element).classList.contains('dropdown-menu') ||
-                                            (node as Element).classList.contains('toggles-menu') ||
-                                            (node as Element).classList.contains('feedback-container'));
-
-                                    if (potentialMenuContainer || hasRelevantClasses) {
-                                        shouldUpdate = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (shouldUpdate) break;
-                    }
-
-                    if (shouldUpdate) {
-                        // Add a small delay to ensure the DOM is fully updated
-                        setTimeout(() => {
-                            this.addMenuItemToDropdown().catch(err => {
-                                logError('Error adding menu items in observer:', err);
-                            });
-                        }, 100);
-                    }
-                } catch (err) {
-                    logError('Error in MutationObserver callback:', err);
-                }
-            });
-
-            // Start observing the document body for DOM changes
-            this.observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-            });
-
-            logDebug('DOM observer started');
-        } catch (err) {
-            logError('Error setting up MutationObserver:', err);
-
-            // Fallback to periodic checking if MutationObserver fails
-            setInterval(() => {
-                if (document.readyState === 'complete') {
-                    this.addMenuItemToDropdown().catch(err => {
-                        logError('Error adding menu items in interval:', err);
-                    });
-                }
-            }, 2000);
-        }
-    }
-
-    /**
      * Check for saved state and show notification if exists
      */
     /**
@@ -384,13 +331,13 @@ export class UIService {
         return !!document.querySelector('#entry-item-list');
     }
 
+
     /**
      * Cleanup resources
      */
     dispose(): void {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
+        if (this.menuObserverId) {
+            observerService.unobserve(this.menuObserverId);
         }
 
         // Clean up components

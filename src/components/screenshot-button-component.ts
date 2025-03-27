@@ -4,6 +4,7 @@ import { IconComponent } from './icon-component';
 import { logError, logDebug } from '../services/logging-service';
 import html2canvas from 'html2canvas';
 import {containerService} from "../services/container-service";
+import {observerService} from "../services/observer-service";
 
 /**
  * ScreenshotButtonComponent
@@ -16,6 +17,7 @@ export class ScreenshotButtonComponent {
     private iconComponent: IconComponent;
     private screenshotButtons: Map<string, HTMLElement> = new Map();
     private static stylesApplied = false;
+    private observerId: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
@@ -30,8 +32,19 @@ export class ScreenshotButtonComponent {
     public initialize(): void {
         try {
             this.loadHtml2Canvas().then(() => {
-                this.addScreenshotButtonsToEntries();
-                this.observeNewEntries();
+                this.observerId = observerService.observe({
+                    selector: 'li[data-id]',
+                    handler: (entries) => {
+                        entries.forEach(entry => {
+                            if (!this.screenshotButtons.has(entry.getAttribute('data-id') || '')) {
+                                this.addScreenshotButtonToEntry(entry as HTMLElement);
+                            }
+                        });
+                    },
+                    processExisting: true
+                });
+
+                this.applyStyles();
                 logDebug('Screenshot button component initialized');
             });
         } catch (error) {
@@ -608,57 +621,15 @@ export class ScreenshotButtonComponent {
     }
 
     /**
-     * Observe DOM for new entries to add screenshot buttons
-     */
-    private observeNewEntries(): void {
-        try {
-            const observer = new MutationObserver((mutations) => {
-                let shouldCheckForNewEntries = false;
-
-                for (const mutation of mutations) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                        for (const node of mutation.addedNodes) {
-                            if (node instanceof HTMLElement) {
-                                // Check if the added node is an entry or contains entries
-                                if (node.matches('li[data-id]') || node.querySelector('li[data-id]')) {
-                                    shouldCheckForNewEntries = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (shouldCheckForNewEntries) break;
-                }
-
-                if (shouldCheckForNewEntries) {
-                    // Small delay to ensure the DOM is fully updated
-                    setTimeout(() => this.addScreenshotButtonsToEntries(), 100);
-                }
-            });
-
-            // Start observing the document body for DOM changes
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        } catch (error) {
-            logError('Error setting up mutation observer:', error);
-
-            // Fallback to periodic checking if MutationObserver fails
-            setInterval(() => {
-                if (document.readyState === 'complete') {
-                    this.addScreenshotButtonsToEntries();
-                }
-            }, 2000);
-        }
-    }
-
-    /**
      * Cleanup resources when component is destroyed
      */
     public destroy(): void {
-        // Clear any references or timers
+        // Unregister from observer service
+        if (this.observerId) {
+            observerService.unobserve(this.observerId);
+        }
+
+        // Clear references
         this.screenshotButtons.clear();
     }
 }

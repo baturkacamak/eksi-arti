@@ -8,6 +8,7 @@ import { IconComponent } from '../components/icon-component';
 import { TooltipComponent } from '../components/tooltip-component';
 import { NotificationService } from './notification-service';
 import { delay } from './utilities';
+import {observerService} from "./observer-service";
 
 /**
  * Interface for author highlight configuration
@@ -142,6 +143,7 @@ export class AuthorHighlighterService {
     private isInitialized: boolean = false;
     private authorColorMapCSS: string = '';
     private STORAGE_KEY = 'eksi_author_highlighter';
+    private observerId: string = '';
 
     private constructor() {
         this.domHandler = new DOMService();
@@ -186,10 +188,13 @@ export class AuthorHighlighterService {
             }
 
             // Observe DOM for new entries
-            this.observeDOM();
-
-            // Process existing entries
-            this.processEntries();
+            this.observerId = observerService.observe({
+                selector: 'li[data-id][data-author]',
+                handler: (entries) => {
+                    entries.forEach(entry => this.processEntry(entry as HTMLElement));
+                },
+                processExisting: true
+            });
 
             this.isInitialized = true;
             logInfo('Author Highlighter service initialized', {
@@ -565,64 +570,6 @@ export class AuthorHighlighterService {
             }, 5000);
         };
     })();
-
-    /**
-     * Observe DOM for new entries
-     */
-    private observeDOM(): void {
-        try {
-            // Disconnect existing observer if any
-            if (this.observer) {
-                this.observer.disconnect();
-                this.observer = null;
-            }
-
-            // Create new observer
-            this.observer = new MutationObserver((mutations) => {
-                let newEntriesAdded = false;
-
-                mutations.forEach(mutation => {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType === Node.ELEMENT_NODE) {
-                                const element = node as HTMLElement;
-
-                                // Check if this is an entry or contains entries
-                                if (element.matches('li[data-id][data-author]')) {
-                                    this.processEntry(element);
-                                    newEntriesAdded = true;
-                                } else if (element.querySelectorAll) {
-                                    const entries = element.querySelectorAll('li[data-id][data-author]');
-                                    if (entries.length) {
-                                        entries.forEach(entry => this.processEntry(entry as HTMLElement));
-                                        newEntriesAdded = true;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                });
-
-                // If new entries are added, we might need to process them after a short delay
-                // to ensure all DOM elements are fully initialized
-                if (newEntriesAdded) {
-                    setTimeout(() => {
-                        this.processEntries();
-                    }, 100);
-                }
-            });
-
-            // Start observing the document body for changes
-            this.observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            logDebug('DOM observer started for author highlighting');
-        } catch (error) {
-            logError('Error setting up DOM observer:', error);
-        }
-    }
 
     /**
      * Add an author to highlight
@@ -1480,9 +1427,8 @@ export class AuthorHighlighterService {
      * Clean up resources when service is destroyed
      */
     public destroy(): void {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
+        if (this.observerId) {
+            observerService.unobserve(this.observerId);
         }
 
         // Remove style elements

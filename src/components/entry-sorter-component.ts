@@ -2,6 +2,8 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { logDebug, logError } from '../services/logging-service';
+import {observerService} from "../services/observer-service";
+import {pageUtils} from "../services/page-utils-service";
 
 /**
  * Sorting strategy interface
@@ -79,6 +81,7 @@ export class EntrySorterComponent {
     private strategies: SortingStrategy[] = [];
     private static stylesApplied = false;
     private observer: MutationObserver | null = null;
+    private observerId: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
@@ -100,13 +103,26 @@ export class EntrySorterComponent {
      */
     public initialize(): void {
         try {
-            // Check if we're on a page with entries
-            if (!document.querySelector('#entry-item-list')) {
+            // Only initialize on entry list pages
+            if (!pageUtils.isEntryListPage()) {
                 return;
             }
 
             this.addSortButtons();
-            this.observePageChanges();
+
+            // Setup observer for page changes
+            this.observerId = observerService.observe({
+                selector: '.sub-title-menu',
+                handler: (elements) => {
+                    elements.forEach(element => {
+                        if (!element.querySelector('.eksi-sort-buttons')) {
+                            this.addSortButtons();
+                        }
+                    });
+                },
+                processExisting: false // We already added buttons in addSortButtons()
+            });
+
             logDebug('Entry sorter component initialized');
         } catch (error) {
             logError('Error initializing entry sorter component:', error);

@@ -5,6 +5,8 @@ import { logDebug, logError, logInfo } from './logging-service';
 import { NotificationComponent } from '../components/notification-component';
 import { IconComponent } from '../components/icon-component';
 import { SITE_DOMAIN } from '../constants';
+import {observerService} from "./observer-service";
+import {pageUtils} from "./page-utils-service";
 
 export class TrashService {
     private static instance: TrashService;
@@ -17,6 +19,7 @@ export class TrashService {
     private lastPage: number = 1;
     private loadingDelay: number = 1000; // Default 1 second delay between page loads
     private abortController: AbortController | null = null;
+    private observerId: string = '';
 
     private constructor() {
         this.httpService = new HttpService();
@@ -39,22 +42,36 @@ export class TrashService {
      * Initialize the trash service
      */
     public initialize(): void {
-        if (!this.isTrashPage()) {
+        if (!pageUtils.isTrashPage()) {
             return;
         }
 
-        logDebug('Initializing Trash Service on trash page');
-        this.detectPagination();
-        this.addLoadMoreButton();
-        this.setupReviveHandlers();
-        this.addBulkReviveControls();
-    }
+        try {
+            logDebug('Initializing Trash Service on trash page');
+            this.detectPagination();
+            this.addLoadMoreButton();
 
-    /**
-     * Check if current page is the trash page
-     */
-    private isTrashPage(): boolean {
-        return window.location.pathname === '/cop';
+            // Setup observer for trash items
+            this.observerId = observerService.observe({
+                selector: '#trash-items li',
+                handler: (items) => {
+                    items.forEach(item => {
+                        // Add revive handler if needed
+                        this.addReviveHandler(item as HTMLElement);
+
+                        // Add checkbox if needed
+                        if (!item.querySelector('.eksi-trash-checkbox')) {
+                            this.addCheckboxToTrashItem(item as HTMLElement);
+                        }
+                    });
+                },
+                processExisting: true
+            });
+
+            this.addBulkReviveControls();
+        } catch (error) {
+            logError('Error initializing Trash Service:', error);
+        }
     }
 
     /**
@@ -527,8 +544,6 @@ export class TrashService {
             // Insert controls at the top
             trashItems.parentNode?.insertBefore(controlsContainer, trashItems);
 
-            // Add mutation observer to handle dynamically loaded items
-            this.observeTrashItemChanges();
         } catch (error) {
             logError('Error adding bulk revive controls:', error);
         }
@@ -732,30 +747,17 @@ export class TrashService {
     }
 
     /**
-     * Observe changes to the trash items container to handle dynamically loaded items
+     * Clean up resources
      */
-    private observeTrashItemChanges(): void {
-        try {
-            const trashItems = document.querySelector('#trash-items');
-            if (!trashItems) return;
+    public destroy(): void {
+        if (this.observerId) {
+            observerService.unobserve(this.observerId);
+        }
 
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach(mutation => {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType === Node.ELEMENT_NODE &&
-                                (node as Element).matches('li') &&
-                                !(node as Element).querySelector('.eksi-trash-checkbox')) {
-                                this.addCheckboxToTrashItem(node as HTMLElement);
-                            }
-                        });
-                    }
-                });
-            });
-
-            observer.observe(trashItems, { childList: true });
-        } catch (error) {
-            logError('Error setting up trash items observer:', error);
+        // Clean up any other resources
+        if (this.abortController) {
+            this.abortController.abort();
+            this.abortController = null;
         }
     }
 }

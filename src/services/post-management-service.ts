@@ -5,6 +5,8 @@ import { NotificationService } from './notification-service';
 import { delay } from './utilities';
 import { IconComponent } from '../components/icon-component';
 import {CSSService} from "./css-service";
+import {observerService} from "./observer-service";
+import {pageUtils} from "./page-utils-service";
 
 export class PostManagementService {
     private domHandler: DOMService;
@@ -13,6 +15,7 @@ export class PostManagementService {
     private loadMoreButton: HTMLElement | null = null;
     private isProcessing: boolean = false;
     private abortProcessing: boolean = false;
+    private observerId: string = '';
 
     constructor() {
         this.domHandler = new DOMService();
@@ -25,27 +28,34 @@ export class PostManagementService {
      */
     public initialize(): void {
         // Only initialize on user profile pages
-        if (!this.isUserProfilePage()) {
+        if (!pageUtils.isUserProfilePage()) {
             return;
         }
 
-        // Find the load more button
-        this.loadMoreButton = document.querySelector('.load-more-entries');
+        try {
+            // Find the load more button
+            this.loadMoreButton = document.querySelector('.load-more-entries');
 
-        // Add the menu buttons
-        this.addMenuButtons();
+            // Setup observer for new entries
+            this.observerId = observerService.observe({
+                selector: '.topic-item',
+                handler: () => {
+                    // Update counter styles when new items appear
+                    this.addItemCounterStyles();
+                },
+                processExisting: false
+            });
 
-        // Add item counter styles
-        this.addItemCounterStyles();
+            // Add the menu buttons
+            this.addMenuButtons();
 
-        logDebug('Post management service initialized');
-    }
+            // Add item counter styles
+            this.addItemCounterStyles();
 
-    /**
-     * Check if current page is a user profile
-     */
-    private isUserProfilePage(): boolean {
-        return window.location.href.includes('/biri/');
+            logDebug('Post management service initialized');
+        } catch (error) {
+            logError('Error initializing post management service:', error);
+        }
     }
 
     /**
@@ -398,6 +408,19 @@ export class PostManagementService {
         } catch (error) {
             logError('Error adding item counter styles', error);
         }
+    }
+
+    /**
+     * Clean up resources
+     */
+    public destroy(): void {
+        if (this.observerId) {
+            observerService.unobserve(this.observerId);
+        }
+
+        // Reset processing state
+        this.isProcessing = false;
+        this.abortProcessing = true;
     }
 }
 // Export a singleton instance
