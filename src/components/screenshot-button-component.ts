@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 /**
  * ScreenshotButtonComponent
  * Adds screenshot buttons to entry controls for capturing entry images
+ * with support for both downloading and copying to clipboard
  */
 export class ScreenshotButtonComponent {
     private domHandler: DOMService;
@@ -119,6 +120,63 @@ export class ScreenshotButtonComponent {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
+            
+            /* Screenshot options menu styles */
+            .eksi-screenshot-options {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 5px;
+                background: #fff;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                overflow: hidden;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-10px);
+                transition: all 0.2s ease;
+            }
+            
+            .eksi-screenshot-options.visible {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+            
+            .eksi-screenshot-option {
+                display: flex;
+                align-items: center;
+                padding: 8px 12px;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: background-color 0.2s ease;
+            }
+            
+            .eksi-screenshot-option:hover {
+                background-color: rgba(142, 158, 217, 0.1);
+            }
+            
+            .eksi-screenshot-option .eksi-icon {
+                margin-right: 8px;
+            }
+            
+            /* Dark mode support */
+            @media (prefers-color-scheme: dark) {
+                .eksi-screenshot-options {
+                    background: #292a2d;
+                    border-color: rgba(255, 255, 255, 0.1);
+                }
+                
+                .eksi-screenshot-option {
+                    color: #e0e0e0;
+                }
+                
+                .eksi-screenshot-option:hover {
+                    background-color: rgba(142, 158, 217, 0.2);
+                }
+            }
         `;
 
         this.cssHandler.addCSS(styles);
@@ -147,10 +205,7 @@ export class ScreenshotButtonComponent {
             // Create screenshot button
             const screenshotButton = this.createScreenshotButton(entry);
 
-            // Position the button in the control area
             // Find the first control element to position relative to
-            // Position the button in the control area
-            // Find the first control element to insert after
             const firstControl = controlsContainer.querySelector('.feedback-container');
             if (firstControl && firstControl.parentNode) {
                 // Insert after the first control element
@@ -179,31 +234,108 @@ export class ScreenshotButtonComponent {
         const buttonContainer = this.domHandler.createElement('span');
         this.domHandler.addClass(buttonContainer, 'eksi-screenshot-button');
 
-        // Create camera icon using IconComponent with a specific class for easier selection
+        // Create camera icon using IconComponent
         const cameraIcon = this.iconComponent.create({
             name: 'photo_camera',
             size: 'small',
-            color: '#8e9ed9', // Different color from copy button
-            className: 'eksi-screenshot-icon' // Add specific class for easier targeting in transitions
+            color: '#8e9ed9',
+            className: 'eksi-screenshot-icon'
         });
 
-        // Append the icon to the button container
-        this.domHandler.appendChild(buttonContainer, cameraIcon);
+        // Create options menu
+        const optionsMenu = this.createOptionsMenu(entry);
 
-        // Add click listener to take screenshot of the entry
+        // Append elements to container
+        this.domHandler.appendChild(buttonContainer, cameraIcon);
+        this.domHandler.appendChild(buttonContainer, optionsMenu);
+
+        // Add click listener to show options menu
         this.domHandler.addEventListener(buttonContainer, 'click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.captureEntryScreenshot(entry, buttonContainer);
+            this.toggleOptionsMenu(optionsMenu);
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!buttonContainer.contains(e.target as Node) && this.domHandler.hasClass(optionsMenu, 'visible')) {
+                this.domHandler.removeClass(optionsMenu, 'visible');
+            }
         });
 
         return buttonContainer;
     }
 
     /**
-     * Capture a screenshot of the entry and download it
+     * Create options menu for screenshot actions
      */
-    private captureEntryScreenshot(entry: HTMLElement, button: HTMLElement): void {
+    private createOptionsMenu(entry: HTMLElement): HTMLElement {
+        const optionsMenu = this.domHandler.createElement('div');
+        this.domHandler.addClass(optionsMenu, 'eksi-screenshot-options');
+
+        // Create download option
+        const downloadOption = this.domHandler.createElement('div');
+        this.domHandler.addClass(downloadOption, 'eksi-screenshot-option');
+
+        const downloadIcon = this.iconComponent.create({
+            name: 'download',
+            size: 'small',
+            color: '#8e9ed9'
+        });
+
+        downloadOption.appendChild(downloadIcon);
+        downloadOption.appendChild(document.createTextNode('İndir'));
+
+        // Create clipboard option
+        const clipboardOption = this.domHandler.createElement('div');
+        this.domHandler.addClass(clipboardOption, 'eksi-screenshot-option');
+
+        const clipboardIcon = this.iconComponent.create({
+            name: 'content_copy',
+            size: 'small',
+            color: '#8e9ed9'
+        });
+
+        clipboardOption.appendChild(clipboardIcon);
+        clipboardOption.appendChild(document.createTextNode('Panoya Kopyala'));
+
+        // Add click handlers
+        this.domHandler.addEventListener(downloadOption, 'click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.domHandler.removeClass(optionsMenu, 'visible');
+            this.captureEntryScreenshot(entry, optionsMenu.parentElement, 'download');
+        });
+
+        this.domHandler.addEventListener(clipboardOption, 'click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.domHandler.removeClass(optionsMenu, 'visible');
+            this.captureEntryScreenshot(entry, optionsMenu.parentElement, 'clipboard');
+        });
+
+        // Add options to menu
+        this.domHandler.appendChild(optionsMenu, downloadOption);
+        this.domHandler.appendChild(optionsMenu, clipboardOption);
+
+        return optionsMenu;
+    }
+
+    /**
+     * Toggle options menu visibility
+     */
+    private toggleOptionsMenu(menu: HTMLElement): void {
+        if (this.domHandler.hasClass(menu, 'visible')) {
+            this.domHandler.removeClass(menu, 'visible');
+        } else {
+            this.domHandler.addClass(menu, 'visible');
+        }
+    }
+
+    /**
+     * Capture a screenshot of the entry and perform the selected action
+     */
+    private captureEntryScreenshot(entry: HTMLElement, button: HTMLElement, action: 'download' | 'clipboard'): void {
         try {
             // Show processing state
             this.showProcessingState(button);
@@ -279,12 +411,23 @@ export class ScreenshotButtonComponent {
                 allowTaint: true,
                 useCORS: true
             }).then((canvas: HTMLCanvasElement) => {
-                // Convert to image and trigger download
+                // Convert to image
                 const image = canvas.toDataURL('image/png');
-                this.downloadScreenshot(image, author, entryId);
 
-                // Show success state
-                this.showSuccessState(button);
+                // Perform the selected action
+                if (action === 'download') {
+                    this.downloadScreenshot(image, author, entryId);
+                    this.showSuccessState(button, 'download');
+                } else if (action === 'clipboard') {
+                    this.copyToClipboard(canvas)
+                        .then(() => {
+                            this.showSuccessState(button, 'clipboard');
+                        })
+                        .catch((error) => {
+                            logError('Error copying to clipboard:', error);
+                            this.showErrorState(button);
+                        });
+                }
 
                 // Remove the temporary container
                 document.body.removeChild(container);
@@ -323,6 +466,65 @@ export class ScreenshotButtonComponent {
     }
 
     /**
+     * Copy the screenshot to clipboard
+     */
+    private async copyToClipboard(canvas: HTMLCanvasElement): Promise<void> {
+        try {
+            // Modern approach using Clipboard API
+            if (navigator.clipboard && navigator.clipboard.write) {
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        throw new Error('Could not create blob from canvas');
+                    }
+
+                    try {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        logDebug('Image copied to clipboard using Clipboard API');
+                    } catch (error) {
+                        throw error;
+                    }
+                }, 'image/png');
+            }
+            // Legacy approach using deprecated execCommand (fallback)
+            else {
+                // Create a temporary image element
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/png');
+
+                // Create a div to hold the image
+                const container = document.createElement('div');
+                container.appendChild(img);
+                container.style.position = 'fixed';
+                container.style.left = '-9999px';
+                document.body.appendChild(container);
+
+                // Select the image
+                const range = document.createRange();
+                range.selectNode(img);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // Execute copy command
+                const successful = document.execCommand('copy');
+                if (!successful) {
+                    throw new Error('Failed to copy image using execCommand');
+                }
+
+                // Clean up
+                selection.removeAllRanges();
+                document.body.removeChild(container);
+                logDebug('Image copied to clipboard using execCommand');
+            }
+        } catch (error) {
+            logError('Clipboard copy failed:', error);
+            // If both methods fail, throw error up to caller
+            throw error;
+        }
+    }
+
+    /**
      * Show processing state on the button
      */
     private showProcessingState(button: HTMLElement): void {
@@ -344,7 +546,7 @@ export class ScreenshotButtonComponent {
     /**
      * Show success state on the button
      */
-    private showSuccessState(button: HTMLElement): void {
+    private showSuccessState(button: HTMLElement, action: 'download' | 'clipboard'): void {
         try {
             const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
             if (!iconElement) return;
@@ -352,10 +554,25 @@ export class ScreenshotButtonComponent {
             // Remove processing animation
             this.domHandler.removeClass(iconElement, 'eksi-screenshot-processing');
 
-            // Reset to camera icon after success animation
+            // Show appropriate success icon based on action
+            if (action === 'download') {
+                iconElement.textContent = 'check_circle';
+            } else if (action === 'clipboard') {
+                iconElement.textContent = 'assignment_turned_in';
+            }
+
+            iconElement.style.color = '#43a047'; // Success green color
+
+            // Add success animation
+            this.domHandler.addClass(iconElement, 'eksi-screenshot-success');
+
+            // Reset to camera icon after animation
             setTimeout(() => {
-                iconElement.textContent = 'photo_camera';
-                iconElement.style.color = '#8e9ed9';
+                this.domHandler.removeClass(iconElement, 'eksi-screenshot-success');
+                setTimeout(() => {
+                    iconElement.textContent = 'photo_camera';
+                    iconElement.style.color = '#8e9ed9';
+                }, 200);
             }, 1500);
         } catch (error) {
             logError('Error showing success state:', error);
