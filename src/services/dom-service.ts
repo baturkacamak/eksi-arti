@@ -9,7 +9,7 @@ export class DOMService {
     /**
      * Query selector all wrapper
      */
-    querySelectorAll<T extends Element>(selector: string, context: Document | Element = document): NodeListOf<T> {
+    querySelectorAll<T extends Element | HTMLElement>(selector: string, context: Document | Element | HTMLElement = document): NodeListOf<T> {
         return context.querySelectorAll<T>(selector);
     }
 

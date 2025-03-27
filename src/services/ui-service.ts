@@ -14,7 +14,8 @@ import {ScreenshotButtonComponent} from "../components/screenshot-button-compone
 import {EntrySorterComponent} from "../components/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
-import {quickSearchComponent} from "../components/quick-search-component";
+import {QuickSearchComponent, quickSearchComponent} from "../components/quick-search-component";
+import {AuthorHighlighterService} from "./author-highlighter-service";
 
 export class UIService {
     private domHandler: DOMService;
@@ -27,6 +28,8 @@ export class UIService {
     private screenshotButtonComponent: ScreenshotButtonComponent;
     private entrySorterComponent: EntrySorterComponent;
     private postManagementService: PostManagementService;
+    private quickSearchComponent: QuickSearchComponent;
+    private authorHighlighterService: AuthorHighlighterService;
 
     constructor() {
         this.domHandler = new DOMService();
@@ -36,6 +39,8 @@ export class UIService {
         this.screenshotButtonComponent = new ScreenshotButtonComponent();
         this.entrySorterComponent = new EntrySorterComponent();
         this.postManagementService = new PostManagementService();
+        this.quickSearchComponent = new QuickSearchComponent();
+        this.authorHighlighterService = AuthorHighlighterService.getInstance();
     }
 
     /**
@@ -63,7 +68,9 @@ export class UIService {
                 // Initialize trash service - it will only activate on the trash page
                 TrashService.getInstance().initialize();
 
-                quickSearchComponent.initialize();
+                this.quickSearchComponent.initialize();
+
+                await this.authorHighlighterService.initialize();
 
                 // Add version info to console
                 logInfo('Ekşi Artı v1.0.0 loaded.');

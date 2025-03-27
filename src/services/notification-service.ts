@@ -274,6 +274,14 @@ export class NotificationService {
     }
 
     /**
+     * Get the footer container element
+     * This can be used to add buttons or other controls to the notification
+     */
+    getFooterContainer(): HTMLElement | null {
+        return this.notificationComponent ? this.notificationComponent.getFooterContainer() : null;
+    }
+
+    /**
      * Close the notification
      */
     close(): void {
