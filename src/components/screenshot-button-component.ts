@@ -3,6 +3,7 @@ import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { logError, logDebug } from '../services/logging-service';
 import html2canvas from 'html2canvas';
+import {entryControlsService} from "../services/entry-controls-service";
 
 /**
  * ScreenshotButtonComponent
@@ -74,7 +75,7 @@ export class ScreenshotButtonComponent {
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                margin: 0 0 0 15px;
+                margin: 0;
                 padding: 4px;
                 border-radius: 4px;
                 transition: all 0.2s ease;
@@ -199,28 +200,16 @@ export class ScreenshotButtonComponent {
             const entryId = entry.getAttribute('data-id');
             if (!entryId || this.screenshotButtons.has(entryId)) return;
 
-            const controlsContainer = entry.querySelector('.feedback-container');
-            if (!controlsContainer) return;
+            // Get container from the singleton service
+            const container = entryControlsService.getContainer(entry);
 
             // Create screenshot button
             const screenshotButton = this.createScreenshotButton(entry);
 
-            // Find the first control element to position relative to
-            const firstControl = controlsContainer.querySelector('.feedback-container');
-            if (firstControl && firstControl.parentNode) {
-                // Insert after the first control element
-                const parent = firstControl.parentNode;
-                if (parent.nextSibling) {
-                    parent.parentNode?.insertBefore(screenshotButton, parent.nextSibling);
-                } else {
-                    parent.parentNode?.appendChild(screenshotButton);
-                }
-            } else {
-                // Fallback: insert at the beginning of controls container
-                controlsContainer.insertBefore(screenshotButton, controlsContainer.firstChild);
-            }
+            // Add to container
+            container.add(screenshotButton);
 
-            // Store reference to this button
+            // Store reference
             this.screenshotButtons.set(entryId, screenshotButton);
         } catch (error) {
             logError('Error adding screenshot button to entry:', error);

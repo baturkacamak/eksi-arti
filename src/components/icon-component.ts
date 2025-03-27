@@ -394,15 +394,15 @@ export class IconComponent {
             }
             
             .eksi-icon-small {
-                font-size: 16px;
+                font-size: 16px !important;
             }
             
             .eksi-icon-medium {
-                font-size: 24px;
+                font-size: 24px !important;
             }
             
             .eksi-icon-large {
-                font-size: 32px;
+                font-size: 32px !important;
             }
             
             /* Improved Animation classes */

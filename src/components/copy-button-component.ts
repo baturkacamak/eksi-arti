@@ -2,6 +2,7 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { logError, logDebug } from '../services/logging-service';
+import {entryControlsService} from "../services/entry-controls-service";
 
 /**
  * CopyButtonComponent
@@ -47,7 +48,7 @@ export class CopyButtonComponent {
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                margin: 0 15px;
+                margin: 0;
                 padding: 4px;
                 border-radius: 4px;
                 transition: all 0.2s ease;
@@ -112,39 +113,23 @@ export class CopyButtonComponent {
             const entryId = entry.getAttribute('data-id');
             if (!entryId || this.copyButtons.has(entryId)) return;
 
-            const controlsContainer = entry.querySelector('.feedback-container');
-            if (!controlsContainer) return;
-
-            const content = entry.querySelector('.content');
-            if (!content) return;
+            // Get container from the singleton service
+            const container = entryControlsService.getContainer(entry);
 
             // Create copy button
-            const copyButton = this.createCopyButton(content.textContent || '');
+            const copyButton = this.createCopyButton(entry.querySelector('.content')?.textContent || '');
 
-            // Position the button in the control area
-            // Find the first control element to insert after
-            const firstControl = controlsContainer.querySelector('.feedback-container');
-            if (firstControl && firstControl.parentNode) {
-                // Insert after the first control element
-                const parent = firstControl.parentNode;
-                if (parent.nextSibling) {
-                    parent.parentNode?.insertBefore(copyButton, parent.nextSibling);
-                } else {
-                    parent.parentNode?.appendChild(copyButton);
-                }
-            } else {
-                // Fallback: insert at the beginning of controls container
-                controlsContainer.insertBefore(copyButton, controlsContainer.firstChild);
-            }
+            // Add to container
+            container.add(copyButton);
 
-            // Store reference to this button
+            // Store reference
             this.copyButtons.set(entryId, copyButton);
         } catch (error) {
             logError('Error adding copy button to entry:', error);
         }
     }
 
-    /**
+        /**
      * Create a copy button element
      */
     private createCopyButton(textToCopy: string): HTMLElement {
