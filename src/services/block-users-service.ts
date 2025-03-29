@@ -15,12 +15,6 @@ import { NotificationService } from './notification-service';
 import {IconComponent} from "../components/icon-component";
 
 export class BlockUsersService {
-    private remoteRequest: HttpService;
-    private htmlParser: HtmlParserService;
-    private notificationService: NotificationService;
-    private preferencesService: PreferencesService;
-    private iconComponent: IconComponent;
-
     private totalUserCount: number = 0;
     private currentBlocked: number = 1;
     private timeout: number = 30;
@@ -35,18 +29,18 @@ export class BlockUsersService {
     private abortProcessing: boolean = false;
     private errorCount: number = 0;
     private maxErrors: number = 10; // Maximum errors before aborting
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.remoteRequest = new HttpService();
-        this.htmlParser = new HtmlParserService();
-        this.notificationService = new NotificationService();
-        this.preferencesService = new PreferencesService();
-        this.iconComponent = new IconComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private httpService: HttpService,
+        private htmlParser: HtmlParserService,
+        private storageService: StorageService,
+        private loggingService: LoggingService,
+        private notificationService: NotificationService,
+        private preferencesService: PreferencesService,
+        private iconComponent: IconComponent
+    ) {
         this.loadOperationParams();
     }
-
     /**
      * Load operation parameters from preferences
      */

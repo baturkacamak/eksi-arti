@@ -13,11 +13,7 @@ export class HttpError extends Error {
 }
 
 export class HttpService {
-    private loggingService: LoggingService;
-
-    constructor() {
-        this.loggingService = new LoggingService();
-    }
+    constructor(private loggingService: LoggingService) {}
 
     /**
      * Make an HTTP request with progressive fallbacks

@@ -19,33 +19,21 @@ import {AuthorHighlighterService} from "./author-highlighter-service";
 import {observerService} from "./observer-service";
 
 export class UIService {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
     private initialized: boolean = false;
-    private observer: MutationObserver | null = null;
     private menuItemSelector: string = '';
-    private iconComponent: IconComponent;
-    private copyButtonComponent: CopyButtonComponent;
-    private screenshotButtonComponent: ScreenshotButtonComponent;
-    private entrySorterComponent: EntrySorterComponent;
-    private postManagementService: PostManagementService;
-    private quickSearchComponent: QuickSearchComponent;
-    private authorHighlighterService: AuthorHighlighterService;
     private menuObserverId: string = '';
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.copyButtonComponent = new CopyButtonComponent();
-        this.screenshotButtonComponent = new ScreenshotButtonComponent();
-        this.entrySorterComponent = new EntrySorterComponent();
-        this.postManagementService = new PostManagementService();
-        this.quickSearchComponent = new QuickSearchComponent();
-        this.authorHighlighterService = AuthorHighlighterService.getInstance();
-        this.loggingService = new LoggingService();
-    }
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private blockUsersService: BlockUsersService,
+        private notificationService: NotificationService,
+        private preferencesManager: PreferencesManager,
+        private storageService: StorageService,
+        private observerService: ObserverService
+    ) {}
 
     /**
      * Initialize the UI

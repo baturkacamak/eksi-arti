@@ -1,47 +1,43 @@
 // In src/content.ts
+import { initializeDI } from './di/initialize-di';
 import { UIService } from './services/ui-service';
-import {LoggingService} from './services/logging-service';
+import { LoggingService } from './services/logging-service';
 import { CSSService } from './services/css-service';
-import {voteMonitoringService} from "./services/vote-monitoring-service";
-import {accessibilityService} from "./services/accessibility-service";
 
-const loggingService = new LoggingService();
 /**
  * Inject Material Icons font
  */
-function injectMaterialIcons(): void {
+function injectMaterialIcons(cssService: CSSService, loggingService: LoggingService): void {
     try {
-        const cssHandler = new CSSService();
-
         // Material Icons CSS
         const materialIconsCSS = `
-      @font-face {
-        font-family: 'Material Icons';
-        font-style: normal;
-        font-weight: 400;
-        src: url(https://fonts.gstatic.com/s/materialicons/v139/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
-      }
-      
-      .material-icons {
-        font-family: 'Material Icons';
-        font-weight: normal;
-        font-style: normal;
-        font-size: 24px;
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-block;
-        white-space: nowrap;
-        word-wrap: normal;
-        direction: ltr;
-        -webkit-font-feature-settings: 'liga';
-        -webkit-font-smoothing: antialiased;
-      }
-    `;
+            @font-face {
+                font-family: 'Material Icons';
+                font-style: normal;
+                font-weight: 400;
+                src: url(https://fonts.gstatic.com/s/materialicons/v139/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+            }
+            
+            .material-icons {
+                font-family: 'Material Icons';
+                font-weight: normal;
+                font-style: normal;
+                font-size: 24px;
+                line-height: 1;
+                letter-spacing: normal;
+                text-transform: none;
+                display: inline-block;
+                white-space: nowrap;
+                word-wrap: normal;
+                direction: ltr;
+                -webkit-font-feature-settings: 'liga';
+                -webkit-font-smoothing: antialiased;
+            }
+        `;
 
-        cssHandler.addCSS(materialIconsCSS);
+        cssService.addCSS(materialIconsCSS);
     } catch (err) {
-      loggingService.error('Error injecting Material Icons:', err);
+        loggingService.error('Error injecting Material Icons:', err);
     }
 }
 
@@ -50,20 +46,26 @@ function injectMaterialIcons(): void {
  */
 function init(): void {
     try {
+        // Initialize the DI container
+        const container = initializeDI();
+
+        // Resolve required services
+        const cssService = container.resolve<CSSService>('CSSService');
+        const loggingService = container.resolve<LoggingService>('LoggingService');
+
         // Inject Material Icons first
-        injectMaterialIcons();
+        injectMaterialIcons(cssService, loggingService);
 
-        // Initialize accessibility service
-        accessibilityService.initialize();
+        // Initialize UI service which coordinates all our components and services
+        const uiService = container.resolve<UIService>('UIService');
+        uiService.initialize().catch(err => {
+            loggingService.error('Error initializing UI service:', err);
+        });
 
-        // Initialize vote monitoring service
-        voteMonitoringService.initialize();
-
-        // Then initialize the UI
-        const uiService = new UIService();
-        uiService.initialize();
+        // Log a startup message
+        loggingService.info('Ekşi Artı extension initialized with Dependency Injection');
     } catch (err) {
-      loggingService.error('Error initializing Ekşi Artı extension:', err);
+        console.error('Error initializing Ekşi Artı extension:', err);
     }
 }
 

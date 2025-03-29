@@ -17,19 +17,17 @@ export interface IconTransitionOptions {
 }
 
 export class IconComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
     private static stylesApplied = false;
     private static fontLoaded = false;
     private static fontLoadListener: (() => void) | null = null;
     private static fontLoadTimeout: number | null = null;
     private static pendingIcons: Set<HTMLElement> = new Set();
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService
+    ) {
         this.applyIconStyles();
 
         // Initialize font loading check if not already done

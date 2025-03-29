@@ -6,8 +6,14 @@ import { ButtonVariant } from './button-component';
 export class BlockOptionsModal extends ModalComponent {
     private entryId: string;
 
-    constructor(entryId: string) {
-        super();
+    constructor(
+        entryId: string,
+        domHandler: DOMService,
+        cssHandler: CSSService,
+        loggingService: LoggingService,
+        private blockUsersService: BlockUsersService
+    ) {
+        super(domHandler, cssHandler, loggingService);
         this.entryId = entryId;
     }
 

@@ -10,11 +10,19 @@ export class ResumeModal extends ModalComponent {
     private entryId: string;
     private savedState: BlockerState;
 
-    constructor(entryId: string, savedState: BlockerState) {
-        super();
+    constructor(
+        entryId: string,
+        savedState: BlockerState,
+        domHandler: DOMService,
+        cssHandler: CSSService,
+        loggingService: LoggingService,
+        private blockUsersService: BlockUsersService
+    ) {
+        super(domHandler, cssHandler, loggingService);
         this.entryId = entryId;
         this.savedState = savedState;
     }
+
 
     /**
      * Create the resume modal element
