@@ -3,7 +3,7 @@ import {BlockerPreferences} from '../types';
 import {BlockType} from '../constants';
 import {PreferencesService} from '../services/preferences-service';
 import {NotificationComponent} from './notification-component';
-import {logError} from "../services/logging-service";
+import {LoggingService} from "../services/logging-service";
 import {ButtonVariant} from "./button-component";
 
 export class PreferencesModal extends ModalComponent {
@@ -41,7 +41,7 @@ export class PreferencesModal extends ModalComponent {
             // Then call the parent show method
             super.show();
         } catch (error) {
-            logError('Error loading preferences:', error);
+          this.loggingService.error('Error loading preferences:', error);
             await this.notification.show('Tercihler yüklenemedi.', {timeout: 5});
         }
     }
@@ -51,7 +51,7 @@ export class PreferencesModal extends ModalComponent {
      */
     protected createElement(): void {
         if (!this.isLoaded || !this.preferences) {
-            logError('Preferences not loaded yet');
+          this.loggingService.error('Preferences not loaded yet');
             return;
         }
 
@@ -122,7 +122,7 @@ export class PreferencesModal extends ModalComponent {
      */
     private async savePreferences(): Promise<void> {
         if (!this.preferences) {
-            logError('Cannot save preferences: preferences not loaded');
+          this.loggingService.error('Cannot save preferences: preferences not loaded');
             return;
         }
 
@@ -141,7 +141,7 @@ export class PreferencesModal extends ModalComponent {
                 await this.notification.show('Tercihler kaydedildi.', {timeout: 3});
                 this.close();
             } catch (error) {
-                logError('Error saving preferences:', error);
+              this.loggingService.error('Error saving preferences:', error);
                 await this.notification.show('Tercihler kaydedilemedi.', {timeout: 5});
             }
         }

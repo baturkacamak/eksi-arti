@@ -4,7 +4,7 @@
  */
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError } from "../services/logging-service";
+import {LoggingService} from "../services/logging-service";
 import {IconComponent, IconProps} from "./icon-component";
 
 export interface CountdownOptions {
@@ -29,11 +29,13 @@ export class CountdownComponent {
     private options: CountdownOptions = {};
     private static stylesApplied = false;
     private iconComponent: IconComponent;
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
+        this.loggingService = new LoggingService();
         this.applyCountdownStyles();
     }
 
@@ -114,7 +116,7 @@ export class CountdownComponent {
 
             return this.countdownElement;
         } catch (error) {
-            logError('Error creating countdown:', error);
+          this.loggingService.error('Error creating countdown:', error);
 
             // Return a fallback element in case of error
             const fallbackElement = this.domHandler.createElement('div');

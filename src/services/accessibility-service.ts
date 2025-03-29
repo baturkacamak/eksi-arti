@@ -5,7 +5,7 @@
  */
 
 import { DOMService } from './dom-service';
-import { logDebug, logError, logInfo } from './logging-service';
+import { LoggingService } from './logging-service';
 import { observerService } from './observer-service';
 import { pageUtils } from './page-utils-service';
 
@@ -19,9 +19,11 @@ export class AccessibilityService {
         ENTRY_LIST: '#entry-item-list',
         HIDEABLE_ELEMENTS: 'footer, .read-more-link-wrapper, .dropdown-menu'
     };
+    private loggingService: LoggingService;
 
     private constructor() {
         this.domHandler = new DOMService();
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -44,7 +46,7 @@ export class AccessibilityService {
             }
 
             if (!pageUtils.isEntryListPage()) {
-                logDebug('No entry list found, skipping accessibility initialization', {}, 'AccessibilityService');
+               this.loggingService.debug('No entry list found, skipping accessibility initialization', {}, 'AccessibilityService');
                 return;
             }
 
@@ -70,7 +72,7 @@ export class AccessibilityService {
                     });
 
                     if (elements.length > 0) {
-                        logInfo(`Enhanced accessibility for ${elements.length} elements`, {}, 'AccessibilityService');
+                      this.loggingService.info(`Enhanced accessibility for ${elements.length} elements`, {}, 'AccessibilityService');
                     }
                 },
                 processExisting: false, // We've already processed existing elements above
@@ -79,9 +81,9 @@ export class AccessibilityService {
             });
 
             this.initialized = true;
-            logDebug('Accessibility service initialized', {}, 'AccessibilityService');
+           this.loggingService.debug('Accessibility service initialized', {}, 'AccessibilityService');
         } catch (error) {
-            logError('Error initializing accessibility service', error, 'AccessibilityService');
+          this.loggingService.error('Error initializing accessibility service', error, 'AccessibilityService');
         }
     }
 
@@ -112,9 +114,9 @@ export class AccessibilityService {
             });
 
             const totalEnhanced = hideableElements.length + dropdownMenus.length;
-            logInfo(`Enhanced accessibility for ${totalEnhanced} elements`, {}, 'AccessibilityService');
+          this.loggingService.info(`Enhanced accessibility for ${totalEnhanced} elements`, {}, 'AccessibilityService');
         } catch (error) {
-            logError('Error enhancing accessibility', error, 'AccessibilityService');
+          this.loggingService.error('Error enhancing accessibility', error, 'AccessibilityService');
         }
     }
 
@@ -126,7 +128,7 @@ export class AccessibilityService {
             observerService.unobserve(this.observerId);
         }
         this.initialized = false;
-        logDebug('Accessibility service disposed', {}, 'AccessibilityService');
+       this.loggingService.debug('Accessibility service disposed', {}, 'AccessibilityService');
     }
 }
 

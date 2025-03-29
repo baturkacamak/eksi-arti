@@ -1,5 +1,5 @@
 import {RequestHeaders} from '../types';
-import {logDebug, logError} from './logging-service';
+import { LoggingService} from './logging-service';
 
 export class HttpError extends Error {
     constructor(
@@ -13,6 +13,12 @@ export class HttpError extends Error {
 }
 
 export class HttpService {
+    private loggingService: LoggingService;
+
+    constructor() {
+        this.loggingService = new LoggingService();
+    }
+
     /**
      * Make an HTTP request with progressive fallbacks
      * First tries fetch API, then XMLHttpRequest, then fallbacks for older browsers
@@ -27,10 +33,10 @@ export class HttpService {
         // Try using the modern Fetch API first
         if (typeof fetch === 'function') {
             try {
-                logDebug('Using Fetch API for request', {method, url});
+               this.loggingService.debug('Using Fetch API for request', {method, url});
                 return await this.makeFetchRequest(method, url, data, browserHeaders);
             } catch (error) {
-                logError('Fetch request failed, falling back to XMLHttpRequest', error);
+              this.loggingService.error('Fetch request failed, falling back to XMLHttpRequest', error);
                 // If fetch fails for any reason, fall back to XMLHttpRequest
             }
         }
@@ -38,10 +44,10 @@ export class HttpService {
         // Fall back to XMLHttpRequest
         if (typeof XMLHttpRequest === 'function') {
             try {
-                logDebug('Using XMLHttpRequest for request', {method, url});
+               this.loggingService.debug('Using XMLHttpRequest for request', {method, url});
                 return await this.makeXHRRequest(method, url, data, browserHeaders);
             } catch (error) {
-                logError('XMLHttpRequest failed, falling back to legacy methods', error);
+              this.loggingService.error('XMLHttpRequest failed, falling back to legacy methods', error);
                 // If XMLHttpRequest fails, fall back to even older methods
             }
         }
@@ -49,10 +55,10 @@ export class HttpService {
         // Last resort for very old environments: JSONP for GET requests
         if (method.toUpperCase() === 'GET') {
             try {
-                logDebug('Using JSONP fallback for GET request', {url});
+               this.loggingService.debug('Using JSONP fallback for GET request', {url});
                 return await this.makeJSONPRequest(url);
             } catch (error) {
-                logError('JSONP request failed', error);
+              this.loggingService.error('JSONP request failed', error);
                 throw new HttpError('All request methods failed', 0, error);
             }
         }
@@ -60,10 +66,10 @@ export class HttpService {
         // For POST without XMLHttpRequest, try iframe approach
         if (method.toUpperCase() === 'POST' && typeof document !== 'undefined') {
             try {
-                logDebug('Using iframe fallback for POST request', {url});
+               this.loggingService.debug('Using iframe fallback for POST request', {url});
                 return await this.makeIframePostRequest(url, data);
             } catch (error) {
-                logError('Iframe POST request failed', error);
+              this.loggingService.error('Iframe POST request failed', error);
                 throw new HttpError('All request methods failed', 0, error);
             }
         }

@@ -1,6 +1,6 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError } from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 
 /**
  * Toggle Switch Properties Interface
@@ -28,6 +28,7 @@ export class ToggleSwitchComponent {
     private inputElement: HTMLInputElement | null = null;
     private labelElement: HTMLLabelElement | null = null;
     private static stylesApplied = false;
+    private loggingService: LoggingService;
 
     /**
      * Constructor
@@ -35,6 +36,7 @@ export class ToggleSwitchComponent {
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
         this.applyToggleSwitchStyles();
     }
 
@@ -123,7 +125,7 @@ export class ToggleSwitchComponent {
 
             return this.containerElement;
         } catch (error) {
-            logError('Error creating toggle switch:', error);
+          this.loggingService.error('Error creating toggle switch:', error);
             // Return a fallback element in case of error
             const fallbackElement = this.domHandler.createElement('div');
             fallbackElement.textContent = props.label || 'Toggle Switch';

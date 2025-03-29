@@ -1,7 +1,7 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
-import { logError, logDebug } from '../services/logging-service';
+import { LoggingService} from '../services/logging-service';
 import html2canvas from 'html2canvas';
 import {containerService} from "../services/container-service";
 import {observerService} from "../services/observer-service";
@@ -18,11 +18,13 @@ export class ScreenshotButtonComponent {
     private screenshotButtons: Map<string, HTMLElement> = new Map();
     private static stylesApplied = false;
     private observerId: string = '';
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
+        this.loggingService = new LoggingService();
         this.applyStyles();
     }
 
@@ -45,10 +47,10 @@ export class ScreenshotButtonComponent {
                 });
 
                 this.applyStyles();
-                logDebug('Screenshot button component initialized');
+               this.loggingService.debug('Screenshot button component initialized');
             });
         } catch (error) {
-            logError('Error initializing screenshot button component:', error);
+          this.loggingService.error('Error initializing screenshot button component:', error);
         }
     }
 
@@ -226,7 +228,7 @@ export class ScreenshotButtonComponent {
             // Store reference
             this.screenshotButtons.set(entryId, screenshotButton);
         } catch (error) {
-            logError('Error adding screenshot button to entry:', error);
+          this.loggingService.error('Error adding screenshot button to entry:', error);
         }
     }
 
@@ -433,7 +435,7 @@ export class ScreenshotButtonComponent {
                             this.showSuccessState(button, 'clipboard');
                         })
                         .catch((error) => {
-                            logError('Error copying to clipboard:', error);
+                          this.loggingService.error('Error copying to clipboard:', error);
                             this.showErrorState(button);
                         });
                 }
@@ -441,13 +443,13 @@ export class ScreenshotButtonComponent {
                 // Remove the temporary container
                 document.body.removeChild(container);
             }).catch((error: Error) => {
-                logError('Error generating screenshot:', error);
+              this.loggingService.error('Error generating screenshot:', error);
                 this.showErrorState(button);
                 document.body.removeChild(container);
             });
 
         } catch (error) {
-            logError('Error capturing entry screenshot:', error);
+          this.loggingService.error('Error capturing entry screenshot:', error);
             this.showErrorState(button);
         }
     }
@@ -470,7 +472,7 @@ export class ScreenshotButtonComponent {
             link.click();
             document.body.removeChild(link);
         } catch (error) {
-            logError('Error downloading screenshot:', error);
+          this.loggingService.error('Error downloading screenshot:', error);
         }
     }
 
@@ -491,7 +493,7 @@ export class ScreenshotButtonComponent {
                         try {
                             const item = new ClipboardItem({ 'image/png': blob });
                             await navigator.clipboard.write([item]);
-                            logDebug('Image copied to clipboard using Clipboard API');
+                           this.loggingService.debug('Image copied to clipboard using Clipboard API');
                             resolve();
                         } catch (error) {
                             reject(error);
@@ -532,10 +534,10 @@ export class ScreenshotButtonComponent {
                 // Clean up
                 selection.removeAllRanges();
                 document.body.removeChild(container);
-                logDebug('Image copied to clipboard using execCommand');
+               this.loggingService.debug('Image copied to clipboard using execCommand');
             }
         } catch (error) {
-            logError('Clipboard copy failed:', error);
+          this.loggingService.error('Clipboard copy failed:', error);
             // If both methods fail, throw error up to caller
             throw error;
         }
@@ -556,7 +558,7 @@ export class ScreenshotButtonComponent {
             // Add processing animation
             this.domHandler.addClass(iconElement, 'eksi-screenshot-processing');
         } catch (error) {
-            logError('Error showing processing state:', error);
+          this.loggingService.error('Error showing processing state:', error);
         }
     }
 
@@ -592,7 +594,7 @@ export class ScreenshotButtonComponent {
                 }, 200);
             }, 1500);
         } catch (error) {
-            logError('Error showing success state:', error);
+          this.loggingService.error('Error showing success state:', error);
         }
     }
 
@@ -616,7 +618,7 @@ export class ScreenshotButtonComponent {
                 iconElement.style.color = '#8e9ed9';
             }, 1500);
         } catch (error) {
-            logError('Error showing error state:', error);
+          this.loggingService.error('Error showing error state:', error);
         }
     }
 

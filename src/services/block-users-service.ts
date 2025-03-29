@@ -7,7 +7,7 @@ import { HtmlParserService } from './html-parser-service';
 import { StorageArea, storageService } from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { BlockType, Endpoints, STORAGE_KEYS } from '../constants';
-import { logDebug, logError, logInfo } from './logging-service';
+import { LoggingService } from './logging-service';
 import { ButtonVariant } from "../components/button-component";
 import { PreferencesService } from "./preferences-service";
 import { delay } from "./utilities";
@@ -35,6 +35,7 @@ export class BlockUsersService {
     private abortProcessing: boolean = false;
     private errorCount: number = 0;
     private maxErrors: number = 10; // Maximum errors before aborting
+    private loggingService: LoggingService;
 
     constructor() {
         this.remoteRequest = new HttpService();
@@ -42,6 +43,7 @@ export class BlockUsersService {
         this.notificationService = new NotificationService();
         this.preferencesService = new PreferencesService();
         this.iconComponent = new IconComponent();
+        this.loggingService = new LoggingService();
         this.loadOperationParams();
     }
 
@@ -61,13 +63,13 @@ export class BlockUsersService {
             this.retryDelay = preferences.retryDelay || 5;
             this.maxRetries = preferences.maxRetries || 3;
 
-            logDebug('Operation parameters loaded', {
+           this.loggingService.debug('Operation parameters loaded', {
                 requestDelay: this.requestDelay,
                 retryDelay: this.retryDelay,
                 maxRetries: this.maxRetries
             }, 'BlockUsersService');
         } catch (error) {
-            logError('Error loading operation parameters:', error, 'BlockUsersService');
+          this.loggingService.error('Error loading operation parameters:', error, 'BlockUsersService');
             // Use default values if there's an error
         }
     }
@@ -101,7 +103,7 @@ export class BlockUsersService {
 
             // If successful and data exists
             if (result.success && result.data && result.data.entryId === this.entryId) {
-                logDebug('Loaded saved state from storage', {
+               this.loggingService.debug('Loaded saved state from storage', {
                     source: result.source,
                     data: result.data
                 }, 'BlockUsersService');
@@ -112,13 +114,13 @@ export class BlockUsersService {
                 return true;
             }
 
-            logDebug('No saved state found or entry ID mismatch', {
+           this.loggingService.debug('No saved state found or entry ID mismatch', {
                 currentEntryId: this.entryId,
                 result
             }, 'BlockUsersService');
             return false;
         } catch (error) {
-            logError('Error loading state', error, 'BlockUsersService');
+          this.loggingService.error('Error loading state', error, 'BlockUsersService');
             return false;
         }
     }
@@ -143,13 +145,13 @@ export class BlockUsersService {
                 StorageArea.LOCAL
             );
 
-            logDebug('Saved state to storage', {
+           this.loggingService.debug('Saved state to storage', {
                 source: result.source,
                 success: result.success,
                 data: stateData
             }, 'BlockUsersService');
         } catch (error) {
-            logError('Failed to save state', error, 'BlockUsersService');
+          this.loggingService.error('Failed to save state', error, 'BlockUsersService');
         }
     }
 
@@ -164,12 +166,12 @@ export class BlockUsersService {
                 StorageArea.LOCAL
             );
 
-            logDebug('Cleared state from storage', {
+           this.loggingService.debug('Cleared state from storage', {
                 source: result.source,
                 success: result.success
             }, 'BlockUsersService');
         } catch (error) {
-            logError('Failed to clear state', error, 'BlockUsersService');
+          this.loggingService.error('Failed to clear state', error, 'BlockUsersService');
         }
     }
 
@@ -292,7 +294,7 @@ export class BlockUsersService {
                 await this.saveState();
             }
         } catch (error) {
-            logError('Error in blockUsers:', error);
+          this.loggingService.error('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
             await this.notificationService.show(
@@ -336,7 +338,7 @@ export class BlockUsersService {
                 await this.saveState();
             } catch (error) {
                 this.errorCount++;
-                logError(`Error processing user ${username}:`, error);
+              this.loggingService.error(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
                     await this.notificationService.show(
@@ -381,7 +383,7 @@ export class BlockUsersService {
                                 options: {
                                     label: 'Sonraki işlem için bekleniyor:',
                                     onComplete: () => {
-                                        logDebug('Countdown completed');
+                                       this.loggingService.debug('Countdown completed');
                                     }
                                 }
                             }
@@ -423,7 +425,7 @@ export class BlockUsersService {
 
             return true;
         } catch (error) {
-            logError(`Failed to process user ${username}:`, error);
+          this.loggingService.error(`Failed to process user ${username}:`, error);
             throw error;
         }
     }
@@ -550,7 +552,7 @@ export class BlockUsersService {
     cancelOperation(): void {
         if (this.isProcessing) {
             this.abortProcessing = true;
-            logInfo('User requested to cancel the blocking operation');
+          this.loggingService.info('User requested to cancel the blocking operation');
         }
     }
 }

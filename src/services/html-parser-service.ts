@@ -1,16 +1,18 @@
-import { DOMService } from './dom-service';
-import { logError, logDebug } from "./logging-service";
+import {DOMService} from './dom-service';
+import {LoggingService} from "./logging-service";
 import {SITE_DOMAIN} from "../constants";
 
 export class HtmlParserService {
     private domHandler: DOMService;
     private useDOMParser: boolean;
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         // Check once if DOMParser is available
         this.useDOMParser = typeof DOMParser !== 'undefined';
-        logDebug(`HtmlParserService initialized. Using DOMParser: ${this.useDOMParser}`);
+        this.loggingService = new LoggingService();
+        this.loggingService.debug(`HtmlParserService initialized. Using DOMParser: ${this.useDOMParser}`);
     }
 
     /**
@@ -34,7 +36,7 @@ export class HtmlParserService {
                 }
                 // If domHandler returns null, fall back to regex
             } catch (error) {
-                logDebug('DOMParser failed, falling back to regex', error);
+                this.loggingService.debug('DOMParser failed, falling back to regex', error);
             }
         }
 
@@ -110,7 +112,7 @@ export class HtmlParserService {
             return userUrls;
         } catch (error) {
             // Only log error if all fallbacks fail
-            logError('All favorites parsing methods failed', error);
+            this.loggingService.error('All favorites parsing methods failed', error);
             return [];
         }
     }
@@ -149,10 +151,10 @@ export class HtmlParserService {
             }
 
             // If we get here, all parsing methods failed
-            logError('Failed to extract user ID from profile HTML');
+            this.loggingService.error('Failed to extract user ID from profile HTML');
             return null;
         } catch (error) {
-            logError('All user ID parsing methods failed', error);
+            this.loggingService.error('All user ID parsing methods failed', error);
             return null;
         }
     }
@@ -171,7 +173,7 @@ export class HtmlParserService {
 
             return '';
         } catch (error) {
-            logDebug('Error parsing post title, using empty string', error);
+            this.loggingService.debug('Error parsing post title, using empty string', error);
             return '';
         }
     }

@@ -1,6 +1,6 @@
 import {DOMService} from '../services/dom-service';
 import {CSSService} from '../services/css-service';
-import {logDebug, logError} from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 
 export interface IconProps {
     name: string;
@@ -24,10 +24,12 @@ export class IconComponent {
     private static fontLoadListener: (() => void) | null = null;
     private static fontLoadTimeout: number | null = null;
     private static pendingIcons: Set<HTMLElement> = new Set();
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
         this.applyIconStyles();
 
         // Initialize font loading check if not already done
@@ -60,7 +62,7 @@ export class IconComponent {
                             document.fonts.add(materialIconsFont);
                             this.handleFontLoaded();
                         }).catch(error => {
-                            logError('Failed to load Material Icons font:', error);
+                          this.loggingService.error('Failed to load Material Icons font:', error);
                             // Still mark as loaded to avoid hanging
                             this.handleFontLoaded();
                         });
@@ -101,7 +103,7 @@ export class IconComponent {
             IconComponent.fontLoadTimeout = null;
         }
 
-        logDebug('Material Icons font loaded');
+       this.loggingService.debug('Material Icons font loaded');
     }
 
     public create(props: IconProps): HTMLElement {
@@ -149,7 +151,7 @@ export class IconComponent {
 
             return iconElement;
         } catch (error) {
-            logError('Error creating icon:', error);
+          this.loggingService.error('Error creating icon:', error);
             // Return fallback element
             const fallbackElement = this.domHandler.createElement('span');
             fallbackElement.textContent = props.name;
@@ -237,7 +239,7 @@ export class IconComponent {
             // Store the timer ID on the element to allow cancellation if needed
             (iconElement as any)._eksiTimerId = cleanupTimer;
         } catch (error) {
-            logError('Error transitioning icon:', error);
+          this.loggingService.error('Error transitioning icon:', error);
 
             // Ensure the icon is still visible in case of error
             iconElement.style.opacity = '1';

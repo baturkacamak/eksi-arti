@@ -4,7 +4,7 @@
  */
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError, logDebug } from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 
 export interface SliderFilterOptions {
     min?: number;
@@ -36,10 +36,12 @@ export class SliderFilterComponent {
     private progressElement: HTMLElement | null = null;
     private options: SliderFilterOptions = {};
     private static stylesApplied = false;
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
         this.applySliderStyles();
     }
 
@@ -150,7 +152,7 @@ export class SliderFilterComponent {
 
             return this.containerElement;
         } catch (error) {
-            logError('Error creating slider filter:', error);
+          this.loggingService.error('Error creating slider filter:', error);
 
             // Return a fallback element in case of error
             const fallbackElement = this.domHandler.createElement('div');

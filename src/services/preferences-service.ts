@@ -1,7 +1,7 @@
 import { BlockerPreferences } from '../types';
 import {BlockType, SITE_DOMAIN, STORAGE_KEYS} from '../constants';
 import { storageService, StorageArea } from './storage-service';
-import { logger, logDebug, logError } from './logging-service';
+import {LoggingService} from './logging-service';
 
 export class PreferencesService {
     private defaultPreferences: BlockerPreferences = {
@@ -11,8 +11,10 @@ export class PreferencesService {
         menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
         notificationPosition: 'top-right'
     };
+    private loggingService: LoggingService;
 
     constructor() {
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -28,14 +30,14 @@ export class PreferencesService {
             );
 
             if (result.success && result.data) {
-                logDebug('Preferences loaded successfully', { data: result.data, source: result.source }, 'PreferencesService');
+               this.loggingService.debug('Preferences loaded successfully', { data: result.data, source: result.source }, 'PreferencesService');
                 return { ...this.defaultPreferences, ...result.data };
             }
 
-            logDebug('No saved preferences found, using defaults', this.defaultPreferences, 'PreferencesService');
+           this.loggingService.debug('No saved preferences found, using defaults', this.defaultPreferences, 'PreferencesService');
             return this.defaultPreferences;
         } catch (error) {
-            logError('Error loading preferences', error, 'PreferencesService');
+          this.loggingService.error('Error loading preferences', error, 'PreferencesService');
             return this.defaultPreferences;
         }
     }
@@ -57,14 +59,14 @@ export class PreferencesService {
             );
 
             if (result.success) {
-                logDebug('Preferences saved successfully', { data: updatedPreferences, source: result.source }, 'PreferencesService');
+               this.loggingService.debug('Preferences saved successfully', { data: updatedPreferences, source: result.source }, 'PreferencesService');
                 return true;
             } else {
-                logError('Failed to save preferences', result.error, 'PreferencesService');
+              this.loggingService.error('Failed to save preferences', result.error, 'PreferencesService');
                 return false;
             }
         } catch (error) {
-            logError('Error saving preferences', error, 'PreferencesService');
+          this.loggingService.error('Error saving preferences', error, 'PreferencesService');
             return false;
         }
     }
@@ -84,7 +86,7 @@ export class PreferencesService {
                 .replace('{entryLink}', `https://${SITE_DOMAIN}/entry/${entryId}`);
         } catch (error) {
             // In case of error, use default template
-            logError('Error generating custom note', error, 'PreferencesService');
+          this.loggingService.error('Error generating custom note', error, 'PreferencesService');
             const actionType = blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
 
             return this.defaultPreferences.defaultNoteTemplate

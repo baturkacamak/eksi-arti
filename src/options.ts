@@ -4,7 +4,7 @@
  */
 import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
 import {TooltipComponent} from "./components/tooltip-component";
-import {logError, logInfo} from "./services/logging-service";
+import {LoggingService} from "./services/logging-service";
 
 /**
  * Options Manager Class
@@ -15,6 +15,12 @@ class OptionsPage {
     private preferences: any = {...DEFAULT_PREFERENCES};
     private saveDebounceTimer: number | null = null;
     private savePending: boolean = false;
+    private loggingService: LoggingService = new LoggingService();
+
+
+    constructor() {
+        this.loggingService = new LoggingService();
+    }
 
     /**
      * Initialize the options page
@@ -39,9 +45,9 @@ class OptionsPage {
             this.initializeTooltips();
 
             this.isInitialized = true;
-            this.logDebug('Options page initialized');
+            this.loggingService.debug('Options page initialized');
         } catch (error) {
-            this.logError('Error initializing options page', error);
+            this.loggingService.error('Error initializing options page', error);
             this.showStatus('Ayarlar yüklenemedi: ' + this.getErrorMessage(error), 'error');
         }
     }
@@ -54,14 +60,14 @@ class OptionsPage {
             const result = await this.getFromStorage(STORAGE_KEYS.PREFERENCES);
             if (result && result[STORAGE_KEYS.PREFERENCES]) {
                 this.preferences = {...DEFAULT_PREFERENCES, ...result[STORAGE_KEYS.PREFERENCES]};
-                this.logDebug('Preferences loaded successfully', this.preferences);
+                this.loggingService.debug('Preferences loaded successfully', this.preferences);
             } else {
-                this.logDebug('No saved preferences found, using defaults', DEFAULT_PREFERENCES);
+                this.loggingService.debug('No saved preferences found, using defaults', DEFAULT_PREFERENCES);
                 this.preferences = {...DEFAULT_PREFERENCES};
             }
             return this.preferences;
         } catch (error) {
-            this.logError('Error loading preferences from storage', error);
+            this.loggingService.error('Error loading preferences from storage', error);
             // Fall back to localStorage if chrome storage fails
             this.preferences = this.loadFromLocalStorage() || {...DEFAULT_PREFERENCES};
             return this.preferences;
@@ -78,7 +84,7 @@ class OptionsPage {
                 return JSON.parse(savedPrefs);
             }
         } catch (error) {
-            this.logError('Error loading from localStorage', error);
+            this.loggingService.error('Error loading from localStorage', error);
         }
         return null;
     }
@@ -115,7 +121,7 @@ class OptionsPage {
                     // Backup to localStorage
                     this.backupToLocalStorage();
 
-                    this.logDebug('Preferences saved successfully', this.preferences);
+                    this.loggingService.debug('Preferences saved successfully', this.preferences);
                     this.showStatus('Kaydedildi', 'success');
 
                     // Update theme if it has changed
@@ -125,7 +131,7 @@ class OptionsPage {
                     return true;
                 } catch (error) {
                     this.savePending = false;
-                    this.logError('Error executing debounced save', error);
+                    this.loggingService.error('Error executing debounced save', error);
                     this.showStatus('Kaydedilemedi: ' + this.getErrorMessage(error), 'error');
                     return false;
                 }
@@ -134,7 +140,7 @@ class OptionsPage {
             return true;
         } catch (error) {
             this.savePending = false;
-            this.logError('Error preparing preferences to save', error);
+            this.loggingService.error('Error preparing preferences to save', error);
             this.showStatus('Ayarlar kaydedilemedi: ' + this.getErrorMessage(error), 'error');
             return false;
         }
@@ -147,7 +153,7 @@ class OptionsPage {
         try {
             localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
         } catch (error) {
-            this.logError('Error backing up to localStorage', error);
+            this.loggingService.error('Error backing up to localStorage', error);
         }
     }
 
@@ -167,7 +173,7 @@ class OptionsPage {
             }
             return false;
         } catch (error) {
-            this.logError('Error resetting preferences', error);
+            this.loggingService.error('Error resetting preferences', error);
             this.showStatus('Ayarlar sıfırlanamadı: ' + this.getErrorMessage(error), 'error');
             return false;
         }
@@ -190,7 +196,7 @@ class OptionsPage {
 
             this.showStatus('Ayarlar dışa aktarıldı', 'success');
         } catch (error) {
-            this.logError('Error exporting settings', error);
+            this.loggingService.error('Error exporting settings', error);
             this.showStatus('Ayarlar dışa aktarılamadı: ' + this.getErrorMessage(error), 'error');
         }
     }
@@ -237,14 +243,14 @@ class OptionsPage {
 
                         this.showStatus('Ayarlar içe aktarıldı', 'success');
                     } catch (error) {
-                        this.logError('Error parsing imported settings', error);
+                        this.loggingService.error('Error parsing imported settings', error);
                         this.showStatus('Ayarlar içe aktarılamadı: ' + this.getErrorMessage(error), 'error');
                     }
                 };
 
                 reader.readAsText(file);
             } catch (error) {
-                this.logError('Error importing settings', error);
+                this.loggingService.error('Error importing settings', error);
                 this.showStatus('Ayarlar içe aktarılamadı: ' + this.getErrorMessage(error), 'error');
             }
         };
@@ -281,9 +287,9 @@ class OptionsPage {
             this.setCheckboxValue('saveOperationHistory', this.preferences.saveOperationHistory);
             this.setCheckboxValue('enableDebugMode', this.preferences.enableDebugMode);
 
-            this.logDebug('UI populated with current preferences');
+            this.loggingService.debug('UI populated with current preferences');
         } catch (error) {
-            this.logError('Error populating UI', error);
+            this.loggingService.error('Error populating UI', error);
         }
     }
 
@@ -326,9 +332,9 @@ class OptionsPage {
             this.preferences.retryDelay = Math.max(2, Math.min(30, this.preferences.retryDelay));
             this.preferences.maxRetries = Math.max(1, Math.min(10, this.preferences.maxRetries));
 
-            this.logDebug('Values collected from UI', this.preferences);
+            this.loggingService.debug('Values collected from UI', this.preferences);
         } catch (error) {
-            this.logError('Error collecting values from UI', error);
+            this.loggingService.error('Error collecting values from UI', error);
             throw error;
         }
     }
@@ -459,9 +465,9 @@ class OptionsPage {
                 }
             });
 
-            this.logDebug('Event listeners set up with auto-save functionality');
+            this.loggingService.debug('Event listeners set up with auto-save functionality');
         } catch (error) {
-            this.logError('Error setting up event listeners', error);
+            this.loggingService.error('Error setting up event listeners', error);
         }
     }
 
@@ -506,9 +512,9 @@ class OptionsPage {
                 tabContent.classList.add('block');
             }
 
-            this.logDebug(`Switched to tab: ${tabId}`);
+            this.loggingService.debug(`Switched to tab: ${tabId}`);
         } catch (error) {
-            this.logError('Error switching tabs', error);
+            this.loggingService.error('Error switching tabs', error);
         }
     }
 
@@ -521,9 +527,9 @@ class OptionsPage {
             const tooltipComponent = new TooltipComponent();
             tooltipComponent.initializeTooltips();
 
-            logInfo('[Ekşi Artı] Tooltips initialized using TooltipComponent');
+          this.loggingService.info('[Ekşi Artı] Tooltips initialized using TooltipComponent');
         } catch (error) {
-            logError('Error initializing tooltips:', error);
+          this.loggingService.error('Error initializing tooltips:', error);
         }
     }
 
@@ -575,9 +581,9 @@ class OptionsPage {
                 });
             }
 
-            this.logDebug(`Theme updated to: ${this.preferences.theme}`);
+            this.loggingService.debug(`Theme updated to: ${this.preferences.theme}`);
         } catch (error) {
-            this.logError('Error updating theme', error);
+            this.loggingService.error('Error updating theme', error);
         }
     }
 
@@ -596,7 +602,7 @@ class OptionsPage {
                 // Fallback to message passing if direct access fails
                 chrome.runtime.sendMessage({action: 'getVersion'}, (response) => {
                     if (chrome.runtime.lastError) {
-                        this.logError('Error getting version', chrome.runtime.lastError);
+                        this.loggingService.error('Error getting version', chrome.runtime.lastError);
                         versionElement.textContent = '1.0.0'; // Fallback
                         return;
                     }
@@ -609,7 +615,7 @@ class OptionsPage {
                 });
             }
         } catch (error) {
-            this.logError('Error displaying version', error);
+            this.loggingService.error('Error displaying version', error);
             // Fallback version display
             const versionElement = document.getElementById('version');
             if (versionElement) versionElement.textContent = '1.0.0';
@@ -637,8 +643,8 @@ class OptionsPage {
                 }
             }, timeout);
         } catch (error) {
-            this.logError('Error showing status', error);
-            logError(message);
+            this.loggingService.error('Error showing status', error);
+          this.loggingService.error(message);
         }
     }
 
@@ -734,26 +740,6 @@ class OptionsPage {
             return error.message;
         }
         return String(error);
-    }
-
-    /**
-     * Debug logging
-     */
-    logDebug(message: string, data: any = null) {
-        if (this.preferences.enableDebugMode) {
-            if (data) {
-                logInfo(`[Ekşi Artı Debug] ${message}`, data);
-            } else {
-                logInfo(`[Ekşi Artı Debug] ${message}`);
-            }
-        }
-    }
-
-    /**
-     * Error logging
-     */
-    logError(message: string, error: any) {
-        logError(`[Ekşi Artı Error] ${message}`, error);
     }
 }
 

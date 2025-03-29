@@ -1,5 +1,5 @@
 // src/services/observer-service.ts
-import { logDebug, logError } from './logging-service';
+import { LoggingService} from './logging-service';
 import { debounce, delay, generateId } from './utilities';
 
 /**
@@ -55,9 +55,10 @@ export class ObserverService {
     private registrations: Map<string, ObserverRegistration> = new Map();
     private isObserving: boolean = false;
     private uniqueIdCounter: number = 0;
+    private loggingService: LoggingService;
 
     private constructor() {
-        // Private constructor for singleton pattern
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -80,9 +81,9 @@ export class ObserverService {
 
         try {
             this.observer = new MutationObserver(this.handleMutations.bind(this));
-            logDebug('Observer service initialized');
+           this.loggingService.debug('Observer service initialized');
         } catch (error) {
-            logError('Error initializing observer service:', error);
+          this.loggingService.error('Error initializing observer service:', error);
             this.setupFallbackPolling();
         }
     }
@@ -121,10 +122,10 @@ export class ObserverService {
                 this.processExistingElements(id);
             }
 
-            logDebug('Added observer registration', { id, selector: config.selector });
+           this.loggingService.debug('Added observer registration', { id, selector: config.selector });
             return id;
         } catch (error) {
-            logError('Error registering observer:', error);
+          this.loggingService.error('Error registering observer:', error);
             return '';
         }
     }
@@ -141,14 +142,14 @@ export class ObserverService {
 
             // Remove the registration
             this.registrations.delete(id);
-            logDebug('Removed observer registration', { id });
+           this.loggingService.debug('Removed observer registration', { id });
 
             // Stop observer if no more registrations
             if (this.registrations.size === 0) {
                 this.stopObserver();
             }
         } catch (error) {
-            logError('Error unregistering observer:', error);
+          this.loggingService.error('Error unregistering observer:', error);
         }
     }
 
@@ -225,7 +226,7 @@ export class ObserverService {
                 }
             });
         } catch (error) {
-            logError('Error handling mutations:', error);
+          this.loggingService.error('Error handling mutations:', error);
         }
     }
 
@@ -244,14 +245,14 @@ export class ObserverService {
                     registration.lastProcessTime = Date.now();
                     config.handler(elements);
                 } catch (error) {
-                    logError('Error in observer handler:', error);
+                  this.loggingService.error('Error in observer handler:', error);
                 }
             }, config.debounceTime || 50); // Ensure we have a default value for debounceTime
 
             // Execute the debounced handler
             debouncedHandler();
         } catch (error) {
-            logError('Error scheduling processing:', error);
+          this.loggingService.error('Error scheduling processing:', error);
         }
     }
 
@@ -275,7 +276,7 @@ export class ObserverService {
                 this.scheduleProcessing(registration, Array.from(existingElements));
             }
         } catch (error) {
-            logError('Error processing existing elements:', error);
+          this.loggingService.error('Error processing existing elements:', error);
         }
     }
 
@@ -304,9 +305,9 @@ export class ObserverService {
             });
 
             this.isObserving = true;
-            logDebug('Started DOM observer');
+           this.loggingService.debug('Started DOM observer');
         } catch (error) {
-            logError('Error starting observer:', error);
+          this.loggingService.error('Error starting observer:', error);
             this.setupFallbackPolling();
         }
     }
@@ -322,9 +323,9 @@ export class ObserverService {
 
             this.observer.disconnect();
             this.isObserving = false;
-            logDebug('Stopped DOM observer');
+           this.loggingService.debug('Stopped DOM observer');
         } catch (error) {
-            logError('Error stopping observer:', error);
+          this.loggingService.error('Error stopping observer:', error);
         }
     }
 
@@ -333,7 +334,7 @@ export class ObserverService {
      */
     private setupFallbackPolling(): void {
         try {
-            logDebug('Setting up fallback polling for DOM changes');
+           this.loggingService.debug('Setting up fallback polling for DOM changes');
 
             // Clear any existing interval
             if (this.observer) {
@@ -374,7 +375,7 @@ export class ObserverService {
                         // Use delay utility for a cleaner approach
                         await delay(1); // 1 second delay
                     } catch (error) {
-                        logError('Error in fallback polling:', error);
+                      this.loggingService.error('Error in fallback polling:', error);
                         await delay(1); // Still continue after error
                     }
                 }
@@ -390,7 +391,7 @@ export class ObserverService {
                 takeRecords: () => []
             } as any as MutationObserver;
         } catch (error) {
-            logError('Error setting up fallback polling:', error);
+          this.loggingService.error('Error setting up fallback polling:', error);
         }
     }
 
@@ -406,9 +407,9 @@ export class ObserverService {
             this.stopObserver();
             this.observer = null;
 
-            logDebug('Observer service disposed');
+           this.loggingService.debug('Observer service disposed');
         } catch (error) {
-            logError('Error disposing observer service:', error);
+          this.loggingService.error('Error disposing observer service:', error);
         }
     }
 }

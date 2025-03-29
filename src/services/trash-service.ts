@@ -1,7 +1,7 @@
 // src/services/trash-service.ts
 import { HttpService } from './http-service';
 import { DOMService } from './dom-service';
-import { logDebug, logError, logInfo } from './logging-service';
+import {LoggingService} from './logging-service';
 import { NotificationComponent } from '../components/notification-component';
 import { IconComponent } from '../components/icon-component';
 import { SITE_DOMAIN } from '../constants';
@@ -20,12 +20,14 @@ export class TrashService {
     private loadingDelay: number = 1000; // Default 1 second delay between page loads
     private abortController: AbortController | null = null;
     private observerId: string = '';
+    private loggingService: LoggingService;
 
     private constructor() {
         this.httpService = new HttpService();
         this.domHandler = new DOMService();
         this.iconComponent = new IconComponent();
         this.notification = new NotificationComponent();
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -47,7 +49,7 @@ export class TrashService {
         }
 
         try {
-            logDebug('Initializing Trash Service on trash page');
+           this.loggingService.debug('Initializing Trash Service on trash page');
             this.detectPagination();
             this.addLoadMoreButton();
 
@@ -70,7 +72,7 @@ export class TrashService {
 
             this.addBulkReviveControls();
         } catch (error) {
-            logError('Error initializing Trash Service:', error);
+          this.loggingService.error('Error initializing Trash Service:', error);
         }
     }
 
@@ -108,9 +110,9 @@ export class TrashService {
                 this.currentPage = 1; // Default to first page
             }
 
-            logDebug('Pagination detected', { currentPage: this.currentPage, lastPage: this.lastPage });
+           this.loggingService.debug('Pagination detected', { currentPage: this.currentPage, lastPage: this.lastPage });
         } catch (error) {
-            logError('Error detecting pagination:', error);
+          this.loggingService.error('Error detecting pagination:', error);
             // Default values
             this.currentPage = 1;
             this.lastPage = 1;
@@ -128,7 +130,7 @@ export class TrashService {
         try {
             const trashItems = this.domHandler.querySelector('#trash-items');
             if (!trashItems) {
-                logError('Trash items container not found');
+              this.loggingService.error('Trash items container not found');
                 return;
             }
 
@@ -177,7 +179,7 @@ export class TrashService {
             const container = trashItems.parentElement || document.body;
             container.appendChild(loadMoreContainer);
         } catch (error) {
-            logError('Error adding load more button:', error);
+          this.loggingService.error('Error adding load more button:', error);
         }
     }
 
@@ -204,7 +206,7 @@ export class TrashService {
 
             const trashItems = document.querySelector('#trash-items');
             if (!trashItems) {
-                logError('Trash items container not found');
+              this.loggingService.error('Trash items container not found');
                 return false;
             }
 
@@ -249,11 +251,11 @@ export class TrashService {
                 }
             }
 
-            logInfo(`Loaded trash page ${nextPage}, added ${itemsAdded} items`);
+          this.loggingService.info(`Loaded trash page ${nextPage}, added ${itemsAdded} items`);
 
             return true;
         } catch (error) {
-            logError('Error loading next page:', error);
+          this.loggingService.error('Error loading next page:', error);
             return false;
         } finally {
             this.isLoading = false;
@@ -349,7 +351,7 @@ export class TrashService {
             // Cleanup
             this.abortController = null;
         } catch (error) {
-            logError('Error loading all pages:', error);
+          this.loggingService.error('Error loading all pages:', error);
 
             await this.notification.show('Sayfa yükleme sırasında hata oluştu.', {
                 timeout: 5,
@@ -379,7 +381,7 @@ export class TrashService {
                     const success = await this.reviveEntry(entryId);
 
                     if (success) {
-                        logInfo(`Entry ${entryId} successfully revived`);
+                      this.loggingService.info(`Entry ${entryId} successfully revived`);
 
                         // Show success notification
                         await this.notification.show(
@@ -399,7 +401,7 @@ export class TrashService {
                             item.remove();
                         }, 500);
                     } else {
-                        logError(`Failed to revive entry ${entryId}`);
+                      this.loggingService.error(`Failed to revive entry ${entryId}`);
 
                         // Show error notification
                         await this.notification.show(
@@ -411,7 +413,7 @@ export class TrashService {
                         );
                     }
                 } catch (error) {
-                    logError(`Error reviving entry ${entryId}:`, error);
+                  this.loggingService.error(`Error reviving entry ${entryId}:`, error);
 
                     // Show error notification
                     await this.notification.show(
@@ -436,7 +438,7 @@ export class TrashService {
                 this.addReviveHandler(item as HTMLElement);
             });
         } catch (error) {
-            logError('Error setting up revive handlers:', error);
+          this.loggingService.error('Error setting up revive handlers:', error);
         }
     }
 
@@ -449,7 +451,7 @@ export class TrashService {
             const response = await this.httpService.post(url);
             return response.includes("canlandirildi") || response.includes("success");
         } catch (error) {
-            logError(`Error reviving entry ${entryId}:`, error);
+          this.loggingService.error(`Error reviving entry ${entryId}:`, error);
             return false;
         }
     }
@@ -545,7 +547,7 @@ export class TrashService {
             trashItems.parentNode?.insertBefore(controlsContainer, trashItems);
 
         } catch (error) {
-            logError('Error adding bulk revive controls:', error);
+          this.loggingService.error('Error adding bulk revive controls:', error);
         }
     }
 
@@ -562,7 +564,7 @@ export class TrashService {
                 }
             });
         } catch (error) {
-            logError('Error adding checkboxes to trash items:', error);
+          this.loggingService.error('Error adding checkboxes to trash items:', error);
         }
     }
 
@@ -610,7 +612,7 @@ export class TrashService {
             // Insert checkbox container at the beginning of the item
             item.insertBefore(checkboxContainer, item.firstChild);
         } catch (error) {
-            logError('Error adding checkbox to trash item:', error);
+          this.loggingService.error('Error adding checkbox to trash item:', error);
         }
     }
 
@@ -642,7 +644,7 @@ export class TrashService {
                 reviveButton.disabled = count === 0;
             }
         } catch (error) {
-            logError('Error updating selection count:', error);
+          this.loggingService.error('Error updating selection count:', error);
         }
     }
 
@@ -707,7 +709,7 @@ export class TrashService {
                     // Small delay to avoid overwhelming the server
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
-                    logError(`Error reviving entry ${entryId}:`, error);
+                  this.loggingService.error(`Error reviving entry ${entryId}:`, error);
                     failCount++;
                 }
             }
@@ -734,7 +736,7 @@ export class TrashService {
             // Update selection count
             this.updateSelectionCount();
         } catch (error) {
-            logError('Error during bulk revive:', error);
+          this.loggingService.error('Error during bulk revive:', error);
 
             await this.notification.show(
                 `<div style="display: flex; align-items: center">

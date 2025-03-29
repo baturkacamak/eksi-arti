@@ -1,5 +1,5 @@
 // src/services/vote-monitoring-service.ts
-import { logError, logDebug } from './logging-service';
+import { LoggingService} from './logging-service';
 import { HttpService } from './http-service';
 import { SITE_DOMAIN } from '../constants';
 import { storageService, StorageArea } from './storage-service';
@@ -10,9 +10,11 @@ export class VoteMonitoringService {
     private userNick: string = '';
     private enabled: boolean = true;
     private checkInterval: number = 1; // minutes
+    private loggingService: LoggingService;
 
     private constructor() {
         this.httpService = new HttpService();
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -36,14 +38,14 @@ export class VoteMonitoringService {
             // Load settings from storage
             await this.loadSettings();
 
-            logDebug('Vote monitoring service initialized', {
+           this.loggingService.debug('Vote monitoring service initialized', {
                 username: this.userNick,
                 enabled: this.enabled
             });
 
             return true;
         } catch (error) {
-            logError('Failed to initialize vote monitoring service', error);
+          this.loggingService.error('Failed to initialize vote monitoring service', error);
             return false;
         }
     }
@@ -76,7 +78,7 @@ export class VoteMonitoringService {
                 this.userNick = result.data;
             }
         } catch (error) {
-            logError('Error extracting username', error);
+          this.loggingService.error('Error extracting username', error);
             throw error;
         }
     }
@@ -96,7 +98,7 @@ export class VoteMonitoringService {
                 this.checkInterval = intervalResult.data;
             }
         } catch (error) {
-            logError('Error loading vote monitoring settings', error);
+          this.loggingService.error('Error loading vote monitoring settings', error);
         }
     }
 
@@ -116,7 +118,7 @@ export class VoteMonitoringService {
 
             return true;
         } catch (error) {
-            logError('Error updating vote monitoring enabled state', error);
+          this.loggingService.error('Error updating vote monitoring enabled state', error);
             return false;
         }
     }
@@ -138,7 +140,7 @@ export class VoteMonitoringService {
 
             return true;
         } catch (error) {
-            logError('Error updating vote monitoring interval', error);
+          this.loggingService.error('Error updating vote monitoring interval', error);
             return false;
         }
     }

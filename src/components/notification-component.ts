@@ -2,7 +2,7 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { NotificationOptions } from '../types';
 import { preferencesManager } from "../services/preferences-manager";
-import { logError, logDebug } from "../services/logging-service";
+import {LoggingService} from "../services/logging-service";
 
 // Position options for notifications
 export type NotificationPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
@@ -28,10 +28,12 @@ export class NotificationComponent {
     private defaultDuration: number = 5; // Default duration in seconds
     private contentContainer: HTMLElement | null = null;
     private footerContainer: HTMLElement | null = null;
+    private loggingService: LoggingService;
 
     constructor() {
         this.cssHandler = new CSSService();
         this.domHandler = new DOMService();
+        this.loggingService = new LoggingService();
         this.initAnimations();
         this.applyStyles();
         this.loadNotificationDuration();
@@ -42,11 +44,11 @@ export class NotificationComponent {
      */
     private async loadNotificationDuration(): Promise<void> {
         try {
-            const preferences = await preferencesManager.getPreferences();
+            const preferences = preferencesManager.getPreferences();
             this.defaultDuration = preferences.notificationDuration || 5;
-            logDebug('Loaded notification duration from preferences:', this.defaultDuration);
+           this.loggingService.debug('Loaded notification duration from preferences:', this.defaultDuration);
         } catch (error) {
-            logError('Error loading notification duration:', error);
+          this.loggingService.error('Error loading notification duration:', error);
         }
     }
 
@@ -78,7 +80,7 @@ export class NotificationComponent {
      */
     async show(content: string, options: ExtendedNotificationOptions = {}): Promise<HTMLElement | null> {
         try {
-            const preferences = await preferencesManager.getPreferences();
+            const preferences = preferencesManager.getPreferences();
 
             if (!preferences.enableNotifications) {
                 return null;
@@ -123,7 +125,7 @@ export class NotificationComponent {
 
             return this.notificationElement;
         } catch (error) {
-            logError('Error showing notification:', error);
+          this.loggingService.error('Error showing notification:', error);
             return null;
         }
     }

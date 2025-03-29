@@ -3,7 +3,7 @@
  * Central service for managing extension preferences
  */
 
-import { logger, logError, logDebug } from './logging-service';
+import {LoggingService} from './logging-service';
 import { BlockType, STORAGE_KEYS } from '../constants';
 import {storageService} from "./storage-service";
 
@@ -74,10 +74,12 @@ class PreferencesManager {
     private preferences: ExtensionPreferences;
     private isInitialized: boolean = false;
     private onChangeCallbacks: Array<(preferences: ExtensionPreferences) => void> = [];
+    private loggingService: LoggingService;
 
     private constructor() {
         // Private constructor to enforce singleton pattern
         this.preferences = { ...DEFAULT_PREFERENCES };
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -103,13 +105,13 @@ class PreferencesManager {
             await this.loadPreferences();
 
             // Set debug mode in logger
-            logger.setDebugMode(this.preferences.enableDebugMode);
+            this.loggingService.setDebugMode(this.preferences.enableDebugMode);
 
             this.isInitialized = true;
-            logDebug('Preferences initialized', this.preferences);
+           this.loggingService.debug('Preferences initialized', this.preferences);
             return true;
         } catch (error) {
-            logError('Failed to initialize preferences', error);
+          this.loggingService.error('Failed to initialize preferences', error);
             return false;
         }
     }
@@ -124,16 +126,16 @@ class PreferencesManager {
             if (result.success && result.data) {
                 // Merge with defaults to ensure all properties exist
                 this.preferences = { ...DEFAULT_PREFERENCES, ...result.data };
-                logDebug('Preferences loaded', { preferences: this.preferences, source: result.source });
+               this.loggingService.debug('Preferences loaded', { preferences: this.preferences, source: result.source });
             } else {
                 // Use defaults if no saved preferences found
                 this.preferences = { ...DEFAULT_PREFERENCES };
-                logDebug('Using default preferences', this.preferences);
+               this.loggingService.debug('Using default preferences', this.preferences);
             }
 
             return this.preferences;
         } catch (error) {
-            logError('Error loading preferences', error);
+          this.loggingService.error('Error loading preferences', error);
             // Use defaults on error
             this.preferences = { ...DEFAULT_PREFERENCES };
             return this.preferences;
@@ -154,21 +156,21 @@ class PreferencesManager {
             const result = await storageService.setItem(STORAGE_KEYS.PREFERENCES, this.preferences);
 
             if (result.success) {
-                logDebug('Preferences saved', { preferences: this.preferences, source: result.source });
+               this.loggingService.debug('Preferences saved', { preferences: this.preferences, source: result.source });
 
                 // Update debug mode in logger
-                logger.setDebugMode(this.preferences.enableDebugMode);
+                this.loggingService.setDebugMode(this.preferences.enableDebugMode);
 
                 // Notify listeners
                 this.notifyChangeListeners();
 
                 return true;
             } else {
-                logError('Failed to save preferences', result.error);
+              this.loggingService.error('Failed to save preferences', result.error);
                 return false;
             }
         } catch (error) {
-            logError('Error saving preferences', error);
+          this.loggingService.error('Error saving preferences', error);
             return false;
         }
     }
@@ -182,21 +184,21 @@ class PreferencesManager {
             const result = await storageService.setItem(STORAGE_KEYS.PREFERENCES, this.preferences);
 
             if (result.success) {
-                logDebug('Preferences reset to defaults');
+               this.loggingService.debug('Preferences reset to defaults');
 
                 // Update debug mode in logger
-                logger.setDebugMode(this.preferences.enableDebugMode);
+                this.loggingService.setDebugMode(this.preferences.enableDebugMode);
 
                 // Notify listeners
                 this.notifyChangeListeners();
 
                 return true;
             } else {
-                logError('Failed to reset preferences', result.error);
+              this.loggingService.error('Failed to reset preferences', result.error);
                 return false;
             }
         } catch (error) {
-            logError('Error resetting preferences', error);
+          this.loggingService.error('Error resetting preferences', error);
             return false;
         }
     }
@@ -219,7 +221,7 @@ class PreferencesManager {
             this.preferences[key] = value;
             return await this.savePreferences();
         } catch (error) {
-            logError(`Error updating preference: ${String(key)}`, error);
+          this.loggingService.error(`Error updating preference: ${String(key)}`, error);
             return false;
         }
     }
@@ -248,7 +250,7 @@ class PreferencesManager {
             try {
                 callback(preferences);
             } catch (error) {
-                logError('Error in preference change callback', error);
+              this.loggingService.error('Error in preference change callback', error);
             }
         }
     }

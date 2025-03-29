@@ -1,7 +1,7 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
-import { logDebug, logError } from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 import {observerService} from "../services/observer-service";
 import {pageUtils} from "../services/page-utils-service";
 
@@ -82,11 +82,13 @@ export class EntrySorterComponent {
     private static stylesApplied = false;
     private observer: MutationObserver | null = null;
     private observerId: string = '';
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
+        this.loggingService = new LoggingService();
 
         // Initialize strategies
         this.strategies = [
@@ -123,9 +125,9 @@ export class EntrySorterComponent {
                 processExisting: false // We already added buttons in addSortButtons()
             });
 
-            logDebug('Entry sorter component initialized');
+           this.loggingService.debug('Entry sorter component initialized');
         } catch (error) {
-            logError('Error initializing entry sorter component:', error);
+          this.loggingService.error('Error initializing entry sorter component:', error);
         }
     }
 
@@ -276,9 +278,9 @@ export class EntrySorterComponent {
             // Add the container to the page
             this.domHandler.appendChild(subtitleMenu, sortButtonsContainer);
 
-            logDebug('Sort buttons added to page');
+           this.loggingService.debug('Sort buttons added to page');
         } catch (error) {
-            logError('Error adding sort buttons:', error);
+          this.loggingService.error('Error adding sort buttons:', error);
         }
     }
 
@@ -345,7 +347,7 @@ export class EntrySorterComponent {
                 this.domHandler.removeClass(button, 'animate');
             }, 500);
         } catch (error) {
-            logError('Error handling sort button click:', error);
+          this.loggingService.error('Error handling sort button click:', error);
         }
     }
 
@@ -374,9 +376,9 @@ export class EntrySorterComponent {
             entryList.innerHTML = '';
             entryList.appendChild(fragment);
 
-            logDebug(`Entries sorted using ${strategy.name} strategy`);
+           this.loggingService.debug(`Entries sorted using ${strategy.name} strategy`);
         } catch (error) {
-            logError('Error sorting entries:', error);
+          this.loggingService.error('Error sorting entries:', error);
         }
     }
 
@@ -411,9 +413,9 @@ export class EntrySorterComponent {
                 subtree: true
             });
 
-            logDebug('Page change observer started');
+           this.loggingService.debug('Page change observer started');
         } catch (error) {
-            logError('Error setting up page change observer:', error);
+          this.loggingService.error('Error setting up page change observer:', error);
 
             // Fallback to periodic checking
             setInterval(() => {

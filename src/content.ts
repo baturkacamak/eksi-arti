@@ -1,10 +1,11 @@
 // In src/content.ts
 import { UIService } from './services/ui-service';
-import { logError } from './services/logging-service';
+import {LoggingService} from './services/logging-service';
 import { CSSService } from './services/css-service';
 import {voteMonitoringService} from "./services/vote-monitoring-service";
 import {accessibilityService} from "./services/accessibility-service";
 
+const loggingService = new LoggingService();
 /**
  * Inject Material Icons font
  */
@@ -40,7 +41,7 @@ function injectMaterialIcons(): void {
 
         cssHandler.addCSS(materialIconsCSS);
     } catch (err) {
-        logError('Error injecting Material Icons:', err);
+      loggingService.error('Error injecting Material Icons:', err);
     }
 }
 
@@ -62,7 +63,7 @@ function init(): void {
         const uiService = new UIService();
         uiService.initialize();
     } catch (err) {
-        logError('Error initializing Ekşi Artı extension:', err);
+      loggingService.error('Error initializing Ekşi Artı extension:', err);
     }
 }
 

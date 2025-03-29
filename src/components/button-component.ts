@@ -1,6 +1,6 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError } from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 
 /**
  * Button variant types
@@ -47,6 +47,7 @@ export class ButtonComponent {
     private cssHandler: CSSService;
     private buttonElement: HTMLButtonElement | null = null;
     private static stylesApplied = false;
+    private loggingService: LoggingService;
 
     /**
      * Constructor
@@ -54,6 +55,7 @@ export class ButtonComponent {
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
         this.applyButtonStyles();
     }
 
@@ -107,7 +109,7 @@ export class ButtonComponent {
 
             return this.buttonElement;
         } catch (error) {
-            logError('Error creating button:', error);
+          this.loggingService.error('Error creating button:', error);
             // Return a fallback button in case of error
             const fallbackButton = this.domHandler.createElement('button');
             fallbackButton.textContent = props.text;

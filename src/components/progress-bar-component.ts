@@ -4,7 +4,7 @@
  */
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError } from "../services/logging-service";
+import {LoggingService} from "../services/logging-service";
 
 export interface ProgressBarOptions {
     height?: string;
@@ -26,10 +26,12 @@ export class ProgressBarComponent {
     private percentageElement: HTMLElement | null = null;
     private percentage: number = 0;
     private static stylesApplied = false;
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
         this.applyProgressBarStyles();
     }
 
@@ -99,7 +101,7 @@ export class ProgressBarComponent {
 
             return this.progressBarElement;
         } catch (error) {
-            logError('Error creating progress bar:', error);
+          this.loggingService.error('Error creating progress bar:', error);
 
             // Return a fallback element in case of error
             const fallbackElement = this.domHandler.createElement('div');

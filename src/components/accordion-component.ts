@@ -1,6 +1,6 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError, logDebug } from '../services/logging-service';
+import { LoggingService} from '../services/logging-service';
 
 export interface AccordionItem {
     id: string;
@@ -28,10 +28,12 @@ export class AccordionComponent {
     private items: AccordionItem[] = [];
     private options: AccordionOptions = {};
     private static stylesApplied = false;
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
         this.applyAccordionStyles();
     }
 
@@ -62,7 +64,7 @@ export class AccordionComponent {
 
             return this.accordionElement;
         } catch (error) {
-            logError('Error creating accordion:', error);
+          this.loggingService.error('Error creating accordion:', error);
 
             // Return a fallback element in case of error
             const fallbackElement = this.domHandler.createElement('div');
@@ -184,7 +186,7 @@ export class AccordionComponent {
         );
 
         if (!itemElement) {
-            logDebug(`Item with ID ${itemId} not found`);
+           this.loggingService.debug(`Item with ID ${itemId} not found`);
             return;
         }
 
@@ -376,7 +378,7 @@ export class AccordionComponent {
         );
 
         if (!itemElement) {
-            logDebug(`Item with ID ${itemId} not found`);
+           this.loggingService.debug(`Item with ID ${itemId} not found`);
             return;
         }
 
@@ -411,7 +413,7 @@ export class AccordionComponent {
         );
 
         if (!itemElement) {
-            logDebug(`Item with ID ${itemId} not found`);
+           this.loggingService.debug(`Item with ID ${itemId} not found`);
             return;
         }
 

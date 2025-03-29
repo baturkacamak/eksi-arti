@@ -1,7 +1,7 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
-import { logError, logDebug } from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 import {containerService} from "../services/container-service";
 import {observerService} from "../services/observer-service";
 
@@ -17,11 +17,13 @@ export class CopyButtonComponent {
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;
     private observerId: string = '';
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
+        this.loggingService = new LoggingService();
         this.applyStyles();
     }
 
@@ -43,9 +45,9 @@ export class CopyButtonComponent {
             });
 
             this.applyStyles();
-            logDebug('Copy button component initialized');
+           this.loggingService.debug('Copy button component initialized');
         } catch (error) {
-            logError('Error initializing copy button component:', error);
+          this.loggingService.error('Error initializing copy button component:', error);
         }
     }
 
@@ -138,7 +140,7 @@ export class CopyButtonComponent {
             // Store reference
             this.copyButtons.set(entryId, copyButton);
         } catch (error) {
-            logError('Error adding copy button to entry:', error);
+          this.loggingService.error('Error adding copy button to entry:', error);
         }
     }
 
@@ -226,7 +228,7 @@ export class CopyButtonComponent {
             // Clean up
             document.body.removeChild(textarea);
         } catch (error) {
-            logError('Error copying to clipboard:', error);
+          this.loggingService.error('Error copying to clipboard:', error);
             // Try alternative method for modern browsers
             this.tryClipboardAPI(text, button);
         }
@@ -269,7 +271,7 @@ export class CopyButtonComponent {
                         this.resetButtonState(button, 'İçeriği kopyala');
                     }, 1500);
 
-                    logError('Clipboard API error:', err);
+                  this.loggingService.error('Clipboard API error:', err);
                 });
         } else {
             // No clipboard method available, reset button after a delay

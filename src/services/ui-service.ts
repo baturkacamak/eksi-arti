@@ -6,7 +6,7 @@ import {StorageArea, storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
 import {preferencesManager} from './preferences-manager';
-import {logDebug, logError, logInfo} from "./logging-service";
+import {LoggingService} from "./logging-service";
 import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/icon-component";
 import {CopyButtonComponent} from "../components/copy-button-component";
@@ -32,6 +32,7 @@ export class UIService {
     private quickSearchComponent: QuickSearchComponent;
     private authorHighlighterService: AuthorHighlighterService;
     private menuObserverId: string = '';
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
@@ -43,6 +44,7 @@ export class UIService {
         this.postManagementService = new PostManagementService();
         this.quickSearchComponent = new QuickSearchComponent();
         this.authorHighlighterService = AuthorHighlighterService.getInstance();
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -82,7 +84,7 @@ export class UIService {
                                 const menuItem = this.createMenuItem(entryId);
                                 this.domHandler.appendChild(dropdownMenu, menuItem);
                             } catch (err) {
-                                logError('Error adding menu item to dropdown:', err);
+                              this.loggingService.error('Error adding menu item to dropdown:', err);
                             }
                         });
                     },
@@ -109,10 +111,10 @@ export class UIService {
                 await this.authorHighlighterService.initialize();
 
                 // Add version info to console
-                logInfo('Ekşi Artı v1.0.0 loaded.');
+              this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
             }, 500);
         } catch (err) {
-            logError('Error initializing UI service:', err);
+          this.loggingService.error('Error initializing UI service:', err);
         }
     }
 
@@ -132,9 +134,9 @@ export class UIService {
                 ? preferences.customMenuSelector
                 : preferences.menuItemSelector;
 
-            logDebug('Using menu selector:', this.menuItemSelector);
+           this.loggingService.debug('Using menu selector:', this.menuItemSelector);
         } catch (error) {
-            logError('Error loading menu selector from preferences:', error);
+          this.loggingService.error('Error loading menu selector from preferences:', error);
             // Fallback to default selector
             this.menuItemSelector = '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu';
         }
@@ -215,7 +217,7 @@ export class UIService {
                     document.body.style.overflow = 'hidden';
                     resumeModal.show();
                 } catch (err) {
-                    logError('Error showing resume modal:', err);
+                  this.loggingService.error('Error showing resume modal:', err);
                 }
             } else {
                 try {
@@ -223,7 +225,7 @@ export class UIService {
                     document.body.style.overflow = 'hidden';
                     optionsModal.show();
                 } catch (err) {
-                    logError('Error showing options modal:', err);
+                  this.loggingService.error('Error showing options modal:', err);
                 }
             }
         });
@@ -251,7 +253,7 @@ export class UIService {
             const dropdownMenus = this.domHandler.querySelectorAll<HTMLUListElement>(this.menuItemSelector);
 
             if (!dropdownMenus || dropdownMenus.length === 0) {
-                logDebug('No dropdown menus found with selector:', this.menuItemSelector);
+               this.loggingService.debug('No dropdown menus found with selector:', this.menuItemSelector);
                 return; // No dropdown menus found
             }
 
@@ -276,14 +278,14 @@ export class UIService {
                     const menuItem = this.createMenuItem(entryId);
                     this.domHandler.appendChild(dropdownMenu, menuItem);
                 } catch (err) {
-                    logError('Error adding menu item to dropdown:', err);
+                  this.loggingService.error('Error adding menu item to dropdown:', err);
                 }
             });
 
             this.initialized = true;
-            logDebug('Menu items added to dropdowns');
+           this.loggingService.debug('Menu items added to dropdowns');
         } catch (err) {
-            logError('Error in addMenuItemToDropdown:', err);
+          this.loggingService.error('Error in addMenuItemToDropdown:', err);
         }
     }
 

@@ -3,7 +3,7 @@ import { DOMService } from './dom-service';
 import { CSSService } from './css-service';
 import { storageService, StorageArea } from './storage-service';
 import { preferencesManager } from './preferences-manager';
-import { logDebug, logError, logInfo } from './logging-service';
+import { LoggingService} from './logging-service';
 import { IconComponent } from '../components/icon-component';
 import { TooltipComponent } from '../components/tooltip-component';
 import { NotificationService } from './notification-service';
@@ -144,6 +144,7 @@ export class AuthorHighlighterService {
     private authorColorMapCSS: string = '';
     private STORAGE_KEY = 'eksi_author_highlighter';
     private observerId: string = '';
+    private loggingService: LoggingService;
 
     private constructor() {
         this.domHandler = new DOMService();
@@ -151,6 +152,7 @@ export class AuthorHighlighterService {
         this.iconComponent = new IconComponent();
         this.tooltipComponent = new TooltipComponent();
         this.notificationService = new NotificationService();
+        this.loggingService = new LoggingService();
         this.config = { ...this.defaultConfig };
     }
 
@@ -197,11 +199,11 @@ export class AuthorHighlighterService {
             });
 
             this.isInitialized = true;
-            logInfo('Author Highlighter service initialized', {
+          this.loggingService.info('Author Highlighter service initialized', {
                 authorsCount: Object.keys(this.config.authors).length
             });
         } catch (error) {
-            logError('Error initializing Author Highlighter service:', error);
+          this.loggingService.error('Error initializing Author Highlighter service:', error);
         }
     }
 
@@ -218,13 +220,13 @@ export class AuthorHighlighterService {
 
             if (result.success && result.data) {
                 this.config = { ...this.defaultConfig, ...result.data };
-                logDebug('Author highlighter config loaded', this.config);
+               this.loggingService.debug('Author highlighter config loaded', this.config);
             } else {
                 this.config = { ...this.defaultConfig };
-                logDebug('Using default author highlighter config', this.config);
+               this.loggingService.debug('Using default author highlighter config', this.config);
             }
         } catch (error) {
-            logError('Error loading author highlighter config:', error);
+          this.loggingService.error('Error loading author highlighter config:', error);
             this.config = { ...this.defaultConfig };
         }
     }
@@ -239,9 +241,9 @@ export class AuthorHighlighterService {
                 this.config,
                 StorageArea.SYNC
             );
-            logDebug('Author highlighter config saved', this.config);
+           this.loggingService.debug('Author highlighter config saved', this.config);
         } catch (error) {
-            logError('Error saving author highlighter config:', error);
+          this.loggingService.error('Error saving author highlighter config:', error);
         }
     }
 
@@ -491,7 +493,7 @@ export class AuthorHighlighterService {
                 this.addAuthorBadge(entry, author, authorConfig);
             }
         } catch (error) {
-            logError('Error processing entry:', error);
+          this.loggingService.error('Error processing entry:', error);
         }
     }
 
@@ -539,7 +541,7 @@ export class AuthorHighlighterService {
                 this.showAuthorMenu(author, badge);
             });
         } catch (error) {
-            logError('Error adding author badge:', error);
+          this.loggingService.error('Error adding author badge:', error);
         }
     }
 
@@ -597,10 +599,10 @@ export class AuthorHighlighterService {
             // Process entries to apply to existing content
             this.processEntries();
 
-            logInfo('Author added for highlighting', { author, color });
+          this.loggingService.info('Author added for highlighting', { author, color });
             return true;
         } catch (error) {
-            logError('Error adding author:', error);
+          this.loggingService.error('Error adding author:', error);
             return false;
         }
     }
@@ -633,10 +635,10 @@ export class AuthorHighlighterService {
                 if (badge) badge.remove();
             });
 
-            logInfo('Author removed from highlighting', { author });
+          this.loggingService.info('Author removed from highlighting', { author });
             return true;
         } catch (error) {
-            logError('Error removing author:', error);
+          this.loggingService.error('Error removing author:', error);
             return false;
         }
     }
@@ -683,10 +685,10 @@ export class AuthorHighlighterService {
                 this.processEntries();
             }
 
-            logInfo('Author highlighting settings updated', { author, settings });
+          this.loggingService.info('Author highlighting settings updated', { author, settings });
             return true;
         } catch (error) {
-            logError('Error updating author:', error);
+          this.loggingService.error('Error updating author:', error);
             return false;
         }
     }
@@ -709,7 +711,7 @@ export class AuthorHighlighterService {
 
             return true;
         } catch (error) {
-            logError('Error toggling author:', error);
+          this.loggingService.error('Error toggling author:', error);
             return false;
         }
     }
@@ -741,10 +743,10 @@ export class AuthorHighlighterService {
                 badges.forEach(badge => badge.remove());
             }
 
-            logInfo('Author highlighting toggled', { enabled: newState });
+          this.loggingService.info('Author highlighting toggled', { enabled: newState });
             return true;
         } catch (error) {
-            logError('Error toggling highlighting:', error);
+          this.loggingService.error('Error toggling highlighting:', error);
             return false;
         }
     }
@@ -794,10 +796,10 @@ export class AuthorHighlighterService {
                 }
             }
 
-            logInfo('Author highlighter config updated', settings);
+          this.loggingService.info('Author highlighter config updated', settings);
             return true;
         } catch (error) {
-            logError('Error updating author highlighter config:', error);
+          this.loggingService.error('Error updating author highlighter config:', error);
             return false;
         }
     }
@@ -830,10 +832,10 @@ export class AuthorHighlighterService {
                 badges.forEach(badge => badge.remove());
             }
 
-            logInfo('Author highlighter config reset to defaults');
+          this.loggingService.info('Author highlighter config reset to defaults');
             return true;
         } catch (error) {
-            logError('Error resetting author highlighter config:', error);
+          this.loggingService.error('Error resetting author highlighter config:', error);
             return false;
         }
     }
@@ -881,7 +883,7 @@ export class AuthorHighlighterService {
 
             return success;
         } catch (error) {
-            logError('Error highlighting author from entry:', error);
+          this.loggingService.error('Error highlighting author from entry:', error);
             return false;
         }
     }
@@ -910,7 +912,7 @@ export class AuthorHighlighterService {
                 this.showAuthorContextMenu(author, entry as HTMLElement, { x: e.clientX, y: e.clientY });
             });
         } catch (error) {
-            logError('Error setting up context menu:', error);
+          this.loggingService.error('Error setting up context menu:', error);
         }
     }
 
@@ -1029,7 +1031,7 @@ export class AuthorHighlighterService {
                 document.addEventListener('click', closeListener);
             }, 100);
         } catch (error) {
-            logError('Error showing author context menu:', error);
+          this.loggingService.error('Error showing author context menu:', error);
         }
     }
 
@@ -1086,7 +1088,7 @@ export class AuthorHighlighterService {
             // Show context menu
             this.showAuthorContextMenu(author, entry, position);
         } catch (error) {
-            logError('Error showing author menu:', error);
+          this.loggingService.error('Error showing author menu:', error);
         }
     }
 
@@ -1191,7 +1193,7 @@ export class AuthorHighlighterService {
                 }
             }, 100);
         } catch (error) {
-            logError('Error showing color picker:', error);
+          this.loggingService.error('Error showing color picker:', error);
         }
     }
 
@@ -1284,7 +1286,7 @@ export class AuthorHighlighterService {
                 footerContainer.appendChild(buttons);
             }
         } catch (error) {
-            logError('Error showing note editor:', error);
+          this.loggingService.error('Error showing note editor:', error);
         }
     }
 
@@ -1315,13 +1317,13 @@ export class AuthorHighlighterService {
             // Process entries
             this.processEntries();
 
-            logInfo('Author highlights imported successfully', {
+          this.loggingService.info('Author highlights imported successfully', {
                 authorsCount: Object.keys(importData.authors).length
             });
 
             return true;
         } catch (error) {
-            logError('Error importing highlights:', error);
+          this.loggingService.error('Error importing highlights:', error);
             return false;
         }
     }
@@ -1338,7 +1340,7 @@ export class AuthorHighlighterService {
 
             return JSON.stringify(exportData, null, 2);
         } catch (error) {
-            logError('Error exporting highlights:', error);
+          this.loggingService.error('Error exporting highlights:', error);
             return '{}';
         }
     }
@@ -1372,7 +1374,7 @@ export class AuthorHighlighterService {
                 // Save config
                 await this.saveConfig();
 
-                logInfo('Cleaned up old authors', {
+              this.loggingService.info('Cleaned up old authors', {
                     removedCount: authorsToRemove.length,
                     daysThreshold
                 });
@@ -1380,7 +1382,7 @@ export class AuthorHighlighterService {
 
             return authorsToRemove.length;
         } catch (error) {
-            logError('Error cleaning up old authors:', error);
+          this.loggingService.error('Error cleaning up old authors:', error);
             return 0;
         }
     }
@@ -1413,7 +1415,7 @@ export class AuthorHighlighterService {
 
             return stats;
         } catch (error) {
-            logError('Error getting author stats:', error);
+          this.loggingService.error('Error getting author stats:', error);
             return {
                 totalAuthors: 0,
                 enabledAuthors: 0,

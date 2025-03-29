@@ -1,7 +1,7 @@
 
 // src/services/container-service.ts
 import { ComponentContainer, ComponentContainerConfig } from '../components/component-container';
-import { logError, logDebug } from './logging-service';
+import { LoggingService} from './logging-service';
 
 export class ContainerService {
     private static instance: ContainerService;
@@ -11,8 +11,10 @@ export class ContainerService {
     private sortButtonsContainer: ComponentContainer | null = null;
     private searchControlsContainer: ComponentContainer | null = null;
     private notificationContainers: Map<string, ComponentContainer> = new Map();
+    private loggingService: LoggingService;
 
     private constructor() {
+        this.loggingService = new LoggingService();
         // Private constructor for singleton
     }
 
@@ -50,7 +52,7 @@ export class ContainerService {
             this.entryControlsContainers.set(entryId, container);
             return container;
         } catch (error) {
-            logError('Error getting entry controls container:', error);
+          this.loggingService.error('Error getting entry controls container:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
@@ -77,7 +79,7 @@ export class ContainerService {
             this.sortButtonsContainer = this.createAndAttachContainer(config, () => parentElement);
             return this.sortButtonsContainer;
         } catch (error) {
-            logError('Error getting sort buttons container:', error);
+          this.loggingService.error('Error getting sort buttons container:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
@@ -98,7 +100,7 @@ export class ContainerService {
             this.searchControlsContainer = this.createAndAttachContainer(config, () => parentElement);
             return this.searchControlsContainer;
         } catch (error) {
-            logError('Error getting search controls container:', error);
+          this.loggingService.error('Error getting search controls container:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
@@ -147,7 +149,7 @@ export class ContainerService {
                 }
 
                 parent.appendChild(containerElement);
-                logDebug(`Container ${config.className || 'unnamed'} added to page`);
+               this.loggingService.debug(`Container ${config.className || 'unnamed'} added to page`);
             }
         }
 

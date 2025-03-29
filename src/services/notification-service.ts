@@ -2,7 +2,7 @@ import { ExtendedNotificationOptions, NotificationComponent } from '../component
 import { ProgressBarComponent, ProgressBarOptions } from '../components/progress-bar-component';
 import { CountdownComponent, CountdownOptions } from '../components/countdown-component';
 import { ButtonComponent, ButtonProps, ButtonSize, ButtonVariant } from '../components/button-component';
-import { logError } from './logging-service';
+import { LoggingService} from './logging-service';
 import { preferencesManager } from "./preferences-manager";
 import { StorageArea, storageService } from './storage-service';
 import { STORAGE_KEYS } from '../constants';
@@ -32,10 +32,12 @@ export class NotificationService {
     private activeButtons: HTMLElement[] = [];
     private hasProgressBar: boolean = false;
     private hasCountdown: boolean = false;
+    private loggingService: LoggingService;
 
     constructor() {
         this.notificationComponent = new NotificationComponent();
         this.buttonComponent = new ButtonComponent();
+        this.loggingService = new LoggingService();
     }
 
     /**
@@ -73,7 +75,7 @@ export class NotificationService {
                 this.addButtons(footerContainer, options.buttons);
             }
         } catch (error) {
-            logError('Error showing notification with components:', error);
+          this.loggingService.error('Error showing notification with components:', error);
         }
     }
 
@@ -112,7 +114,7 @@ export class NotificationService {
             // Update the progress value
             this.updateProgress(current, total);
         } catch (error) {
-            logError('Error adding progress bar:', error);
+          this.loggingService.error('Error adding progress bar:', error);
         }
     }
 
@@ -150,7 +152,7 @@ export class NotificationService {
             this.domAppendElement(container, this.activeCountdown);
             this.hasCountdown = true;
         } catch (error) {
-            logError('Error adding countdown:', error);
+          this.loggingService.error('Error adding countdown:', error);
         }
     }
 
@@ -195,7 +197,7 @@ export class NotificationService {
             // Add to container
             this.domAppendElement(container, buttonContainer);
         } catch (error) {
-            logError('Error adding buttons:', error);
+          this.loggingService.error('Error adding buttons:', error);
         }
     }
 
@@ -252,10 +254,10 @@ export class NotificationService {
                     document.body.style.overflow = 'hidden';
                     resumeModal.show();
                 } else {
-                    logError('No saved operation state found');
+                  this.loggingService.error('No saved operation state found');
                 }
             } catch (error) {
-                logError('Error loading resume modal:', error);
+              this.loggingService.error('Error loading resume modal:', error);
             }
         };
 

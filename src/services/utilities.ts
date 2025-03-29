@@ -2,7 +2,7 @@
  * Utility functions for the Ekşi Artı extension
  */
 
-import { logDebug } from './logging-service';
+import { LoggingService} from './logging-service';
 
 /**
  * Promise-based delay function
@@ -77,7 +77,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 ): ((...args: Parameters<T>) => void) => {
     let timeoutId: number | undefined;
 
-    return function(...args: Parameters<T>) {
+    return function (...args: Parameters<T>) {
         if (timeoutId) {
             clearTimeout(timeoutId);
         }
@@ -101,7 +101,7 @@ export const throttle = <T extends (...args: any[]) => any>(
 ): ((...args: Parameters<T>) => void) => {
     let lastCall = 0;
 
-    return function(...args: Parameters<T>) {
+    return function (...args: Parameters<T>) {
         const now = Date.now();
 
         if (now - lastCall >= limit) {
@@ -159,7 +159,8 @@ export const safeJsonParse = <T>(jsonString: string, defaultValue: T): T => {
     try {
         return JSON.parse(jsonString) as T;
     } catch (e) {
-        logDebug('Error parsing JSON', { error: e, jsonString });
+        const loggingService = new LoggingService();
+        loggingService.debug('Error parsing JSON', {error: e, jsonString});
         return defaultValue;
     }
 };
@@ -198,7 +199,8 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
             return success;
         }
     } catch (e) {
-        logDebug('Error copying to clipboard', e);
+        const loggingService = new LoggingService();
+        loggingService.debug('Error copying to clipboard', e);
         return false;
     }
 };

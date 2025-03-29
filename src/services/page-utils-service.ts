@@ -1,6 +1,3 @@
-// src/services/page-utils-service.ts
-import { logDebug } from './logging-service';
-
 /**
  * Service providing utility methods for page detection and common DOM operations
  */

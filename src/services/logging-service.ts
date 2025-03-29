@@ -20,15 +20,13 @@ export interface LogEntry {
     source?: string;
 }
 
-class LoggingService {
-    private static instance: LoggingService;
+export class LoggingService {
     private isDebugEnabled: boolean = false;
     private logs: LogEntry[] = [];
     private maxLogEntries: number = 100;
     private appName: string = 'Ekşi Artı';
 
-    private constructor() {
-        // Private constructor to enforce singleton pattern
+    constructor() {
         try {
             // Try to get debug mode setting from localStorage as fallback
             const preferences = localStorage.getItem('eksi_blocker_preferences');
@@ -39,16 +37,6 @@ class LoggingService {
         } catch (error) {
             // Silently fail if we can't get the debug setting
         }
-    }
-
-    /**
-     * Get the singleton instance
-     */
-    public static getInstance(): LoggingService {
-        if (!LoggingService.instance) {
-            LoggingService.instance = new LoggingService();
-        }
-        return LoggingService.instance;
     }
 
     /**
@@ -182,23 +170,3 @@ class LoggingService {
         }
     }
 }
-
-// Export singleton instance
-export const logger = LoggingService.getInstance();
-
-// Convenience export functions
-export const logDebug = (message: string, data?: any, source?: string): void => {
-    logger.debug(message, data, source);
-};
-
-export const logInfo = (message: string, data?: any, source?: string): void => {
-    logger.info(message, data, source);
-};
-
-export const logWarn = (message: string, data?: any, source?: string): void => {
-    logger.warn(message, data, source);
-};
-
-export const logError = (message: string, error?: any, source?: string): void => {
-    logger.error(message, error, source);
-};

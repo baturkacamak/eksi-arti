@@ -1,6 +1,6 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
-import { logError, logDebug } from '../services/logging-service';
+import {LoggingService} from '../services/logging-service';
 
 /**
  * Component Container Configuration
@@ -29,10 +29,12 @@ export class ComponentContainer {
     private components: HTMLElement[] = [];
     private config: ComponentContainerConfig;
     private static stylesApplied = false;
+    private loggingService: LoggingService;
 
     constructor(config: ComponentContainerConfig = {}) {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
+        this.loggingService = new LoggingService();
 
         // Default configuration
         this.config = {
@@ -86,9 +88,9 @@ export class ComponentContainer {
                 this.containerElement.style.display = 'none';
             }
 
-            logDebug('Component container created', { id: this.config.id });
+           this.loggingService.debug('Component container created', { id: this.config.id });
         } catch (error) {
-            logError('Error creating component container:', error);
+          this.loggingService.error('Error creating component container:', error);
         }
     }
 
@@ -149,12 +151,12 @@ export class ComponentContainer {
                 this.components.push(component);
             }
 
-            logDebug('Component added to container', {
+           this.loggingService.debug('Component added to container', {
                 containerId: this.config.id,
                 componentCount: this.components.length
             });
         } catch (error) {
-            logError('Error adding component to container:', error);
+          this.loggingService.error('Error adding component to container:', error);
         }
 
         return this;
@@ -185,12 +187,12 @@ export class ComponentContainer {
                 }
             }
 
-            logDebug('Component removed from container', {
+           this.loggingService.debug('Component removed from container', {
                 containerId: this.config.id,
                 componentCount: this.components.length
             });
         } catch (error) {
-            logError('Error removing component from container:', error);
+          this.loggingService.error('Error removing component from container:', error);
         }
 
         return this;
@@ -212,9 +214,9 @@ export class ComponentContainer {
             // Clear components array
             this.components = [];
 
-            logDebug('Container cleared', { containerId: this.config.id });
+           this.loggingService.debug('Container cleared', { containerId: this.config.id });
         } catch (error) {
-            logError('Error clearing container:', error);
+          this.loggingService.error('Error clearing container:', error);
         }
 
         return this;
@@ -313,9 +315,9 @@ export class ComponentContainer {
         if (this.containerElement && parent) {
             try {
                 parent.appendChild(this.containerElement);
-                logDebug('Container appended to parent', { containerId: this.config.id });
+               this.loggingService.debug('Container appended to parent', { containerId: this.config.id });
             } catch (error) {
-                logError('Error appending container to parent:', error);
+              this.loggingService.error('Error appending container to parent:', error);
             }
         }
         return this;
@@ -330,9 +332,9 @@ export class ComponentContainer {
         if (this.containerElement && referenceElement && referenceElement.parentNode) {
             try {
                 referenceElement.parentNode.insertBefore(this.containerElement, referenceElement);
-                logDebug('Container inserted before reference element', { containerId: this.config.id });
+               this.loggingService.debug('Container inserted before reference element', { containerId: this.config.id });
             } catch (error) {
-                logError('Error inserting container before reference element:', error);
+              this.loggingService.error('Error inserting container before reference element:', error);
             }
         }
         return this;

@@ -4,9 +4,10 @@
  */
 
 import { preferencesManager } from './services/preferences-manager';
-import { logger, logDebug, logError } from './services/logging-service';
+import {LoggingService} from './services/logging-service';
 import {getCurrentDomain} from "./constants";
 
+const loggingService = new LoggingService();
 /**
  * Set up vote monitoring
  */
@@ -28,7 +29,7 @@ function setupVoteMonitoring() {
         if (message.username) {
             // Store username
             chrome.storage.local.set({'userNick': message.username});
-            logDebug('Username updated', { username: message.username });
+           loggingService.debug('Username updated', { username: message.username });
         }
 
         if (message.action === 'updateVoteMonitoring') {
@@ -37,7 +38,7 @@ function setupVoteMonitoring() {
                 chrome.alarms.create('checkForNewVote', {
                     periodInMinutes: message.interval
                 });
-                logDebug('Vote monitoring interval updated', { interval: message.interval });
+               loggingService.debug('Vote monitoring interval updated', { interval: message.interval });
             }
 
             if (message.enabled !== undefined) {
@@ -50,7 +51,7 @@ function setupVoteMonitoring() {
                     // Clear the alarm if disabled
                     chrome.alarms.clear('checkForNewVote');
                 }
-                logDebug('Vote monitoring enabled state updated', { enabled: message.enabled });
+               loggingService.debug('Vote monitoring enabled state updated', { enabled: message.enabled });
             }
         }
     });
@@ -103,7 +104,7 @@ async function checkForNewVote() {
 
             // If there's a change, show notification
             if (previousTitle && currentTitle !== previousTitle) {
-                logDebug('New vote detected', {
+               loggingService.debug('New vote detected', {
                     currentTitle,
                     previousTitle
                 });
@@ -121,7 +122,7 @@ async function checkForNewVote() {
             chrome.storage.local.set({'previousTitle': currentTitle});
         }
     } catch (error) {
-        logError('Error checking for new votes', error);
+      loggingService.error('Error checking for new votes', error);
     }
 }
 
@@ -136,12 +137,12 @@ async function initializeExtension() {
         const preferences = preferencesManager.getPreferences();
 
         // Set up logger based on preferences
-        logger.setDebugMode(preferences.enableDebugMode);
+        loggingService.setDebugMode(preferences.enableDebugMode);
 
         // Set up vote monitoring
         setupVoteMonitoring();
 
-        logDebug('Extension initialized successfully', { version: chrome.runtime.getManifest().version });
+       loggingService.debug('Extension initialized successfully', { version: chrome.runtime.getManifest().version });
 
         // Set up message listeners
         setupMessageListeners();
@@ -151,7 +152,7 @@ async function initializeExtension() {
 
         return true;
     } catch (error) {
-        logError('Failed to initialize extension', error);
+      loggingService.error('Failed to initialize extension', error);
         return false;
     }
 }
@@ -162,7 +163,7 @@ async function initializeExtension() {
 function setupMessageListeners() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         try {
-            logDebug('Message received', { message, sender });
+           loggingService.debug('Message received', { message, sender });
 
             switch (message.action) {
                 case 'getPreferences':
@@ -180,7 +181,7 @@ function setupMessageListeners() {
                             sendResponse({ success });
                         })
                         .catch(error => {
-                            logError('Error saving preferences', error);
+                          loggingService.error('Error saving preferences', error);
                             sendResponse({
                                 success: false,
                                 error: error instanceof Error ? error.message : 'Unknown error'
@@ -195,7 +196,7 @@ function setupMessageListeners() {
                             sendResponse({ success });
                         })
                         .catch(error => {
-                            logError('Error resetting preferences', error);
+                          loggingService.error('Error resetting preferences', error);
                             sendResponse({
                                 success: false,
                                 error: error instanceof Error ? error.message : 'Unknown error'
@@ -215,19 +216,19 @@ function setupMessageListeners() {
                     // Get debug logs
                     sendResponse({
                         success: true,
-                        logs: logger.getLogs()
+                        logs: loggingService.getLogs()
                     });
                     break;
 
                 default:
-                    logDebug('Unknown message action', message.action);
+                   loggingService.debug('Unknown message action', message.action);
                     sendResponse({
                         success: false,
                         error: 'Unknown action'
                     });
             }
         } catch (error) {
-            logError('Error processing message', error);
+          loggingService.error('Error processing message', error);
             sendResponse({
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error'
@@ -275,7 +276,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
         if (details.reason === 'install') {
             // First install
-            logDebug('Extension installed');
+           loggingService.debug('Extension installed');
 
             // Open options page on first install
             chrome.runtime.openOptionsPage();
@@ -284,7 +285,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
             const currentVersion = chrome.runtime.getManifest().version;
             const previousVersion = details.previousVersion;
 
-            logDebug('Extension updated', { previousVersion, currentVersion });
+           loggingService.debug('Extension updated', { previousVersion, currentVersion });
 
             // Check if this is a major update that needs attention
             if (previousVersion && isMajorUpdate(previousVersion, currentVersion)) {
@@ -293,7 +294,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
             }
         }
     } catch (error) {
-        logError('Error during extension installation', error);
+      loggingService.error('Error during extension installation', error);
     }
 });
 
@@ -310,13 +311,13 @@ function isMajorUpdate(oldVersion: string, newVersion: string): boolean {
 
 // Initialize when background script loads
 initializeExtension().catch(error => {
-    logError('Failed to initialize extension on load', error);
+  loggingService.error('Failed to initialize extension on load', error);
 });
 
 // Listen for browser startup
 chrome.runtime.onStartup.addListener(() => {
     initializeExtension().catch(error => {
-        logError('Failed to initialize extension on browser startup', error);
+      loggingService.error('Failed to initialize extension on browser startup', error);
     });
 });
 

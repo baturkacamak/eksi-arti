@@ -1,9 +1,8 @@
-// src/components/quick-search-component.ts
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { TooltipComponent } from './tooltip-component';
-import { logError, logDebug } from '../services/logging-service';
+import { LoggingService} from '../services/logging-service';
 import { debounce } from '../services/utilities';
 import {observerService} from "../services/observer-service";
 import {pageUtils} from "../services/page-utils-service";
@@ -41,12 +40,14 @@ export class QuickSearchComponent {
         'İ': 'I', 'I': 'İ'
     };
     private observerId: string = '';
+    private loggingService: LoggingService;
 
     constructor() {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.iconComponent = new IconComponent();
         this.tooltipComponent = new TooltipComponent();
+        this.loggingService = new LoggingService();
         this.applyStyles();
     }
 
@@ -78,9 +79,9 @@ export class QuickSearchComponent {
                 processExisting: false // Only process new content
             });
 
-            logDebug('Quick search component initialized');
+           this.loggingService.debug('Quick search component initialized');
         } catch (error) {
-            logError('Error initializing quick search component:', error);
+          this.loggingService.error('Error initializing quick search component:', error);
         }
     }
 
@@ -167,7 +168,7 @@ export class QuickSearchComponent {
             this.searchContainer.style.opacity = '0';
 
         } catch (error) {
-            logError('Error creating search toolbar:', error);
+          this.loggingService.error('Error creating search toolbar:', error);
         }
     }
 
@@ -403,7 +404,7 @@ export class QuickSearchComponent {
                 this.navigateHighlights('next');
             }
         } catch (error) {
-            logError('Error performing search:', error);
+          this.loggingService.error('Error performing search:', error);
         }
     }
 
