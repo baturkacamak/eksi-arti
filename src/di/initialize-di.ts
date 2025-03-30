@@ -29,6 +29,7 @@ import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-f
 import {NotificationComponent} from "../components/notification-component";
 import {ContainerService, containerService} from "../services/container-service";
 import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
+import {containerThemeService} from "../services/container-theme-service";
 
 /**
  * Initialize the dependency injection container
@@ -44,6 +45,7 @@ export function initializeDI(): Container {
     container.register('PageUtilsService', () => pageUtils);
     container.register('StorageService', () => storageService);
     container.register('PreferencesManager', () => preferencesManager);
+    container.register('ContainerThemeService', () => containerThemeService);
 
     // Register services with dependencies
     container.register('HttpService', () => {

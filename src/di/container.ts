@@ -1,4 +1,3 @@
-// src/di/container.ts
 export class Container {
     private static instance: Container;
     private services: Map<string, () => any> = new Map();

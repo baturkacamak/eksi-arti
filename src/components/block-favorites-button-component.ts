@@ -133,6 +133,7 @@ export class BlockFavoritesButtonComponent {
     private createBlockButton(entryId: string): HTMLElement {
         const buttonContainer = this.domHandler.createElement('span');
         this.domHandler.addClass(buttonContainer, 'eksi-block-favorites-button');
+        this.domHandler.addClass(buttonContainer, 'eksi-button'); // Add this class for theme compatibility
 
         // Create block icon
         const blockIcon = this.iconComponent.create({

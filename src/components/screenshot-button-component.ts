@@ -238,6 +238,7 @@ export class ScreenshotButtonComponent {
     private createScreenshotButton(entry: HTMLElement): HTMLElement {
         const buttonContainer = this.domHandler.createElement('span');
         this.domHandler.addClass(buttonContainer, 'eksi-screenshot-button');
+        this.domHandler.addClass(buttonContainer, 'eksi-button'); // Add this class for theme compatibility
 
         // Create camera icon using IconComponent
         const cameraIcon = this.iconComponent.create({

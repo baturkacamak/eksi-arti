@@ -1,6 +1,12 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import {LoggingService} from '../services/logging-service';
+import {
+    ContainerShape,
+    ContainerSize,
+    ContainerTheme, ContainerThemeConfig,
+    containerThemeService
+} from "../services/container-theme-service";
 
 /**
  * Component Container Configuration
@@ -16,6 +22,12 @@ export interface ComponentContainerConfig {
     height?: string;
     visible?: boolean;
     customStyles?: Partial<CSSStyleDeclaration>;
+    theme?: ContainerTheme;
+    size?: ContainerSize;
+    shape?: ContainerShape;
+    isHoverable?: boolean;
+    hasBorder?: boolean;
+    hasShadow?: boolean;
 }
 
 /**
@@ -80,6 +92,11 @@ export class ComponentContainer {
                 this.domHandler.addClass(this.containerElement, this.config.className);
             }
 
+            // Apply theme
+            if (this.config.theme) {
+                this.applyTheme(this.config.theme);
+            }
+
             // Apply configuration styles
             this.applyConfigStyles();
 
@@ -88,9 +105,9 @@ export class ComponentContainer {
                 this.containerElement.style.display = 'none';
             }
 
-           this.loggingService.debug('Component container created', { id: this.config.id });
+            this.loggingService.debug('Component container created', { id: this.config.id });
         } catch (error) {
-          this.loggingService.error('Error creating component container:', error);
+            this.loggingService.error('Error creating component container:', error);
         }
     }
 
@@ -160,6 +177,24 @@ export class ComponentContainer {
         }
 
         return this;
+    }
+
+    /**
+     * Apply theme to the container
+     */
+    public applyTheme(theme: ContainerTheme = ContainerTheme.DEFAULT): void {
+        if (!this.containerElement) return;
+
+        const themeConfig: ContainerThemeConfig = {
+            theme,
+            isHoverable: true,
+            hasBorder: true,
+            size: this.config.size as ContainerSize || ContainerSize.MEDIUM,
+            shape: this.config.shape as ContainerShape || ContainerShape.SLIGHTLY_ROUNDED,
+            hasShadow: this.config.position === 'floating' || this.config.position === 'fixed'
+        };
+
+        containerThemeService.applyCustomStyles(this.containerElement, themeConfig);
     }
 
     /**

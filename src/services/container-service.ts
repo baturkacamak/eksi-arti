@@ -2,6 +2,7 @@
 // src/services/container-service.ts
 import { ComponentContainer, ComponentContainerConfig } from '../components/component-container';
 import { LoggingService} from './logging-service';
+import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
 
 export class ContainerService {
     private static instance: ContainerService;
@@ -39,9 +40,15 @@ export class ContainerService {
 
             const config: ComponentContainerConfig = {
                 direction: 'horizontal',
-                gap: 8,
+                gap: 4,
                 position: 'inline',
-                className: 'eksi-entry-controls'
+                className: 'eksi-entry-controls',
+                // Use the theme system
+                theme: ContainerTheme.NEUTRAL,
+                size: ContainerSize.MEDIUM,
+                shape: ContainerShape.SLIGHTLY_ROUNDED,
+                isHoverable: true,
+                hasBorder: true
             };
 
             const container = this.createAndAttachContainer(config, () => {
@@ -52,7 +59,7 @@ export class ContainerService {
             this.entryControlsContainers.set(entryId, container);
             return container;
         } catch (error) {
-          this.loggingService.error('Error getting entry controls container:', error);
+            this.loggingService.error('Error getting entry controls container:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
@@ -69,6 +76,12 @@ export class ContainerService {
                 gap: 3,
                 position: 'inline',
                 className: 'eksi-sort-buttons',
+                // Use the theme system
+                theme: ContainerTheme.DEFAULT,
+                size: ContainerSize.SMALL,
+                shape: ContainerShape.SLIGHTLY_ROUNDED,
+                isHoverable: false,
+                hasBorder: false,
                 customStyles: {
                     marginLeft: '15px',
                     display: 'inline-flex',
@@ -79,7 +92,7 @@ export class ContainerService {
             this.sortButtonsContainer = this.createAndAttachContainer(config, () => parentElement);
             return this.sortButtonsContainer;
         } catch (error) {
-          this.loggingService.error('Error getting sort buttons container:', error);
+            this.loggingService.error('Error getting sort buttons container:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
@@ -94,16 +107,34 @@ export class ContainerService {
             const config: ComponentContainerConfig = {
                 direction: 'horizontal',
                 gap: 5,
-                className: 'eksi-search-controls'
+                className: 'eksi-search-controls',
+                // Use the theme system
+                theme: ContainerTheme.PRIMARY,
+                size: ContainerSize.MEDIUM,
+                shape: ContainerShape.ROUNDED,
+                isHoverable: true,
+                hasShadow: true
             };
 
             this.searchControlsContainer = this.createAndAttachContainer(config, () => parentElement);
             return this.searchControlsContainer;
         } catch (error) {
-          this.loggingService.error('Error getting search controls container:', error);
+            this.loggingService.error('Error getting search controls container:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
+
+    private createTemporaryContainer(direction: 'horizontal' | 'vertical'): ComponentContainer {
+        return new ComponentContainer({
+            direction,
+            gap: 5,
+            position: 'inline',
+            theme: ContainerTheme.NEUTRAL,
+            size: ContainerSize.MEDIUM,
+            hasBorder: false
+        });
+    }
+
 
     // Reset specific container types
     public resetSortButtonsContainer(): void {
@@ -121,15 +152,6 @@ export class ContainerService {
             this.removeContainer(this.entryControlsContainers.get(entryId)!);
             this.entryControlsContainers.delete(entryId);
         }
-    }
-
-    // Helper methods
-    private createTemporaryContainer(direction: 'horizontal' | 'vertical'): ComponentContainer {
-        return new ComponentContainer({
-            direction,
-            gap: 5,
-            position: 'inline'
-        });
     }
 
     private createAndAttachContainer(

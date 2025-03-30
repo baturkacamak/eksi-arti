@@ -146,38 +146,39 @@ export class CopyButtonComponent {
         /**
      * Create a copy button element
      */
-    private createCopyButton(textToCopy: string): HTMLElement {
-        const buttonContainer = this.domHandler.createElement('span');
-        this.domHandler.addClass(buttonContainer, 'eksi-copy-button');
+        private createCopyButton(textToCopy: string): HTMLElement {
+            const buttonContainer = this.domHandler.createElement('span');
+            this.domHandler.addClass(buttonContainer, 'eksi-copy-button');
+            this.domHandler.addClass(buttonContainer, 'eksi-button'); // Add this class for theme compatibility
 
-        // Add title for accessibility and user feedback
-        buttonContainer.setAttribute('title', 'İçeriği kopyala');
-        buttonContainer.setAttribute('aria-label', 'İçeriği kopyala');
+            // Add title for accessibility and user feedback
+            buttonContainer.setAttribute('title', 'İçeriği kopyala');
+            buttonContainer.setAttribute('aria-label', 'İçeriği kopyala');
 
-        // Create copy icon using IconComponent with a specific class for easier selection
-        const copyIcon = this.iconComponent.create({
-            name: 'content_copy',
-            size: 'small',
-            color: '#81c14b',
-            className: 'eksi-copy-icon' // Add specific class for easier targeting in transitions
-        });
+            // Create copy icon using IconComponent with a specific class for easier selection
+            const copyIcon = this.iconComponent.create({
+                name: 'content_copy',
+                size: 'small',
+                color: '#81c14b',
+                className: 'eksi-copy-icon' // Add specific class for easier targeting in transitions
+            });
 
-        // Append the icon to the button container
-        this.domHandler.appendChild(buttonContainer, copyIcon);
+            // Append the icon to the button container
+            this.domHandler.appendChild(buttonContainer, copyIcon);
 
-        // Add click listener to copy the entry content
-        this.domHandler.addEventListener(buttonContainer, 'click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            // Add click listener to copy the entry content
+            this.domHandler.addEventListener(buttonContainer, 'click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
-            // Only process click if not already in transition
-            if (!this.inTransition.has(buttonContainer)) {
-                this.copyTextToClipboard(textToCopy, buttonContainer);
-            }
-        });
+                // Only process click if not already in transition
+                if (!this.inTransition.has(buttonContainer)) {
+                    this.copyTextToClipboard(textToCopy, buttonContainer);
+                }
+            });
 
-        return buttonContainer;
-    }
+            return buttonContainer;
+        }
 
     /**
      * Copy text to clipboard and show feedback
