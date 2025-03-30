@@ -102,20 +102,27 @@ export class SearchFilterComponent {
      */
     private injectSearchRow(): void {
         try {
-            // Find the sort row (for reference point)
-            const sortRow = document.querySelector('.sub-title-menu');
-            if (!sortRow) {
-                this.loggingService.error('Sort row not found');
+            // Find the custom controls row container which should hold sort buttons
+            let customControlsRow = document.querySelector('.eksi-custom-controls-row');
+
+            // Get topic element as fallback
+            const topicElement = document.querySelector('#topic');
+            if (!topicElement) {
+                this.loggingService.error('Topic element not found');
                 return;
             }
 
             // Create search row container
             this.searchRow = this.domHandler.createElement('div');
             this.domHandler.addClass(this.searchRow, 'eksi-search-row');
+            this.searchRow.style.width = '100%';
+            this.searchRow.style.marginTop = '5px';
+            this.searchRow.style.marginBottom = '15px';
 
             // Create search container
             this.searchContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(this.searchContainer, 'eksi-search-container');
+            this.searchContainer.style.width = '100%';
 
             // Create search input
             this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
@@ -224,11 +231,19 @@ export class SearchFilterComponent {
             this.domHandler.appendChild(this.searchRow, this.searchContainer);
             this.domHandler.appendChild(this.searchRow, this.controlsContainer);
 
-            // Insert search row after sort row
-            sortRow.parentNode?.insertBefore(this.searchRow, sortRow.nextSibling);
-
-            // Make original sort row stick as well
-            sortRow.classList.add('eksi-sticky-sort-row');
+            // If we have custom controls row (with sort buttons), insert after it
+            if (customControlsRow) {
+                customControlsRow.parentNode?.insertBefore(this.searchRow, customControlsRow.nextSibling);
+            } else {
+                // Otherwise, find entry list and insert before it
+                const entryList = topicElement.querySelector('#entry-item-list');
+                if (entryList) {
+                    topicElement.insertBefore(this.searchRow, entryList);
+                } else {
+                    // Last resort, just append to topic element
+                    topicElement.appendChild(this.searchRow);
+                }
+            }
 
             // Add input event listener with debounce
             this.domHandler.addEventListener(this.searchInput, 'input', debounce((e) => {
