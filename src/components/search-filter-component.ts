@@ -522,6 +522,11 @@ export class SearchFilterComponent {
             if (isMatch) {
                 this.showEntry(entry);
                 this.filteredEntries.add(entry);
+                // Only highlight the content element, not the entire entry
+                const contentElement = entry.querySelector('.content');
+                if (contentElement) {
+                    this.highlightText(contentElement as HTMLElement, pattern);
+                }
             } else {
                 this.hideEntry(entry);
             }
@@ -941,13 +946,34 @@ export class SearchFilterComponent {
             /* Highlight styles */
             .eksi-search-highlight {
                 background-color: rgba(255, 213, 79, 0.4);
-                border-radius: 2px;
-                transition: background-color 0.2s ease;
+                border-radius: 3px;
+                padding: 0 2px;
+                margin: 0 -2px;
+                box-shadow: 0 0 0 1px rgba(255, 213, 79, 0.2);
+                transition: all 0.3s ease;
+                color: inherit;
             }
             
+            /* Active highlight for current search result */
             .eksi-search-highlight.active {
                 background-color: rgba(255, 152, 0, 0.6);
                 box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.6);
+                color: #000;
+                font-weight: 500;
+            }
+            
+            /* Dark mode support */
+            @media (prefers-color-scheme: dark) {
+                .eksi-search-highlight {
+                    background-color: rgba(255, 213, 79, 0.3);
+                    box-shadow: 0 0 0 1px rgba(255, 213, 79, 0.15);
+                }
+                
+                .eksi-search-highlight.active {
+                    background-color: rgba(255, 152, 0, 0.5);
+                    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.5);
+                    color: #fff;
+                }
             }
             
             /* Dark mode support */
