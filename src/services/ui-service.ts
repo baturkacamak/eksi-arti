@@ -13,7 +13,7 @@ import {ScreenshotButtonComponent} from "../components/screenshot-button-compone
 import {EntrySorterComponent} from "../components/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
-import {QuickSearchComponent} from "../components/quick-search-component";
+import {SearchFilterComponent} from "../components/search-filter-component";
 import {AuthorHighlighterService} from "./author-highlighter-service";
 import {ObserverService, observerService} from "./observer-service";
 import {BlockUsersService} from "./block-users-service";
@@ -31,12 +31,12 @@ export class UIService {
     private screenshotButtonComponent: ScreenshotButtonComponent;
     private entrySorterComponent: EntrySorterComponent;
     private postManagementService: PostManagementService;
-    private quickSearchComponent: QuickSearchComponent;
     private authorHighlighterService: AuthorHighlighterService;
 
     // Services resolved from the DI container
     private trashService: TrashService;
     private blockFavoritesButtonComponent: BlockFavoritesButtonComponent;
+    private searchFilterComponent: SearchFilterComponent;
 
     constructor(
         private domHandler: DOMService,
@@ -55,11 +55,11 @@ export class UIService {
         this.screenshotButtonComponent = container.resolve<ScreenshotButtonComponent>('ScreenshotButtonComponent');
         this.entrySorterComponent = container.resolve<EntrySorterComponent>('EntrySorterComponent');
         this.postManagementService = container.resolve<PostManagementService>('PostManagementService');
-        this.quickSearchComponent = container.resolve<QuickSearchComponent>('QuickSearchComponent');
+        this.searchFilterComponent = container.resolve<SearchFilterComponent>('SearchFilterComponent');
         this.trashService = container.resolve<TrashService>('TrashService');
 
         this.blockFavoritesButtonComponent = container.resolve<BlockFavoritesButtonComponent>('BlockFavoritesButtonComponent');
-        
+
         // Use getInstance for singleton services
         this.authorHighlighterService = container.resolve<AuthorHighlighterService>('AuthorHighlighterService');
     }
@@ -123,7 +123,7 @@ export class UIService {
                 // Initialize trash service - it will only activate on the trash page
                 this.trashService.initialize();
 
-                this.quickSearchComponent.initialize();
+                this.searchFilterComponent.initialize();
 
                 await this.authorHighlighterService.initialize();
 

@@ -20,7 +20,6 @@ import {AuthorHighlighterService} from '../services/author-highlighter-service';
 import {UIService} from '../services/ui-service';
 import {ObserverService, observerService} from '../services/observer-service';
 import {PageUtilsService, pageUtils} from '../services/page-utils-service';
-import {QuickSearchComponent} from '../components/quick-search-component';
 import {PostManagementService} from "../services/post-management-service";
 import {EntrySorterComponent} from "../components/entry-sorter-component";
 import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
@@ -30,6 +29,7 @@ import {NotificationComponent} from "../components/notification-component";
 import {ContainerService, containerService} from "../services/container-service";
 import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
 import {containerThemeService} from "../services/container-theme-service";
+import {SearchFilterComponent} from "../components/search-filter-component";
 
 /**
  * Initialize the dependency injection container
@@ -308,7 +308,7 @@ export function initializeDI(): Container {
         );
     });
 
-    container.register('QuickSearchComponent', () => {
+    container.register('SearchFilterComponent', () => {
         const domHandler = container.resolve<DOMService>('DOMService');
         const cssHandler = container.resolve<CSSService>('CSSService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
@@ -317,7 +317,7 @@ export function initializeDI(): Container {
         const observerService = container.resolve<ObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
 
-        return new QuickSearchComponent(
+        return new SearchFilterComponent(
             domHandler,
             cssHandler,
             loggingService,
