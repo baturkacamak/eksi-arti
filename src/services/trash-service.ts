@@ -1,60 +1,46 @@
 // src/services/trash-service.ts
 import { HttpService } from './http-service';
 import { DOMService } from './dom-service';
-import {LoggingService} from './logging-service';
-import { NotificationComponent } from '../components/notification-component';
+import { LoggingService } from './logging-service';
+import { NotificationService } from './notification-service';
 import { IconComponent } from '../components/icon-component';
 import { SITE_DOMAIN } from '../constants';
-import {observerService} from "./observer-service";
-import {pageUtils} from "./page-utils-service";
+import { ObserverService } from "./observer-service";
+import { PageUtilsService } from "./page-utils-service";
 
 export class TrashService {
-    private static instance: TrashService;
-    private httpService: HttpService;
-    private domHandler: DOMService;
-    private iconComponent: IconComponent;
-    private notification: NotificationComponent;
     private isLoading: boolean = false;
     private currentPage: number = 1;
     private lastPage: number = 1;
     private loadingDelay: number = 1000; // Default 1 second delay between page loads
     private abortController: AbortController | null = null;
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    private constructor() {
-        this.httpService = new HttpService();
-        this.domHandler = new DOMService();
-        this.iconComponent = new IconComponent();
-        this.notification = new NotificationComponent();
-        this.loggingService = new LoggingService();
-    }
-
-    /**
-     * Get singleton instance
-     */
-    public static getInstance(): TrashService {
-        if (!TrashService.instance) {
-            TrashService.instance = new TrashService();
-        }
-        return TrashService.instance;
-    }
+    constructor(
+        private httpService: HttpService,
+        private domHandler: DOMService,
+        private loggingService: LoggingService,
+        private notificationService: NotificationService,
+        private iconComponent: IconComponent,
+        private observerService: ObserverService,
+        private pageUtils: PageUtilsService
+    ) {}
 
     /**
      * Initialize the trash service
      */
     public initialize(): void {
-        if (!pageUtils.isTrashPage()) {
+        if (!this.pageUtils.isTrashPage()) {
             return;
         }
 
         try {
-           this.loggingService.debug('Initializing Trash Service on trash page');
+            this.loggingService.debug('Initializing Trash Service on trash page');
             this.detectPagination();
             this.addLoadMoreButton();
 
             // Setup observer for trash items
-            this.observerId = observerService.observe({
+            this.observerId = this.observerService.observe({
                 selector: '#trash-items li',
                 handler: (items) => {
                     items.forEach(item => {
@@ -72,7 +58,7 @@ export class TrashService {
 
             this.addBulkReviveControls();
         } catch (error) {
-          this.loggingService.error('Error initializing Trash Service:', error);
+            this.loggingService.error('Error initializing Trash Service:', error);
         }
     }
 
@@ -110,9 +96,9 @@ export class TrashService {
                 this.currentPage = 1; // Default to first page
             }
 
-           this.loggingService.debug('Pagination detected', { currentPage: this.currentPage, lastPage: this.lastPage });
+            this.loggingService.debug('Pagination detected', { currentPage: this.currentPage, lastPage: this.lastPage });
         } catch (error) {
-          this.loggingService.error('Error detecting pagination:', error);
+            this.loggingService.error('Error detecting pagination:', error);
             // Default values
             this.currentPage = 1;
             this.lastPage = 1;
@@ -130,7 +116,7 @@ export class TrashService {
         try {
             const trashItems = this.domHandler.querySelector('#trash-items');
             if (!trashItems) {
-              this.loggingService.error('Trash items container not found');
+                this.loggingService.error('Trash items container not found');
                 return;
             }
 
@@ -179,7 +165,7 @@ export class TrashService {
             const container = trashItems.parentElement || document.body;
             container.appendChild(loadMoreContainer);
         } catch (error) {
-          this.loggingService.error('Error adding load more button:', error);
+            this.loggingService.error('Error adding load more button:', error);
         }
     }
 
@@ -202,11 +188,11 @@ export class TrashService {
                 loadingButton.disabled = true;
             }
 
-            await this.notification.show(`Çöp sayfası ${nextPage} yükleniyor...`, { timeout: 2 });
+            await this.notificationService.show(`Çöp sayfası ${nextPage} yükleniyor...`, { timeout: 2 });
 
             const trashItems = document.querySelector('#trash-items');
             if (!trashItems) {
-              this.loggingService.error('Trash items container not found');
+                this.loggingService.error('Trash items container not found');
                 return false;
             }
 
@@ -251,11 +237,11 @@ export class TrashService {
                 }
             }
 
-          this.loggingService.info(`Loaded trash page ${nextPage}, added ${itemsAdded} items`);
+            this.loggingService.info(`Loaded trash page ${nextPage}, added ${itemsAdded} items`);
 
             return true;
         } catch (error) {
-          this.loggingService.error('Error loading next page:', error);
+            this.loggingService.error('Error loading next page:', error);
             return false;
         } finally {
             this.isLoading = false;
@@ -287,7 +273,7 @@ export class TrashService {
             }
 
             // Add a cancel button to the notification
-            await this.notification.show(
+            await this.notificationService.show(
                 `Tüm çöp sayfaları yükleniyor (${this.currentPage + 1}/${this.lastPage})...`,
                 {
                     timeout: 0, // Don't auto-close
@@ -311,7 +297,7 @@ export class TrashService {
             let nextPage = this.currentPage + 1;
             while (nextPage <= this.lastPage && !signal.aborted) {
                 // Update notification
-                this.notification.updateContent(
+                this.notificationService.updateContent(
                     `Tüm çöp sayfaları yükleniyor (${nextPage}/${this.lastPage})...`
                 );
 
@@ -325,12 +311,12 @@ export class TrashService {
 
             // Complete or aborted
             if (signal.aborted) {
-                await this.notification.show('Sayfa yükleme durduruldu.', {
+                await this.notificationService.show('Sayfa yükleme durduruldu.', {
                     timeout: 3,
                     theme: 'warning'
                 });
             } else {
-                await this.notification.show('Tüm çöp sayfaları yüklendi.', {
+                await this.notificationService.show('Tüm çöp sayfaları yüklendi.', {
                     timeout: 3,
                     theme: 'success'
                 });
@@ -351,9 +337,9 @@ export class TrashService {
             // Cleanup
             this.abortController = null;
         } catch (error) {
-          this.loggingService.error('Error loading all pages:', error);
+            this.loggingService.error('Error loading all pages:', error);
 
-            await this.notification.show('Sayfa yükleme sırasında hata oluştu.', {
+            await this.notificationService.show('Sayfa yükleme sırasında hata oluştu.', {
                 timeout: 5,
                 theme: 'error'
             });
@@ -381,10 +367,10 @@ export class TrashService {
                     const success = await this.reviveEntry(entryId);
 
                     if (success) {
-                      this.loggingService.info(`Entry ${entryId} successfully revived`);
+                        this.loggingService.info(`Entry ${entryId} successfully revived`);
 
                         // Show success notification
-                        await this.notification.show(
+                        await this.notificationService.show(
                             `<div style="display: flex; align-items: center">
                                 ${this.iconComponent.create({ name: 'check_circle', color: '#43a047', size: 'medium' }).outerHTML}
                                 <span>Entry başarıyla canlandırıldı.</span>
@@ -401,10 +387,10 @@ export class TrashService {
                             item.remove();
                         }, 500);
                     } else {
-                      this.loggingService.error(`Failed to revive entry ${entryId}`);
+                        this.loggingService.error(`Failed to revive entry ${entryId}`);
 
                         // Show error notification
-                        await this.notification.show(
+                        await this.notificationService.show(
                             `<div style="display: flex; align-items: center">
                                 ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
                                 <span>Entry canlandırılamadı.</span>
@@ -413,10 +399,10 @@ export class TrashService {
                         );
                     }
                 } catch (error) {
-                  this.loggingService.error(`Error reviving entry ${entryId}:`, error);
+                    this.loggingService.error(`Error reviving entry ${entryId}:`, error);
 
                     // Show error notification
-                    await this.notification.show(
+                    await this.notificationService.show(
                         `<div style="display: flex; align-items: center">
                             ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
                             <span>Entry canlandırılırken hata oluştu.</span>
@@ -429,20 +415,6 @@ export class TrashService {
     }
 
     /**
-     * Set up revive handlers for all initial trash items
-     */
-    private setupReviveHandlers(): void {
-        try {
-            const trashItems = document.querySelectorAll('#trash-items li');
-            trashItems.forEach(item => {
-                this.addReviveHandler(item as HTMLElement);
-            });
-        } catch (error) {
-          this.loggingService.error('Error setting up revive handlers:', error);
-        }
-    }
-
-    /**
      * Revive an entry from trash
      */
     private async reviveEntry(entryId: string): Promise<boolean> {
@@ -451,7 +423,7 @@ export class TrashService {
             const response = await this.httpService.post(url);
             return response.includes("canlandirildi") || response.includes("success");
         } catch (error) {
-          this.loggingService.error(`Error reviving entry ${entryId}:`, error);
+            this.loggingService.error(`Error reviving entry ${entryId}:`, error);
             return false;
         }
     }
@@ -547,7 +519,7 @@ export class TrashService {
             trashItems.parentNode?.insertBefore(controlsContainer, trashItems);
 
         } catch (error) {
-          this.loggingService.error('Error adding bulk revive controls:', error);
+            this.loggingService.error('Error adding bulk revive controls:', error);
         }
     }
 
@@ -564,7 +536,7 @@ export class TrashService {
                 }
             });
         } catch (error) {
-          this.loggingService.error('Error adding checkboxes to trash items:', error);
+            this.loggingService.error('Error adding checkboxes to trash items:', error);
         }
     }
 
@@ -612,7 +584,7 @@ export class TrashService {
             // Insert checkbox container at the beginning of the item
             item.insertBefore(checkboxContainer, item.firstChild);
         } catch (error) {
-          this.loggingService.error('Error adding checkbox to trash item:', error);
+            this.loggingService.error('Error adding checkbox to trash item:', error);
         }
     }
 
@@ -644,7 +616,7 @@ export class TrashService {
                 reviveButton.disabled = count === 0;
             }
         } catch (error) {
-          this.loggingService.error('Error updating selection count:', error);
+            this.loggingService.error('Error updating selection count:', error);
         }
     }
 
@@ -657,7 +629,7 @@ export class TrashService {
             const entryIds = Array.from(checkboxes).map(checkbox => checkbox.getAttribute('data-entry-id')).filter(Boolean) as string[];
 
             if (entryIds.length === 0) {
-                await this.notification.show('Canlandırılacak entry seçilmedi.', {
+                await this.notificationService.show('Canlandırılacak entry seçilmedi.', {
                     theme: 'warning',
                     timeout: 3
                 });
@@ -669,7 +641,7 @@ export class TrashService {
             }
 
             // Show notification
-            await this.notification.show(`${entryIds.length} entry canlandırılıyor...`, {
+            await this.notificationService.show(`${entryIds.length} entry canlandırılıyor...`, {
                 theme: 'info',
                 timeout: 0 // Don't auto-close
             });
@@ -681,7 +653,7 @@ export class TrashService {
                 const entryId = entryIds[i];
 
                 // Update notification
-                this.notification.updateContent(`${i + 1}/${entryIds.length} - Entry ${entryId} canlandırılıyor...`);
+                this.notificationService.updateContent(`${i + 1}/${entryIds.length} - Entry ${entryId} canlandırılıyor...`);
 
                 try {
                     const success = await this.reviveEntry(entryId);
@@ -709,14 +681,14 @@ export class TrashService {
                     // Small delay to avoid overwhelming the server
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
-                  this.loggingService.error(`Error reviving entry ${entryId}:`, error);
+                    this.loggingService.error(`Error reviving entry ${entryId}:`, error);
                     failCount++;
                 }
             }
 
             // Show final result
             if (failCount === 0) {
-                await this.notification.show(
+                await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
                         ${this.iconComponent.create({ name: 'check_circle', color: '#43a047', size: 'medium' }).outerHTML}
                         <span>${successCount} entry başarıyla canlandırıldı.</span>
@@ -724,7 +696,7 @@ export class TrashService {
                     { theme: 'success', timeout: 5 }
                 );
             } else {
-                await this.notification.show(
+                await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
                         ${this.iconComponent.create({ name: 'info', color: '#1e88e5', size: 'medium' }).outerHTML}
                         <span>${successCount} entry başarıyla canlandırıldı, ${failCount} entry canlandırılamadı.</span>
@@ -736,9 +708,9 @@ export class TrashService {
             // Update selection count
             this.updateSelectionCount();
         } catch (error) {
-          this.loggingService.error('Error during bulk revive:', error);
+            this.loggingService.error('Error during bulk revive:', error);
 
-            await this.notification.show(
+            await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
                     ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
                     <span>Toplu canlandırma sırasında hata oluştu.</span>
@@ -753,7 +725,7 @@ export class TrashService {
      */
     public destroy(): void {
         if (this.observerId) {
-            observerService.unobserve(this.observerId);
+            this.observerService.unobserve(this.observerId);
         }
 
         // Clean up any other resources
@@ -763,6 +735,3 @@ export class TrashService {
         }
     }
 }
-
-// Export singleton instance
-export const trashService = TrashService.getInstance();

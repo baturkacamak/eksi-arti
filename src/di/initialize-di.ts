@@ -185,5 +185,34 @@ export function initializeDI(): Container {
         );
     });
 
+    container.register('BlockOptionsModalFactory', () => {
+        const domHandler = container.resolve<DOMService>('DOMService');
+        const cssHandler = container.resolve<CSSService>('CSSService');
+        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
+
+        return new BlockOptionsModalFactory(
+            domHandler,
+            cssHandler,
+            loggingService,
+            blockUsersService
+        );
+    });
+
+    container.register('ResumeModalFactory', () => {
+        const domHandler = container.resolve<DOMService>('DOMService');
+        const cssHandler = container.resolve<CSSService>('CSSService');
+        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
+
+        return new ResumeModalFactory(
+            domHandler,
+            cssHandler,
+            loggingService,
+            blockUsersService
+        );
+    });
+
+
     return container;
 }

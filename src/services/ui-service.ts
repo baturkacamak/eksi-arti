@@ -5,7 +5,6 @@ import {ResumeModal} from '../components/resume-modal';
 import {StorageArea, storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
-import {preferencesManager} from './preferences-manager';
 import {LoggingService} from "./logging-service";
 import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/icon-component";
@@ -14,26 +13,51 @@ import {ScreenshotButtonComponent} from "../components/screenshot-button-compone
 import {EntrySorterComponent} from "../components/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
-import {QuickSearchComponent, quickSearchComponent} from "../components/quick-search-component";
+import {QuickSearchComponent} from "../components/quick-search-component";
 import {AuthorHighlighterService} from "./author-highlighter-service";
 import {observerService} from "./observer-service";
+import {BlockUsersService} from "./block-users-service";
+import {Container} from "../di/container";
 
 export class UIService {
     private initialized: boolean = false;
     private menuItemSelector: string = '';
     private menuObserverId: string = '';
 
-    constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
-        private iconComponent: IconComponent,
-        private blockUsersService: BlockUsersService,
-        private notificationService: NotificationService,
-        private preferencesManager: PreferencesManager,
-        private storageService: StorageService,
-        private observerService: ObserverService
-    ) {}
+    private copyButtonComponent: CopyButtonComponent;
+    private screenshotButtonComponent: ScreenshotButtonComponent;
+    private entrySorterComponent: EntrySorterComponent;
+    private postManagementService: PostManagementService;
+    private quickSearchComponent: QuickSearchComponent;
+    private authorHighlighterService: AuthorHighlighterService;
+
+    // Services resolved from the DI container
+    private domHandler: DOMService;
+    private cssHandler: CSSService;
+    private loggingService: LoggingService;
+    private iconComponent: IconComponent;
+    private blockUsersService: BlockUsersService;
+    private notificationService: NotificationService;
+
+    constructor(private container: Container) {
+        // Resolve dependencies from the container
+        this.domHandler = container.resolve<DOMService>('DOMService');
+        this.cssHandler = container.resolve<CSSService>('CSSService');
+        this.loggingService = container.resolve<LoggingService>('LoggingService');
+        this.iconComponent = container.resolve<IconComponent>('IconComponent');
+        this.blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
+        this.notificationService = container.resolve<NotificationService>('NotificationService');
+
+        // Create instances of components that may not be in the container
+        this.copyButtonComponent = new CopyButtonComponent();
+        this.screenshotButtonComponent = new ScreenshotButtonComponent();
+        this.entrySorterComponent = new EntrySorterComponent();
+        this.postManagementService = new PostManagementService();
+        this.quickSearchComponent = new QuickSearchComponent();
+
+        // Use getInstance for singleton services
+        this.authorHighlighterService = AuthorHighlighterService.getInstance();
+    }
 
     /**
      * Initialize the UI
@@ -72,7 +96,7 @@ export class UIService {
                                 const menuItem = this.createMenuItem(entryId);
                                 this.domHandler.appendChild(dropdownMenu, menuItem);
                             } catch (err) {
-                              this.loggingService.error('Error adding menu item to dropdown:', err);
+                                this.loggingService.error('Error adding menu item to dropdown:', err);
                             }
                         });
                     },
@@ -99,10 +123,10 @@ export class UIService {
                 await this.authorHighlighterService.initialize();
 
                 // Add version info to console
-              this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
+                this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
             }, 500);
         } catch (err) {
-          this.loggingService.error('Error initializing UI service:', err);
+            this.loggingService.error('Error initializing UI service:', err);
         }
     }
 
@@ -111,6 +135,9 @@ export class UIService {
      */
     private async loadMenuSelector(): Promise<void> {
         try {
+            // Get preferences manager from container
+            const preferencesManager = await this.container.resolve('PreferencesManager');
+
             // Initialize preferences manager if not already
             await preferencesManager.initialize();
 
@@ -122,9 +149,9 @@ export class UIService {
                 ? preferences.customMenuSelector
                 : preferences.menuItemSelector;
 
-           this.loggingService.debug('Using menu selector:', this.menuItemSelector);
+            this.loggingService.debug('Using menu selector:', this.menuItemSelector);
         } catch (error) {
-          this.loggingService.error('Error loading menu selector from preferences:', error);
+            this.loggingService.error('Error loading menu selector from preferences:', error);
             // Fallback to default selector
             this.menuItemSelector = '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu';
         }
@@ -133,7 +160,6 @@ export class UIService {
     /**
      * Create menu item elements
      */
-    // In ui-service.ts, update the createMenuItemElements method
     private createMenuItemElements(): HTMLLIElement {
         const newItem = this.domHandler.createElement('li');
         const newAnchor = this.domHandler.createElement('a');
@@ -196,25 +222,34 @@ export class UIService {
             e.preventDefault();
             e.stopPropagation();
 
-            // Check if there's an existing operation
-            const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
-            const savedState = result.success && result.data ? result.data : null;
-            if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
-                try {
-                    const resumeModal = new ResumeModal(entryId, savedState);
-                    document.body.style.overflow = 'hidden';
-                    resumeModal.show();
-                } catch (err) {
-                  this.loggingService.error('Error showing resume modal:', err);
+            try {
+                // Check if there's an existing operation
+                const storage = this.container.resolve('StorageService');
+                const result = await storage.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+                const savedState = result.success && result.data ? result.data : null;
+
+                if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
+                    try {
+                        // Create ResumeModal through DI or factory if available
+                        // For now, creating directly but in a full DI setup you might use a factory
+                        const resumeModal = new ResumeModal(entryId, savedState);
+                        document.body.style.overflow = 'hidden';
+                        resumeModal.show();
+                    } catch (err) {
+                        this.loggingService.error('Error showing resume modal:', err);
+                    }
+                } else {
+                    try {
+                        // Create BlockOptionsModal through DI or factory if available
+                        const optionsModal = new BlockOptionsModal(entryId);
+                        document.body.style.overflow = 'hidden';
+                        optionsModal.show();
+                    } catch (err) {
+                        this.loggingService.error('Error showing options modal:', err);
+                    }
                 }
-            } else {
-                try {
-                    const optionsModal = new BlockOptionsModal(entryId);
-                    document.body.style.overflow = 'hidden';
-                    optionsModal.show();
-                } catch (err) {
-                  this.loggingService.error('Error showing options modal:', err);
-                }
+            } catch (error) {
+                this.loggingService.error('Error in menu item click handler:', error);
             }
         });
     }
@@ -229,90 +264,41 @@ export class UIService {
     }
 
     /**
-     * Add menu items to dropdowns
-     * Now uses the stored menu selector from preferences
-     */
-    private async addMenuItemToDropdown(): Promise<void> {
-        try {
-            // Make sure we have the latest menu selector
-            await this.loadMenuSelector();
-
-            // Use the menu selector from preferences
-            const dropdownMenus = this.domHandler.querySelectorAll<HTMLUListElement>(this.menuItemSelector);
-
-            if (!dropdownMenus || dropdownMenus.length === 0) {
-               this.loggingService.debug('No dropdown menus found with selector:', this.menuItemSelector);
-                return; // No dropdown menus found
-            }
-
-            dropdownMenus.forEach((dropdownMenu) => {
-                try {
-                    // Check if this menu already has our custom option
-                    const existingItem = this.domHandler.querySelector('li a[aria-label="favorileyenleri engelle"]', dropdownMenu);
-                    if (existingItem) {
-                        return; // Skip this menu if our option already exists
-                    }
-
-                    const entryItem = dropdownMenu.closest('li[data-id]');
-                    if (!entryItem) {
-                        return; // Skip if we can't find the entry ID
-                    }
-
-                    const entryId = entryItem.getAttribute('data-id');
-                    if (!entryId) {
-                        return; // Skip if entry ID is empty
-                    }
-
-                    const menuItem = this.createMenuItem(entryId);
-                    this.domHandler.appendChild(dropdownMenu, menuItem);
-                } catch (err) {
-                  this.loggingService.error('Error adding menu item to dropdown:', err);
-                }
-            });
-
-            this.initialized = true;
-           this.loggingService.debug('Menu items added to dropdowns');
-        } catch (err) {
-          this.loggingService.error('Error in addMenuItemToDropdown:', err);
-        }
-    }
-
-    /**
-     * Check for saved state and show notification if exists
-     */
-    /**
      * Check for saved state and show notification if exists
      */
     private async checkForSavedState(): Promise<void> {
-        const result = await storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
-        const savedState = result.success && result.data ? result.data : null;
+        try {
+            const storage = this.container.resolve('StorageService');
+            const result = await storage.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+            const savedState = result.success && result.data ? result.data : null;
 
-        if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
-            // Create a notification service instead of the basic component
-            const notificationService = new NotificationService();
-            const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
+            if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
+                const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
 
-            // Show the notification with more concise wording
-            await notificationService.show(
-                `<div class="eksi-notification-info">
-                    ${this.iconComponent.create({
-                    name: 'info',
-                    color: '#42a5f5',
-                    size: 'medium'
-                }).outerHTML}
-                    Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
-                    <div>
-                        <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
-                    </div>
-                </div>`,
-                {
-                    timeout: 0, // Don't auto-close this notification since it has an action button
-                    width: '380px' // Set explicit width to ensure it's not too wide
-                }
-            );
+                // Show the notification with more concise wording
+                await this.notificationService.show(
+                    `<div class="eksi-notification-info">
+                        ${this.iconComponent.create({
+                        name: 'info',
+                        color: '#42a5f5',
+                        size: 'medium'
+                    }).outerHTML}
+                        Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
+                        <div>
+                            <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
+                        </div>
+                    </div>`,
+                    {
+                        timeout: 0, // Don't auto-close this notification since it has an action button
+                        width: '380px' // Set explicit width to ensure it's not too wide
+                    }
+                );
 
-            // Add a continue button to the notification
-            notificationService.addContinueButton(savedState.entryId);
+                // Add a continue button to the notification
+                this.notificationService.addContinueButton(savedState.entryId);
+            }
+        } catch (error) {
+            this.loggingService.error('Error checking for saved state:', error);
         }
     }
 
@@ -320,7 +306,6 @@ export class UIService {
     private isEntriesPage(): boolean {
         return !!document.querySelector('#entry-item-list');
     }
-
 
     /**
      * Cleanup resources
@@ -332,10 +317,7 @@ export class UIService {
 
         // Clean up components
         if (this.copyButtonComponent) {
-            // Call destroy method if it exists
-            if ('destroy' in this.copyButtonComponent) {
-                (this.copyButtonComponent as any).destroy();
-            }
+            this.copyButtonComponent.destroy();
         }
 
         if (this.screenshotButtonComponent) {

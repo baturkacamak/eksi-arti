@@ -5,27 +5,11 @@ import { SITE_DOMAIN } from '../constants';
 import { storageService, StorageArea } from './storage-service';
 
 export class VoteMonitoringService {
-    private static instance: VoteMonitoringService;
-    private httpService: HttpService;
     private userNick: string = '';
     private enabled: boolean = true;
     private checkInterval: number = 1; // minutes
-    private loggingService: LoggingService;
 
-    private constructor() {
-        this.httpService = new HttpService();
-        this.loggingService = new LoggingService();
-    }
-
-    /**
-     * Get singleton instance
-     */
-    public static getInstance(): VoteMonitoringService {
-        if (!VoteMonitoringService.instance) {
-            VoteMonitoringService.instance = new VoteMonitoringService();
-        }
-        return VoteMonitoringService.instance;
-    }
+    constructor(private loggingService: LoggingService) {}
 
     /**
      * Initialize the service by extracting the username
@@ -156,6 +140,3 @@ export class VoteMonitoringService {
         };
     }
 }
-
-// Export singleton instance
-export const voteMonitoringService = VoteMonitoringService.getInstance();
