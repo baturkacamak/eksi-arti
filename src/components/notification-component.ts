@@ -21,19 +21,17 @@ export interface ExtendedNotificationOptions extends NotificationOptions {
 }
 
 export class NotificationComponent {
-    private cssHandler: CSSService;
-    private domHandler: DOMService;
     private notificationElement: HTMLElement | null = null;
     private timeoutId: number | null = null;
     private defaultDuration: number = 5; // Default duration in seconds
     private contentContainer: HTMLElement | null = null;
     private footerContainer: HTMLElement | null = null;
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.cssHandler = new CSSService();
-        this.domHandler = new DOMService();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+    ) {
         this.initAnimations();
         this.applyStyles();
         this.loadNotificationDuration();

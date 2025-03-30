@@ -99,6 +99,14 @@ export function initializeDI(): Container {
         return new CountdownComponent(domService, cssService, loggingService, iconComponent);
     });
 
+    // Register NotificationComponent before NotificationService
+    container.register('NotificationComponent', () => {
+        const domService = container.resolve<DOMService>('DOMService');
+        const cssService = container.resolve<CSSService>('CSSService');
+        const loggingService = container.resolve<LoggingService>('LoggingService');
+        return new NotificationComponent(domService, cssService, loggingService);
+    });
+
     // Register complex services that depend on multiple other services
     container.register('NotificationService', () => {
         const loggingService = container.resolve<LoggingService>('LoggingService');

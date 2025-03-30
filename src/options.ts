@@ -5,6 +5,8 @@
 import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
 import {TooltipComponent} from "./components/tooltip-component";
 import {LoggingService} from "./services/logging-service";
+import {CSSService} from "./services/css-service";
+import {DOMService} from "./services/dom-service";
 
 /**
  * Options Manager Class
@@ -523,8 +525,11 @@ class OptionsPage {
      */
     initializeTooltips() {
         try {
+            // Create necessary dependencies for TooltipComponent
+            const domHandler = new DOMService();
+            const cssHandler = new CSSService();
             // Create and initialize the TooltipComponent
-            const tooltipComponent = new TooltipComponent();
+            const tooltipComponent = new TooltipComponent(domHandler, cssHandler, this.loggingService);
             tooltipComponent.initializeTooltips();
 
           this.loggingService.info('[Ekşi Artı] Tooltips initialized using TooltipComponent');
