@@ -1,20 +1,17 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import { ButtonComponent, ButtonVariant, ButtonSize } from './button-component';
-import { LoggingService } from "../services/logging-service";
+import {DOMService} from '../services/dom-service';
+import {CSSService} from '../services/css-service';
+import {ButtonComponent, ButtonVariant, ButtonSize} from './button-component';
+import {LoggingService} from "../services/logging-service";
 
 export class ModalComponent {
-    protected domHandler: DOMService;
-    protected cssHandler: CSSService;
-    protected buttonComponent: ButtonComponent;
     protected modalElement: HTMLElement | null = null;
-    protected loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.buttonComponent = new ButtonComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        protected domHandler: DOMService,
+        protected cssHandler: CSSService,
+        protected loggingService: LoggingService,
+        protected buttonComponent: ButtonComponent,
+    ) {
         this.applyModalStyles();
     }
 
@@ -29,7 +26,7 @@ export class ModalComponent {
             // Add keydown listener for Escape key to close modal
             document.addEventListener('keydown', this.handleEscapeKey);
         } catch (err) {
-          this.loggingService.error('Error showing modal:', err);
+            this.loggingService.error('Error showing modal:', err);
         }
     }
 

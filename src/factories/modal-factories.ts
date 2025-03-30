@@ -6,6 +6,8 @@ import { BlockUsersService } from '../services/block-users-service';
 import { BlockOptionsModal } from '../components/block-options-modal';
 import { ResumeModal } from '../components/resume-modal';
 import { BlockerState } from '../types';
+import {ButtonComponent} from "../components/button-component";
+import {Container} from "../di/container";
 
 /**
  * Factory for creating BlockOptionsModal instances
@@ -15,7 +17,9 @@ export class BlockOptionsModalFactory {
         private domHandler: DOMService,
         private cssHandler: CSSService,
         private loggingService: LoggingService,
-        private blockUsersService: BlockUsersService
+        private blockUsersService: BlockUsersService,
+        private container: Container,
+        private buttonComponent: ButtonComponent
     ) {}
 
     /**
@@ -27,7 +31,9 @@ export class BlockOptionsModalFactory {
             this.domHandler,
             this.cssHandler,
             this.loggingService,
-            this.blockUsersService
+            this.container,
+            this.blockUsersService,
+            this.buttonComponent
         );
     }
 }
@@ -40,7 +46,9 @@ export class ResumeModalFactory {
         private domHandler: DOMService,
         private cssHandler: CSSService,
         private loggingService: LoggingService,
-        private blockUsersService: BlockUsersService
+        private blockUsersService: BlockUsersService,
+        private buttonComponent: ButtonComponent,
+        private container: Container,
     ) {}
 
     /**
@@ -53,7 +61,9 @@ export class ResumeModalFactory {
             this.domHandler,
             this.cssHandler,
             this.loggingService,
-            this.blockUsersService
+            this.buttonComponent,
+            this.blockUsersService,
+            this.container,
         );
     }
 }

@@ -1,10 +1,15 @@
-import { ModalComponent } from './modal-component';
-import { BlockerState } from '../types';
-import { BlockUsersService } from '../services/block-users-service';
-import { BlockOptionsModal } from './block-options-modal';
-import { STORAGE_KEYS } from '../constants';
-import { storageService } from '../services/storage-service';
-import { ButtonVariant } from './button-component';
+import {ModalComponent} from './modal-component';
+import {BlockerState} from '../types';
+import {BlockUsersService} from '../services/block-users-service';
+import {BlockOptionsModal} from './block-options-modal';
+import {STORAGE_KEYS} from '../constants';
+import {storageService} from '../services/storage-service';
+import {ButtonComponent, ButtonVariant} from './button-component';
+import {DOMService} from "../services/dom-service";
+import {CSSService} from "../services/css-service";
+import {LoggingService} from "../services/logging-service";
+import {Container} from "../di/container";
+import {BlockOptionsModalFactory} from "../factories/modal-factories";
 
 export class ResumeModal extends ModalComponent {
     private entryId: string;
@@ -16,9 +21,11 @@ export class ResumeModal extends ModalComponent {
         domHandler: DOMService,
         cssHandler: CSSService,
         loggingService: LoggingService,
-        private blockUsersService: BlockUsersService
+        buttonComponent: ButtonComponent,
+        private blockUsersService: BlockUsersService,
+        private container: Container
     ) {
-        super(domHandler, cssHandler, loggingService);
+        super(domHandler, cssHandler, loggingService, buttonComponent);
         this.entryId = entryId;
         this.savedState = savedState;
     }
@@ -144,7 +151,7 @@ export class ResumeModal extends ModalComponent {
         // Short delay for better visual feedback
         setTimeout(() => {
             this.close();
-            const blockUsers = new BlockUsersService();
+            const blockUsers = this.blockUsersService;
             blockUsers.setBlockType(this.savedState.blockType);
             blockUsers.blockUsers(this.savedState.entryId);
         }, 500);
@@ -172,7 +179,8 @@ export class ResumeModal extends ModalComponent {
             await storageService.removeItem(STORAGE_KEYS.CURRENT_OPERATION);
 
             // Show the options modal to start a new operation
-            const optionsModal = new BlockOptionsModal(this.entryId);
+            const blockOptionsModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockOptionsModalFactory');
+            const optionsModal = blockOptionsModalFactory.create(this.entryId);
             optionsModal.show();
         }, 500);
     }

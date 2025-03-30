@@ -177,12 +177,15 @@ export function initializeDI(): Container {
         const cssHandler = container.resolve<CSSService>('CSSService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
+        const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
 
         return new BlockOptionsModalFactory(
             domHandler,
             cssHandler,
             loggingService,
-            blockUsersService
+            blockUsersService,
+            container,
+            buttonComponent
         );
     });
 
@@ -191,12 +194,15 @@ export function initializeDI(): Container {
         const cssHandler = container.resolve<CSSService>('CSSService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
+        const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
 
         return new ResumeModalFactory(
             domHandler,
             cssHandler,
             loggingService,
-            blockUsersService
+            blockUsersService,
+            buttonComponent,
+            container
         );
     });
 

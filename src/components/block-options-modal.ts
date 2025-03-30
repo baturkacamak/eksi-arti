@@ -1,7 +1,7 @@
 import { ModalComponent } from './modal-component';
 import { BlockType } from '../constants';
 import { BlockUsersService } from '../services/block-users-service';
-import { ButtonVariant } from './button-component';
+import {ButtonComponent, ButtonVariant} from './button-component';
 import {LoggingService} from "../services/logging-service";
 import {CSSService} from "../services/css-service";
 import {DOMService} from "../services/dom-service";
@@ -16,9 +16,10 @@ export class BlockOptionsModal extends ModalComponent {
         cssHandler: CSSService,
         loggingService: LoggingService,
         private container: Container,
-        private blockUsersService: BlockUsersService
+        private blockUsersService: BlockUsersService,
+        buttonComponent: ButtonComponent
     ) {
-        super(domHandler, cssHandler, loggingService);
+        super(domHandler, cssHandler, loggingService, buttonComponent);
         this.entryId = entryId;
     }
 

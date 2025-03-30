@@ -3,11 +3,13 @@ import {LoggingService} from "./logging-service";
 import {SITE_DOMAIN} from "../constants";
 
 export class HtmlParserService {
+    private useDOMParser: boolean;
 
     constructor(
         private readonly domHandler: DOMService,
         private loggingService: LoggingService
     ) {
+        this.useDOMParser = typeof DOMParser !== 'undefined';
     }
 
     /**

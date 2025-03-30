@@ -4,20 +4,24 @@ import {BlockType} from '../constants';
 import {PreferencesService} from '../services/preferences-service';
 import {NotificationComponent} from './notification-component';
 import {LoggingService} from "../services/logging-service";
-import {ButtonVariant} from "./button-component";
+import {ButtonComponent, ButtonVariant} from "./button-component";
+import {CSSService} from "../services/css-service";
+import {DOMService} from "../services/dom-service";
 
 export class PreferencesModal extends ModalComponent {
-    private preferences: BlockerPreferences | null = null;
-    private preferencesService: PreferencesService;
-    private notification: NotificationComponent;
     private isLoaded: boolean = false;
 
-    constructor() {
-        super();
-        this.preferencesService = new PreferencesService();
-        this.notification = new NotificationComponent();
-        // Initialize with default values, will be replaced when loaded
-        this.preferences = null;
+    constructor(
+        domHandler: DOMService,
+        cssHandler: CSSService,
+        loggingService: LoggingService,
+        buttonComponent: ButtonComponent,
+        private preferences: BlockerPreferences,
+        private preferencesService: PreferencesService,
+        private notification: NotificationComponent,
+        private notificationComponent: NotificationComponent,
+    ) {
+        super(domHandler, cssHandler, loggingService, buttonComponent);
     }
 
     /**

@@ -19,6 +19,7 @@ import {ObserverService, observerService} from "./observer-service";
 import {BlockUsersService} from "./block-users-service";
 import {Container} from "../di/container";
 import {PreferencesManager} from "./preferences-manager";
+import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
 
 export class UIService {
     private initialized: boolean = false;
@@ -226,9 +227,8 @@ export class UIService {
 
                 if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
                     try {
-                        // Create ResumeModal through DI or factory if available
-                        // For now, creating directly but in a full DI setup you might use a factory
-                        const resumeModal = new ResumeModal(entryId, savedState);
+                        const resumeModalFactory = this.container.resolve<ResumeModalFactory>('ResumeModalFactory');
+                        const resumeModal = resumeModalFactory.create(entryId, savedState);
                         document.body.style.overflow = 'hidden';
                         resumeModal.show();
                     } catch (err) {
@@ -236,8 +236,8 @@ export class UIService {
                     }
                 } else {
                     try {
-                        // Create BlockOptionsModal through DI or factory if available
-                        const optionsModal = new BlockOptionsModal(entryId);
+                        const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockModalFactory');
+                        const optionsModal = blockModalFactory.create(entryId);
                         document.body.style.overflow = 'hidden';
                         optionsModal.show();
                     } catch (err) {
