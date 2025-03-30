@@ -100,6 +100,18 @@ export class SearchFilterComponent {
     /**
      * Inject full search row
      */
+    /**
+     * Inject full search row
+     */
+    /**
+     * Inject full search row
+     */
+    /**
+     * Inject full search row
+     */
+    /**
+     * Inject full search row
+     */
     private injectSearchRow(): void {
         try {
             // Find the custom controls row container which should hold sort buttons
@@ -127,7 +139,9 @@ export class SearchFilterComponent {
             // Create search input
             this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
             this.searchInput.type = 'text';
-            this.searchInput.placeholder = 'Entry içeriklerinde ara...';
+            this.searchInput.placeholder = 'Entry içeriklerinde ara (hem vurgular hem filtreler)...';
+            this.searchInput.autocomplete = 'off';
+            this.searchInput.autofocus = true;
             this.domHandler.addClass(this.searchInput, 'eksi-search-input');
 
             // Create search icon
@@ -141,23 +155,6 @@ export class SearchFilterComponent {
             // Create controls container
             this.controlsContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(this.controlsContainer, 'eksi-search-controls');
-
-            // Create mode toggle buttons
-            const filterButton = this.createToggleButton('filter_list', 'Filtre modu (sadece eşleşenleri göster)', this.filterMode, (active) => {
-                if (active) {
-                    this.filterMode = true;
-                    this.domHandler.removeClass(highlightButton, 'active');
-                    this.performSearch();
-                }
-            });
-
-            const highlightButton = this.createToggleButton('format_color_text', 'Vurgulama modu (eşleşmeleri vurgula)', !this.filterMode, (active) => {
-                if (active) {
-                    this.filterMode = false;
-                    this.domHandler.removeClass(filterButton, 'active');
-                    this.performSearch();
-                }
-            });
 
             // Create option buttons
             const caseButton = this.createToggleButton('text_format', 'Büyük/küçük harf duyarlı', this.caseSensitive, (active) => {
@@ -175,9 +172,9 @@ export class SearchFilterComponent {
                 this.performSearch();
             });
 
-            // Create navigation buttons (for highlight mode)
-            const prevButton = this.createActionButton('navigate_before', 'Önceki (Shift+Enter)', () => this.navigateHighlights('prev'));
-            const nextButton = this.createActionButton('navigate_next', 'Sonraki (Enter)', () => this.navigateHighlights('next'));
+            // Create navigation buttons
+            const prevButton = this.createActionButton('navigate_before', 'Önceki eşleşme (Shift+Enter)', () => this.navigateHighlights('prev'));
+            const nextButton = this.createActionButton('navigate_next', 'Sonraki eşleşme (Enter)', () => this.navigateHighlights('next'));
 
             // Create help button
             const helpButton = this.createHelpButton();
@@ -218,8 +215,6 @@ export class SearchFilterComponent {
             this.domHandler.appendChild(this.searchContainer, this.resultCounter);
 
             // Add control buttons to controls container
-            this.domHandler.appendChild(this.controlsContainer, filterButton);
-            this.domHandler.appendChild(this.controlsContainer, highlightButton);
             this.domHandler.appendChild(this.controlsContainer, caseButton);
             this.domHandler.appendChild(this.controlsContainer, regexButton);
             this.domHandler.appendChild(this.controlsContainer, normalizeButton);
