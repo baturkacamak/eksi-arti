@@ -387,6 +387,115 @@ export class ContainerThemeService {
                     background: rgba(255, 255, 255, 0.1) !important;
                 }
             }
+            
+            /* Custom controls row container */
+            .eksi-custom-controls-row {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                margin: 10px 0 !important;
+                padding: 8px 10px !important;
+                border-radius: 6px !important;
+                background-color: rgba(0, 0, 0, 0.02) !important;
+                border: 1px solid rgba(0, 0, 0, 0.05) !important;
+                transition: background 0.2s ease !important;
+            }
+            
+            /* Dark mode support for custom controls row */
+            @media (prefers-color-scheme: dark) {
+                .eksi-custom-controls-row {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
+            }
+            
+            /* Sort buttons styling */
+            .eksi-sort-buttons {
+                display: flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+            }
+            
+            .eksi-sort-button {
+                display: flex !important;
+                align-items: center !important;
+                padding: 5px 8px !important;
+                border-radius: 4px !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                font-size: 13px !important;
+                color: #666 !important;
+                user-select: none !important;
+            }
+            
+            .eksi-sort-button:hover {
+                background-color: rgba(129, 193, 75, 0.1) !important;
+                color: #81c14b !important;
+            }
+            
+            .eksi-sort-button.active {
+                background-color: rgba(129, 193, 75, 0.15) !important;
+                color: #81c14b !important;
+                font-weight: 500 !important;
+            }
+            
+            .eksi-sort-button .eksi-icon {
+                margin-right: 5px !important;
+                font-size: 16px !important;
+            }
+            
+            /* Search input styling */
+            .eksi-inline-search-container {
+                position: relative !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+            
+            .eksi-quick-search-input {
+                padding: 6px 12px !important;
+                padding-right: 32px !important;
+                border: 1px solid #e0e0e0 !important;
+                border-radius: 4px !important;
+                font-size: 13px !important;
+                width: 200px !important;
+                transition: all 0.2s ease !important;
+            }
+            
+            .eksi-quick-search-input:focus {
+                border-color: #81c14b !important;
+                outline: none !important;
+                box-shadow: 0 0 0 2px rgba(129, 193, 75, 0.15) !important;
+            }
+            
+            /* Dark mode support for search input */
+            @media (prefers-color-scheme: dark) {
+                .eksi-sort-button {
+                    color: #aaa !important;
+                }
+                
+                .eksi-sort-button:hover {
+                    background-color: rgba(129, 193, 75, 0.15) !important;
+                }
+                
+                .eksi-sort-button.active {
+                    background-color: rgba(129, 193, 75, 0.2) !important;
+                }
+                
+                .eksi-quick-search-input {
+                    background-color: #383838 !important;
+                    color: #e0e0e0 !important;
+                    border-color: #444 !important;
+                }
+                
+                .eksi-quick-search-input::placeholder {
+                    color: #aaa !important;
+                }
+                
+                .eksi-quick-search-input:focus {
+                    border-color: #81c14b !important;
+                    box-shadow: 0 0 0 2px rgba(129, 193, 75, 0.2) !important;
+                }
+            }
         `;
 
         this.cssService.addCSS(baseStyles);

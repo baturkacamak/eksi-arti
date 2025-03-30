@@ -242,25 +242,60 @@ export class EntrySorterComponent {
      */
     private addSortButtons(): void {
         try {
-            // Find the sub-title-menu where we'll add the buttons
-            const subtitleMenu = document.querySelector('.sub-title-menu');
-            if (!subtitleMenu) return;
+            // Find the main content area instead of the sub-title-menu
+            const contentArea = document.querySelector('#topic');
+            if (!contentArea) return;
 
-            // Check if buttons are already added
-            if (subtitleMenu.querySelector('.eksi-sort-buttons')) return;
+            // Check if a container for our custom controls already exists
+            if (document.querySelector('.eksi-custom-controls-row')) return;
 
-            // Create container for sort buttons
+            // Create a container for our custom row of controls
+            const customControlsRow = this.domHandler.createElement('div');
+            this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
+
+            // Style the custom controls row
+            customControlsRow.style.display = 'flex';
+            customControlsRow.style.alignItems = 'center';
+            customControlsRow.style.marginBottom = '10px';
+            customControlsRow.style.marginTop = '10px';
+            customControlsRow.style.padding = '8px 10px';
+            customControlsRow.style.borderRadius = '6px';
+            customControlsRow.style.backgroundColor = 'rgba(0, 0, 0, 0.02)';
+            customControlsRow.style.border = '1px solid rgba(0, 0, 0, 0.05)';
+
+            // Add dark mode support
+            const darkModeStyles = document.createElement('style');
+            darkModeStyles.textContent = `
+            @media (prefers-color-scheme: dark) {
+                .eksi-custom-controls-row {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
+            }
+        `;
+            document.head.appendChild(darkModeStyles);
+
+            // Create a div for the sort buttons
             const sortButtonsContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(sortButtonsContainer, 'eksi-sort-buttons');
+            sortButtonsContainer.style.display = 'flex';
+            sortButtonsContainer.style.alignItems = 'center';
+            sortButtonsContainer.style.marginRight = 'auto'; // Push sort buttons to the left
 
-            // Add a separator before our buttons
-            const separator = this.domHandler.createElement('span');
-            this.domHandler.addClass(separator, 'eksi-sort-separator');
-            separator.textContent = '|';
-            this.domHandler.appendChild(sortButtonsContainer, separator);
+            // Add a label for the sort options
+            const sortLabel = this.domHandler.createElement('span');
+            sortLabel.textContent = 'Sırala: ';
+            sortLabel.style.fontSize = '13px';
+            sortLabel.style.color = '#666';
+            sortLabel.style.marginRight = '8px';
+            this.domHandler.appendChild(sortButtonsContainer, sortLabel);
 
-            // Create and add buttons for each strategy
+            // Create and add buttons for each strategy EXCEPT the date sort
+            // We're skipping the date sort (index 0) since you mentioned you don't need it
             this.strategies.forEach((strategy, index) => {
+                // Skip the date sort (first strategy)
+                if (strategy.name === 'date') return;
+
                 const button = this.createSortButton(strategy);
                 this.domHandler.appendChild(sortButtonsContainer, button);
                 this.sortButtons.push(button);
@@ -270,16 +305,33 @@ export class EntrySorterComponent {
                     const buttonSeparator = this.domHandler.createElement('span');
                     this.domHandler.addClass(buttonSeparator, 'eksi-sort-separator');
                     buttonSeparator.textContent = '·';
+                    buttonSeparator.style.margin = '0 8px';
+                    buttonSeparator.style.color = '#ccc';
                     this.domHandler.appendChild(sortButtonsContainer, buttonSeparator);
                 }
             });
 
-            // Add the container to the page
-            this.domHandler.appendChild(subtitleMenu, sortButtonsContainer);
+            // Add the sort buttons to our custom row
+            this.domHandler.appendChild(customControlsRow, sortButtonsContainer);
 
-           this.loggingService.debug('Sort buttons added to page');
+            // Create a placeholder for the search input (which will be added by another component)
+            const searchPlaceholder = this.domHandler.createElement('div');
+            this.domHandler.addClass(searchPlaceholder, 'eksi-search-placeholder');
+            searchPlaceholder.style.marginLeft = 'auto'; // Push to the right
+            searchPlaceholder.id = 'eksi-search-container';
+            this.domHandler.appendChild(customControlsRow, searchPlaceholder);
+
+            // Insert our custom controls row before the content
+            const firstContent = contentArea.querySelector('#entry-item-list');
+            if (firstContent) {
+                contentArea.insertBefore(customControlsRow, firstContent);
+            } else {
+                contentArea.appendChild(customControlsRow);
+            }
+
+            this.loggingService.debug('Sort buttons added to page in custom row');
         } catch (error) {
-          this.loggingService.error('Error adding sort buttons:', error);
+            this.loggingService.error('Error adding sort buttons:', error);
         }
     }
 
@@ -291,23 +343,37 @@ export class EntrySorterComponent {
         this.domHandler.addClass(button, 'eksi-sort-button');
         button.setAttribute('data-sort', strategy.name);
 
+        // Improve button styling
+        button.style.padding = '5px 8px';
+        button.style.borderRadius = '4px';
+        button.style.cursor = 'pointer';
+        button.style.fontSize = '13px';
+        button.style.transition = 'all 0.2s ease';
+
         // Create icon using IconComponent
         const icon = this.iconComponent.create({
             name: strategy.icon,
             size: 'small'
         });
 
-        // Create text node
-        const text = document.createTextNode(strategy.name === 'date' ? 'sıra' : strategy.name);
+        // Style the icon
+        (icon as HTMLElement).style.marginRight = '5px';
+        (icon as HTMLElement).style.fontSize = '16px';
+        (icon as HTMLElement).style.verticalAlign = 'middle';
+
+        // Create text node - use Turkish versions of the names for better UX
+        const displayName = strategy.name === 'favorite' ? 'favoriler' :
+            strategy.name === 'length' ? 'uzunluk' :
+                strategy.name;
+        const text = document.createTextNode(displayName);
 
         // Assemble button
         this.domHandler.appendChild(button, icon);
         this.domHandler.appendChild(button, text);
 
-        // Set active state for default strategy (date)
-        if (strategy.name === 'date') {
-            this.domHandler.addClass(button, 'active');
-            this.activeStrategy = strategy;
+        // Add tooltip if needed
+        if (strategy.tooltip) {
+            button.setAttribute('title', strategy.tooltip);
         }
 
         // Add click handler
@@ -328,10 +394,17 @@ export class EntrySorterComponent {
 
             // Update active button styling
             this.sortButtons.forEach(btn => {
+                btn.style.backgroundColor = '';
+                btn.style.color = '#666';
+                btn.style.fontWeight = 'normal';
                 this.domHandler.removeClass(btn, 'active');
                 this.domHandler.removeClass(btn, 'animate');
             });
 
+            // Style the active button
+            button.style.backgroundColor = 'rgba(129, 193, 75, 0.1)';
+            button.style.color = '#81c14b';
+            button.style.fontWeight = '500';
             this.domHandler.addClass(button, 'active');
             this.domHandler.addClass(button, 'animate');
 
@@ -346,7 +419,7 @@ export class EntrySorterComponent {
                 this.domHandler.removeClass(button, 'animate');
             }, 500);
         } catch (error) {
-          this.loggingService.error('Error handling sort button click:', error);
+            this.loggingService.error('Error handling sort button click:', error);
         }
     }
 

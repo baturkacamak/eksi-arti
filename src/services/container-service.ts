@@ -3,6 +3,7 @@
 import { ComponentContainer, ComponentContainerConfig } from '../components/component-container';
 import { LoggingService} from './logging-service';
 import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
+import {DOMService} from "./dom-service";
 
 export class ContainerService {
     private static instance: ContainerService;
@@ -13,10 +14,11 @@ export class ContainerService {
     private searchControlsContainer: ComponentContainer | null = null;
     private notificationContainers: Map<string, ComponentContainer> = new Map();
     private loggingService: LoggingService;
+    private domHandler: DOMService;
 
     private constructor() {
         this.loggingService = new LoggingService();
-        // Private constructor for singleton
+        this.domHandler = new DOMService();
     }
 
     public static getInstance(): ContainerService {
@@ -60,6 +62,159 @@ export class ContainerService {
             return container;
         } catch (error) {
             this.loggingService.error('Error getting entry controls container:', error);
+            return this.createTemporaryContainer('horizontal');
+        }
+    }
+
+    /**
+     * Get or create the custom controls row container
+     * This provides a central container for sort buttons and search input
+     */
+    public getCustomControlsRow(): ComponentContainer {
+        try {
+            // Check if we already have a container in the DOM
+            const existingElement = document.querySelector('.eksi-custom-controls-row');
+
+            // If it exists, find a target element to attach to
+            if (existingElement) {
+                const config: ComponentContainerConfig = {
+                    direction: 'horizontal',
+                    position: 'inline',
+                    className: 'eksi-custom-controls-row',
+                    theme: ContainerTheme.NEUTRAL,
+                    size: ContainerSize.MEDIUM,
+                    shape: ContainerShape.ROUNDED,
+                    isHoverable: false,
+                    hasBorder: true,
+                    customStyles: {
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        margin: '10px 0',
+                        width: '100%'
+                    }
+                };
+
+                // Create a new container with the existing element
+                const container = new ComponentContainer(config);
+                const containerElement = container.getElement();
+
+                // Replace the existing element with our container
+                if (containerElement && existingElement.parentNode) {
+                    existingElement.parentNode.replaceChild(containerElement, existingElement);
+                    // Copy any children from the original element
+                    while (existingElement.firstChild) {
+                        containerElement.appendChild(existingElement.firstChild);
+                    }
+                }
+
+                return container;
+            }
+
+            // If no existing element, create a new container
+            const config: ComponentContainerConfig = {
+                direction: 'horizontal',
+                position: 'inline',
+                className: 'eksi-custom-controls-row',
+                theme: ContainerTheme.NEUTRAL,
+                size: ContainerSize.MEDIUM,
+                shape: ContainerShape.ROUNDED,
+                isHoverable: false,
+                hasBorder: true,
+                customStyles: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    margin: '10px 0',
+                    width: '100%'
+                }
+            };
+
+            // Find the target element to attach to
+            const targetElement = document.querySelector('#topic') || document.body;
+            const firstContent = targetElement.querySelector('#entry-item-list');
+
+            // Create the container
+            const container = new ComponentContainer(config);
+
+            // Attach it to the DOM
+            const containerElement = container.getElement();
+            if (containerElement) {
+                if (firstContent) {
+                    targetElement.insertBefore(containerElement, firstContent);
+                } else {
+                    targetElement.appendChild(containerElement);
+                }
+            }
+
+            // Add left and right sections for sort buttons and search
+            const leftSection = this.domHandler.createElement('div');
+            this.domHandler.addClass(leftSection, 'eksi-custom-controls-left');
+            leftSection.style.display = 'flex';
+            leftSection.style.alignItems = 'center';
+            leftSection.style.flexGrow = '1';
+
+            const rightSection = this.domHandler.createElement('div');
+            this.domHandler.addClass(rightSection, 'eksi-custom-controls-right');
+            rightSection.style.display = 'flex';
+            rightSection.style.alignItems = 'center';
+            rightSection.id = 'eksi-search-container';
+
+            // Add sections to container
+            if (containerElement) {
+                containerElement.appendChild(leftSection);
+                containerElement.appendChild(rightSection);
+            }
+
+            return container;
+        } catch (error) {
+            this.loggingService.error('Error getting custom controls row container:', error);
+            return this.createTemporaryContainer('horizontal');
+        }
+    }
+
+    /**
+     * Get the sort buttons container within the custom controls row
+     */
+    public getSortButtonsContainerInCustomRow(): ComponentContainer {
+        try {
+            // Get or create the custom controls row
+            const controlsRow = this.getCustomControlsRow();
+            const controlsElement = controlsRow.getElement();
+
+            if (!controlsElement) {
+                throw new Error('Custom controls row element not found');
+            }
+
+            // Find the left section
+            const leftSection = controlsElement.querySelector('.eksi-custom-controls-left');
+            if (!leftSection) {
+                throw new Error('Left section of custom controls row not found');
+            }
+
+            // Check if we already have a sort buttons container
+            if (this.sortButtonsContainer) {
+                return this.sortButtonsContainer;
+            }
+
+            // Create the sort buttons container
+            const config: ComponentContainerConfig = {
+                direction: 'horizontal',
+                gap: 8,
+                position: 'inline',
+                className: 'eksi-sort-buttons',
+                theme: ContainerTheme.DEFAULT,
+                hasBorder: false,
+                customStyles: {
+                    display: 'flex',
+                    alignItems: 'center'
+                }
+            };
+
+            this.sortButtonsContainer = this.createAndAttachContainer(config, () => leftSection as HTMLElement);
+            return this.sortButtonsContainer;
+        } catch (error) {
+            this.loggingService.error('Error getting sort buttons container in custom row:', error);
             return this.createTemporaryContainer('horizontal');
         }
     }
@@ -176,6 +331,52 @@ export class ContainerService {
         }
 
         return container;
+    }
+
+    /**
+     * Get the search container within the custom controls row
+     */
+    public getSearchContainerInCustomRow(): ComponentContainer {
+        try {
+            // Get or create the custom controls row
+            const controlsRow = this.getCustomControlsRow();
+            const controlsElement = controlsRow.getElement();
+
+            if (!controlsElement) {
+                throw new Error('Custom controls row element not found');
+            }
+
+            // Find the right section
+            const rightSection = controlsElement.querySelector('.eksi-custom-controls-right');
+            if (!rightSection) {
+                throw new Error('Right section of custom controls row not found');
+            }
+
+            // Check if we already have a search container
+            if (this.searchControlsContainer) {
+                return this.searchControlsContainer;
+            }
+
+            // Create the search container
+            const config: ComponentContainerConfig = {
+                direction: 'horizontal',
+                gap: 8,
+                position: 'inline',
+                className: 'eksi-search-controls',
+                theme: ContainerTheme.DEFAULT,
+                hasBorder: false,
+                customStyles: {
+                    display: 'flex',
+                    alignItems: 'center'
+                }
+            };
+
+            this.searchControlsContainer = this.createAndAttachContainer(config, () => rightSection as HTMLElement);
+            return this.searchControlsContainer;
+        } catch (error) {
+            this.loggingService.error('Error getting search container in custom row:', error);
+            return this.createTemporaryContainer('horizontal');
+        }
     }
 
     private removeContainer(container: ComponentContainer | null): void {

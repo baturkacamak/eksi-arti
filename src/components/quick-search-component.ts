@@ -59,10 +59,17 @@ export class QuickSearchComponent {
                 return;
             }
 
-            this.createSearchToolbar();
-            this.setupKeyboardShortcuts();
+            // Check if our custom controls row exists
+            const customControlsRow = document.querySelector('.eksi-custom-controls-row');
+            if (!customControlsRow) {
+                // If it doesn't exist yet, set up a mutation observer to wait for it
+                this.waitForCustomControlsRow();
+            } else {
+                // If it already exists, add our search component
+                this.createInlineSearchInput(customControlsRow);
+            }
 
-            // Create search help tooltip
+            this.setupKeyboardShortcuts();
             this.createSearchHelpTooltip();
 
             // Observe for new content to search
@@ -80,6 +87,117 @@ export class QuickSearchComponent {
             this.loggingService.debug('Quick search component initialized');
         } catch (error) {
             this.loggingService.error('Error initializing quick search component:', error);
+        }
+    }
+
+    private waitForCustomControlsRow(): void {
+        const observer = new MutationObserver((mutations, observer) => {
+            const customControlsRow = document.querySelector('.eksi-custom-controls-row');
+            if (customControlsRow) {
+                // Stop observing once we find our element
+                observer.disconnect();
+                // Add our search component
+                this.createInlineSearchInput(customControlsRow);
+            }
+        });
+
+        // Start observing the document body for the custom controls row
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    private createInlineSearchInput(container: Element): void {
+        try {
+            // Look for the search placeholder that was created by the EntrySorterComponent
+            const searchPlaceholder = container.querySelector('#eksi-search-container');
+            if (!searchPlaceholder) {
+                // If no placeholder, we could add to the end of the container
+                this.loggingService.debug('No search placeholder found, adding to end of container');
+                this.createSearchToolbar(); // Fall back to the original floating search bar
+                return;
+            }
+
+            // Create search input container
+            const searchContainer = this.domHandler.createElement('div');
+            this.domHandler.addClass(searchContainer, 'eksi-inline-search-container');
+            searchContainer.style.display = 'flex';
+            searchContainer.style.alignItems = 'center';
+            searchContainer.style.position = 'relative';
+
+            // Create search input
+            this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
+            this.searchInput.type = 'text';
+            this.searchInput.placeholder = 'Entry\'lerde ara...';
+            this.domHandler.addClass(this.searchInput, 'eksi-quick-search-input');
+
+            // Style the input
+            this.searchInput.style.width = '200px';
+            this.searchInput.style.padding = '6px 12px';
+            this.searchInput.style.border = '1px solid #e0e0e0';
+            this.searchInput.style.borderRadius = '4px';
+            this.searchInput.style.fontSize = '13px';
+            this.searchInput.style.backgroundColor = '#fff';
+
+            // Dark mode support for the input
+            const darkModeStyles = document.createElement('style');
+            darkModeStyles.textContent = `
+            @media (prefers-color-scheme: dark) {
+                .eksi-quick-search-input {
+                    background-color: #383838 !important;
+                    color: #e0e0e0 !important;
+                    border-color: #444 !important;
+                }
+                
+                .eksi-quick-search-input::placeholder {
+                    color: #aaa !important;
+                }
+            }
+        `;
+            document.head.appendChild(darkModeStyles);
+
+            // Create search icon
+            const searchIcon = this.iconComponent.create({
+                name: 'search',
+                size: 'small',
+                color: '#81c14b'
+            });
+
+            // Style the icon
+            (searchIcon as HTMLElement).style.position = 'absolute';
+            (searchIcon as HTMLElement).style.right = '10px';
+            (searchIcon as HTMLElement).style.pointerEvents = 'none';
+
+            // Add elements to search container
+            this.domHandler.appendChild(searchContainer, this.searchInput);
+            this.domHandler.appendChild(searchContainer, searchIcon);
+
+            // Replace the placeholder with our search container
+            searchPlaceholder.innerHTML = '';
+            searchPlaceholder.appendChild(searchContainer);
+
+            // Add input event listener with debounce
+            this.domHandler.addEventListener(this.searchInput, 'input', debounce(() => {
+                this.performSearch();
+            }, 300));
+
+            // Add key event listeners
+            this.domHandler.addEventListener(this.searchInput, 'keydown', (e) => {
+                this.handleSearchKeydown(e);
+            });
+
+            // Add focus handler to show the active state
+            this.domHandler.addEventListener(this.searchInput, 'focus', () => {
+                this.isActive = true;
+            });
+
+            // Set active immediately since this is always visible
+            this.isActive = true;
+
+            this.loggingService.debug('Created inline search input');
+        } catch (error) {
+            this.loggingService.error('Error creating inline search input:', error);
         }
     }
 
@@ -278,6 +396,24 @@ export class QuickSearchComponent {
      * Toggle search visibility
      */
     public toggleSearch(show?: boolean): void {
+        // If we have the inline search, just focus or blur it
+        if (this.searchInput && document.querySelector('.eksi-inline-search-container')) {
+            const shouldShow = show !== undefined ? show : !this.isActive;
+
+            if (shouldShow) {
+                this.searchInput.focus();
+                this.isActive = true;
+            } else {
+                this.searchInput.blur();
+                this.isActive = false;
+                // Clear search when hiding
+                this.searchInput.value = '';
+                this.clearHighlights();
+            }
+            return;
+        }
+
+        // Fall back to the original behavior for the floating search
         if (!this.searchContainer) return;
 
         const shouldShow = show !== undefined ? show : !this.isActive;
