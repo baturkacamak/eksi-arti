@@ -2,6 +2,10 @@ import { ModalComponent } from './modal-component';
 import { BlockType } from '../constants';
 import { BlockUsersService } from '../services/block-users-service';
 import { ButtonVariant } from './button-component';
+import {LoggingService} from "../services/logging-service";
+import {CSSService} from "../services/css-service";
+import {DOMService} from "../services/dom-service";
+import {Container} from "../di/container";
 
 export class BlockOptionsModal extends ModalComponent {
     private entryId: string;
@@ -11,6 +15,7 @@ export class BlockOptionsModal extends ModalComponent {
         domHandler: DOMService,
         cssHandler: CSSService,
         loggingService: LoggingService,
+        private container: Container,
         private blockUsersService: BlockUsersService
     ) {
         super(domHandler, cssHandler, loggingService);
@@ -110,7 +115,7 @@ export class BlockOptionsModal extends ModalComponent {
 
         // Short delay for better visual feedback
         setTimeout(async () => {
-            const blockUsers = new BlockUsersService();
+            const blockUsers = this.container.resolve<BlockUsersService>('BlockUsersService');
             blockUsers.setBlockType(blockType);
             this.close();
             await blockUsers.blockUsers(this.entryId);

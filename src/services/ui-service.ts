@@ -2,7 +2,7 @@ import {DOMService} from './dom-service';
 import {CSSService} from './css-service';
 import {BlockOptionsModal} from '../components/block-options-modal';
 import {ResumeModal} from '../components/resume-modal';
-import {StorageArea, storageService} from './storage-service';
+import {StorageArea, StorageService, storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
 import {LoggingService} from "./logging-service";
@@ -15,9 +15,10 @@ import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
 import {QuickSearchComponent} from "../components/quick-search-component";
 import {AuthorHighlighterService} from "./author-highlighter-service";
-import {observerService} from "./observer-service";
+import {ObserverService, observerService} from "./observer-service";
 import {BlockUsersService} from "./block-users-service";
 import {Container} from "../di/container";
+import {PreferencesManager} from "./preferences-manager";
 
 export class UIService {
     private initialized: boolean = false;
@@ -32,31 +33,30 @@ export class UIService {
     private authorHighlighterService: AuthorHighlighterService;
 
     // Services resolved from the DI container
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
-    private loggingService: LoggingService;
-    private iconComponent: IconComponent;
-    private blockUsersService: BlockUsersService;
-    private notificationService: NotificationService;
+    private trashService: TrashService;
 
-    constructor(private container: Container) {
-        // Resolve dependencies from the container
-        this.domHandler = container.resolve<DOMService>('DOMService');
-        this.cssHandler = container.resolve<CSSService>('CSSService');
-        this.loggingService = container.resolve<LoggingService>('LoggingService');
-        this.iconComponent = container.resolve<IconComponent>('IconComponent');
-        this.blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
-        this.notificationService = container.resolve<NotificationService>('NotificationService');
-
-        // Create instances of components that may not be in the container
-        this.copyButtonComponent = new CopyButtonComponent();
-        this.screenshotButtonComponent = new ScreenshotButtonComponent();
-        this.entrySorterComponent = new EntrySorterComponent();
-        this.postManagementService = new PostManagementService();
-        this.quickSearchComponent = new QuickSearchComponent();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private blockUsersService: BlockUsersService,
+        private notificationService: NotificationService,
+        private preferencesManager: PreferencesManager,
+        private storageService: StorageService,
+        private observerService: ObserverService,
+        private container: Container
+    ) {
+        // Resolve components from container instead of creating them directly
+        this.copyButtonComponent = container.resolve<CopyButtonComponent>('CopyButtonComponent');
+        this.screenshotButtonComponent = container.resolve<ScreenshotButtonComponent>('ScreenshotButtonComponent');
+        this.entrySorterComponent = container.resolve<EntrySorterComponent>('EntrySorterComponent');
+        this.postManagementService = container.resolve<PostManagementService>('PostManagementService');
+        this.quickSearchComponent = container.resolve<QuickSearchComponent>('QuickSearchComponent');
+        this.trashService = container.resolve<TrashService>('TrashService');
 
         // Use getInstance for singleton services
-        this.authorHighlighterService = AuthorHighlighterService.getInstance();
+        this.authorHighlighterService = container.resolve<AuthorHighlighterService>('AuthorHighlighterService');
     }
 
     /**
@@ -116,7 +116,7 @@ export class UIService {
                 this.postManagementService.initialize();
 
                 // Initialize trash service - it will only activate on the trash page
-                TrashService.getInstance().initialize();
+                this.trashService.initialize();
 
                 this.quickSearchComponent.initialize();
 
@@ -135,14 +135,11 @@ export class UIService {
      */
     private async loadMenuSelector(): Promise<void> {
         try {
-            // Get preferences manager from container
-            const preferencesManager = await this.container.resolve('PreferencesManager');
-
             // Initialize preferences manager if not already
-            await preferencesManager.initialize();
+            await this.preferencesManager.initialize();
 
             // Get preferences
-            const preferences = preferencesManager.getPreferences();
+            const preferences = this.preferencesManager.getPreferences();
 
             // Use custom selector if provided and not empty, otherwise use default
             this.menuItemSelector = preferences.customMenuSelector && preferences.customMenuSelector.trim() !== ''
@@ -224,8 +221,7 @@ export class UIService {
 
             try {
                 // Check if there's an existing operation
-                const storage = this.container.resolve('StorageService');
-                const result = await storage.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
+                const result = await this.storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
                 const savedState = result.success && result.data ? result.data : null;
 
                 if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
@@ -268,7 +264,7 @@ export class UIService {
      */
     private async checkForSavedState(): Promise<void> {
         try {
-            const storage = this.container.resolve('StorageService');
+            const storage = this.container.resolve<StorageService>('StorageService');
             const result = await storage.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
             const savedState = result.success && result.data ? result.data : null;
 
@@ -313,11 +309,6 @@ export class UIService {
     dispose(): void {
         if (this.menuObserverId) {
             observerService.unobserve(this.menuObserverId);
-        }
-
-        // Clean up components
-        if (this.copyButtonComponent) {
-            this.copyButtonComponent.destroy();
         }
 
         if (this.screenshotButtonComponent) {

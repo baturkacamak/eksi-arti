@@ -3,16 +3,11 @@ import {LoggingService} from "./logging-service";
 import {SITE_DOMAIN} from "../constants";
 
 export class HtmlParserService {
-    private domHandler: DOMService;
-    private useDOMParser: boolean;
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        // Check once if DOMParser is available
-        this.useDOMParser = typeof DOMParser !== 'undefined';
-        this.loggingService = new LoggingService();
-        this.loggingService.debug(`HtmlParserService initialized. Using DOMParser: ${this.useDOMParser}`);
+    constructor(
+        private readonly domHandler: DOMService,
+        private loggingService: LoggingService
+    ) {
     }
 
     /**

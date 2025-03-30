@@ -69,7 +69,7 @@ const DEFAULT_PREFERENCES: ExtensionPreferences = {
     menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu'
 };
 
-class PreferencesManager {
+export class PreferencesManager {
     private static instance: PreferencesManager;
     private preferences: ExtensionPreferences;
     private isInitialized: boolean = false;

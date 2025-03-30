@@ -1,14 +1,14 @@
 // src/services/author-highlighter-service.ts
 import { DOMService } from './dom-service';
 import { CSSService } from './css-service';
-import { storageService, StorageArea } from './storage-service';
+import {storageService, StorageArea, StorageService} from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { LoggingService} from './logging-service';
 import { IconComponent } from '../components/icon-component';
 import { TooltipComponent } from '../components/tooltip-component';
 import { NotificationService } from './notification-service';
 import { delay } from './utilities';
-import {observerService} from "./observer-service";
+import {ObserverService, observerService} from "./observer-service";
 
 /**
  * Interface for author highlight configuration
@@ -122,11 +122,6 @@ export class ColorUtils {
  */
 export class AuthorHighlighterService {
     private static instance: AuthorHighlighterService;
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
-    private iconComponent: IconComponent;
-    private tooltipComponent: TooltipComponent;
-    private notificationService: NotificationService;
 
     private config: AuthorHighlightConfig;
     private defaultConfig: AuthorHighlightConfig = {
@@ -144,26 +139,18 @@ export class AuthorHighlighterService {
     private authorColorMapCSS: string = '';
     private STORAGE_KEY = 'eksi_author_highlighter';
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    private constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.tooltipComponent = new TooltipComponent();
-        this.notificationService = new NotificationService();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private storageService: StorageService,
+        private iconComponent: IconComponent,
+        private tooltipComponent: TooltipComponent,
+        private notificationService: NotificationService,
+        private observerService: ObserverService
+    ) {
         this.config = { ...this.defaultConfig };
-    }
-
-    /**
-     * Get singleton instance
-     */
-    public static getInstance(): AuthorHighlighterService {
-        if (!AuthorHighlighterService.instance) {
-            AuthorHighlighterService.instance = new AuthorHighlighterService();
-        }
-        return AuthorHighlighterService.instance;
     }
 
     /**

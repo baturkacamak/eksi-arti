@@ -43,19 +43,17 @@ export interface ButtonProps {
  * Reusable button component for creating consistent buttons across the extension
  */
 export class ButtonComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
     private buttonElement: HTMLButtonElement | null = null;
     private static stylesApplied = false;
-    private loggingService: LoggingService;
 
     /**
      * Constructor
      */
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+    ) {
         this.applyButtonStyles();
     }
 

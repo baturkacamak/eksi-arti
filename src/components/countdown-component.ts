@@ -20,22 +20,19 @@ export interface CountdownOptions {
 }
 
 export class CountdownComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
     private countdownElement: HTMLElement | null = null;
     private timeElement: HTMLElement | null = null;
     private intervalId: number | null = null;
     private remainingSeconds: number = 0;
     private options: CountdownOptions = {};
     private static stylesApplied = false;
-    private iconComponent: IconComponent;
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+    ) {
         this.applyCountdownStyles();
     }
 

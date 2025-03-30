@@ -2,28 +2,27 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import {LoggingService} from '../services/logging-service';
-import {containerService} from "../services/container-service";
-import {observerService} from "../services/observer-service";
+import {ContainerService, containerService} from "../services/container-service";
+import {ObserverService, observerService} from "../services/observer-service";
 
 /**
  * CopyButtonComponent
  * Adds copy buttons to entry controls for easily copying entry text
  */
 export class CopyButtonComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
-    private iconComponent: IconComponent;
     private copyButtons: Map<string, HTMLElement> = new Map();
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private containerService: ContainerService,
+        private observerService: ObserverService
+    ) {
         this.applyStyles();
     }
 

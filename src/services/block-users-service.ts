@@ -4,7 +4,7 @@
  */
 import { HttpService } from './http-service';
 import { HtmlParserService } from './html-parser-service';
-import { StorageArea, storageService } from './storage-service';
+import {StorageArea, StorageService, storageService} from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { BlockType, Endpoints, STORAGE_KEYS } from '../constants';
 import { LoggingService } from './logging-service';
@@ -179,7 +179,7 @@ export class BlockUsersService {
                 timeout: 60
             });
 
-            const html = await this.remoteRequest.get(`${Endpoints.FAVORITES}?entryId=${entryId}`);
+            const html = await this.httpService.get(`${Endpoints.FAVORITES}?entryId=${entryId}`);
             return this.htmlParser.parseFavoritesHtml(html);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
@@ -436,7 +436,7 @@ export class BlockUsersService {
      */
     private async fetchUserProfile(url: string): Promise<string> {
         try {
-            return await this.remoteRequest.get(url);
+            return await this.httpService.get(url);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new Error(`Failed to fetch user profile: ${errorMessage}`);
@@ -452,7 +452,7 @@ export class BlockUsersService {
         }
 
         try {
-            await this.remoteRequest.post(`${Endpoints.BLOCK}/${userId}?r=${this.blockType}`);
+            await this.httpService.post(`${Endpoints.BLOCK}/${userId}?r=${this.blockType}`);
             return true;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -475,7 +475,7 @@ export class BlockUsersService {
             const noteText = await this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType);
 
             const data = `who=${userId}&usernote=${encodeURIComponent(noteText)}`;
-            await this.remoteRequest.post(noteUrl, data);
+            await this.httpService.post(noteUrl, data);
             return true;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';

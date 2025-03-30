@@ -1,5 +1,6 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
+import {LoggingService} from "../services/logging-service";
 
 export interface TooltipOptions {
     position?: 'top' | 'bottom' | 'left' | 'right';
@@ -15,8 +16,6 @@ export interface TooltipOptions {
 }
 
 export class TooltipComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
     private activeTooltips: Map<HTMLElement, HTMLElement> = new Map();
     private delayTimeouts: Map<HTMLElement, number> = new Map();
     private documentClickListener: ((e: MouseEvent) => void) | null = null;
@@ -34,9 +33,11 @@ export class TooltipComponent {
         closeButton: false
     };
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+    ) {
         this.applyTooltipStyles();
         this.initializeTooltips();
     }

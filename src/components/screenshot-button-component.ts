@@ -3,8 +3,8 @@ import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import { LoggingService} from '../services/logging-service';
 import html2canvas from 'html2canvas';
-import {containerService} from "../services/container-service";
-import {observerService} from "../services/observer-service";
+import {ContainerService, containerService} from "../services/container-service";
+import {ObserverService, observerService} from "../services/observer-service";
 
 /**
  * ScreenshotButtonComponent
@@ -12,19 +12,19 @@ import {observerService} from "../services/observer-service";
  * with support for both downloading and copying to clipboard
  */
 export class ScreenshotButtonComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
-    private iconComponent: IconComponent;
     private screenshotButtons: Map<string, HTMLElement> = new Map();
+    private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private containerService: ContainerService = containerService,
+        private observerService: ObserverService = observerService
+    ) {
         this.applyStyles();
     }
 

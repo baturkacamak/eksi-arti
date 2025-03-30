@@ -1,28 +1,27 @@
 // src/services/post-management-service.ts
-import { DOMService } from './dom-service';
+import {DOMService} from './dom-service';
 import {LoggingService} from './logging-service';
-import { NotificationService } from './notification-service';
-import { delay } from './utilities';
-import { IconComponent } from '../components/icon-component';
+import {NotificationService} from './notification-service';
+import {delay} from './utilities';
+import {IconComponent} from '../components/icon-component';
 import {CSSService} from "./css-service";
-import {observerService} from "./observer-service";
+import {ObserverService, observerService} from "./observer-service";
 import {pageUtils} from "./page-utils-service";
 
 export class PostManagementService {
-    private domHandler: DOMService;
-    private notificationService: NotificationService;
-    private iconComponent: IconComponent;
     private loadMoreButton: HTMLElement | null = null;
     private isProcessing: boolean = false;
     private abortProcessing: boolean = false;
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.notificationService = new NotificationService();
-        this.iconComponent = new IconComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domService: DOMService,
+        private cssService: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private notificationService: NotificationService,
+        private observerService: ObserverService,
+    ) {
     }
 
     /**
@@ -54,9 +53,9 @@ export class PostManagementService {
             // Add item counter styles
             this.addItemCounterStyles();
 
-           this.loggingService.debug('Post management service initialized');
+            this.loggingService.debug('Post management service initialized');
         } catch (error) {
-          this.loggingService.error('Error initializing post management service:', error);
+            this.loggingService.error('Error initializing post management service:', error);
         }
     }
 
@@ -67,7 +66,7 @@ export class PostManagementService {
         try {
             const dropdownMenuList = document.querySelector('#profile-dots ul');
             if (!dropdownMenuList) {
-               this.loggingService.debug('Profile dropdown menu not found');
+                this.loggingService.debug('Profile dropdown menu not found');
                 return;
             }
 
@@ -90,9 +89,9 @@ export class PostManagementService {
             deleteAllItem.appendChild(deleteAllLink);
             dropdownMenuList.appendChild(deleteAllItem);
 
-           this.loggingService.debug('Menu buttons added to profile dropdown');
+            this.loggingService.debug('Menu buttons added to profile dropdown');
         } catch (error) {
-          this.loggingService.error('Error adding menu buttons', error);
+            this.loggingService.error('Error adding menu buttons', error);
         }
     }
 
@@ -185,7 +184,7 @@ export class PostManagementService {
                 }
             );
         } catch (error) {
-          this.loggingService.error('Error loading all entries', error);
+            this.loggingService.error('Error loading all entries', error);
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
                     ${this.iconComponent.create({name: 'error', color: '#e53935', size: 'medium'}).outerHTML}
@@ -307,7 +306,7 @@ export class PostManagementService {
                 }
             );
         } catch (error) {
-          this.loggingService.error('Error deleting entries', error);
+            this.loggingService.error('Error deleting entries', error);
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
                     ${this.iconComponent.create({name: 'error', color: '#e53935', size: 'medium'}).outerHTML}
@@ -339,7 +338,7 @@ export class PostManagementService {
                 await this.confirmDeletion();
             }
         } catch (error) {
-          this.loggingService.error('Error deleting entry', error);
+            this.loggingService.error('Error deleting entry', error);
             throw error;
         }
     }
@@ -406,9 +405,9 @@ export class PostManagementService {
         `;
 
             cssHandler.addCSS(counterStyles);
-           this.loggingService.debug('Entry counter styles added');
+            this.loggingService.debug('Entry counter styles added');
         } catch (error) {
-          this.loggingService.error('Error adding item counter styles', error);
+            this.loggingService.error('Error adding item counter styles', error);
         }
     }
 
@@ -425,5 +424,3 @@ export class PostManagementService {
         this.abortProcessing = true;
     }
 }
-// Export a singleton instance
-export const postManagementService = new PostManagementService();

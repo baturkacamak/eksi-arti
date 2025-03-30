@@ -1,21 +1,17 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import { IconComponent } from './icon-component';
-import { TooltipComponent } from './tooltip-component';
-import { LoggingService} from '../services/logging-service';
-import { debounce } from '../services/utilities';
-import {observerService} from "../services/observer-service";
-import {pageUtils} from "../services/page-utils-service";
+import {DOMService} from '../services/dom-service';
+import {CSSService} from '../services/css-service';
+import {IconComponent} from './icon-component';
+import {TooltipComponent} from './tooltip-component';
+import {LoggingService} from '../services/logging-service';
+import {debounce} from '../services/utilities';
+import {ObserverService, observerService} from "../services/observer-service";
+import {pageUtils, PageUtilsService} from "../services/page-utils-service";
 
 /**
  * QuickSearchComponent
  * Adds a search box to entry pages for quickly finding and highlighting text
  */
 export class QuickSearchComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
-    private iconComponent: IconComponent;
-    private tooltipComponent: TooltipComponent;
     private searchInput: HTMLInputElement | null = null;
     private searchContainer: HTMLElement | null = null;
     private highlightedElements: HTMLElement[] = [];
@@ -40,14 +36,16 @@ export class QuickSearchComponent {
         'İ': 'I', 'I': 'İ'
     };
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.tooltipComponent = new TooltipComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private tooltipComponent: TooltipComponent,
+        private observerService: ObserverService,
+        private pageUtils: PageUtilsService
+    ) {
         this.applyStyles();
     }
 
@@ -79,9 +77,9 @@ export class QuickSearchComponent {
                 processExisting: false // Only process new content
             });
 
-           this.loggingService.debug('Quick search component initialized');
+            this.loggingService.debug('Quick search component initialized');
         } catch (error) {
-          this.loggingService.error('Error initializing quick search component:', error);
+            this.loggingService.error('Error initializing quick search component:', error);
         }
     }
 
@@ -168,7 +166,7 @@ export class QuickSearchComponent {
             this.searchContainer.style.opacity = '0';
 
         } catch (error) {
-          this.loggingService.error('Error creating search toolbar:', error);
+            this.loggingService.error('Error creating search toolbar:', error);
         }
     }
 
@@ -404,7 +402,7 @@ export class QuickSearchComponent {
                 this.navigateHighlights('next');
             }
         } catch (error) {
-          this.loggingService.error('Error performing search:', error);
+            this.loggingService.error('Error performing search:', error);
         }
     }
 
@@ -807,6 +805,3 @@ export class QuickSearchComponent {
         }
     }
 }
-
-// Export singleton instance
-export const quickSearchComponent = new QuickSearchComponent();

@@ -2,8 +2,8 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
 import {LoggingService} from '../services/logging-service';
-import {observerService} from "../services/observer-service";
-import {pageUtils} from "../services/page-utils-service";
+import {ObserverService, observerService} from "../services/observer-service";
+import {pageUtils, PageUtilsService} from "../services/page-utils-service";
 
 /**
  * Sorting strategy interface
@@ -73,22 +73,21 @@ class DateSortingStrategy implements SortingStrategy {
  * A component for sorting entries by different criteria
  */
 export class EntrySorterComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
-    private iconComponent: IconComponent;
     private sortButtons: HTMLElement[] = [];
     private activeStrategy: SortingStrategy | null = null;
     private strategies: SortingStrategy[] = [];
     private static stylesApplied = false;
     private observer: MutationObserver | null = null;
     private observerId: string = '';
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.iconComponent = new IconComponent();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+        private iconComponent: IconComponent,
+        private observerService: ObserverService,
+        private pageUtils: PageUtilsService
+    ) {
 
         // Initialize strategies
         this.strategies = [

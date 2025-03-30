@@ -18,20 +18,18 @@ export interface ProgressBarOptions {
 }
 
 export class ProgressBarComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
     private progressBarElement: HTMLElement | null = null;
     private progressFillElement: HTMLElement | null = null;
     private labelElement: HTMLElement | null = null;
     private percentageElement: HTMLElement | null = null;
     private percentage: number = 0;
     private static stylesApplied = false;
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.loggingService = new LoggingService();
+    constructor(
+        private domHandler: DOMService,
+        private cssHandler: CSSService,
+        private loggingService: LoggingService,
+    ) {
         this.applyProgressBarStyles();
     }
 

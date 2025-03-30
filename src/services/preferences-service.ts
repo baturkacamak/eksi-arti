@@ -1,6 +1,6 @@
 import { BlockerPreferences } from '../types';
 import {BlockType, SITE_DOMAIN, STORAGE_KEYS} from '../constants';
-import { storageService, StorageArea } from './storage-service';
+import {storageService, StorageArea, StorageService} from './storage-service';
 import {LoggingService} from './logging-service';
 
 export class PreferencesService {
@@ -11,10 +11,11 @@ export class PreferencesService {
         menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
         notificationPosition: 'top-right'
     };
-    private loggingService: LoggingService;
 
-    constructor() {
-        this.loggingService = new LoggingService();
+    constructor(
+        private storageService: StorageService,
+        private loggingService: LoggingService,
+    ) {
     }
 
     /**
