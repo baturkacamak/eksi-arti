@@ -28,6 +28,7 @@ import {CopyButtonComponent} from "../components/copy-button-component";
 import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
 import {NotificationComponent} from "../components/notification-component";
 import {ContainerService, containerService} from "../services/container-service";
+import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
 
 /**
  * Initialize the dependency injection container
@@ -105,6 +106,25 @@ export function initializeDI(): Container {
         const cssService = container.resolve<CSSService>('CSSService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
         return new NotificationComponent(domService, cssService, loggingService);
+    });
+
+    container.register('BlockFavoritesButtonComponent', () => {
+        const domHandler = container.resolve<DOMService>('DOMService');
+        const cssHandler = container.resolve<CSSService>('CSSService');
+        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const containerService = container.resolve<ContainerService>('ContainerService');
+        const observerService = container.resolve<ObserverService>('ObserverService');
+
+        return new BlockFavoritesButtonComponent(
+            domHandler,
+            cssHandler,
+            loggingService,
+            iconComponent,
+            containerService,
+            observerService,
+            container
+        );
     });
 
     // Register complex services that depend on multiple other services

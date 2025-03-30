@@ -20,6 +20,7 @@ import {BlockUsersService} from "./block-users-service";
 import {Container} from "../di/container";
 import {PreferencesManager} from "./preferences-manager";
 import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
+import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
 
 export class UIService {
     private initialized: boolean = false;
@@ -35,6 +36,7 @@ export class UIService {
 
     // Services resolved from the DI container
     private trashService: TrashService;
+    private blockFavoritesButtonComponent: BlockFavoritesButtonComponent;
 
     constructor(
         private domHandler: DOMService,
@@ -56,6 +58,8 @@ export class UIService {
         this.quickSearchComponent = container.resolve<QuickSearchComponent>('QuickSearchComponent');
         this.trashService = container.resolve<TrashService>('TrashService');
 
+        this.blockFavoritesButtonComponent = container.resolve<BlockFavoritesButtonComponent>('BlockFavoritesButtonComponent');
+        
         // Use getInstance for singleton services
         this.authorHighlighterService = container.resolve<AuthorHighlighterService>('AuthorHighlighterService');
     }
@@ -94,8 +98,9 @@ export class UIService {
                                     return; // Skip if entry ID is empty
                                 }
 
-                                const menuItem = this.createMenuItem(entryId);
-                                this.domHandler.appendChild(dropdownMenu, menuItem);
+                                this.copyButtonComponent.initialize();
+                                this.screenshotButtonComponent.initialize();
+                                this.blockFavoritesButtonComponent.initialize();
                             } catch (err) {
                                 this.loggingService.error('Error adding menu item to dropdown:', err);
                             }
@@ -105,8 +110,7 @@ export class UIService {
                 });
 
                 await this.checkForSavedState();
-                this.copyButtonComponent.initialize();
-                this.screenshotButtonComponent.initialize();
+
 
                 // Check if we're on an entries page and initialize the sorter
                 if (this.isEntriesPage()) {
@@ -153,41 +157,6 @@ export class UIService {
             // Fallback to default selector
             this.menuItemSelector = '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu';
         }
-    }
-
-    /**
-     * Create menu item elements
-     */
-    private createMenuItemElements(): HTMLLIElement {
-        const newItem = this.domHandler.createElement('li');
-        const newAnchor = this.domHandler.createElement('a');
-
-        // Setup anchor with proper attributes
-        newAnchor.setAttribute('title', 'favorileyenleri engelle');
-        newAnchor.setAttribute('aria-label', 'favorileyenleri engelle');
-
-        // Create the icon element using IconComponent
-        const iconElement = this.iconComponent.create({
-            name: 'more_horiz',
-            size: 14,
-            className: 'eksi-menu-icon'
-        });
-
-        // Add icon to anchor
-        this.domHandler.appendChild(newAnchor, iconElement);
-
-        // Add text node
-        const textNode = document.createTextNode(' favorileyenleri engelle');
-        this.domHandler.appendChild(newAnchor, textNode);
-
-        // Add a custom CSS class for styling
-        this.domHandler.addClass(newAnchor, 'eksi-block-users-link');
-
-        // Add custom styling
-        this.addMenuItemStyles();
-
-        this.domHandler.appendChild(newItem, newAnchor);
-        return newItem;
     }
 
     /**
@@ -251,15 +220,6 @@ export class UIService {
     }
 
     /**
-     * Create menu item for an entry
-     */
-    private createMenuItem(entryId: string): HTMLLIElement {
-        const menuItem = this.createMenuItemElements();
-        this.addMenuItemEventListener(entryId, menuItem);
-        return menuItem;
-    }
-
-    /**
      * Check for saved state and show notification if exists
      */
     private async checkForSavedState(): Promise<void> {
@@ -317,6 +277,10 @@ export class UIService {
 
         if (this.entrySorterComponent) {
             this.entrySorterComponent.destroy();
+        }
+
+        if (this.blockFavoritesButtonComponent) {
+            this.blockFavoritesButtonComponent.destroy();
         }
     }
 }

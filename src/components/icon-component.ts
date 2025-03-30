@@ -271,7 +271,7 @@ export class IconComponent {
     /**
      * Show temporary success state for an icon
      */
-    public showSuccessState(iconElement: HTMLElement, duration: number = 2000): void {
+    public showSuccessState(iconElement: HTMLElement, duration: number = 2000, successIcon: string = 'check_circle'): void {
         if (!iconElement) return;
 
         // Cancel any existing transition
@@ -288,7 +288,7 @@ export class IconComponent {
         iconElement.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
         // Transition to success state
-        this.transitionTo(iconElement, 'check_circle', '#43a047', {
+        this.transitionTo(iconElement, successIcon, '#43a047', {
             duration,
             animation: 'scale',
             onComplete: () => {
