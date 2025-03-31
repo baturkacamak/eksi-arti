@@ -26,7 +26,7 @@ import {ScreenshotButtonComponent} from "../components/screenshot-button-compone
 import {CopyButtonComponent} from "../components/copy-button-component";
 import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
 import {NotificationComponent} from "../components/notification-component";
-import {ContainerService, containerService} from "../services/container-service";
+import {ContainerService} from "../services/container-service";
 import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
 import {containerThemeService} from "../services/container-theme-service";
 import {SearchFilterComponent} from "../components/search-filter-component";
@@ -242,15 +242,15 @@ export function initializeDI(): Container {
         const cssHandler = container.resolve<CSSService>('CSSService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
         const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const containerService = container.resolve<ContainerService>('ContainerService'); // Get from DI
         const observerService = container.resolve<ObserverService>('ObserverService');
-        const containerService = container.resolve<ContainerService>('ContainerService');
 
         return new CopyButtonComponent(
             domHandler,
             cssHandler,
             loggingService,
             iconComponent,
-            containerService,
+            containerService, // Pass the instance from DI
             observerService
         );
     });
@@ -342,10 +342,10 @@ export function initializeDI(): Container {
         );
     });
 
-// Also register the ContainerService if it's not already registered
     container.register('ContainerService', () => {
+        const domHandler = container.resolve<DOMService>('DOMService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
-        return containerService;
+        return new ContainerService(domHandler, loggingService);
     });
 
 

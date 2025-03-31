@@ -1,9 +1,6 @@
 // src/components/block-favorites-button-component.ts
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
-import { LoggingService } from '../services/logging-service';
-import { ContainerService, containerService } from "../services/container-service";
+import { ContainerService } from "../services/container-service";
 import { ObserverService, observerService } from "../services/observer-service";
 import { BlockOptionsModalFactory } from "../factories/modal-factories";
 import { ResumeModalFactory } from "../factories/modal-factories";

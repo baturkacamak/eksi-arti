@@ -1,5 +1,5 @@
 import { IconComponent } from './icon-component';
-import {ContainerService, containerService} from "../services/container-service";
+import {ContainerService} from "../services/container-service";
 import {ObserverService, observerService} from "../services/observer-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
@@ -130,7 +130,7 @@ export class CopyButtonComponent implements ICopyButtonComponent {
             if (!entryId || this.copyButtons.has(entryId)) return;
 
             // Get container from the singleton service
-            const container = containerService.getEntryControlsContainer(entry);
+            const container = this.containerService.getEntryControlsContainer(entry);
 
             // Create copy button
             const copyButton = this.createCopyButton(entry.querySelector('.content')?.textContent || '');

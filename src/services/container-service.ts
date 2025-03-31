@@ -9,27 +9,17 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IComponentContainerConfig} from "../interfaces/IContainer";
 
 export class ContainerService {
-    private static instance: ContainerService;
 
     // Maps to store different types of containers
     private entryControlsContainers: Map<string, ComponentContainer> = new Map();
     private sortButtonsContainer: ComponentContainer | null = null;
     private searchControlsContainer: ComponentContainer | null = null;
     private notificationContainers: Map<string, ComponentContainer> = new Map();
-    private loggingService: ILoggingService;
-    private domHandler: IDOMService;
 
-    private constructor() {
-        this.loggingService = new LoggingService();
-        this.domHandler = new DOMService();
-    }
-
-    public static getInstance(): ContainerService {
-        if (!ContainerService.instance) {
-            ContainerService.instance = new ContainerService();
-        }
-        return ContainerService.instance;
-    }
+    constructor(
+        private domHandler: IDOMService,
+        private loggingService: ILoggingService
+    ) {}
 
     // Get entry controls container for a specific entry
     public getEntryControlsContainer(entry: HTMLElement): ComponentContainer {
@@ -391,6 +381,3 @@ export class ContainerService {
         }
     }
 }
-
-// Export the singleton instance
-export const containerService = ContainerService.getInstance();

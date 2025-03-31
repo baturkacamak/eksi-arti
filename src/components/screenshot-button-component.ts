@@ -1,9 +1,6 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
-import { LoggingService} from '../services/logging-service';
 import html2canvas from 'html2canvas';
-import {ContainerService, containerService} from "../services/container-service";
+import {ContainerService} from "../services/container-service";
 import {ObserverService, observerService} from "../services/observer-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
@@ -27,7 +24,7 @@ export class ScreenshotButtonComponent implements IScreenshotButtonComponent {
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IconComponent,
-        private containerService: ContainerService = containerService,
+        private containerService: ContainerService,
         private observerService: IObserverService = observerService
     ) {
         this.applyStyles();
@@ -222,7 +219,7 @@ export class ScreenshotButtonComponent implements IScreenshotButtonComponent {
             if (!entryId || this.screenshotButtons.has(entryId)) return;
 
             // Get container from the singleton service
-            const container = containerService.getEntryControlsContainer(entry);
+            const container = this.containerService.getEntryControlsContainer(entry);
 
 
             // Create screenshot button
