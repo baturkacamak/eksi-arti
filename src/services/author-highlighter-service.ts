@@ -1,7 +1,7 @@
 // src/services/author-highlighter-service.ts
 import { DOMService } from './dom-service';
 import { CSSService } from './css-service';
-import {storageService, StorageArea, StorageService} from './storage-service';
+import {storageService, StorageService} from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { LoggingService} from './logging-service';
 import { IconComponent } from '../components/icon-component';
@@ -9,6 +9,12 @@ import { TooltipComponent } from '../components/tooltip-component';
 import { NotificationService } from './notification-service';
 import { delay } from './utilities';
 import {ObserverService, observerService} from "./observer-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {INotificationService} from "../interfaces/services/INotificationService";
+import {IObserverService} from "../interfaces/services/IObserverService";
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 
 /**
  * Interface for author highlight configuration
@@ -141,14 +147,14 @@ export class AuthorHighlighterService {
     private observerId: string = '';
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
-        private storageService: StorageService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
+        private storageService: IStorageService,
         private iconComponent: IconComponent,
         private tooltipComponent: TooltipComponent,
-        private notificationService: NotificationService,
-        private observerService: ObserverService
+        private notificationService: INotificationService,
+        private observerService: IObserverService
     ) {
         this.config = { ...this.defaultConfig };
     }

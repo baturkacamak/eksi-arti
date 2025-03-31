@@ -1,6 +1,9 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import {LoggingService} from '../services/logging-service';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 /**
  * Toggle Switch Properties Interface
@@ -22,13 +25,13 @@ export interface ToggleSwitchProps {
  * Reusable toggle switch component for creating consistent toggle switches across the extension
  */
 export class ToggleSwitchComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
+    private domHandler: IDOMService;
+    private cssHandler: ICSSService;
     private containerElement: HTMLElement | null = null;
     private inputElement: HTMLInputElement | null = null;
     private labelElement: HTMLLabelElement | null = null;
     private static stylesApplied = false;
-    private loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     /**
      * Constructor

@@ -9,8 +9,13 @@ import { BlockOptionsModalFactory } from "../factories/modal-factories";
 import { ResumeModalFactory } from "../factories/modal-factories";
 import { STORAGE_KEYS } from "../constants";
 import { BlockerState } from "../types";
-import { StorageArea, storageService } from "../services/storage-service";
+import { storageService } from "../services/storage-service";
 import { Container } from "../di/container";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IObserverService} from "../interfaces/services/IObserverService";
+import {StorageArea} from "../interfaces/services/IStorageService";
 
 /**
  * BlockFavoritesButtonComponent
@@ -22,12 +27,12 @@ export class BlockFavoritesButtonComponent {
     private observerId: string = '';
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private iconComponent: IconComponent,
         private containerService: ContainerService = containerService,
-        private observerService: ObserverService = observerService,
+        private observerService: IObserverService = observerService,
         private container: Container
     ) {
         this.applyStyles();

@@ -6,6 +6,8 @@
 import {LoggingService} from './logging-service';
 import { BlockType, STORAGE_KEYS } from '../constants';
 import {storageService} from "./storage-service";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
 
 // Preferences interface
 export interface ExtensionPreferences {
@@ -70,11 +72,11 @@ const DEFAULT_PREFERENCES: ExtensionPreferences = {
 };
 
 export class PreferencesManager {
-    private static instance: PreferencesManager;
+    private static instance: IPreferencesManager;
     private preferences: ExtensionPreferences;
     private isInitialized: boolean = false;
     private onChangeCallbacks: Array<(preferences: ExtensionPreferences) => void> = [];
-    private loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     private constructor() {
         // Private constructor to enforce singleton pattern
@@ -85,7 +87,7 @@ export class PreferencesManager {
     /**
      * Get the singleton instance
      */
-    public static getInstance(): PreferencesManager {
+    public static getInstance(): IPreferencesManager {
         if (!PreferencesManager.instance) {
             PreferencesManager.instance = new PreferencesManager();
         }

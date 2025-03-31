@@ -4,6 +4,8 @@ import { ComponentContainer, ComponentContainerConfig } from '../components/comp
 import { LoggingService} from './logging-service';
 import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
 import {DOMService} from "./dom-service";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 export class ContainerService {
     private static instance: ContainerService;
@@ -13,8 +15,8 @@ export class ContainerService {
     private sortButtonsContainer: ComponentContainer | null = null;
     private searchControlsContainer: ComponentContainer | null = null;
     private notificationContainers: Map<string, ComponentContainer> = new Map();
-    private loggingService: LoggingService;
-    private domHandler: DOMService;
+    private loggingService: ILoggingService;
+    private domHandler: IDOMService;
 
     private constructor() {
         this.loggingService = new LoggingService();

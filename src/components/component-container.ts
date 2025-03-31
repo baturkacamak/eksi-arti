@@ -7,6 +7,9 @@ import {
     ContainerTheme, ContainerThemeConfig,
     containerThemeService
 } from "../services/container-theme-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 /**
  * Component Container Configuration
@@ -35,13 +38,13 @@ export interface ComponentContainerConfig {
  * A reusable container for organizing and managing UI components
  */
 export class ComponentContainer {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
+    private domHandler: IDOMService;
+    private cssHandler: ICSSService;
     private containerElement: HTMLElement | null = null;
     private components: HTMLElement[] = [];
     private config: ComponentContainerConfig;
     private static stylesApplied = false;
-    private loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     constructor(config: ComponentContainerConfig = {}) {
         this.domHandler = new DOMService();

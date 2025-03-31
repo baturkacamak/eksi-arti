@@ -1,13 +1,15 @@
 import {DOMService} from './dom-service';
 import {LoggingService} from "./logging-service";
 import {SITE_DOMAIN} from "../constants";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 export class HtmlParserService {
     private useDOMParser: boolean;
 
     constructor(
-        private readonly domHandler: DOMService,
-        private loggingService: LoggingService
+        private readonly domHandler: IDOMService,
+        private loggingService: ILoggingService
     ) {
         this.useDOMParser = typeof DOMParser !== 'undefined';
     }

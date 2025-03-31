@@ -2,7 +2,7 @@ import {DOMService} from './dom-service';
 import {CSSService} from './css-service';
 import {BlockOptionsModal} from '../components/block-options-modal';
 import {ResumeModal} from '../components/resume-modal';
-import {StorageArea, StorageService, storageService} from './storage-service';
+import { StorageService, storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
 import {LoggingService} from "./logging-service";
@@ -21,6 +21,13 @@ import {Container} from "../di/container";
 import {PreferencesManager} from "./preferences-manager";
 import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
 import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {INotificationService} from "../interfaces/services/INotificationService";
+import {IObserverService} from "../interfaces/services/IObserverService";
+import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 
 export class UIService {
     private initialized: boolean = false;
@@ -39,15 +46,15 @@ export class UIService {
     private searchFilterComponent: SearchFilterComponent;
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private iconComponent: IconComponent,
         private blockUsersService: BlockUsersService,
-        private notificationService: NotificationService,
-        private preferencesManager: PreferencesManager,
-        private storageService: StorageService,
-        private observerService: ObserverService,
+        private notificationService: INotificationService,
+        private preferencesManager: IPreferencesManager,
+        private storageService: IStorageService,
+        private observerService: IObserverService,
         private container: Container
     ) {
         // Resolve components from container instead of creating them directly

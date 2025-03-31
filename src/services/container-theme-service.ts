@@ -2,6 +2,8 @@
 
 import { CSSService } from './css-service';
 import { LoggingService } from './logging-service';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 /**
  * Container theme types
@@ -56,8 +58,8 @@ export interface ContainerThemeConfig {
  */
 export class ContainerThemeService {
     private static instance: ContainerThemeService;
-    private cssService: CSSService;
-    private loggingService: LoggingService;
+    private cssService: ICSSService;
+    private loggingService: ILoggingService;
     private stylesApplied: boolean = false;
 
     private constructor() {

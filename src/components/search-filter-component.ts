@@ -6,6 +6,10 @@ import { debounce } from '../services/utilities';
 import { ObserverService, observerService } from "../services/observer-service";
 import { pageUtils, PageUtilsService } from "../services/page-utils-service";
 import { TooltipComponent } from './tooltip-component';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IObserverService} from "../interfaces/services/IObserverService";
 
 /**
  * SearchFilterComponent
@@ -43,12 +47,12 @@ export class SearchFilterComponent {
     };
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private iconComponent: IconComponent,
         private tooltipComponent: TooltipComponent,
-        private observerService: ObserverService,
+        private observerService: IObserverService,
         private pageUtils: PageUtilsService
     ) {
         this.applyStyles();

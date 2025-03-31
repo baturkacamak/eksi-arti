@@ -8,10 +8,12 @@ import { DOMService } from './dom-service';
 import { LoggingService } from './logging-service';
 import { observerService } from './observer-service';
 import { pageUtils } from './page-utils-service';
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class AccessibilityService {
     private static instance: AccessibilityService;
-    private domHandler: DOMService;
+    private domHandler: IDOMService;
     private initialized: boolean = false;
     private observerId: string = '';
 
@@ -19,7 +21,7 @@ export class AccessibilityService {
         ENTRY_LIST: '#entry-item-list',
         HIDEABLE_ELEMENTS: 'footer, .read-more-link-wrapper, .dropdown-menu'
     };
-    private loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     private constructor() {
         this.domHandler = new DOMService();

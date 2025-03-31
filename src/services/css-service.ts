@@ -1,8 +1,10 @@
 import { DOMService } from './dom-service';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
-export class CSSService {
+export class CSSService implements ICSSService {
   private styleTagId = 'eksi-arti-style';
-  private domHandler: DOMService;
+  private domHandler: IDOMService;
 
   constructor() {
     this.domHandler = new DOMService();

@@ -4,7 +4,7 @@
  */
 import { HttpService } from './http-service';
 import { HtmlParserService } from './html-parser-service';
-import {StorageArea, StorageService, storageService} from './storage-service';
+import {StorageService, storageService} from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { BlockType, Endpoints, STORAGE_KEYS } from '../constants';
 import { LoggingService } from './logging-service';
@@ -13,6 +13,12 @@ import { PreferencesService } from "./preferences-service";
 import { delay } from "./utilities";
 import { NotificationService } from './notification-service';
 import {IconComponent} from "../components/icon-component";
+import {IHtmlParserService} from "../interfaces/services/IHtmlParserService";
+import {IHttpService} from "../interfaces/services/IHttpService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {INotificationService} from "../interfaces/services/INotificationService";
+import {IPreferencesService} from "../interfaces/services/IPreferencesService";
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 
 export class BlockUsersService {
     private totalUserCount: number = 0;
@@ -31,12 +37,12 @@ export class BlockUsersService {
     private maxErrors: number = 10; // Maximum errors before aborting
 
     constructor(
-        private httpService: HttpService,
-        private htmlParser: HtmlParserService,
-        private storageService: StorageService,
-        private loggingService: LoggingService,
-        private notificationService: NotificationService,
-        private preferencesService: PreferencesService,
+        private httpService: IHttpService,
+        private htmlParser: IHtmlParserService,
+        private storageService: IStorageService,
+        private loggingService: ILoggingService,
+        private notificationService: INotificationService,
+        private preferencesService: IPreferencesService,
         private iconComponent: IconComponent
     ) {
         this.loadOperationParams();

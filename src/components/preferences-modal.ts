@@ -7,17 +7,21 @@ import {LoggingService} from "../services/logging-service";
 import {ButtonComponent, ButtonVariant} from "./button-component";
 import {CSSService} from "../services/css-service";
 import {DOMService} from "../services/dom-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 
 export class PreferencesModal extends ModalComponent {
     private isLoaded: boolean = false;
 
     constructor(
-        domHandler: DOMService,
-        cssHandler: CSSService,
-        loggingService: LoggingService,
+        domHandler: IDOMService,
+        cssHandler: ICSSService,
+        loggingService: ILoggingService,
         buttonComponent: ButtonComponent,
         private preferences: BlockerPreferences,
-        private preferencesService: PreferencesService,
+        private preferencesService: IPreferencesService,
         private notification: NotificationComponent,
         private notificationComponent: NotificationComponent,
     ) {

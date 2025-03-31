@@ -3,13 +3,15 @@ import {ProgressBarComponent, ProgressBarOptions} from '../components/progress-b
 import {CountdownComponent, CountdownOptions} from '../components/countdown-component';
 import {ButtonComponent, ButtonProps, ButtonSize, ButtonVariant} from '../components/button-component';
 import {LoggingService} from './logging-service';
-import {StorageArea, storageService} from './storage-service';
+import {storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
 import {ResumeModalFactory} from "../factories/modal-factories";
 import {DOMService} from "./dom-service";
 import {CSSService} from "./css-service";
 import {Container} from "../di/container";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {StorageArea} from "../interfaces/services/IStorageService";
 
 // Combined options for the notification service
 export interface NotificationServiceOptions extends ExtendedNotificationOptions {
@@ -33,7 +35,7 @@ export class NotificationService {
     private hasCountdown: boolean = false;
 
     constructor(
-        private loggingService: LoggingService,
+        private loggingService: ILoggingService,
         private buttonComponent: ButtonComponent,
         private progressBarComponent: ProgressBarComponent,
         private countdownComponent: CountdownComponent,

@@ -1,7 +1,9 @@
 import { BlockerPreferences } from '../types';
 import {BlockType, SITE_DOMAIN, STORAGE_KEYS} from '../constants';
-import {storageService, StorageArea, StorageService} from './storage-service';
+import {storageService, StorageService} from './storage-service';
 import {LoggingService} from './logging-service';
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 
 export class PreferencesService {
     private defaultPreferences: BlockerPreferences = {
@@ -13,8 +15,8 @@ export class PreferencesService {
     };
 
     constructor(
-        private storageService: StorageService,
-        private loggingService: LoggingService,
+        private storageService: IStorageService,
+        private loggingService: ILoggingService,
     ) {
     }
 

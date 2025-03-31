@@ -2,14 +2,16 @@
 import { LoggingService} from './logging-service';
 import { HttpService } from './http-service';
 import { SITE_DOMAIN } from '../constants';
-import { storageService, StorageArea } from './storage-service';
+import { storageService } from './storage-service';
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {StorageArea} from "../interfaces/services/IStorageService";
 
 export class VoteMonitoringService {
     private userNick: string = '';
     private enabled: boolean = true;
     private checkInterval: number = 1; // minutes
 
-    constructor(private loggingService: LoggingService) {}
+    constructor(private loggingService: ILoggingService) {}
 
     /**
      * Initialize the service by extracting the username

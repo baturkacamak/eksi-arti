@@ -1,6 +1,8 @@
 // src/services/observer-service.ts
 import { LoggingService} from './logging-service';
 import { debounce, delay, generateId } from './utilities';
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IObserverService} from "../interfaces/services/IObserverService";
 
 /**
  * Configuration options for observer registration
@@ -50,12 +52,12 @@ interface ObserverRegistration {
  * without creating multiple MutationObserver instances
  */
 export class ObserverService {
-    private static instance: ObserverService;
+    private static instance: IObserverService;
     private observer: MutationObserver | null = null;
     private registrations: Map<string, ObserverRegistration> = new Map();
     private isObserving: boolean = false;
     private uniqueIdCounter: number = 0;
-    private loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     private constructor() {
         this.loggingService = new LoggingService();
@@ -64,7 +66,7 @@ export class ObserverService {
     /**
      * Get the singleton instance
      */
-    public static getInstance(): ObserverService {
+    public static getInstance(): IObserverService {
         if (!ObserverService.instance) {
             ObserverService.instance = new ObserverService();
         }

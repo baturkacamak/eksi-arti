@@ -4,6 +4,7 @@
  */
 
 import {LoggingService} from './logging-service';
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 // Storage areas
 /**
@@ -81,8 +82,7 @@ export class StorageService {
     private memoryStorage: Map<string, any> = new Map();
     private isDebugEnabled: boolean = false;
     private inServiceWorker: boolean;
-    private loggingService: LoggingService;
-    private static loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     private constructor() {
         // Check execution context
@@ -104,7 +104,7 @@ export class StorageService {
             }
         }
 
-       this.loggingService.debug(`StorageService initialized (ServiceWorker: ${this.inServiceWorker})`);
+        this.loggingService.debug(`StorageService initialized (ServiceWorker: ${this.inServiceWorker})`);
     }
 
     /**
@@ -124,7 +124,7 @@ export class StorageService {
         try {
             // For Chrome extension, use chrome.storage.local when available
             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.set({ [key]: value });
+                chrome.storage.local.set({[key]: value});
 
                 // Also save to localStorage as fallback if available
                 if (!isServiceWorkerContext()) {
@@ -138,7 +138,8 @@ export class StorageService {
             }
             return false;
         } catch (e) {
-          this.loggingService.error('Error saving to storage:', e);
+            const loggingService = new LoggingService();
+            loggingService.error('Error saving to storage:', e);
             return false;
         }
     }
@@ -155,7 +156,8 @@ export class StorageService {
             }
             return defaultValue;
         } catch (e) {
-          this.loggingService.error('Error loading from storage:', e);
+            const loggingService = new LoggingService();
+            loggingService.error('Error loading from storage:', e);
             return defaultValue;
         }
     }
@@ -181,7 +183,8 @@ export class StorageService {
             }
             return false;
         } catch (e) {
-          this.loggingService.error('Error removing from storage:', e);
+            const loggingService = new LoggingService();
+            loggingService.error('Error removing from storage:', e);
             return false;
         }
     }
@@ -193,7 +196,7 @@ export class StorageService {
     public async setItem<T>(key: string, value: T, area: StorageArea = StorageArea.SYNC): Promise<StorageResult<T>> {
         try {
             // Create data object
-            const data = { [key]: value };
+            const data = {[key]: value};
 
             // First, try Chrome Storage API (sync or local)
             if (isChromeStorageAvailable(area)) {
@@ -201,7 +204,7 @@ export class StorageService {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
                         chrome.storage.sync.set(data, () => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
 
                                 // If sync fails, try local storage
                                 if (isChromeStorageAvailable(StorageArea.LOCAL)) {
@@ -209,26 +212,26 @@ export class StorageService {
                                         if (chrome.runtime.lastError) {
                                             this.fallbackToLocalStorage(key, value, resolve);
                                         } else {
-                                           this.loggingService.debug(`Saved to Chrome local storage after sync failed: ${key}`);
-                                            resolve({ success: true, source: StorageArea.LOCAL, data: value });
+                                            this.loggingService.debug(`Saved to Chrome local storage after sync failed: ${key}`);
+                                            resolve({success: true, source: StorageArea.LOCAL, data: value});
                                         }
                                     });
                                 } else {
                                     this.fallbackToLocalStorage(key, value, resolve);
                                 }
                             } else {
-                               this.loggingService.debug(`Saved to Chrome sync storage: ${key}`);
-                                resolve({ success: true, source: StorageArea.SYNC, data: value });
+                                this.loggingService.debug(`Saved to Chrome sync storage: ${key}`);
+                                resolve({success: true, source: StorageArea.SYNC, data: value});
                             }
                         });
                     } else if (area === StorageArea.LOCAL && chrome.storage.local) {
                         chrome.storage.local.set(data, () => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome local storage error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome local storage error:`, chrome.runtime.lastError);
                                 this.fallbackToLocalStorage(key, value, resolve);
                             } else {
-                               this.loggingService.debug(`Saved to Chrome local storage: ${key}`);
-                                resolve({ success: true, source: StorageArea.LOCAL, data: value });
+                                this.loggingService.debug(`Saved to Chrome local storage: ${key}`);
+                                resolve({success: true, source: StorageArea.LOCAL, data: value});
                             }
                         });
                     } else {
@@ -240,7 +243,7 @@ export class StorageService {
                 return this.fallbackToLocalStorage(key, value);
             }
         } catch (error) {
-          this.loggingService.error('Error in setItem:', error);
+            this.loggingService.error('Error in setItem:', error);
 
             // Final fallback to memory storage
             this.memoryStorage.set(key, value);
@@ -264,7 +267,7 @@ export class StorageService {
         // If in service worker, skip localStorage and go straight to memory
         if (this.inServiceWorker) {
             this.memoryStorage.set(key, value);
-           this.loggingService.debug(`Saved to memory storage (in service worker): ${key}`);
+            this.loggingService.debug(`Saved to memory storage (in service worker): ${key}`);
 
             const result = {
                 success: true,
@@ -281,20 +284,20 @@ export class StorageService {
 
         try {
             localStorage.setItem(key, JSON.stringify(value));
-           this.loggingService.debug(`Saved to localStorage: ${key}`);
+            this.loggingService.debug(`Saved to localStorage: ${key}`);
 
-            const result = { success: true, source: StorageArea.LOCAL as StorageArea, data: value };
+            const result = {success: true, source: StorageArea.LOCAL as StorageArea, data: value};
             if (resolve) {
                 resolve(result);
                 return Promise.resolve(result);
             }
             return result;
         } catch (error) {
-          this.loggingService.error('localStorage error:', error);
+            this.loggingService.error('localStorage error:', error);
 
             // Final fallback to memory storage
             this.memoryStorage.set(key, value);
-           this.loggingService.debug(`Saved to memory storage after localStorage failed: ${key}`);
+            this.loggingService.debug(`Saved to memory storage after localStorage failed: ${key}`);
 
             const result = {
                 success: true,
@@ -323,7 +326,7 @@ export class StorageService {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
                         chrome.storage.sync.get(key, (result) => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
 
                                 // If sync fails, try local storage
                                 if (isChromeStorageAvailable(StorageArea.LOCAL)) {
@@ -331,8 +334,8 @@ export class StorageService {
                                         if (chrome.runtime.lastError || !localResult || localResult[key] === undefined) {
                                             this.fallbackToLocalStorageGet(key, defaultValue, resolve);
                                         } else {
-                                           this.loggingService.debug(`Retrieved from Chrome local storage after sync failed: ${key}`);
-                                            resolve({ success: true, source: StorageArea.LOCAL, data: localResult[key] });
+                                            this.loggingService.debug(`Retrieved from Chrome local storage after sync failed: ${key}`);
+                                            resolve({success: true, source: StorageArea.LOCAL, data: localResult[key]});
                                         }
                                     });
                                 } else {
@@ -341,8 +344,8 @@ export class StorageService {
                             } else if (!result || result[key] === undefined) {
                                 this.fallbackToLocalStorageGet(key, defaultValue, resolve);
                             } else {
-                               this.loggingService.debug(`Retrieved from Chrome sync storage: ${key}`);
-                                resolve({ success: true, source: StorageArea.SYNC, data: result[key] });
+                                this.loggingService.debug(`Retrieved from Chrome sync storage: ${key}`);
+                                resolve({success: true, source: StorageArea.SYNC, data: result[key]});
                             }
                         });
                     } else if (area === StorageArea.LOCAL && chrome.storage.local) {
@@ -350,8 +353,8 @@ export class StorageService {
                             if (chrome.runtime.lastError || !result || result[key] === undefined) {
                                 this.fallbackToLocalStorageGet(key, defaultValue, resolve);
                             } else {
-                               this.loggingService.debug(`Retrieved from Chrome local storage: ${key}`);
-                                resolve({ success: true, source: StorageArea.LOCAL, data: result[key] });
+                                this.loggingService.debug(`Retrieved from Chrome local storage: ${key}`);
+                                resolve({success: true, source: StorageArea.LOCAL, data: result[key]});
                             }
                         });
                     } else {
@@ -363,7 +366,7 @@ export class StorageService {
                 return this.fallbackToLocalStorageGet(key, defaultValue);
             }
         } catch (error) {
-          this.loggingService.error('Error in getItem:', error);
+            this.loggingService.error('Error in getItem:', error);
 
             // Final fallback to memory storage
             const data = this.memoryStorage.has(key) ? this.memoryStorage.get(key) : defaultValue;
@@ -388,7 +391,7 @@ export class StorageService {
         if (this.inServiceWorker) {
             if (this.memoryStorage.has(key)) {
                 const memoryValue = this.memoryStorage.get(key);
-               this.loggingService.debug(`Retrieved from memory storage (in service worker): ${key}`);
+                this.loggingService.debug(`Retrieved from memory storage (in service worker): ${key}`);
 
                 const result = {
                     success: true,
@@ -422,9 +425,9 @@ export class StorageService {
 
             if (item !== null) {
                 const parsedItem = JSON.parse(item) as T;
-               this.loggingService.debug(`Retrieved from localStorage: ${key}`);
+                this.loggingService.debug(`Retrieved from localStorage: ${key}`);
 
-                const result = { success: true, source: StorageArea.LOCAL as StorageArea, data: parsedItem };
+                const result = {success: true, source: StorageArea.LOCAL as StorageArea, data: parsedItem};
                 if (resolve) {
                     resolve(result);
                     return Promise.resolve(result);
@@ -434,9 +437,9 @@ export class StorageService {
                 // Try memory storage
                 if (this.memoryStorage.has(key)) {
                     const memoryValue = this.memoryStorage.get(key);
-                   this.loggingService.debug(`Retrieved from memory storage: ${key}`);
+                    this.loggingService.debug(`Retrieved from memory storage: ${key}`);
 
-                    const result = { success: true, source: StorageArea.MEMORY, data: memoryValue };
+                    const result = {success: true, source: StorageArea.MEMORY, data: memoryValue};
                     if (resolve) {
                         resolve(result);
                         return Promise.resolve(result);
@@ -459,14 +462,14 @@ export class StorageService {
                 }
             }
         } catch (error) {
-          this.loggingService.error('localStorage get error:', error);
+            this.loggingService.error('localStorage get error:', error);
 
             // Final fallback to memory storage
             if (this.memoryStorage.has(key)) {
                 const data = this.memoryStorage.get(key);
-               this.loggingService.debug(`Retrieved from memory storage after localStorage failed: ${key}`);
+                this.loggingService.debug(`Retrieved from memory storage after localStorage failed: ${key}`);
 
-                const result = { success: true, source: StorageArea.MEMORY, data };
+                const result = {success: true, source: StorageArea.MEMORY, data};
                 if (resolve) {
                     resolve(result);
                     return Promise.resolve(result);
@@ -500,7 +503,7 @@ export class StorageService {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
                         chrome.storage.sync.remove(key, () => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome sync storage remove error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome sync storage remove error:`, chrome.runtime.lastError);
 
                                 // If sync fails, try local storage
                                 if (isChromeStorageAvailable(StorageArea.LOCAL)) {
@@ -508,26 +511,26 @@ export class StorageService {
                                         if (chrome.runtime.lastError) {
                                             this.fallbackToLocalStorageRemove(key, resolve);
                                         } else {
-                                           this.loggingService.debug(`Removed from Chrome local storage after sync failed: ${key}`);
-                                            resolve({ success: true, source: StorageArea.LOCAL });
+                                            this.loggingService.debug(`Removed from Chrome local storage after sync failed: ${key}`);
+                                            resolve({success: true, source: StorageArea.LOCAL});
                                         }
                                     });
                                 } else {
                                     this.fallbackToLocalStorageRemove(key, resolve);
                                 }
                             } else {
-                               this.loggingService.debug(`Removed from Chrome sync storage: ${key}`);
-                                resolve({ success: true, source: StorageArea.SYNC });
+                                this.loggingService.debug(`Removed from Chrome sync storage: ${key}`);
+                                resolve({success: true, source: StorageArea.SYNC});
                             }
                         });
                     } else if (area === StorageArea.LOCAL && chrome.storage.local) {
                         chrome.storage.local.remove(key, () => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome local storage remove error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome local storage remove error:`, chrome.runtime.lastError);
                                 this.fallbackToLocalStorageRemove(key, resolve);
                             } else {
-                               this.loggingService.debug(`Removed from Chrome local storage: ${key}`);
-                                resolve({ success: true, source: StorageArea.LOCAL });
+                                this.loggingService.debug(`Removed from Chrome local storage: ${key}`);
+                                resolve({success: true, source: StorageArea.LOCAL});
                             }
                         });
                     } else {
@@ -539,7 +542,7 @@ export class StorageService {
                 return this.fallbackToLocalStorageRemove(key);
             }
         } catch (error) {
-          this.loggingService.error('Error in removeItem:', error);
+            this.loggingService.error('Error in removeItem:', error);
 
             // Try to remove from memory storage anyway
             this.memoryStorage.delete(key);
@@ -562,7 +565,7 @@ export class StorageService {
         if (this.inServiceWorker) {
             // Remove from memory storage
             this.memoryStorage.delete(key);
-           this.loggingService.debug(`Removed from memory storage (in service worker): ${key}`);
+            this.loggingService.debug(`Removed from memory storage (in service worker): ${key}`);
 
             const result = {
                 success: true,
@@ -579,20 +582,20 @@ export class StorageService {
         try {
             localStorage.removeItem(key);
             this.memoryStorage.delete(key); // Also remove from memory
-           this.loggingService.debug(`Removed from localStorage: ${key}`);
+            this.loggingService.debug(`Removed from localStorage: ${key}`);
 
-            const result = { success: true, source: StorageArea.LOCAL as StorageArea };
+            const result = {success: true, source: StorageArea.LOCAL as StorageArea};
             if (resolve) {
                 resolve(result);
                 return Promise.resolve(result);
             }
             return result;
         } catch (error) {
-          this.loggingService.error('localStorage remove error:', error);
+            this.loggingService.error('localStorage remove error:', error);
 
             // Final fallback to memory storage
             this.memoryStorage.delete(key);
-           this.loggingService.debug(`Removed from memory storage after localStorage failed: ${key}`);
+            this.loggingService.debug(`Removed from memory storage after localStorage failed: ${key}`);
 
             const result = {
                 success: true,
@@ -619,7 +622,7 @@ export class StorageService {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
                         chrome.storage.sync.clear(() => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome sync storage clear error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome sync storage clear error:`, chrome.runtime.lastError);
 
                                 // If sync fails, try local storage
                                 if (isChromeStorageAvailable(StorageArea.LOCAL)) {
@@ -627,26 +630,26 @@ export class StorageService {
                                         if (chrome.runtime.lastError) {
                                             this.fallbackToLocalStorageClear(resolve);
                                         } else {
-                                           this.loggingService.debug(`Cleared Chrome local storage after sync failed`);
-                                            resolve({ success: true, source: StorageArea.LOCAL });
+                                            this.loggingService.debug(`Cleared Chrome local storage after sync failed`);
+                                            resolve({success: true, source: StorageArea.LOCAL});
                                         }
                                     });
                                 } else {
                                     this.fallbackToLocalStorageClear(resolve);
                                 }
                             } else {
-                               this.loggingService.debug(`Cleared Chrome sync storage`);
-                                resolve({ success: true, source: StorageArea.SYNC });
+                                this.loggingService.debug(`Cleared Chrome sync storage`);
+                                resolve({success: true, source: StorageArea.SYNC});
                             }
                         });
                     } else if (area === StorageArea.LOCAL && chrome.storage.local) {
                         chrome.storage.local.clear(() => {
                             if (chrome.runtime.lastError) {
-                              this.loggingService.error(`Chrome local storage clear error:`, chrome.runtime.lastError);
+                                this.loggingService.error(`Chrome local storage clear error:`, chrome.runtime.lastError);
                                 this.fallbackToLocalStorageClear(resolve);
                             } else {
-                               this.loggingService.debug(`Cleared Chrome local storage`);
-                                resolve({ success: true, source: StorageArea.LOCAL });
+                                this.loggingService.debug(`Cleared Chrome local storage`);
+                                resolve({success: true, source: StorageArea.LOCAL});
                             }
                         });
                     } else {
@@ -658,7 +661,7 @@ export class StorageService {
                 return this.fallbackToLocalStorageClear();
             }
         } catch (error) {
-          this.loggingService.error('Error in clear:', error);
+            this.loggingService.error('Error in clear:', error);
 
             // Try to clear memory storage anyway
             this.memoryStorage.clear();
@@ -680,7 +683,7 @@ export class StorageService {
         if (this.inServiceWorker) {
             // Clear memory storage
             this.memoryStorage.clear();
-           this.loggingService.debug(`Cleared memory storage (in service worker)`);
+            this.loggingService.debug(`Cleared memory storage (in service worker)`);
 
             const result = {
                 success: true,
@@ -697,20 +700,20 @@ export class StorageService {
         try {
             localStorage.clear();
             this.memoryStorage.clear(); // Also clear memory
-           this.loggingService.debug(`Cleared localStorage`);
+            this.loggingService.debug(`Cleared localStorage`);
 
-            const result = { success: true, source: StorageArea.LOCAL as StorageArea };
+            const result = {success: true, source: StorageArea.LOCAL as StorageArea};
             if (resolve) {
                 resolve(result);
                 return Promise.resolve(result);
             }
             return result;
         } catch (error) {
-          this.loggingService.error('localStorage clear error:', error);
+            this.loggingService.error('localStorage clear error:', error);
 
             // Final fallback to memory storage
             this.memoryStorage.clear();
-           this.loggingService.debug(`Cleared memory storage after localStorage failed`);
+            this.loggingService.debug(`Cleared memory storage after localStorage failed`);
 
             const result = {
                 success: true,

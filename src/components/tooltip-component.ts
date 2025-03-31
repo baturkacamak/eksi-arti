@@ -1,6 +1,8 @@
 import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
 import {LoggingService} from "../services/logging-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 export interface TooltipOptions {
     position?: 'top' | 'bottom' | 'left' | 'right';
@@ -34,9 +36,9 @@ export class TooltipComponent {
     };
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
     ) {
         this.applyTooltipStyles();
         this.initializeTooltips();

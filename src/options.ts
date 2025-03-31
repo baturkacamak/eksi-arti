@@ -7,6 +7,7 @@ import {TooltipComponent} from "./components/tooltip-component";
 import {LoggingService} from "./services/logging-service";
 import {CSSService} from "./services/css-service";
 import {DOMService} from "./services/dom-service";
+import {ILoggingService} from "./interfaces/services/ILoggingService";
 
 /**
  * Options Manager Class
@@ -17,7 +18,7 @@ class OptionsPage {
     private preferences: any = {...DEFAULT_PREFERENCES};
     private saveDebounceTimer: number | null = null;
     private savePending: boolean = false;
-    private loggingService: LoggingService = new LoggingService();
+    private loggingService: ILoggingService = new LoggingService();
 
 
     constructor() {

@@ -8,15 +8,18 @@ import { ResumeModal } from '../components/resume-modal';
 import { BlockerState } from '../types';
 import {ButtonComponent} from "../components/button-component";
 import {Container} from "../di/container";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 /**
  * Factory for creating BlockOptionsModal instances
  */
 export class BlockOptionsModalFactory {
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private blockUsersService: BlockUsersService,
         private container: Container,
         private buttonComponent: ButtonComponent
@@ -43,9 +46,9 @@ export class BlockOptionsModalFactory {
  */
 export class ResumeModalFactory {
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private blockUsersService: BlockUsersService,
         private buttonComponent: ButtonComponent,
         private container: Container,

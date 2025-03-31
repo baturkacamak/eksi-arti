@@ -7,6 +7,11 @@ import { IconComponent } from '../components/icon-component';
 import { SITE_DOMAIN } from '../constants';
 import { ObserverService } from "./observer-service";
 import { PageUtilsService } from "./page-utils-service";
+import {IHttpService} from "../interfaces/services/IHttpService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {INotificationService} from "../interfaces/services/INotificationService";
+import {IObserverService} from "../interfaces/services/IObserverService";
 
 export class TrashService {
     private isLoading: boolean = false;
@@ -17,12 +22,12 @@ export class TrashService {
     private observerId: string = '';
 
     constructor(
-        private httpService: HttpService,
-        private domHandler: DOMService,
-        private loggingService: LoggingService,
-        private notificationService: NotificationService,
+        private httpService: IHttpService,
+        private domHandler: IDOMService,
+        private loggingService: ILoggingService,
+        private notificationService: INotificationService,
         private iconComponent: IconComponent,
-        private observerService: ObserverService,
+        private observerService: IObserverService,
         private pageUtils: PageUtilsService
     ) {}
 

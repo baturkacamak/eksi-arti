@@ -5,6 +5,9 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import {LoggingService} from "../services/logging-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 export interface ProgressBarOptions {
     height?: string;
@@ -26,9 +29,9 @@ export class ProgressBarComponent {
     private static stylesApplied = false;
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
     ) {
         this.applyProgressBarStyles();
     }

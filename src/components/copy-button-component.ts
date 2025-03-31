@@ -4,6 +4,10 @@ import { IconComponent } from './icon-component';
 import {LoggingService} from '../services/logging-service';
 import {ContainerService, containerService} from "../services/container-service";
 import {ObserverService, observerService} from "../services/observer-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IObserverService} from "../interfaces/services/IObserverService";
 
 /**
  * CopyButtonComponent
@@ -16,12 +20,12 @@ export class CopyButtonComponent {
     private observerId: string = '';
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private iconComponent: IconComponent,
         private containerService: ContainerService,
-        private observerService: ObserverService
+        private observerService: IObserverService
     ) {
         this.applyStyles();
     }

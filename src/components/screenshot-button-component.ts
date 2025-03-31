@@ -5,6 +5,10 @@ import { LoggingService} from '../services/logging-service';
 import html2canvas from 'html2canvas';
 import {ContainerService, containerService} from "../services/container-service";
 import {ObserverService, observerService} from "../services/observer-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {IObserverService} from "../interfaces/services/IObserverService";
 
 /**
  * ScreenshotButtonComponent
@@ -18,12 +22,12 @@ export class ScreenshotButtonComponent {
     private observerId: string = '';
 
     constructor(
-        private domHandler: DOMService,
-        private cssHandler: CSSService,
-        private loggingService: LoggingService,
+        private domHandler: IDOMService,
+        private cssHandler: ICSSService,
+        private loggingService: ILoggingService,
         private iconComponent: IconComponent,
         private containerService: ContainerService = containerService,
-        private observerService: ObserverService = observerService
+        private observerService: IObserverService = observerService
     ) {
         this.applyStyles();
     }

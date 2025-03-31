@@ -6,15 +6,18 @@ import {LoggingService} from "../services/logging-service";
 import {CSSService} from "../services/css-service";
 import {DOMService} from "../services/dom-service";
 import {Container} from "../di/container";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 export class BlockOptionsModal extends ModalComponent {
     private entryId: string;
 
     constructor(
         entryId: string,
-        domHandler: DOMService,
-        cssHandler: CSSService,
-        loggingService: LoggingService,
+        domHandler: IDOMService,
+        cssHandler: ICSSService,
+        loggingService: ILoggingService,
         private container: Container,
         private blockUsersService: BlockUsersService,
         buttonComponent: ButtonComponent

@@ -2,6 +2,7 @@
  * Logging Service
  * Provides unified logging functionality with debug mode support
  */
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 // Log levels
 export enum LogLevel {
@@ -20,7 +21,7 @@ export interface LogEntry {
     source?: string;
 }
 
-export class LoggingService {
+export class LoggingService implements ILoggingService {
     private isDebugEnabled: boolean = false;
     private logs: LogEntry[] = [];
     private maxLogEntries: number = 100;

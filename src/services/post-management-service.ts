@@ -7,6 +7,11 @@ import {IconComponent} from '../components/icon-component';
 import {CSSService} from "./css-service";
 import {ObserverService, observerService} from "./observer-service";
 import {pageUtils} from "./page-utils-service";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {INotificationService} from "../interfaces/services/INotificationService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {IObserverService} from "../interfaces/services/IObserverService";
 
 export class PostManagementService {
     private loadMoreButton: HTMLElement | null = null;
@@ -15,12 +20,12 @@ export class PostManagementService {
     private observerId: string = '';
 
     constructor(
-        private domService: DOMService,
-        private cssService: CSSService,
-        private loggingService: LoggingService,
+        private domService: IDOMService,
+        private cssService: ICSSService,
+        private loggingService: ILoggingService,
         private iconComponent: IconComponent,
-        private notificationService: NotificationService,
-        private observerService: ObserverService,
+        private notificationService: INotificationService,
+        private observerService: IObserverService,
     ) {
     }
 

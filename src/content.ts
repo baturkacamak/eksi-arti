@@ -3,11 +3,13 @@ import { initializeDI } from './di/initialize-di';
 import { UIService } from './services/ui-service';
 import { LoggingService } from './services/logging-service';
 import { CSSService } from './services/css-service';
+import {ICSSService} from "./interfaces/services/ICSSService";
+import {ILoggingService} from "./interfaces/services/ILoggingService";
 
 /**
  * Inject Material Icons font
  */
-function injectMaterialIcons(cssService: CSSService, loggingService: LoggingService): void {
+function injectMaterialIcons(cssService: ICSSService, loggingService: ILoggingService): void {
     try {
         // Material Icons CSS
         const materialIconsCSS = `

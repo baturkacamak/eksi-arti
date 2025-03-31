@@ -3,6 +3,9 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { LoggingService } from '../services/logging-service';
 import { ButtonComponent, ButtonVariant, ButtonSize } from './button-component';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 /**
  * Base class for modal dialogs
@@ -12,9 +15,9 @@ export abstract class ModalBase {
     protected buttonComponent: ButtonComponent;
 
     constructor(
-        protected domHandler: DOMService,
-        protected cssHandler: CSSService,
-        protected loggingService: LoggingService
+        protected domHandler: IDOMService,
+        protected cssHandler: ICSSService,
+        protected loggingService: ILoggingService
     ) {
         this.buttonComponent = new ButtonComponent(domHandler, cssHandler, loggingService);
         this.applyModalStyles();

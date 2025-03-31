@@ -30,6 +30,7 @@ import {ContainerService, containerService} from "../services/container-service"
 import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
 import {containerThemeService} from "../services/container-theme-service";
 import {SearchFilterComponent} from "../components/search-filter-component";
+import {IStorageService} from "../interfaces/services/IStorageService";
 
 /**
  * Initialize the dependency injection container
@@ -60,7 +61,7 @@ export function initializeDI(): Container {
     });
 
     container.register('PreferencesService', () => {
-        const storageService = container.resolve<StorageService>('StorageService');
+        const storageService = container.resolve<IStorageService>('StorageService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
         return new PreferencesService(storageService, loggingService);
     });
@@ -142,7 +143,7 @@ export function initializeDI(): Container {
     container.register('BlockUsersService', () => {
         const httpService = container.resolve<HttpService>('HttpService');
         const htmlParser = container.resolve<HtmlParserService>('HtmlParserService');
-        const storageService = container.resolve<StorageService>('StorageService');
+        const storageService = container.resolve<IStorageService>('StorageService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const preferencesService = container.resolve<PreferencesService>('PreferencesService');
@@ -186,7 +187,7 @@ export function initializeDI(): Container {
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const preferencesManager = container.resolve<PreferencesManager>('PreferencesManager');
-        const storageService = container.resolve<StorageService>('StorageService');
+        const storageService = container.resolve<IStorageService>('StorageService');
         const observerService = container.resolve<ObserverService>('ObserverService');
         return new UIService(
             domService,
@@ -333,7 +334,7 @@ export function initializeDI(): Container {
             container.resolve<DOMService>('DOMService'),
             container.resolve<CSSService>('CSSService'),
             container.resolve<LoggingService>('LoggingService'),
-            container.resolve<StorageService>('StorageService'),
+            container.resolve<IStorageService>('StorageService'),
             container.resolve<IconComponent>('IconComponent'),
             container.resolve<TooltipComponent>('TooltipComponent'),
             container.resolve<NotificationService>('NotificationService'),

@@ -1,6 +1,9 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { LoggingService} from '../services/logging-service';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 export interface AccordionItem {
     id: string;
@@ -22,13 +25,13 @@ export interface AccordionOptions {
 }
 
 export class AccordionComponent {
-    private domHandler: DOMService;
-    private cssHandler: CSSService;
+    private domHandler: IDOMService;
+    private cssHandler: ICSSService;
     private accordionElement: HTMLElement | null = null;
     private items: AccordionItem[] = [];
     private options: AccordionOptions = {};
     private static stylesApplied = false;
-    private loggingService: LoggingService;
+    private loggingService: ILoggingService;
 
     constructor() {
         this.domHandler = new DOMService();

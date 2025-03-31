@@ -10,6 +10,9 @@ import {CSSService} from "../services/css-service";
 import {LoggingService} from "../services/logging-service";
 import {Container} from "../di/container";
 import {BlockOptionsModalFactory} from "../factories/modal-factories";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class ResumeModal extends ModalComponent {
     private entryId: string;
@@ -18,9 +21,9 @@ export class ResumeModal extends ModalComponent {
     constructor(
         entryId: string,
         savedState: BlockerState,
-        domHandler: DOMService,
-        cssHandler: CSSService,
-        loggingService: LoggingService,
+        domHandler: IDOMService,
+        cssHandler: ICSSService,
+        loggingService: ILoggingService,
         buttonComponent: ButtonComponent,
         private blockUsersService: BlockUsersService,
         private container: Container

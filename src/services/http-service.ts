@@ -1,5 +1,6 @@
 import {RequestHeaders} from '../types';
 import { LoggingService} from './logging-service';
+import {ILoggingService} from "../interfaces/services/ILoggingService";
 
 export class HttpError extends Error {
     constructor(
@@ -13,7 +14,7 @@ export class HttpError extends Error {
 }
 
 export class HttpService {
-    constructor(private loggingService: LoggingService) {}
+    constructor(private loggingService: ILoggingService) {}
 
     /**
      * Make an HTTP request with progressive fallbacks
