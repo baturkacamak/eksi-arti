@@ -6,8 +6,9 @@ import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ButtonSize, ButtonVariant} from "../interfaces/components/IButtonComponent";
+import {IModalComponent} from "../interfaces/components/IModalComponent";
 
-export class ModalComponent {
+export class ModalComponent implements IModalComponent {
     protected modalElement: HTMLElement | null = null;
 
     constructor(

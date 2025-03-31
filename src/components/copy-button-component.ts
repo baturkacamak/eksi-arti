@@ -1,19 +1,17 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
 import { IconComponent } from './icon-component';
-import {LoggingService} from '../services/logging-service';
 import {ContainerService, containerService} from "../services/container-service";
 import {ObserverService, observerService} from "../services/observer-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService} from "../interfaces/services/IObserverService";
+import {ICopyButtonComponent} from "../interfaces/components/ICopyButtonComponent";
 
 /**
  * CopyButtonComponent
  * Adds copy buttons to entry controls for easily copying entry text
  */
-export class CopyButtonComponent {
+export class CopyButtonComponent implements ICopyButtonComponent {
     private copyButtons: Map<string, HTMLElement> = new Map();
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;
@@ -298,5 +296,8 @@ export class CopyButtonComponent {
 
         // Remove from transition tracking
         this.inTransition.delete(button);
+    }
+
+    destroy(): void {
     }
 }

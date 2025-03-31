@@ -8,6 +8,7 @@ import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {IObserverService} from "../interfaces/services/IObserverService";
+import {IEntrySorterComponent} from "../interfaces/components/IEntrySorterComponent";
 
 /**
  * Sorting strategy interface
@@ -76,7 +77,7 @@ class DateSortingStrategy implements SortingStrategy {
  * EntrySorterComponent
  * A component for sorting entries by different criteria
  */
-export class EntrySorterComponent {
+export class EntrySorterComponent implements IEntrySorterComponent {
     private sortButtons: HTMLElement[] = [];
     private activeStrategy: SortingStrategy | null = null;
     private strategies: SortingStrategy[] = [];

@@ -1,29 +1,10 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import { NotificationOptions } from '../types';
 import { preferencesManager } from "../services/preferences-manager";
-import {LoggingService} from "../services/logging-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {ExtendedNotificationOptions, INotificationComponent} from "../interfaces/components/INotificationComponent";
 
-// Position options for notifications
-export type NotificationPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
-
-// Notification appearance theme
-export type NotificationTheme = 'default' | 'success' | 'error' | 'warning' | 'info';
-
-// Extended notification options
-export interface ExtendedNotificationOptions extends NotificationOptions {
-    position?: NotificationPosition;
-    theme?: NotificationTheme;
-    closable?: boolean;
-    timeout?: number;
-    width?: string;
-    onClose?: () => void;
-}
-
-export class NotificationComponent {
+export class NotificationComponent implements INotificationComponent {
     private notificationElement: HTMLElement | null = null;
     private timeoutId: number | null = null;
     private defaultDuration: number = 5; // Default duration in seconds

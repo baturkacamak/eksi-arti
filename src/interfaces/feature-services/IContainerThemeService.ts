@@ -1,4 +1,4 @@
-import { ContainerTheme, ContainerSize, ContainerShape, ContainerThemeConfig } from '../services/container-theme-service';
+import {ContainerThemeConfig} from "../../services/container-theme-service";
 
 export interface IContainerThemeService {
     generateContainerClasses(config?: ContainerThemeConfig): string;

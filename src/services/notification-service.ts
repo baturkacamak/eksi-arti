@@ -1,20 +1,15 @@
-import {ExtendedNotificationOptions, NotificationComponent} from '../components/notification-component';
-import {ProgressBarComponent, ProgressBarOptions} from '../components/progress-bar-component';
-import {CountdownComponent} from '../components/countdown-component';
-import {ButtonComponent} from '../components/button-component';
-import {LoggingService} from './logging-service';
 import {storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
 import {ResumeModalFactory} from "../factories/modal-factories";
-import {DOMService} from "./dom-service";
-import {CSSService} from "./css-service";
-import {Container} from "../di/container";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";
 import {INotificationService, INotificationServiceOptions} from "../interfaces/services/INotificationService";
-import {ButtonProps, ButtonSize, ButtonVariant} from "../interfaces/components/IButtonComponent";
-import {CountdownOptions} from "../interfaces/components/ICountdownComponent";
+import {ButtonProps, ButtonSize, ButtonVariant, IButtonComponent} from "../interfaces/components/IButtonComponent";
+import {CountdownOptions, ICountdownComponent} from "../interfaces/components/ICountdownComponent";
+import {IProgressBarComponent, ProgressBarOptions} from "../interfaces/components/IProgressBarComponent";
+import {INotificationComponent} from "../interfaces/components/INotificationComponent";
+import {IContainer} from "../interfaces/IContainer";
 
 export class NotificationService implements INotificationService {
     private activeProgressBar: HTMLElement | null = null;
@@ -25,11 +20,11 @@ export class NotificationService implements INotificationService {
 
     constructor(
         private loggingService: ILoggingService,
-        private buttonComponent: ButtonComponent,
-        private progressBarComponent: ProgressBarComponent,
-        private countdownComponent: CountdownComponent,
-        private notificationComponent: NotificationComponent,
-        private container: Container  // Add this parameter
+        private buttonComponent: IButtonComponent,
+        private progressBarComponent: IProgressBarComponent,
+        private countdownComponent: ICountdownComponent,
+        private notificationComponent: INotificationComponent,
+        private container: IContainer  // Add this parameter
     ) {
     }
 

@@ -2,25 +2,12 @@
  * ProgressBarComponent
  * A standalone component for displaying a progress bar
  */
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import {LoggingService} from "../services/logging-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {IProgressBarComponent, ProgressBarOptions} from "../interfaces/components/IProgressBarComponent";
 
-export interface ProgressBarOptions {
-    height?: string;
-    backgroundColor?: string;
-    progressColor?: string;
-    animated?: boolean;
-    striped?: boolean;
-    showPercentage?: boolean;
-    label?: string;
-    className?: string;
-}
-
-export class ProgressBarComponent {
+export class ProgressBarComponent implements IProgressBarComponent {
     private progressBarElement: HTMLElement | null = null;
     private progressFillElement: HTMLElement | null = null;
     private labelElement: HTMLElement | null = null;

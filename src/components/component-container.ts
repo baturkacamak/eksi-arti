@@ -10,28 +10,7 @@ import {
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
-
-/**
- * Component Container Configuration
- */
-export interface ComponentContainerConfig {
-    id?: string;
-    className?: string;
-    position?: 'inline' | 'floating' | 'fixed';
-    direction?: 'horizontal' | 'vertical';
-    gap?: number; // Gap between components in pixels
-    padding?: number;
-    width?: string;
-    height?: string;
-    visible?: boolean;
-    customStyles?: Partial<CSSStyleDeclaration>;
-    theme?: ContainerTheme;
-    size?: ContainerSize;
-    shape?: ContainerShape;
-    isHoverable?: boolean;
-    hasBorder?: boolean;
-    hasShadow?: boolean;
-}
+import {IComponentContainerConfig, IContainer} from "../interfaces/IContainer";
 
 /**
  * Component Container Class
@@ -42,11 +21,11 @@ export class ComponentContainer {
     private cssHandler: ICSSService;
     private containerElement: HTMLElement | null = null;
     private components: HTMLElement[] = [];
-    private config: ComponentContainerConfig;
+    private config: IComponentContainerConfig;
     private static stylesApplied = false;
     private loggingService: ILoggingService;
 
-    constructor(config: ComponentContainerConfig = {}) {
+    constructor(config: IComponentContainerConfig = {}) {
         this.domHandler = new DOMService();
         this.cssHandler = new CSSService();
         this.loggingService = new LoggingService();
@@ -302,7 +281,7 @@ export class ComponentContainer {
      * @param config New configuration options
      * @returns The container instance for chaining
      */
-    public updateConfig(config: Partial<ComponentContainerConfig>): ComponentContainer {
+    public updateConfig(config: Partial<IComponentContainerConfig>): ComponentContainer {
         this.config = { ...this.config, ...config };
 
         if (this.containerElement) {

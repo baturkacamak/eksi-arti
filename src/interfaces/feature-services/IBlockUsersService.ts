@@ -1,4 +1,4 @@
-import { BlockType } from '../constants';
+import {BlockType} from "../../constants";
 
 export interface IBlockUsersService {
     setBlockType(type: BlockType): void;

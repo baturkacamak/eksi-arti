@@ -4,22 +4,9 @@ import {LoggingService} from '../services/logging-service';
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {IconProps, IconTransitionOptions, IIconComponent} from "../interfaces/components/IIconComponent";
 
-export interface IconProps {
-    name: string;
-    color?: string;
-    size?: 'small' | 'medium' | 'large' | number;
-    className?: string;
-    ariaHidden?: boolean;
-}
-
-export interface IconTransitionOptions {
-    duration?: number;  // Duration in milliseconds
-    animation?: 'none' | 'fade' | 'scale' | 'rotate';
-    onComplete?: () => void;
-}
-
-export class IconComponent {
+export class IconComponent implements IIconComponent {
     private static stylesApplied = false;
     private static fontLoaded = false;
     private static fontLoadListener: (() => void) | null = null;

@@ -9,13 +9,14 @@ import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {IObserverService} from "../interfaces/services/IObserverService";
+import {IScreenshotButtonComponent} from "../interfaces/components/IScreenshotButtonComponent";
 
 /**
  * ScreenshotButtonComponent
  * Adds screenshot buttons to entry controls for capturing entry images
  * with support for both downloading and copying to clipboard
  */
-export class ScreenshotButtonComponent {
+export class ScreenshotButtonComponent implements IScreenshotButtonComponent {
     private screenshotButtons: Map<string, HTMLElement> = new Map();
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;

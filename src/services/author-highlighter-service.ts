@@ -1,13 +1,7 @@
 // src/services/author-highlighter-service.ts
-import { DOMService } from './dom-service';
-import { CSSService } from './css-service';
 import {storageService, StorageService} from './storage-service';
-import { preferencesManager } from './preferences-manager';
-import { LoggingService} from './logging-service';
 import { IconComponent } from '../components/icon-component';
 import { TooltipComponent } from '../components/tooltip-component';
-import { NotificationService } from './notification-service';
-import { delay } from './utilities';
 import {ObserverService, observerService} from "./observer-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
@@ -15,31 +9,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {INotificationService} from "../interfaces/services/INotificationService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
-
-/**
- * Interface for author highlight configuration
- */
-export interface AuthorHighlightConfig {
-    enabled: boolean;
-    authors: Record<string, AuthorHighlight>;
-    defaultOpacity: number;
-    highlightEntireEntry: boolean;
-    animationEnabled: boolean;
-    animationDuration: number;
-    showContextMenu: boolean;
-}
-
-/**
- * Interface for individual author highlight settings
- */
-export interface AuthorHighlight {
-    color: string;
-    textColor?: string;
-    notes?: string;
-    enabled: boolean;
-    createdAt: number;
-    lastSeen?: number;
-}
+import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/feature-services/IAuthorHighlighterService";
 
 /**
  * Color management utility functions

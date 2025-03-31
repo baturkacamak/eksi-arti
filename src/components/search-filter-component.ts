@@ -10,12 +10,13 @@ import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService} from "../interfaces/services/IObserverService";
+import {ISearchFilterComponent} from "../interfaces/components/ISearchFilterComponent";
 
 /**
  * SearchFilterComponent
  * Adds a full-width sticky search bar with both filtering and highlighting capabilities
  */
-export class SearchFilterComponent {
+export class SearchFilterComponent implements ISearchFilterComponent {
     private searchInput: HTMLInputElement | null = null;
     private searchContainer: HTMLElement | null = null;
     private clearButton: HTMLElement | null = null;
@@ -435,7 +436,7 @@ export class SearchFilterComponent {
     /**
      * Perform the search
      */
-    private performSearch(): void {
+    public performSearch(): void {
         try {
             if (!this.searchInput) return;
 
@@ -815,7 +816,7 @@ export class SearchFilterComponent {
     /**
      * Reset search state completely
      */
-    private resetSearch(): void {
+    public resetSearch(): void {
         this.clearHighlights();
         this.resetVisibility();
         this.filteredEntries.clear();

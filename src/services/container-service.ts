@@ -1,11 +1,12 @@
 
 // src/services/container-service.ts
-import { ComponentContainer, ComponentContainerConfig } from '../components/component-container';
+import { ComponentContainer } from '../components/component-container';
 import { LoggingService} from './logging-service';
 import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
 import {DOMService} from "./dom-service";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IComponentContainerConfig} from "../interfaces/IContainer";
 
 export class ContainerService {
     private static instance: ContainerService;
@@ -42,7 +43,7 @@ export class ContainerService {
                 return this.entryControlsContainers.get(entryId)!;
             }
 
-            const config: ComponentContainerConfig = {
+            const config: IComponentContainerConfig = {
                 direction: 'horizontal',
                 gap: 4,
                 position: 'inline',
@@ -79,7 +80,7 @@ export class ContainerService {
 
             // If it exists, find a target element to attach to
             if (existingElement) {
-                const config: ComponentContainerConfig = {
+                const config: IComponentContainerConfig = {
                     direction: 'horizontal',
                     position: 'inline',
                     className: 'eksi-custom-controls-row',
@@ -114,7 +115,7 @@ export class ContainerService {
             }
 
             // If no existing element, create a new container
-            const config: ComponentContainerConfig = {
+            const config: IComponentContainerConfig = {
                 direction: 'horizontal',
                 position: 'inline',
                 className: 'eksi-custom-controls-row',
@@ -200,7 +201,7 @@ export class ContainerService {
             }
 
             // Create the sort buttons container
-            const config: ComponentContainerConfig = {
+            const config: IComponentContainerConfig = {
                 direction: 'horizontal',
                 gap: 8,
                 position: 'inline',
@@ -228,7 +229,7 @@ export class ContainerService {
                 return this.sortButtonsContainer;
             }
 
-            const config: ComponentContainerConfig = {
+            const config: IComponentContainerConfig = {
                 direction: 'horizontal',
                 gap: 3,
                 position: 'inline',
@@ -261,7 +262,7 @@ export class ContainerService {
                 return this.searchControlsContainer;
             }
 
-            const config: ComponentContainerConfig = {
+            const config: IComponentContainerConfig = {
                 direction: 'horizontal',
                 gap: 5,
                 className: 'eksi-search-controls',
@@ -312,7 +313,7 @@ export class ContainerService {
     }
 
     private createAndAttachContainer(
-        config: ComponentContainerConfig,
+        config: IComponentContainerConfig,
         getParent: () => HTMLElement | null
     ): ComponentContainer {
         const container = new ComponentContainer(config);
@@ -360,7 +361,7 @@ export class ContainerService {
             }
 
             // Create the search container
-            const config: ComponentContainerConfig = {
+            const config: IComponentContainerConfig = {
                 direction: 'horizontal',
                 gap: 8,
                 position: 'inline',

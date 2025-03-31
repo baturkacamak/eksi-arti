@@ -1,4 +1,27 @@
-import { AuthorHighlight, AuthorHighlightConfig } from '../services/author-highlighter-service';
+/**
+ * Interface for author highlight configuration
+ */
+export interface AuthorHighlightConfig {
+    enabled: boolean;
+    authors: Record<string, AuthorHighlight>;
+    defaultOpacity: number;
+    highlightEntireEntry: boolean;
+    animationEnabled: boolean;
+    animationDuration: number;
+    showContextMenu: boolean;
+}
+
+/**
+ * Interface for individual author highlight settings
+ */
+export interface AuthorHighlight {
+    color: string;
+    textColor?: string;
+    notes?: string;
+    enabled: boolean;
+    createdAt: number;
+    lastSeen?: number;
+}
 
 export interface IAuthorHighlighterService {
     initialize(): Promise<void>;

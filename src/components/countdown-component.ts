@@ -5,11 +5,12 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import {LoggingService} from "../services/logging-service";
-import {IconComponent, IconProps} from "./icon-component";
+import {IconComponent} from "./icon-component";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {CountdownOptions, ICountdownComponent} from "../interfaces/components/ICountdownComponent";
+import {IconProps} from "../interfaces/components/IIconComponent";
 
 export class CountdownComponent implements ICountdownComponent {
     private countdownElement: HTMLElement | null = null;

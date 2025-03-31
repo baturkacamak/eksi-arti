@@ -16,12 +16,13 @@ import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {StorageArea} from "../interfaces/services/IStorageService";
+import {IBlockFavoritesButtonComponent} from "../interfaces/components/IBlockFavoritesButtonComponent";
 
 /**
  * BlockFavoritesButtonComponent
  * Adds a button to entry controls for quickly blocking users who favorited the entry
  */
-export class BlockFavoritesButtonComponent {
+export class BlockFavoritesButtonComponent implements IBlockFavoritesButtonComponent {
     private blockButtons: Map<string, HTMLElement> = new Map();
     private static stylesApplied = false;
     private observerId: string = '';
