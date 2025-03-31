@@ -11,6 +11,7 @@ import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {ISearchFilterComponent} from "../interfaces/components/ISearchFilterComponent";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
  * SearchFilterComponent
@@ -51,7 +52,7 @@ export class SearchFilterComponent implements ISearchFilterComponent {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private tooltipComponent: TooltipComponent,
         private observerService: IObserverService,
         private pageUtils: PageUtilsService

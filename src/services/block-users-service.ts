@@ -18,6 +18,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {INotificationService} from "../interfaces/services/INotificationService";
 import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 export class BlockUsersService {
     private totalUserCount: number = 0;
@@ -42,7 +43,7 @@ export class BlockUsersService {
         private loggingService: ILoggingService,
         private notificationService: INotificationService,
         private preferencesService: IPreferencesService,
-        private iconComponent: IconComponent
+        private iconComponent: IIconComponent
     ) {
         this.loadOperationParams();
     }

@@ -28,6 +28,7 @@ import {INotificationService} from "../interfaces/services/INotificationService"
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 export class UIService {
     private initialized: boolean = false;
@@ -49,7 +50,7 @@ export class UIService {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private blockUsersService: BlockUsersService,
         private notificationService: INotificationService,
         private preferencesManager: IPreferencesManager,

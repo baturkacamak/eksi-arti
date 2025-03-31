@@ -14,6 +14,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {StorageArea} from "../interfaces/services/IStorageService";
 import {IBlockFavoritesButtonComponent} from "../interfaces/components/IBlockFavoritesButtonComponent";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
  * BlockFavoritesButtonComponent
@@ -28,7 +29,7 @@ export class BlockFavoritesButtonComponent implements IBlockFavoritesButtonCompo
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private containerService: ContainerService = containerService,
         private observerService: IObserverService = observerService,
         private container: Container

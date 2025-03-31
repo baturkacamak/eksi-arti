@@ -10,6 +10,7 @@ import {INotificationService} from "../interfaces/services/INotificationService"
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/feature-services/IAuthorHighlighterService";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
  * Color management utility functions
@@ -121,7 +122,7 @@ export class AuthorHighlighterService {
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private storageService: IStorageService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private tooltipComponent: TooltipComponent,
         private notificationService: INotificationService,
         private observerService: IObserverService

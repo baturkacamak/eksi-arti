@@ -10,7 +10,7 @@ import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {CountdownOptions, ICountdownComponent} from "../interfaces/components/ICountdownComponent";
-import {IconProps} from "../interfaces/components/IIconComponent";
+import {IconProps, IIconComponent} from "../interfaces/components/IIconComponent";
 
 export class CountdownComponent implements ICountdownComponent {
     private countdownElement: HTMLElement | null = null;
@@ -24,7 +24,7 @@ export class CountdownComponent implements ICountdownComponent {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
     ) {
         this.applyCountdownStyles();
     }

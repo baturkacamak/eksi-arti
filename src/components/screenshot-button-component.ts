@@ -7,6 +7,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IScreenshotButtonComponent} from "../interfaces/components/IScreenshotButtonComponent";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
  * ScreenshotButtonComponent
@@ -23,7 +24,7 @@ export class ScreenshotButtonComponent implements IScreenshotButtonComponent {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private containerService: ContainerService,
         private observerService: IObserverService = observerService
     ) {

@@ -6,6 +6,7 @@ import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {ICopyButtonComponent} from "../interfaces/components/ICopyButtonComponent";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
  * CopyButtonComponent
@@ -21,7 +22,7 @@ export class CopyButtonComponent implements ICopyButtonComponent {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private containerService: ContainerService,
         private observerService: IObserverService
     ) {

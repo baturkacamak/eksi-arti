@@ -9,6 +9,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IEntrySorterComponent} from "../interfaces/components/IEntrySorterComponent";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
  * Sorting strategy interface
@@ -89,7 +90,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private observerService: IObserverService,
         private pageUtils: PageUtilsService
     ) {

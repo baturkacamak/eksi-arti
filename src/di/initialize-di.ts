@@ -31,6 +31,14 @@ import {BlockFavoritesButtonComponent} from "../components/block-favorites-butto
 import {containerThemeService} from "../services/container-theme-service";
 import {SearchFilterComponent} from "../components/search-filter-component";
 import {IStorageService} from "../interfaces/services/IStorageService";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
+import {IObserverService} from "../interfaces/services/IObserverService";
+import {INotificationComponent} from "../interfaces/components/INotificationComponent";
+import {IProgressBarComponent} from "../interfaces/components/IProgressBarComponent";
+import {ICountdownComponent} from "../interfaces/components/ICountdownComponent";
 
 /**
  * Initialize the dependency injection container
@@ -50,74 +58,74 @@ export function initializeDI(): Container {
 
     // Register services with dependencies
     container.register('HttpService', () => {
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new HttpService(loggingService);
     });
 
     container.register('HtmlParserService', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new HtmlParserService(domService, loggingService);
     });
 
     container.register('PreferencesService', () => {
         const storageService = container.resolve<IStorageService>('StorageService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new PreferencesService(storageService, loggingService);
     });
 
     // Register UI components
     container.register('IconComponent', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new IconComponent(domService, cssService, loggingService);
     });
 
     container.register('TooltipComponent', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new TooltipComponent(domService, cssService, loggingService);
     });
 
     container.register('ButtonComponent', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ButtonComponent(domService, cssService, loggingService);
     });
 
     container.register('ProgressBarComponent', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ProgressBarComponent(domService, cssService, loggingService);
     });
 
     container.register('CountdownComponent', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         return new CountdownComponent(domService, cssService, loggingService, iconComponent);
     });
 
     // Register NotificationComponent before NotificationService
     container.register('NotificationComponent', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new NotificationComponent(domService, cssService, loggingService);
     });
 
     container.register('BlockFavoritesButtonComponent', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const containerService = container.resolve<ContainerService>('ContainerService');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
 
         return new BlockFavoritesButtonComponent(
             domHandler,
@@ -132,11 +140,11 @@ export function initializeDI(): Container {
 
     // Register complex services that depend on multiple other services
     container.register('NotificationService', () => {
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
-        const progressBarComponent = container.resolve<ProgressBarComponent>('ProgressBarComponent');
-        const countdownComponent = container.resolve<CountdownComponent>('CountdownComponent');
-        const notificationComponent = container.resolve<NotificationComponent>('NotificationComponent');
+        const progressBarComponent = container.resolve<IProgressBarComponent>('ProgressBarComponent');
+        const countdownComponent = container.resolve<ICountdownComponent>('CountdownComponent');
+        const notificationComponent = container.resolve<INotificationComponent>('NotificationComponent');
         return new NotificationService(loggingService, buttonComponent, progressBarComponent, countdownComponent, notificationComponent, container);
     });
 
@@ -144,10 +152,10 @@ export function initializeDI(): Container {
         const httpService = container.resolve<HttpService>('HttpService');
         const htmlParser = container.resolve<HtmlParserService>('HtmlParserService');
         const storageService = container.resolve<IStorageService>('StorageService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const preferencesService = container.resolve<PreferencesService>('PreferencesService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         return new BlockUsersService(
             httpService,
             htmlParser,
@@ -161,11 +169,11 @@ export function initializeDI(): Container {
 
     container.register('TrashService', () => {
         const httpService = container.resolve<HttpService>('HttpService');
-        const domService = container.resolve<DOMService>('DOMService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         const notificationService = container.resolve<NotificationService>('NotificationService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
         return new TrashService(
             httpService,
@@ -180,15 +188,15 @@ export function initializeDI(): Container {
 
     // Register the main UI service that coordinates everything
     container.register('UIService', () => {
-        const domService = container.resolve<DOMService>('DOMService');
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const preferencesManager = container.resolve<PreferencesManager>('PreferencesManager');
         const storageService = container.resolve<IStorageService>('StorageService');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
         return new UIService(
             domService,
             cssService,
@@ -204,9 +212,9 @@ export function initializeDI(): Container {
     });
 
     container.register('BlockOptionsModalFactory', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
         const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
 
@@ -221,9 +229,9 @@ export function initializeDI(): Container {
     });
 
     container.register('ResumeModalFactory', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
         const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
 
@@ -238,12 +246,12 @@ export function initializeDI(): Container {
     });
 
     container.register('CopyButtonComponent', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const containerService = container.resolve<ContainerService>('ContainerService'); // Get from DI
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
 
         return new CopyButtonComponent(
             domHandler,
@@ -256,12 +264,12 @@ export function initializeDI(): Container {
     });
 
     container.register('ScreenshotButtonComponent', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const containerService = container.resolve<ContainerService>('ContainerService');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
 
         return new ScreenshotButtonComponent(
             domHandler,
@@ -274,11 +282,11 @@ export function initializeDI(): Container {
     });
 
     container.register('EntrySorterComponent', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
 
         return new EntrySorterComponent(
@@ -292,12 +300,12 @@ export function initializeDI(): Container {
     });
 
     container.register('PostManagementService', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const notificationService = container.resolve<NotificationService>('NotificationService');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
 
         return new PostManagementService(
             domHandler,
@@ -310,12 +318,12 @@ export function initializeDI(): Container {
     });
 
     container.register('SearchFilterComponent', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const cssHandler = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
-        const iconComponent = container.resolve<IconComponent>('IconComponent');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const tooltipComponent = container.resolve<TooltipComponent>('TooltipComponent');
-        const observerService = container.resolve<ObserverService>('ObserverService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
 
         return new SearchFilterComponent(
@@ -331,20 +339,20 @@ export function initializeDI(): Container {
 
     container.register('AuthorHighlighterService', () => {
         return new AuthorHighlighterService(
-            container.resolve<DOMService>('DOMService'),
-            container.resolve<CSSService>('CSSService'),
-            container.resolve<LoggingService>('LoggingService'),
+            container.resolve<IDOMService>('DOMService'),
+            container.resolve<ICSSService>('CSSService'),
+            container.resolve<ILoggingService>('LoggingService'),
             container.resolve<IStorageService>('StorageService'),
-            container.resolve<IconComponent>('IconComponent'),
+            container.resolve<IIconComponent>('IconComponent'),
             container.resolve<TooltipComponent>('TooltipComponent'),
             container.resolve<NotificationService>('NotificationService'),
-            container.resolve<ObserverService>('ObserverService')
+            container.resolve<IObserverService>('ObserverService')
         );
     });
 
     container.register('ContainerService', () => {
-        const domHandler = container.resolve<DOMService>('DOMService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ContainerService(domHandler, loggingService);
     });
 

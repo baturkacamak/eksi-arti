@@ -12,6 +12,7 @@ import {INotificationService} from "../interfaces/services/INotificationService"
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {IObserverService} from "../interfaces/services/IObserverService";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 export class PostManagementService {
     private loadMoreButton: HTMLElement | null = null;
@@ -23,7 +24,7 @@ export class PostManagementService {
         private domService: IDOMService,
         private cssService: ICSSService,
         private loggingService: ILoggingService,
-        private iconComponent: IconComponent,
+        private iconComponent: IIconComponent,
         private notificationService: INotificationService,
         private observerService: IObserverService,
     ) {
