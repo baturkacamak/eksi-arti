@@ -95,6 +95,7 @@ export class ScreenshotButtonComponent {
                 border-radius: 4px;
                 transition: all 0.2s ease;
                 position: relative;
+                overflow: initial;
                 border: 1px solid rgba(142, 158, 217, 0.2); /* Different color from copy button */
             }
             
