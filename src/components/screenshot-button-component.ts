@@ -276,6 +276,9 @@ export class ScreenshotButtonComponent {
     /**
      * Create options menu for screenshot actions
      */
+    /**
+     * Create options menu for screenshot actions
+     */
     private createOptionsMenu(entry: HTMLElement): HTMLElement {
         const optionsMenu = this.domHandler.createElement('div');
         this.domHandler.addClass(optionsMenu, 'eksi-screenshot-options');
@@ -306,26 +309,20 @@ export class ScreenshotButtonComponent {
         clipboardOption.appendChild(clipboardIcon);
         clipboardOption.appendChild(document.createTextNode('Panoya Kopyala'));
 
-        // Add click handlers
-        this.domHandler.addEventListener(downloadOption, 'click', (e) => {
+        // Create a reusable handler function
+        const handleOptionClick = (action: 'download' | 'clipboard') => (e: Event) => {
             e.preventDefault();
             e.stopPropagation();
             this.domHandler.removeClass(optionsMenu, 'visible');
             const parentElement = optionsMenu.parentElement;
             if (parentElement) {
-                this.captureEntryScreenshot(entry, parentElement, 'download');
+                this.captureEntryScreenshot(entry, parentElement, action);
             }
-        });
+        };
 
-        this.domHandler.addEventListener(clipboardOption, 'click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.domHandler.removeClass(optionsMenu, 'visible');
-            const parentElement = optionsMenu.parentElement;
-            if (parentElement) {
-                this.captureEntryScreenshot(entry, parentElement, 'clipboard');
-            }
-        });
+        // Add click handlers using the reusable function
+        this.domHandler.addEventListener(downloadOption, 'click', handleOptionClick('download'));
+        this.domHandler.addEventListener(clipboardOption, 'click', handleOptionClick('clipboard'));
 
         // Add options to menu
         this.domHandler.appendChild(optionsMenu, downloadOption);
