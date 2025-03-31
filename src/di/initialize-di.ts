@@ -36,7 +36,7 @@ import {IStorageService} from "../interfaces/services/IStorageService";
  * Initialize the dependency injection container
  */
 export function initializeDI(): Container {
-    const container = Container.getInstance();
+    const container = new Container();
 
     // Register basic services
     container.register('LoggingService', () => new LoggingService());

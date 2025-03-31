@@ -1,16 +1,9 @@
 export class Container {
-    private static instance: Container;
     private services: Map<string, () => any> = new Map();
     private instances: Map<string, any> = new Map();
 
-    private constructor() {}
+    constructor() {}
 
-    public static getInstance(): Container {
-        if (!Container.instance) {
-            Container.instance = new Container();
-        }
-        return Container.instance;
-    }
 
     // Register a service factory
     register<T>(key: string, factory: () => T): void {
