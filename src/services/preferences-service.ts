@@ -4,8 +4,9 @@ import {storageService, StorageService} from './storage-service';
 import {LoggingService} from './logging-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
+import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 
-export class PreferencesService {
+export class PreferencesService implements IPreferencesService {
     private defaultPreferences: BlockerPreferences = {
         defaultBlockType: BlockType.MUTE,
         defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',

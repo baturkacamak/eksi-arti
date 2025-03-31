@@ -7,41 +7,10 @@ import {LoggingService} from './logging-service';
 import { BlockType, STORAGE_KEYS } from '../constants';
 import {storageService} from "./storage-service";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
-
-// Preferences interface
-export interface ExtensionPreferences {
-    // General settings
-    enableNotifications: boolean;
-    notificationDuration: number;
-    customMenuSelector: string;
-
-    // Blocking settings
-    defaultBlockType: BlockType;
-    defaultNoteTemplate: string;
-    requestDelay: number;
-    retryDelay: number;
-    maxRetries: number;
-
-    // Appearance settings
-    theme: 'system' | 'light' | 'dark';
-    notificationPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
-
-    // Advanced settings
-    saveOperationHistory: boolean;
-    enableDebugMode: boolean;
-
-    // Vote monitoring settings
-    voteMonitoringEnabled: boolean;
-    voteMonitoringInterval: number;
-
-    // Other
-    preferenceStorageKey: string;
-    menuItemSelector: string;
-}
+import {IExtensionPreferences, IPreferencesManager} from "../interfaces/services/IPreferencesManager";
 
 // Default preferences
-const DEFAULT_PREFERENCES: ExtensionPreferences = {
+const DEFAULT_PREFERENCES: IExtensionPreferences = {
     // General settings
     enableNotifications: true,
     notificationDuration: 5,
@@ -73,9 +42,9 @@ const DEFAULT_PREFERENCES: ExtensionPreferences = {
 
 export class PreferencesManager {
     private static instance: IPreferencesManager;
-    private preferences: ExtensionPreferences;
+    private preferences: IExtensionPreferences;
     private isInitialized: boolean = false;
-    private onChangeCallbacks: Array<(preferences: ExtensionPreferences) => void> = [];
+    private onChangeCallbacks: Array<(preferences: IExtensionPreferences) => void> = [];
     private loggingService: ILoggingService;
 
     private constructor() {
@@ -121,9 +90,9 @@ export class PreferencesManager {
     /**
      * Load preferences from storage
      */
-    public async loadPreferences(): Promise<ExtensionPreferences> {
+    public async loadPreferences(): Promise<IExtensionPreferences> {
         try {
-            const result = await storageService.getItem<ExtensionPreferences>(STORAGE_KEYS.PREFERENCES);
+            const result = await storageService.getItem<IExtensionPreferences>(STORAGE_KEYS.PREFERENCES);
 
             if (result.success && result.data) {
                 // Merge with defaults to ensure all properties exist
@@ -147,7 +116,7 @@ export class PreferencesManager {
     /**
      * Save preferences to storage
      */
-    public async savePreferences(newPreferences?: Partial<ExtensionPreferences>): Promise<boolean> {
+    public async savePreferences(newPreferences?: Partial<IExtensionPreferences>): Promise<boolean> {
         try {
             if (newPreferences) {
                 // Update preferences with new values
@@ -208,16 +177,16 @@ export class PreferencesManager {
     /**
      * Get current preferences
      */
-    public getPreferences(): ExtensionPreferences {
+    public getPreferences(): IExtensionPreferences {
         return { ...this.preferences };
     }
 
     /**
      * Update specific preference
      */
-    public async updatePreference<K extends keyof ExtensionPreferences>(
+    public async updatePreference<K extends keyof IExtensionPreferences>(
         key: K,
-        value: ExtensionPreferences[K]
+        value: IExtensionPreferences[K]
     ): Promise<boolean> {
         try {
             this.preferences[key] = value;
@@ -231,7 +200,7 @@ export class PreferencesManager {
     /**
      * Register a callback for preference changes
      */
-    public onChange(callback: (preferences: ExtensionPreferences) => void): () => void {
+    public onChange(callback: (preferences: IExtensionPreferences) => void): () => void {
         this.onChangeCallbacks.push(callback);
 
         // Return a function to unsubscribe
@@ -262,6 +231,6 @@ export class PreferencesManager {
 export const preferencesManager = PreferencesManager.getInstance();
 
 // Legacy compatibility method
-export function getPreferences(): ExtensionPreferences {
+export function getPreferences(): IExtensionPreferences {
     return preferencesManager.getPreferences();
 }

@@ -1,4 +1,6 @@
-export class DOMService {
+import {IDOMService} from "../interfaces/services/IDOMService";
+
+export class DOMService implements IDOMService {
     /**
      * Query selector wrapper
      */

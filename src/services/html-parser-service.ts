@@ -3,8 +3,9 @@ import {LoggingService} from "./logging-service";
 import {SITE_DOMAIN} from "../constants";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IHtmlParserService} from "../interfaces/services/IHtmlParserService";
 
-export class HtmlParserService {
+export class HtmlParserService implements IHtmlParserService {
     private useDOMParser: boolean;
 
     constructor(

@@ -1,6 +1,7 @@
 import {RequestHeaders} from '../types';
 import { LoggingService} from './logging-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IHttpService} from "../interfaces/services/IHttpService";
 
 export class HttpError extends Error {
     constructor(
@@ -13,7 +14,7 @@ export class HttpError extends Error {
     }
 }
 
-export class HttpService {
+export class HttpService implements IHttpService {
     constructor(private loggingService: ILoggingService) {}
 
     /**

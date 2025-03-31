@@ -1,31 +1,45 @@
-export interface ExtensionPreferences {
+import { BlockType } from "../../constants";
+
+// Preferences interface
+export interface IExtensionPreferences {
+    // General settings
     enableNotifications: boolean;
     notificationDuration: number;
     customMenuSelector: string;
+
+    // Blocking settings
     defaultBlockType: BlockType;
     defaultNoteTemplate: string;
     requestDelay: number;
     retryDelay: number;
     maxRetries: number;
+
+    // Appearance settings
     theme: 'system' | 'light' | 'dark';
     notificationPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+
+    // Advanced settings
     saveOperationHistory: boolean;
     enableDebugMode: boolean;
+
+    // Vote monitoring settings
     voteMonitoringEnabled: boolean;
     voteMonitoringInterval: number;
+
+    // Other
     preferenceStorageKey: string;
     menuItemSelector: string;
 }
 
 export interface IPreferencesManager {
     initialize(): Promise<boolean>;
-    loadPreferences(): Promise<ExtensionPreferences>;
-    savePreferences(newPreferences?: Partial<ExtensionPreferences>): Promise<boolean>;
+    loadPreferences(): Promise<IExtensionPreferences>;
+    savePreferences(newPreferences?: Partial<IExtensionPreferences>): Promise<boolean>;
     resetPreferences(): Promise<boolean>;
-    getPreferences(): ExtensionPreferences;
-    updatePreference<K extends keyof ExtensionPreferences>(
+    getPreferences(): IExtensionPreferences;
+    updatePreference<K extends keyof IExtensionPreferences>(
         key: K,
-        value: ExtensionPreferences[K]
+        value: IExtensionPreferences[K]
     ): Promise<boolean>;
-    onChange(callback: (preferences: ExtensionPreferences) => void): () => void;
+    onChange(callback: (preferences: IExtensionPreferences) => void): () => void;
 }

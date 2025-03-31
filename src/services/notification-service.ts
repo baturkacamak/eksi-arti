@@ -12,22 +12,9 @@ import {CSSService} from "./css-service";
 import {Container} from "../di/container";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";
+import {INotificationService, INotificationServiceOptions} from "../interfaces/services/INotificationService";
 
-// Combined options for the notification service
-export interface NotificationServiceOptions extends ExtendedNotificationOptions {
-    progress?: {
-        current: number;
-        total: number;
-        options?: ProgressBarOptions;
-    };
-    countdown?: {
-        seconds: number;
-        options?: CountdownOptions;
-    };
-    buttons?: ButtonProps[];
-}
-
-export class NotificationService {
+export class NotificationService implements INotificationService {
     private activeProgressBar: HTMLElement | null = null;
     private activeCountdown: HTMLElement | null = null;
     private activeButtons: HTMLElement[] = [];
@@ -47,7 +34,7 @@ export class NotificationService {
     /**
      * Show a notification with optional progress bar, countdown, and buttons
      */
-    async show(content: string, options: NotificationServiceOptions = {}): Promise<void> {
+    async show(content: string, options: INotificationServiceOptions = {}): Promise<void> {
         try {
             // First show the basic notification
             const notificationElement = await this.notificationComponent.show(content, options);
