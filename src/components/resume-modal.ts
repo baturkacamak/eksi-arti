@@ -4,15 +4,13 @@ import {BlockUsersService} from '../services/block-users-service';
 import {BlockOptionsModal} from './block-options-modal';
 import {STORAGE_KEYS} from '../constants';
 import {storageService} from '../services/storage-service';
-import {ButtonComponent, ButtonVariant} from './button-component';
-import {DOMService} from "../services/dom-service";
-import {CSSService} from "../services/css-service";
-import {LoggingService} from "../services/logging-service";
+import {ButtonComponent} from './button-component';
 import {Container} from "../di/container";
 import {BlockOptionsModalFactory} from "../factories/modal-factories";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {ButtonVariant} from "../interfaces/components/IButtonComponent";
 
 export class ResumeModal extends ModalComponent {
     private entryId: string;

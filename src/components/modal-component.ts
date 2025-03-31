@@ -1,10 +1,11 @@
 import {DOMService} from '../services/dom-service';
 import {CSSService} from '../services/css-service';
-import {ButtonComponent, ButtonVariant, ButtonSize} from './button-component';
+import {ButtonComponent} from './button-component';
 import {LoggingService} from "../services/logging-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {ButtonSize, ButtonVariant} from "../interfaces/components/IButtonComponent";
 
 export class ModalComponent {
     protected modalElement: HTMLElement | null = null;

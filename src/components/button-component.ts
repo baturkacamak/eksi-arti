@@ -4,48 +4,13 @@ import {LoggingService} from '../services/logging-service';
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
-
-/**
- * Button variant types
- */
-export enum ButtonVariant {
-    DEFAULT = 'default',
-    PRIMARY = 'primary',
-    SECONDARY = 'secondary',
-    DANGER = 'danger',
-    SUCCESS = 'success',
-}
-
-/**
- * Button size types
- */
-export enum ButtonSize {
-    SMALL = 'small',
-    MEDIUM = 'medium',
-    LARGE = 'large',
-}
-
-/**
- * Button properties interface
- */
-export interface ButtonProps {
-    text: string;
-    variant?: ButtonVariant;
-    size?: ButtonSize;
-    icon?: string;
-    iconPosition?: 'left' | 'right';
-    ariaLabel?: string;
-    disabled?: boolean;
-    fullWidth?: boolean;
-    className?: string;
-    onClick?: (event: MouseEvent) => void;
-}
+import {ButtonProps, ButtonSize, ButtonVariant, IButtonComponent} from "../interfaces/components/IButtonComponent";
 
 /**
  * Button Component
  * Reusable button component for creating consistent buttons across the extension
  */
-export class ButtonComponent {
+export class ButtonComponent implements IButtonComponent {
     private buttonElement: HTMLButtonElement | null = null;
     private static stylesApplied = false;
 

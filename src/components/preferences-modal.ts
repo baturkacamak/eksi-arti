@@ -4,13 +4,14 @@ import {BlockType} from '../constants';
 import {PreferencesService} from '../services/preferences-service';
 import {NotificationComponent} from './notification-component';
 import {LoggingService} from "../services/logging-service";
-import {ButtonComponent, ButtonVariant} from "./button-component";
+import {ButtonComponent} from "./button-component";
 import {CSSService} from "../services/css-service";
 import {DOMService} from "../services/dom-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {IPreferencesService} from "../interfaces/services/IPreferencesService";
+import {ButtonVariant} from "../interfaces/components/IButtonComponent";
 
 export class PreferencesModal extends ModalComponent {
     private isLoaded: boolean = false;

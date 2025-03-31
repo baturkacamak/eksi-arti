@@ -8,7 +8,6 @@ import {StorageService, storageService} from './storage-service';
 import { preferencesManager } from './preferences-manager';
 import { BlockType, Endpoints, STORAGE_KEYS } from '../constants';
 import { LoggingService } from './logging-service';
-import { ButtonVariant } from "../components/button-component";
 import { PreferencesService } from "./preferences-service";
 import { delay } from "./utilities";
 import { NotificationService } from './notification-service';

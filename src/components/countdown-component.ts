@@ -9,20 +9,9 @@ import {IconComponent, IconProps} from "./icon-component";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {CountdownOptions, ICountdownComponent} from "../interfaces/components/ICountdownComponent";
 
-export interface CountdownOptions {
-    autoStart?: boolean;
-    showIcon?: boolean;
-    icon?: IconProps | null;
-    showLabel?: boolean;
-    label?: string;
-    className?: string;
-    onComplete?: () => void;
-    onTick?: (secondsRemaining: number) => void;
-    textFormat?: (seconds: number) => string;
-}
-
-export class CountdownComponent {
+export class CountdownComponent implements ICountdownComponent {
     private countdownElement: HTMLElement | null = null;
     private timeElement: HTMLElement | null = null;
     private intervalId: number | null = null;

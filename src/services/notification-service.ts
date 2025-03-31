@@ -1,7 +1,7 @@
 import {ExtendedNotificationOptions, NotificationComponent} from '../components/notification-component';
 import {ProgressBarComponent, ProgressBarOptions} from '../components/progress-bar-component';
-import {CountdownComponent, CountdownOptions} from '../components/countdown-component';
-import {ButtonComponent, ButtonProps, ButtonSize, ButtonVariant} from '../components/button-component';
+import {CountdownComponent} from '../components/countdown-component';
+import {ButtonComponent} from '../components/button-component';
 import {LoggingService} from './logging-service';
 import {storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
@@ -13,6 +13,8 @@ import {Container} from "../di/container";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";
 import {INotificationService, INotificationServiceOptions} from "../interfaces/services/INotificationService";
+import {ButtonProps, ButtonSize, ButtonVariant} from "../interfaces/components/IButtonComponent";
+import {CountdownOptions} from "../interfaces/components/ICountdownComponent";
 
 export class NotificationService implements INotificationService {
     private activeProgressBar: HTMLElement | null = null;

@@ -2,10 +2,11 @@
 import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { LoggingService } from '../services/logging-service';
-import { ButtonComponent, ButtonVariant, ButtonSize } from './button-component';
+import { ButtonComponent } from './button-component';
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {ButtonSize, ButtonVariant} from "../interfaces/components/IButtonComponent";
 
 /**
  * Base class for modal dialogs

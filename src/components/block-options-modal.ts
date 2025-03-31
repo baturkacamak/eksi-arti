@@ -1,7 +1,7 @@
 import { ModalComponent } from './modal-component';
 import { BlockType } from '../constants';
 import { BlockUsersService } from '../services/block-users-service';
-import {ButtonComponent, ButtonVariant} from './button-component';
+import {ButtonComponent} from './button-component';
 import {LoggingService} from "../services/logging-service";
 import {CSSService} from "../services/css-service";
 import {DOMService} from "../services/dom-service";
@@ -9,6 +9,7 @@ import {Container} from "../di/container";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {ButtonVariant} from "../interfaces/components/IButtonComponent";
 
 export class BlockOptionsModal extends ModalComponent {
     private entryId: string;
