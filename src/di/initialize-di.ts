@@ -42,6 +42,10 @@ import {ICountdownComponent} from "../interfaces/components/ICountdownComponent"
 import {EventBus} from "../services/event-bus";
 import {IEventBus} from "../interfaces/services/IEventBus";
 import {initializeCommandDI} from "./initialize-di-commands";
+import {IButtonComponent} from "../interfaces/components/IButtonComponent";
+import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
+import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
+import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 
 /**
  * Initialize the dependency injection container
@@ -220,16 +224,18 @@ export function initializeDI(): Container {
         const domHandler = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
-        const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
+        const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
+        const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
+        const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
 
         return new BlockOptionsModalFactory(
             domHandler,
             cssHandler,
             loggingService,
-            blockUsersService,
             container,
-            buttonComponent
+            buttonComponent,
+            commandFactory,
+            commandInvoker,
         );
     });
 

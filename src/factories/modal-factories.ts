@@ -11,6 +11,10 @@ import {Container} from "../di/container";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
+import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
+import {IButtonComponent} from "../interfaces/components/IButtonComponent";
+import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
+import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 
 /**
  * Factory for creating BlockOptionsModal instances
@@ -20,9 +24,10 @@ export class BlockOptionsModalFactory {
         private domHandler: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
-        private blockUsersService: BlockUsersService,
         private container: Container,
-        private buttonComponent: ButtonComponent
+        private buttonComponent: IButtonComponent,
+        private commandFactory: ICommandFactory,
+        private commandInvoker: ICommandInvoker,
     ) {}
 
     /**
@@ -35,8 +40,9 @@ export class BlockOptionsModalFactory {
             this.cssHandler,
             this.loggingService,
             this.container,
-            this.blockUsersService,
-            this.buttonComponent
+            this.buttonComponent,
+            this.commandFactory,
+            this.commandInvoker,
         );
     }
 }

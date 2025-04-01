@@ -1,17 +1,16 @@
-import { ModalComponent } from './modal-component';
+import { ModalBase } from './modal-base';
 import { BlockType } from '../constants';
-import { BlockUsersService } from '../services/block-users-service';
-import {ButtonComponent} from './button-component';
-import {LoggingService} from "../services/logging-service";
-import {CSSService} from "../services/css-service";
-import {DOMService} from "../services/dom-service";
-import {Container} from "../di/container";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {ButtonVariant} from "../interfaces/components/IButtonComponent";
+import { Container } from "../di/container";
+import { BlockOptionsModalFactory } from "../factories/modal-factories";
+import { ICommandFactory } from "../commands/interfaces/ICommandFactory";
+import { ICommandInvoker } from "../commands/interfaces/ICommandInvoker";
+import { ICSSService } from "../interfaces/services/ICSSService";
+import { IDOMService } from "../interfaces/services/IDOMService";
+import { ILoggingService } from "../interfaces/services/ILoggingService";
+import { ButtonVariant } from "../interfaces/components/IButtonComponent";
+import { IButtonComponent } from "../interfaces/components/IButtonComponent";
 
-export class BlockOptionsModal extends ModalComponent {
+export class BlockOptionsModal extends ModalBase {
     private entryId: string;
 
     constructor(
@@ -20,10 +19,11 @@ export class BlockOptionsModal extends ModalComponent {
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         private container: Container,
-        private blockUsersService: BlockUsersService,
-        buttonComponent: ButtonComponent
+        buttonComponent: IButtonComponent,
+        private commandFactory: ICommandFactory,
+        private commandInvoker: ICommandInvoker,
     ) {
-        super(domHandler, cssHandler, loggingService, buttonComponent);
+        super(domHandler, cssHandler, loggingService);
         this.entryId = entryId;
     }
 
@@ -98,7 +98,7 @@ export class BlockOptionsModal extends ModalComponent {
     /**
      * Handle user selecting a block option
      */
-    private handleOptionSelected(blockType: BlockType): void {
+    private async handleOptionSelected(blockType: BlockType): Promise<void> {
         // Show loading state on button
         let button: HTMLButtonElement | null = null;
 
@@ -111,19 +111,26 @@ export class BlockOptionsModal extends ModalComponent {
 
         // Use the ButtonComponent to show loading state if button is found
         if (button) {
-            // Create temporary instance to handle the button
             const tempButtonComponent = this.buttonComponent;
-            // Cast to any to access the buttonElement property
             (tempButtonComponent as any).buttonElement = button;
             tempButtonComponent.setLoading(true, blockType === BlockType.MUTE ? 'İşleniyor...' : 'İşleniyor...');
         }
 
         // Short delay for better visual feedback
         setTimeout(async () => {
-            const blockUsers = this.container.resolve<BlockUsersService>('BlockUsersService');
-            blockUsers.setBlockType(blockType);
-            this.close();
-            await blockUsers.blockUsers(this.entryId);
+            try {
+                // Create the block users command
+                const blockUsersCommand = this.commandFactory.createBlockUsersCommand(this.entryId, blockType);
+
+                // Execute the command using the invoker
+                const success = await this.commandInvoker.execute(blockUsersCommand);
+
+                // Close the modal
+                this.close();
+            } catch (error) {
+                // Log and handle errors
+                this.loggingService.error('Error executing block users command:', error);
+            }
         }, 300);
     }
 }
