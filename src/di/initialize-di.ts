@@ -266,6 +266,8 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const containerService = container.resolve<ContainerService>('ContainerService'); // Get from DI
         const observerService = container.resolve<IObserverService>('ObserverService');
+        const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
+        const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
 
         return new CopyButtonComponent(
             domHandler,
@@ -273,7 +275,9 @@ export function initializeDI(): Container {
             loggingService,
             iconComponent,
             containerService, // Pass the instance from DI
-            observerService
+            observerService,
+            commandFactory,
+            commandInvoker
         );
     });
 
@@ -320,6 +324,8 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const observerService = container.resolve<IObserverService>('ObserverService');
+        const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
+        const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
 
         return new PostManagementService(
             domHandler,
@@ -327,7 +333,9 @@ export function initializeDI(): Container {
             loggingService,
             iconComponent,
             notificationService,
-            observerService
+            observerService,
+            commandFactory,
+            commandInvoker,
         );
     });
 
