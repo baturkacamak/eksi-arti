@@ -39,6 +39,8 @@ import {IObserverService} from "../interfaces/services/IObserverService";
 import {INotificationComponent} from "../interfaces/components/INotificationComponent";
 import {IProgressBarComponent} from "../interfaces/components/IProgressBarComponent";
 import {ICountdownComponent} from "../interfaces/components/ICountdownComponent";
+import {EventBus} from "../services/event-bus";
+import {IEventBus} from "../interfaces/services/IEventBus";
 
 /**
  * Initialize the dependency injection container
@@ -156,6 +158,7 @@ export function initializeDI(): Container {
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const preferencesService = container.resolve<PreferencesService>('PreferencesService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const eventBus = container.resolve<IEventBus>('EventBus');
         return new BlockUsersService(
             httpService,
             htmlParser,
@@ -163,7 +166,8 @@ export function initializeDI(): Container {
             loggingService,
             notificationService,
             preferencesService,
-            iconComponent
+            iconComponent,
+            eventBus
         );
     });
 
@@ -356,6 +360,10 @@ export function initializeDI(): Container {
         return new ContainerService(domHandler, loggingService);
     });
 
+    container.register('EventBus', () => {
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new EventBus(loggingService);
+    });
 
     return container;
 }

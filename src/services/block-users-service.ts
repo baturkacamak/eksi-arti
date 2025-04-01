@@ -2,15 +2,15 @@
  * BlockUsersService
  * Service to manage blocking users who favorited a specific entry
  */
-import { HttpService } from './http-service';
-import { HtmlParserService } from './html-parser-service';
+import {HttpService} from './http-service';
+import {HtmlParserService} from './html-parser-service';
 import {StorageService, storageService} from './storage-service';
-import { preferencesManager } from './preferences-manager';
-import { BlockType, Endpoints, STORAGE_KEYS } from '../constants';
-import { LoggingService } from './logging-service';
-import { PreferencesService } from "./preferences-service";
-import { delay } from "./utilities";
-import { NotificationService } from './notification-service';
+import {preferencesManager} from './preferences-manager';
+import {BlockType, Endpoints, STORAGE_KEYS} from '../constants';
+import {LoggingService} from './logging-service';
+import {PreferencesService} from "./preferences-service";
+import {delay} from "./utilities";
+import {NotificationService} from './notification-service';
 import {IconComponent} from "../components/icon-component";
 import {IHtmlParserService} from "../interfaces/services/IHtmlParserService";
 import {IHttpService} from "../interfaces/services/IHttpService";
@@ -19,6 +19,7 @@ import {INotificationService} from "../interfaces/services/INotificationService"
 import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
+import {IEventBus} from "../interfaces/services/IEventBus";
 
 export class BlockUsersService {
     private totalUserCount: number = 0;
@@ -43,10 +44,12 @@ export class BlockUsersService {
         private loggingService: ILoggingService,
         private notificationService: INotificationService,
         private preferencesService: IPreferencesService,
-        private iconComponent: IIconComponent
+        private iconComponent: IIconComponent,
+        private eventBus: IEventBus
     ) {
         this.loadOperationParams();
     }
+
     /**
      * Load operation parameters from preferences
      */
@@ -63,13 +66,13 @@ export class BlockUsersService {
             this.retryDelay = preferences.retryDelay || 5;
             this.maxRetries = preferences.maxRetries || 3;
 
-           this.loggingService.debug('Operation parameters loaded', {
+            this.loggingService.debug('Operation parameters loaded', {
                 requestDelay: this.requestDelay,
                 retryDelay: this.retryDelay,
                 maxRetries: this.maxRetries
             }, 'BlockUsersService');
         } catch (error) {
-          this.loggingService.error('Error loading operation parameters:', error, 'BlockUsersService');
+            this.loggingService.error('Error loading operation parameters:', error, 'BlockUsersService');
             // Use default values if there's an error
         }
     }
@@ -103,7 +106,7 @@ export class BlockUsersService {
 
             // If successful and data exists
             if (result.success && result.data && result.data.entryId === this.entryId) {
-               this.loggingService.debug('Loaded saved state from storage', {
+                this.loggingService.debug('Loaded saved state from storage', {
                     source: result.source,
                     data: result.data
                 }, 'BlockUsersService');
@@ -114,13 +117,13 @@ export class BlockUsersService {
                 return true;
             }
 
-           this.loggingService.debug('No saved state found or entry ID mismatch', {
+            this.loggingService.debug('No saved state found or entry ID mismatch', {
                 currentEntryId: this.entryId,
                 result
             }, 'BlockUsersService');
             return false;
         } catch (error) {
-          this.loggingService.error('Error loading state', error, 'BlockUsersService');
+            this.loggingService.error('Error loading state', error, 'BlockUsersService');
             return false;
         }
     }
@@ -145,13 +148,13 @@ export class BlockUsersService {
                 StorageArea.LOCAL
             );
 
-           this.loggingService.debug('Saved state to storage', {
+            this.loggingService.debug('Saved state to storage', {
                 source: result.source,
                 success: result.success,
                 data: stateData
             }, 'BlockUsersService');
         } catch (error) {
-          this.loggingService.error('Failed to save state', error, 'BlockUsersService');
+            this.loggingService.error('Failed to save state', error, 'BlockUsersService');
         }
     }
 
@@ -166,12 +169,12 @@ export class BlockUsersService {
                 StorageArea.LOCAL
             );
 
-           this.loggingService.debug('Cleared state from storage', {
+            this.loggingService.debug('Cleared state from storage', {
                 source: result.source,
                 success: result.success
             }, 'BlockUsersService');
         } catch (error) {
-          this.loggingService.error('Failed to clear state', error, 'BlockUsersService');
+            this.loggingService.error('Failed to clear state', error, 'BlockUsersService');
         }
     }
 
@@ -203,6 +206,7 @@ export class BlockUsersService {
     async blockUsers(entryId: string): Promise<void> {
         try {
             this.entryId = entryId;
+            this.eventBus.publish('blockUsers:started', {entryId});
 
             // Load updated settings from preferences
             await this.loadOperationParams();
@@ -228,7 +232,7 @@ export class BlockUsersService {
                 // Show success notification with no progress bar
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({ name: 'check_circle', color: '#81c14b', size: 'medium' }).outerHTML}
+                        ${this.iconComponent.create({name: 'check_circle', color: '#81c14b', size: 'medium'}).outerHTML}
                         <span>Tüm kullanıcılar zaten işlendi.</span>
                     </div>`,
                     {
@@ -264,7 +268,7 @@ export class BlockUsersService {
                 this.abortProcessing = true;
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({ name: 'warning', color: '#ff9800', size: 'medium' }).outerHTML}
+                        ${this.iconComponent.create({name: 'warning', color: '#ff9800', size: 'medium'}).outerHTML}
                         <span>İşlem durduruldu.</span>
                     </div>`,
                     {
@@ -281,7 +285,7 @@ export class BlockUsersService {
             if (!this.abortProcessing) {
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({ name: 'check_circle', color: '#81c14b', size: 'medium' }).outerHTML}
+                        ${this.iconComponent.create({name: 'check_circle', color: '#81c14b', size: 'medium'}).outerHTML}
                         <span>İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.</span>
                     </div>`,
                     {
@@ -294,12 +298,12 @@ export class BlockUsersService {
                 await this.saveState();
             }
         } catch (error) {
-          this.loggingService.error('Error in blockUsers:', error);
+            this.loggingService.error('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
-                    ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
+                    ${this.iconComponent.create({name: 'error', color: '#e53935', size: 'medium'}).outerHTML}
                     <span>Hata oluştu: ${errorMessage}</span>
                 </div>`,
                 {
@@ -334,16 +338,27 @@ export class BlockUsersService {
             try {
                 await this.processUser(userUrl, postTitle);
                 this.processedUsers.add(username);
+                this.eventBus.publish('blockUsers:userProcessed', {
+                    entryId: this.entryId,
+                    username,
+                    current: this.processedUsers.size,
+                    total: this.totalUserCount
+                });
                 this.updateProgress();
                 await this.saveState();
+
             } catch (error) {
                 this.errorCount++;
-              this.loggingService.error(`Error processing user ${username}:`, error);
+                this.loggingService.error(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
                     await this.notificationService.show(
                         `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({ name: 'error_outline', color: '#e53935', size: 'medium' }).outerHTML}
+                            ${this.iconComponent.create({
+                            name: 'error_outline',
+                            color: '#e53935',
+                            size: 'medium'
+                        }).outerHTML}
                             <span>Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.</span>
                         </div>`,
                         {
@@ -365,7 +380,7 @@ export class BlockUsersService {
                     // Only create a new notification if we don't have one
                     this.notificationService.show(
                         `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({ name: 'person', color: '#81c14b', size: 'medium' }).outerHTML}
+                            ${this.iconComponent.create({name: 'person', color: '#81c14b', size: 'medium'}).outerHTML}
                             <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
                         </div>`,
                         {
@@ -383,7 +398,7 @@ export class BlockUsersService {
                                 options: {
                                     label: 'Sonraki işlem için bekleniyor:',
                                     onComplete: () => {
-                                       this.loggingService.debug('Countdown completed');
+                                        this.loggingService.debug('Countdown completed');
                                     }
                                 }
                             }
@@ -394,7 +409,7 @@ export class BlockUsersService {
                     // Just update the existing notification
                     this.notificationService.updateContent(
                         `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({ name: 'person', color: '#81c14b', size: 'medium' }).outerHTML}
+                            ${this.iconComponent.create({name: 'person', color: '#81c14b', size: 'medium'}).outerHTML}
                             <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
                         </div>`
                     );
@@ -425,7 +440,7 @@ export class BlockUsersService {
 
             return true;
         } catch (error) {
-          this.loggingService.error(`Failed to process user ${username}:`, error);
+            this.loggingService.error(`Failed to process user ${username}:`, error);
             throw error;
         }
     }
@@ -526,7 +541,7 @@ export class BlockUsersService {
         // Update notification content with progress
         this.notificationService.updateContent(
             `<div style="display: flex; align-items: center">
-                ${this.iconComponent.create({ name: 'person', color: '#81c14b', size: 'medium' }).outerHTML}
+                ${this.iconComponent.create({name: 'person', color: '#81c14b', size: 'medium'}).outerHTML}
                 <span>${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
                 <strong>${processed}</strong> / <strong>${total}</strong> 
                 (Kalan: ${remaining})</span>
@@ -552,7 +567,7 @@ export class BlockUsersService {
     cancelOperation(): void {
         if (this.isProcessing) {
             this.abortProcessing = true;
-          this.loggingService.info('User requested to cancel the blocking operation');
+            this.loggingService.info('User requested to cancel the blocking operation');
         }
     }
 }
