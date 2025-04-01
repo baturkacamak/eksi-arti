@@ -15,6 +15,7 @@ import {IObserverService} from "../interfaces/services/IObserverService";
 import {StorageArea} from "../interfaces/services/IStorageService";
 import {IBlockFavoritesButtonComponent} from "../interfaces/components/IBlockFavoritesButtonComponent";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
+import {IBlockOptionsModalFactory} from "../interfaces/factories";
 
 /**
  * BlockFavoritesButtonComponent
@@ -32,7 +33,8 @@ export class BlockFavoritesButtonComponent implements IBlockFavoritesButtonCompo
         private iconComponent: IIconComponent,
         private containerService: ContainerService = containerService,
         private observerService: IObserverService = observerService,
-        private container: Container
+        private container: Container,
+        private blockModalFactory: IBlockOptionsModalFactory,
     ) {
         this.applyStyles();
     }
@@ -176,8 +178,7 @@ export class BlockFavoritesButtonComponent implements IBlockFavoritesButtonCompo
                     }
                 } else {
                     try {
-                        const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockOptionsModalFactory');
-                        const optionsModal = blockModalFactory.create(entryId);
+                        const optionsModal = this.blockModalFactory.create(entryId);
                         document.body.style.overflow = 'hidden';
                         optionsModal.show();
                     } catch (err) {

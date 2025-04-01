@@ -46,6 +46,7 @@ import {IButtonComponent} from "../interfaces/components/IButtonComponent";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
+import {IBlockOptionsModalFactory} from "../interfaces/factories";
 
 /**
  * Initialize the dependency injection container
@@ -133,6 +134,7 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const containerService = container.resolve<ContainerService>('ContainerService');
         const observerService = container.resolve<IObserverService>('ObserverService');
+        const blockModalFactory = container.resolve<IBlockOptionsModalFactory>('BlockOptionsModalFactory');
 
         return new BlockFavoritesButtonComponent(
             domHandler,
@@ -141,7 +143,8 @@ export function initializeDI(): Container {
             iconComponent,
             containerService,
             observerService,
-            container
+            container,
+            blockModalFactory
         );
     });
 
