@@ -41,6 +41,7 @@ import {IProgressBarComponent} from "../interfaces/components/IProgressBarCompon
 import {ICountdownComponent} from "../interfaces/components/ICountdownComponent";
 import {EventBus} from "../services/event-bus";
 import {IEventBus} from "../interfaces/services/IEventBus";
+import {initializeCommandDI} from "./initialize-di-commands";
 
 /**
  * Initialize the dependency injection container
@@ -364,6 +365,8 @@ export function initializeDI(): Container {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new EventBus(loggingService);
     });
+
+    initializeCommandDI(container);
 
     return container;
 }

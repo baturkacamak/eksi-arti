@@ -40,7 +40,7 @@ export class LoadAllEntriesCommand implements ICommand {
           { theme: "warning", timeout: 5 }
         );
       });
-      let hasMoreEntries: boolean = true;
+      let hasMoreEntries: false | boolean | undefined = true;
       let loadCount = 0;
       while (hasMoreEntries && !signal.aborted) {
         if (this.loadMoreButton) {

@@ -9,7 +9,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {INotificationService} from "../interfaces/services/INotificationService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
-import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/feature-services/IAuthorHighlighterService";
+import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/services/IAuthorHighlighterService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 
 /**
