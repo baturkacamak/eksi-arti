@@ -8,7 +8,7 @@ import { IObserverService } from "../interfaces/services/IObserverService";
 import { pageUtils } from "./page-utils-service";
 import { ICommandFactory } from "../commands/interfaces/ICommandFactory";
 import { ICommandInvoker } from "../commands/interfaces/ICommandInvoker";
-import {delay} from "./utilities";
+import { delay } from "./utilities";
 
 export class PostManagementService {
     private loadMoreButton: HTMLElement | null = null;
@@ -29,7 +29,7 @@ export class PostManagementService {
 
     /**
      * Initialize the service.
-     * Only runs on user profile pages.
+     * Only executes on user profile pages.
      */
     public initialize(): void {
         if (!pageUtils.isUserProfilePage()) {
@@ -38,18 +38,18 @@ export class PostManagementService {
 
         try {
             // Find the "load more entries" button.
-            this.loadMoreButton = document.querySelector('.load-more-entries');
+            this.loadMoreButton = document.querySelector(".load-more-entries");
 
-            // Setup an observer for new entries (e.g., to update counter styles).
+            // Set up observer for new entries (e.g. to update counter styles).
             this.observerId = this.observerService.observe({
-                selector: '.topic-item',
+                selector: ".topic-item",
                 handler: () => {
                     this.addItemCounterStyles();
                 },
-                processExisting: false
+                processExisting: false,
             });
 
-            // Add menu buttons (for "load all" and "delete all" operations).
+            // Add menu buttons to the profile dropdown.
             this.addMenuButtons();
 
             // Apply entry counter styles.
@@ -62,7 +62,7 @@ export class PostManagementService {
     }
 
     /**
-     * Add menu buttons to the profile dropdown.
+     * Add menu buttons (e.g. "Load All Entries" and "Delete All Entries") to the profile dropdown.
      */
     private addMenuButtons(): void {
         try {
@@ -72,7 +72,7 @@ export class PostManagementService {
                 return;
             }
 
-            // Create "Load All Entries" button
+            // Create "Load All Entries" button.
             const loadAllItem = document.createElement("li");
             const loadAllLink = document.createElement("a");
             loadAllLink.textContent = "Tüm Entry'leri Yükle";
@@ -81,12 +81,12 @@ export class PostManagementService {
             loadAllItem.appendChild(loadAllLink);
             dropdownMenuList.appendChild(loadAllItem);
 
-            // Create "Delete All Entries" button (kept inline for now)
+            // Create "Delete All Entries" button.
             const deleteAllItem = document.createElement("li");
             const deleteAllLink = document.createElement("a");
             deleteAllLink.textContent = "Tüm Entry'leri Sil";
             deleteAllLink.href = "javascript:void(0);";
-            deleteAllLink.style.color = "#e53935"; // Red for danger
+            deleteAllLink.style.color = "#e53935"; // Use red for danger.
             deleteAllLink.addEventListener("click", () => this.deleteAllEntries());
             deleteAllItem.appendChild(deleteAllLink);
             dropdownMenuList.appendChild(deleteAllItem);
@@ -98,8 +98,8 @@ export class PostManagementService {
     }
 
     /**
-     * Load all entries using the command pattern.
-     * Instead of inline implementation, delegate the work to a command class.
+     * Load all entries by delegating the task to a command.
+     * This method now uses the command pattern so that the command history tracks the operation.
      */
     public async loadAllEntries(): Promise<void> {
         if (!this.loadMoreButton || this.isProcessing) {
@@ -110,10 +110,11 @@ export class PostManagementService {
             this.isProcessing = true;
             this.abortProcessing = false;
 
-            // Create the LoadAllEntriesCommand via the factory and execute it using the invoker.
-            const command = this.commandFactory.createLoadAllEntriesCommand(this.loadMoreButton);
-            const success = await this.commandInvoker.execute(command);
+            // Create the LoadAllEntriesCommand via the command factory.
+            const loadAllCommand = this.commandFactory.createLoadAllEntriesCommand(this.loadMoreButton);
 
+            // Execute the command using the command invoker.
+            const success = await this.commandInvoker.execute(loadAllCommand);
             if (!success) {
                 this.loggingService.warn("LoadAllEntriesCommand execution failed");
             }
@@ -121,9 +122,9 @@ export class PostManagementService {
             this.loggingService.error("Error loading all entries", error);
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
-          ${this.iconComponent.create({ name: "error", color: "#e53935", size: "medium" }).outerHTML}
-          <span>Entry'ler yüklenirken hata oluştu.</span>
-        </div>`,
+                  ${this.iconComponent.create({ name: "error", color: "#e53935", size: "medium" }).outerHTML}
+                  <span>Entry'ler yüklenirken hata oluştu.</span>
+                </div>`,
                 { theme: "error", timeout: 5 }
             );
         } finally {
@@ -133,7 +134,7 @@ export class PostManagementService {
 
     /**
      * Delete all entries.
-     * (This method remains unchanged, but you could similarly create a DeleteAllEntriesCommand.)
+     * (This method remains mostly unchanged; you could similarly refactor it into a command.)
      */
     public async deleteAllEntries(): Promise<void> {
         if (this.isProcessing) {
@@ -152,9 +153,9 @@ export class PostManagementService {
             if (topicItems.length === 0) {
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-            ${this.iconComponent.create({ name: "info", color: "#1e88e5", size: "medium" }).outerHTML}
-            <span>Silinecek entry bulunamadı.</span>
-          </div>`,
+                      ${this.iconComponent.create({ name: "info", color: "#1e88e5", size: "medium" }).outerHTML}
+                      <span>Silinecek entry bulunamadı.</span>
+                    </div>`,
                     { theme: "info", timeout: 5 }
                 );
                 this.isProcessing = false;
@@ -163,23 +164,19 @@ export class PostManagementService {
 
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
-          ${this.iconComponent.create({ name: "delete", color: "#e53935", size: "medium" }).outerHTML}
-          <span>Entry'ler siliniyor...</span>
-        </div>`,
-                {
-                    theme: "error",
-                    progress: { current: 0, total: topicItems.length },
-                    timeout: 0
-                }
+                  ${this.iconComponent.create({ name: "delete", color: "#e53935", size: "medium" }).outerHTML}
+                  <span>Entry'ler siliniyor...</span>
+                </div>`,
+                { theme: "error", progress: { current: 0, total: topicItems.length }, timeout: 0 }
             );
 
             this.notificationService.addStopButton(() => {
                 this.abortProcessing = true;
                 this.notificationService.show(
                     `<div style="display: flex; align-items: center">
-            ${this.iconComponent.create({ name: "warning", color: "#ff9800", size: "medium" }).outerHTML}
-            <span>Silme işlemi durduruldu.</span>
-          </div>`,
+                      ${this.iconComponent.create({ name: "warning", color: "#ff9800", size: "medium" }).outerHTML}
+                      <span>Silme işlemi durduruldu.</span>
+                    </div>`,
                     { theme: "warning", timeout: 5 }
                 );
             });
@@ -191,34 +188,30 @@ export class PostManagementService {
                 const item = topicItems[i] as HTMLElement;
                 this.notificationService.updateContent(
                     `<div style="display: flex; align-items: center">
-            ${this.iconComponent.create({ name: "delete", color: "#e53935", size: "medium" }).outerHTML}
-            <span>Entry siliniyor... (${i + 1}/${topicItems.length})</span>
-          </div>`
+                      ${this.iconComponent.create({ name: "delete", color: "#e53935", size: "medium" }).outerHTML}
+                      <span>Entry siliniyor... (${i + 1}/${topicItems.length})</span>
+                    </div>`
                 );
                 this.notificationService.updateProgress(i + 1, topicItems.length);
                 await this.deleteEntry(item);
                 await delay(2);
             }
 
-            if (this.abortProcessing) {
-                return;
-            }
-
             const totalEntries = document.querySelectorAll(".topic-item").length;
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
-          ${this.iconComponent.create({ name: "check_circle", color: "#43a047", size: "medium" }).outerHTML}
-          <span>Tüm entry'ler silindi. (Toplam: ${totalEntries})</span>
-        </div>`,
+                  ${this.iconComponent.create({ name: "check_circle", color: "#43a047", size: "medium" }).outerHTML}
+                  <span>Tüm entry'ler silindi. (Toplam: ${totalEntries})</span>
+                </div>`,
                 { theme: "success", timeout: 5 }
             );
         } catch (error) {
             this.loggingService.error("Error deleting entries", error);
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
-          ${this.iconComponent.create({ name: "error", color: "#e53935", size: "medium" }).outerHTML}
-          <span>Entry'ler silinirken hata oluştu.</span>
-        </div>`,
+                  ${this.iconComponent.create({ name: "error", color: "#e53935", size: "medium" }).outerHTML}
+                  <span>Entry'ler silinirken hata oluştu.</span>
+                </div>`,
                 { theme: "error", timeout: 5 }
             );
         } finally {
@@ -226,6 +219,9 @@ export class PostManagementService {
         }
     }
 
+    /**
+     * Delete a single entry.
+     */
     private async deleteEntry(topicItem: HTMLElement): Promise<void> {
         try {
             const deleteLink = Array.from(topicItem.querySelectorAll("a")).find(
@@ -242,6 +238,9 @@ export class PostManagementService {
         }
     }
 
+    /**
+     * Confirm the deletion in the modal dialog.
+     */
     private async confirmDeletion(): Promise<void> {
         return new Promise<void>((resolve) => {
             const checkInterval = setInterval(() => {
@@ -271,7 +270,6 @@ export class PostManagementService {
 
     private addItemCounterStyles(): void {
         try {
-            // Instantiate a new CSSService (or inject if possible)
             const cssHandler = new (this.cssService.constructor as { new (): ICSSService })();
             const counterStyles = `
             .topic-item::before {
@@ -306,5 +304,17 @@ export class PostManagementService {
         }
         this.isProcessing = false;
         this.abortProcessing = true;
+    }
+
+    /**
+     * Example of using command history: Undo the last executed command.
+     */
+    public async undoLastAction(): Promise<void> {
+        const success = await this.commandInvoker.undo();
+        if (success) {
+            this.loggingService.info("Last command undone successfully");
+        } else {
+            this.loggingService.warn("No command to undo or undo failed");
+        }
     }
 }
