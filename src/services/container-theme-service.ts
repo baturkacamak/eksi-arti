@@ -395,8 +395,7 @@ export class ContainerThemeService {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: space-between !important;
-                margin: 10px 0 !important;
-                padding: 8px 10px !important;
+                padding: 0 !important;
                 border-radius: 6px !important;
                 background-color: rgba(0, 0, 0, 0.02) !important;
                 border: 1px solid rgba(0, 0, 0, 0.05) !important;

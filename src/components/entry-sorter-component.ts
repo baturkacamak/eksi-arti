@@ -10,69 +10,10 @@ import {IDOMService} from "../interfaces/services/IDOMService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IEntrySorterComponent} from "../interfaces/components/IEntrySorterComponent";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
-
-/**
- * Sorting strategy interface
- */
-interface SortingStrategy {
-    sort(a: HTMLElement, b: HTMLElement): number;
-    name: string;
-    icon: string;
-    tooltip: string;
-}
-
-/**
- * Length sorting strategy
- */
-class LengthSortingStrategy implements SortingStrategy {
-    name = 'length';
-    icon = 'format_line_spacing';
-    tooltip = 'Uzunluğa göre sırala';
-
-    sort(a: HTMLElement, b: HTMLElement): number {
-        return this.getEntryLength(b) - this.getEntryLength(a);
-    }
-
-    private getEntryLength(entry: HTMLElement): number {
-        const content = entry.querySelector('.content');
-        if (!content) return 0;
-
-        // Count approximate words by counting whitespace
-        const whitespaceMatches = content.textContent?.match(/\s+/g);
-        return whitespaceMatches ? whitespaceMatches.length : 0;
-    }
-}
-
-/**
- * Favorite count sorting strategy
- */
-class FavoriteCountSortingStrategy implements SortingStrategy {
-    name = 'favorite';
-    icon = 'favorite';
-    tooltip = 'Favori sayısına göre sırala';
-
-    sort(a: HTMLElement, b: HTMLElement): number {
-        const aFav = parseInt(a.getAttribute('data-favorite-count') || '0');
-        const bFav = parseInt(b.getAttribute('data-favorite-count') || '0');
-        return bFav - aFav;
-    }
-}
-
-/**
- * Date sorting strategy (most recent first)
- */
-class DateSortingStrategy implements SortingStrategy {
-    name = 'date';
-    icon = 'access_time';
-    tooltip = 'Tarihe göre sırala (varsayılan)';
-
-    sort(a: HTMLElement, b: HTMLElement): number {
-        // Sort by data-id (higher is more recent) - this is the default sort
-        const aId = parseInt(a.getAttribute('data-id') || '0');
-        const bId = parseInt(b.getAttribute('data-id') || '0');
-        return bId - aId;
-    }
-}
+import {DateSortingStrategy} from "../commands/sort/strategies/DateSortingStrategy";
+import {FavoriteCountSortingStrategy} from "../commands/sort/strategies/FavoriteCountSortingStrategy";
+import {ISortingStrategy} from "../commands/sort/ISortingStrategy";
+import {LengthSortingStrategy} from "../commands/sort/strategies/LengthSortingStrategy";
 
 /**
  * EntrySorterComponent
@@ -80,8 +21,8 @@ class DateSortingStrategy implements SortingStrategy {
  */
 export class EntrySorterComponent implements IEntrySorterComponent {
     private sortButtons: HTMLElement[] = [];
-    private activeStrategy: SortingStrategy | null = null;
-    private strategies: SortingStrategy[] = [];
+    private activeStrategy: ISortingStrategy | null = null;
+    private strategies: ISortingStrategy[] = [];
     private static stylesApplied = false;
     private observer: MutationObserver | null = null;
     private observerId: string = '';
@@ -146,7 +87,6 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             .eksi-sort-buttons {
                 display: inline-flex;
                 align-items: center;
-                margin-left: 15px;
             }
             
             .eksi-sort-button {
@@ -288,14 +228,6 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             sortButtonsContainer.style.alignItems = 'center';
             sortButtonsContainer.style.marginRight = 'auto'; // Push sort buttons to the left
 
-            // Add a label for the sort options
-            const sortLabel = this.domHandler.createElement('span');
-            sortLabel.textContent = 'Sırala: ';
-            sortLabel.style.fontSize = '13px';
-            sortLabel.style.color = '#666';
-            sortLabel.style.marginRight = '8px';
-            this.domHandler.appendChild(sortButtonsContainer, sortLabel);
-
             // Create and add buttons for each strategy EXCEPT the date sort
             // We're skipping the date sort (index 0) since you mentioned you don't need it
             this.strategies.forEach((strategy, index) => {
@@ -310,7 +242,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
                 if (index < this.strategies.length - 1) {
                     const buttonSeparator = this.domHandler.createElement('span');
                     this.domHandler.addClass(buttonSeparator, 'eksi-sort-separator');
-                    buttonSeparator.textContent = '·';
+                    buttonSeparator.textContent = '|';
                     buttonSeparator.style.margin = '0 8px';
                     buttonSeparator.style.color = '#ccc';
                     this.domHandler.appendChild(sortButtonsContainer, buttonSeparator);
@@ -344,7 +276,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
     /**
      * Create a sort button for a specific strategy
      */
-    private createSortButton(strategy: SortingStrategy): HTMLElement {
+    private createSortButton(strategy: ISortingStrategy): HTMLElement {
         const button = this.domHandler.createElement('div');
         this.domHandler.addClass(button, 'eksi-sort-button');
         button.setAttribute('data-sort', strategy.name);
@@ -393,7 +325,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
     /**
      * Handle sort button click
      */
-    private handleSortButtonClick(strategy: SortingStrategy, button: HTMLElement): void {
+    private handleSortButtonClick(strategy: ISortingStrategy, button: HTMLElement): void {
         try {
             // Skip if this strategy is already active
             if (this.activeStrategy === strategy) return;
@@ -432,7 +364,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
     /**
      * Sort entries using the specified strategy
      */
-    private sortEntries(strategy: SortingStrategy): void {
+    private sortEntries(strategy: ISortingStrategy): void {
         try {
             const entryList = document.querySelector('#entry-item-list');
             if (!entryList) return;

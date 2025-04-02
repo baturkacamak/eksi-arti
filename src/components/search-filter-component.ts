@@ -879,6 +879,7 @@ export class SearchFilterComponent implements ISearchFilterComponent {
                 padding: 4px 8px;
                 font-size: 14px;
                 outline: none;
+                margin-left: 10px;
             }
             
             /* Search icon */
