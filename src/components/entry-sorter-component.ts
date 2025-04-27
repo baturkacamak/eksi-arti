@@ -356,29 +356,6 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             // Set active strategy
             this.activeStrategy = strategy;
 
-            // If this is the account age strategy, preload account ages
-            if (strategy instanceof AccountAgeSortingStrategy) {
-                // Show loading indicator
-                const originalText = button.textContent;
-                button.textContent = 'Yükleniyor...';
-                button.style.pointerEvents = 'none';
-                button.style.opacity = '0.7';
-
-                // Get all entries
-                const entryList = document.querySelector('#entry-item-list');
-                if (entryList) {
-                    const entries = Array.from(entryList.querySelectorAll('li[data-id]')) as HTMLElement[];
-
-                    // Preload account ages
-                    await strategy.preloadAccountAges(entries);
-                }
-
-                // Restore button state
-                button.textContent = originalText;
-                button.style.pointerEvents = '';
-                button.style.opacity = '';
-            }
-
             // Sort entries
             this.sortEntries(strategy);
 
