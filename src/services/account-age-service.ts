@@ -1,12 +1,13 @@
 // src/services/account-age-service.ts
-import { IDOMService } from "../interfaces/services/IDOMService";
-import { ICSSService } from "../interfaces/services/ICSSService";
-import { IHttpService } from "../interfaces/services/IHttpService";
-import { ILoggingService } from "../interfaces/services/ILoggingService";
-import { IStorageService, StorageArea } from "../interfaces/services/IStorageService";
-import { IObserverService } from "../interfaces/services/IObserverService";
-import { IIconComponent } from "../interfaces/components/IIconComponent";
-import { SITE_DOMAIN } from "../constants";
+import {IDOMService} from "../interfaces/services/IDOMService";
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IHttpService} from "../interfaces/services/IHttpService";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
+import {IObserverService} from "../interfaces/services/IObserverService";
+import {IIconComponent} from "../interfaces/components/IIconComponent";
+import {SITE_DOMAIN} from "../constants";
+import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
 interface UserAccountAge {
     username: string;
@@ -29,39 +30,17 @@ export class AccountAgeService {
     private processedLinks: WeakSet<HTMLElement> = new WeakSet();
     private activeRequests: Map<string, Promise<UserAccountAge | null>> = new Map();
 
-    private constructor(
+    public constructor(
         private domService: IDOMService,
         private cssService: ICSSService,
         private httpService: IHttpService,
         private loggingService: ILoggingService,
         private storageService: IStorageService,
         private observerService: IObserverService,
-        private iconComponent: IIconComponent
+        private iconComponent: IIconComponent,
+        private tooltipComponent: ITooltipComponent,
     ) {
         this.applyCSSStyles();
-    }
-
-    public static getInstance(
-        domService: IDOMService,
-        cssService: ICSSService,
-        httpService: IHttpService,
-        loggingService: ILoggingService,
-        storageService: IStorageService,
-        observerService: IObserverService,
-        iconComponent: IIconComponent
-    ): AccountAgeService {
-        if (!AccountAgeService.instance) {
-            AccountAgeService.instance = new AccountAgeService(
-                domService,
-                cssService,
-                httpService,
-                loggingService,
-                storageService,
-                observerService,
-                iconComponent
-            );
-        }
-        return AccountAgeService.instance;
     }
 
     public async initialize(): Promise<void> {
@@ -76,7 +55,7 @@ export class AccountAgeService {
 
                 // Setup observer for new links
                 this.observerId = this.observerService.observe({
-                    selector: 'a[href^="/biri/"]',
+                    selector: 'a.entry-author[href^="/biri/"]',
                     handler: (elements) => {
                         elements.forEach(element => {
                             if (element instanceof HTMLAnchorElement && !this.processedLinks.has(element)) {
@@ -103,13 +82,18 @@ export class AccountAgeService {
             );
 
             if (result.success && result.data) {
-                this.cache = result.data;
+                const raw = result.data;
+                for (const user in raw) {
+                    raw[user].registrationDate = new Date(raw[user].registrationDate as any);
+                }
+                this.cache = raw;
                 this.cleanExpiredCache();
             }
         } catch (error) {
             this.loggingService.error('Error loading account age cache:', error);
         }
     }
+
 
     private async saveCache(): Promise<void> {
         try {
@@ -140,7 +124,7 @@ export class AccountAgeService {
     }
 
     private processExistingLinks(): void {
-        const links = document.querySelectorAll('a[href^="/biri/"]') as NodeListOf<HTMLAnchorElement>;
+        const links = document.querySelectorAll('a.entry-author[href^="/biri/"]') as NodeListOf<HTMLAnchorElement>;
         links.forEach(link => {
             if (!this.processedLinks.has(link)) {
                 this.addAccountAgeBadge(link);
@@ -198,7 +182,7 @@ export class AccountAgeService {
                 }
 
                 const now = new Date();
-                const { years, months } = this.calculateAge(registrationDate, now);
+                const {years, months} = this.calculateAge(registrationDate, now);
 
                 const accountAge: UserAccountAge = {
                     username,
@@ -253,7 +237,7 @@ export class AccountAgeService {
             months += 12;
         }
 
-        return { years, months };
+        return {years, months};
     }
 
     private async addAccountAgeBadge(link: HTMLAnchorElement): Promise<void> {
@@ -286,11 +270,39 @@ export class AccountAgeService {
     }
 
     private appendBadge(link: HTMLAnchorElement, accountAge: UserAccountAge): void {
+        if (!(accountAge.registrationDate instanceof Date)) {
+            accountAge.registrationDate = new Date(accountAge.registrationDate as any);
+        }
         const badge = this.createBadge(accountAge);
         link.parentNode?.insertBefore(badge, link.nextSibling);
 
-        // Add tooltip functionality
-        this.setupTooltip(badge, accountAge);
+
+        const tooltipId = `eksi-age-tooltip-${accountAge.username}`;
+        const tooltipContent = this.domService.createElement('div');
+        tooltipContent.id = tooltipId;
+        tooltipContent.style.display = 'none';
+        const yearNames = [
+            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ];
+        // e.g. “Kayıt: Nisan 2013” / “Yaş: 12 yıl 3 ay”
+        tooltipContent.innerHTML = `
+          <div><strong>Kayıt:</strong>
+            ${yearNames[accountAge.registrationDate.getMonth()]}
+            ${accountAge.registrationDate.getFullYear()}
+          </div>
+          <div><strong>Yaş:</strong>
+            ${accountAge.ageInYears} yıl ${accountAge.ageInMonths} ay
+          </div>
+        `;
+        document.body.appendChild(tooltipContent);
+
+
+        badge.classList.add('tooltip-trigger');
+        badge.setAttribute('data-tooltip-content', tooltipId);
+
+
+        this.tooltipComponent.setupTooltip(badge);
     }
 
     private createBadge(accountAge: UserAccountAge): HTMLElement {
@@ -322,43 +334,6 @@ export class AccountAgeService {
         this.domService.appendChild(badge, spinner);
 
         return badge;
-    }
-
-    private setupTooltip(badge: HTMLElement, accountAge: UserAccountAge): void {
-        const tooltip = this.domService.createElement('div');
-        tooltip.className = 'eksi-account-age-tooltip';
-
-        // Format registration date
-        const months = [
-            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-        ];
-
-        const formattedDate = `${months[accountAge.registrationDate.getMonth()]} ${accountAge.registrationDate.getFullYear()}`;
-
-        tooltip.innerHTML = `
-            <div class="tooltip-header">Hesap Yaşı</div>
-            <div class="tooltip-content">
-                <div><strong>Kayıt:</strong> ${formattedDate}</div>
-                <div><strong>Yaş:</strong> ${accountAge.ageInYears} yıl ${accountAge.ageInMonths} ay</div>
-            </div>
-        `;
-
-        this.domService.appendChild(badge, tooltip);
-
-        // Show tooltip on hover
-        badge.addEventListener('mouseenter', () => {
-            tooltip.style.display = 'block';
-            // Position tooltip
-            const rect = badge.getBoundingClientRect();
-            tooltip.style.top = `${rect.height + 5}px`;
-            tooltip.style.left = '50%';
-            tooltip.style.transform = 'translateX(-50%)';
-        });
-
-        badge.addEventListener('mouseleave', () => {
-            tooltip.style.display = 'none';
-        });
     }
 
     private applyCSSStyles(): void {
@@ -468,6 +443,3 @@ export class AccountAgeService {
         this.activeRequests.clear();
     }
 }
-
-// Export singleton instance
-export const accountAgeService = AccountAgeService.getInstance;

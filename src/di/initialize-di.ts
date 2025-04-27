@@ -49,6 +49,7 @@ import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
 import { AccountAgeService } from '../services/account-age-service';
 import {IHttpService} from "../interfaces/services/IHttpService";
+import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
 /**
  * Initialize the dependency injection container
@@ -312,15 +313,17 @@ export function initializeDI(): Container {
         const storageService = container.resolve<IStorageService>('StorageService');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
 
-        return AccountAgeService.getInstance(
+        return new AccountAgeService(
             domService,
             cssService,
             httpService,
             loggingService,
             storageService,
             observerService,
-            iconComponent
+            iconComponent,
+            tooltipComponent
         );
     });
 
