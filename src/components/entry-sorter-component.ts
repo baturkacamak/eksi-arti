@@ -14,6 +14,8 @@ import {DateSortingStrategy} from "../commands/sort/strategies/DateSortingStrate
 import {FavoriteCountSortingStrategy} from "../commands/sort/strategies/FavoriteCountSortingStrategy";
 import {ISortingStrategy} from "../commands/sort/ISortingStrategy";
 import {LengthSortingStrategy} from "../commands/sort/strategies/LengthSortingStrategy";
+import { AccountAgeSortingStrategy } from "../commands/sort/strategies/AccountAgeSortingStrategy";
+import { AccountAgeService } from "../services/account-age-service";
 
 /**
  * EntrySorterComponent
@@ -33,14 +35,16 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent,
         private observerService: IObserverService,
-        private pageUtils: PageUtilsService
+        private pageUtils: PageUtilsService,
+        private accountAgeService: AccountAgeService
     ) {
 
         // Initialize strategies
         this.strategies = [
             new DateSortingStrategy(),
             new FavoriteCountSortingStrategy(),
-            new LengthSortingStrategy()
+            new LengthSortingStrategy(),
+            new AccountAgeSortingStrategy(this.accountAgeService)
         ];
 
         this.applyStyles();
@@ -299,10 +303,13 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         (icon as HTMLElement).style.fontSize = '16px';
         (icon as HTMLElement).style.verticalAlign = 'middle';
 
-        // Create text node - use Turkish versions of the names for better UX
-        const displayName = strategy.name === 'favorite' ? 'favoriler' :
-            strategy.name === 'length' ? 'uzunluk' :
-                strategy.name;
+        // Create text node - use displayName or Turkish versions of the names for better UX
+        const displayName = strategy.displayName || (
+            strategy.name === 'favorite' ? 'favoriler' :
+                strategy.name === 'length' ? 'uzunluk' :
+                    strategy.name === 'account-age' ? 'hesap yaşı' :
+                        strategy.name
+        );
         const text = document.createTextNode(displayName);
 
         // Assemble button
@@ -315,8 +322,8 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         }
 
         // Add click handler
-        this.domHandler.addEventListener(button, 'click', () => {
-            this.handleSortButtonClick(strategy, button);
+        this.domHandler.addEventListener(button, 'click', async () => {
+            await this.handleSortButtonClick(strategy, button);
         });
 
         return button;
@@ -325,7 +332,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
     /**
      * Handle sort button click
      */
-    private handleSortButtonClick(strategy: ISortingStrategy, button: HTMLElement): void {
+    private async handleSortButtonClick(strategy: ISortingStrategy, button: HTMLElement): Promise<void> {
         try {
             // Skip if this strategy is already active
             if (this.activeStrategy === strategy) return;
@@ -348,6 +355,29 @@ export class EntrySorterComponent implements IEntrySorterComponent {
 
             // Set active strategy
             this.activeStrategy = strategy;
+
+            // If this is the account age strategy, preload account ages
+            if (strategy instanceof AccountAgeSortingStrategy) {
+                // Show loading indicator
+                const originalText = button.textContent;
+                button.textContent = 'Yükleniyor...';
+                button.style.pointerEvents = 'none';
+                button.style.opacity = '0.7';
+
+                // Get all entries
+                const entryList = document.querySelector('#entry-item-list');
+                if (entryList) {
+                    const entries = Array.from(entryList.querySelectorAll('li[data-id]')) as HTMLElement[];
+
+                    // Preload account ages
+                    await strategy.preloadAccountAges(entries);
+                }
+
+                // Restore button state
+                button.textContent = originalText;
+                button.style.pointerEvents = '';
+                button.style.opacity = '';
+            }
 
             // Sort entries
             this.sortEntries(strategy);

@@ -47,6 +47,8 @@ import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
+import { AccountAgeService } from '../services/account-age-service';
+import {IHttpService} from "../interfaces/services/IHttpService";
 
 /**
  * Initialize the dependency injection container
@@ -209,6 +211,8 @@ export function initializeDI(): Container {
         const preferencesManager = container.resolve<PreferencesManager>('PreferencesManager');
         const storageService = container.resolve<IStorageService>('StorageService');
         const observerService = container.resolve<IObserverService>('ObserverService');
+        const accountAgeService = container.resolve<AccountAgeService>('AccountAgeService');
+
         return new UIService(
             domService,
             cssService,
@@ -219,7 +223,8 @@ export function initializeDI(): Container {
             preferencesManager,
             storageService,
             observerService,
-            container
+            container,
+            accountAgeService
         );
     });
 
@@ -299,6 +304,26 @@ export function initializeDI(): Container {
         );
     });
 
+    container.register('AccountAgeService', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const httpService = container.resolve<IHttpService>('HttpService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const storageService = container.resolve<IStorageService>('StorageService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+
+        return AccountAgeService.getInstance(
+            domService,
+            cssService,
+            httpService,
+            loggingService,
+            storageService,
+            observerService,
+            iconComponent
+        );
+    });
+
     container.register('EntrySorterComponent', () => {
         const domHandler = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
@@ -306,6 +331,7 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
+        const accountAgeService = container.resolve<AccountAgeService>('AccountAgeService');
 
         return new EntrySorterComponent(
             domHandler,
@@ -313,7 +339,8 @@ export function initializeDI(): Container {
             loggingService,
             iconComponent,
             observerService,
-            pageUtils
+            pageUtils,
+            accountAgeService
         );
     });
 

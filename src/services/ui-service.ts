@@ -29,6 +29,7 @@ import {IObserverService} from "../interfaces/services/IObserverService";
 import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
+import { AccountAgeService } from './account-age-service';
 
 export class UIService {
     private initialized: boolean = false;
@@ -56,7 +57,8 @@ export class UIService {
         private preferencesManager: IPreferencesManager,
         private storageService: IStorageService,
         private observerService: IObserverService,
-        private container: Container
+        private container: Container,
+        private accountAgeService: AccountAgeService,
     ) {
         // Resolve components from container instead of creating them directly
         this.copyButtonComponent = container.resolve<CopyButtonComponent>('CopyButtonComponent');
@@ -134,6 +136,8 @@ export class UIService {
                 this.searchFilterComponent.initialize();
 
                 await this.authorHighlighterService.initialize();
+
+                await this.accountAgeService.initialize();
 
                 // Add version info to console
                 this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
@@ -289,6 +293,10 @@ export class UIService {
 
         if (this.blockFavoritesButtonComponent) {
             this.blockFavoritesButtonComponent.destroy();
+        }
+
+        if (this.accountAgeService) {
+            this.accountAgeService.destroy();
         }
     }
 }

@@ -13,6 +13,8 @@ export interface ISortingStrategy {
    */
   name: string;
 
+  readonly displayName?: string;
+
   /**
    * Icon to display in UI
    */
@@ -22,4 +24,5 @@ export interface ISortingStrategy {
    * Tooltip text to display in UI
    */
   tooltip: string;
+  sort(a: HTMLElement, b: HTMLElement): number;
 }
