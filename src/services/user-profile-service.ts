@@ -185,7 +185,7 @@ export class UserProfileService {
                     }
 
                     const now = new Date();
-                    const { years, months } = this.calculateAge(registrationDate, now);
+                    const {years, months} = this.calculateAge(registrationDate, now);
 
                     const ratingElement = doc.querySelector('p.muted');
                     const rating = ratingElement?.textContent?.trim() || '';
@@ -275,15 +275,13 @@ export class UserProfileService {
         const loadingBadge = this.createLoadingBadge();
         link.parentNode?.insertBefore(loadingBadge, link.nextSibling);
 
-        this.queueService.add(async () => {
-            if (!loadingBadge.parentNode) return;
-            const userProfile = await this.getUserProfile(username);
-            loadingBadge.remove();
+        if (!loadingBadge.parentNode) return;
+        const userProfile = await this.getUserProfile(username);
+        loadingBadge.remove();
 
-            if (userProfile) {
-                this.appendBadge(link, userProfile);
-            }
-        });
+        if (userProfile) {
+            this.appendBadge(link, userProfile);
+        }
     }
 
     private appendBadge(link: HTMLAnchorElement, userProfile: IUserProfile): void {
