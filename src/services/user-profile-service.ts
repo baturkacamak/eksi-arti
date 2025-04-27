@@ -8,6 +8,7 @@ import {IObserverService} from "../interfaces/services/IObserverService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {SITE_DOMAIN} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
+import {IAsyncQueueService} from "../interfaces/services/IAsyncQueueService";
 
 interface IUserProfile {
     username: string;
@@ -45,6 +46,7 @@ export class UserProfileService {
         private observerService: IObserverService,
         private iconComponent: IIconComponent,
         private tooltipComponent: ITooltipComponent,
+        private queueService: IAsyncQueueService,
     ) {
         this.applyCSSStyles();
     }
@@ -152,79 +154,75 @@ export class UserProfileService {
     }
 
     private async fetchUserProfile(username: string): Promise<IUserProfile | null> {
-        // Check if there's already an active request for this user
         if (this.activeRequests.has(username)) {
             return this.activeRequests.get(username)!;
         }
 
-        const fetchPromise = (async () => {
-            try {
-                const url = `https://${SITE_DOMAIN}/biri/${encodeURIComponent(username)}`;
-                const html = await this.httpService.get(url);
+        const fetchPromise = new Promise<IUserProfile | null>((resolve) => {
+            this.queueService.add(async () => {
+                try {
+                    const url = `https://${SITE_DOMAIN}/biri/${encodeURIComponent(username)}`;
+                    const html = await this.httpService.get(url);
 
-                // Parse the registration date from the HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const recordDateElement = doc.querySelector('.recorddate');
-
-                if (!recordDateElement) {
-                    return null;
-                }
-
-                // Extract the date text (e.g., "mart 2013")
-                const dateText = recordDateElement.textContent?.trim() || '';
-                if (!dateText) {
-                    return null;
-                }
-
-                // Parse the Turkish date format
-                const registrationDate = this.parseTurkishDate(dateText);
-                if (!registrationDate) {
-                    return null;
-                }
-
-                const now = new Date();
-                const {years, months} = this.calculateAge(registrationDate, now);
-
-                // Extract the rating
-                const ratingElement = doc.querySelector('p.muted');
-                const rating = ratingElement?.textContent?.trim() || '';
-                const ratingMatch = rating.match(/\((\d+)\)/);
-                const ratingPoints = ratingMatch ? parseInt(ratingMatch[1], 10) : undefined;
-
-                // Extract counts
-                const entryCountEl = doc.querySelector('#entry-count-total');
-                const followerCountEl = doc.querySelector('#user-follower-count');
-                const followingCountEl = doc.querySelector('#user-following-count');
-
-                const userProfile: IUserProfile = {
-                    username,
-                    registrationDate: registrationDate.getTime(),
-                    ageInYears: years,
-                    ageInMonths: months,
-                    lastUpdated: Date.now(),
-                    stats: {
-                        rating: rating.replace(/\s*\(\d+\)/, ''),
-                        ratingPoints,
-                        entryCount: entryCountEl ? parseInt(entryCountEl.textContent || '0', 10) : undefined,
-                        followerCount: followerCountEl ? parseInt(followerCountEl.textContent || '0', 10) : undefined,
-                        followingCount: followingCountEl ? parseInt(followingCountEl.textContent || '0', 10) : undefined
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const recordDateElement = doc.querySelector('.recorddate');
+                    if (!recordDateElement) {
+                        resolve(null);
+                        return;
                     }
-                };
 
-                // Update cache
-                this.cache[username] = userProfile;
-                await this.saveCache();
+                    const dateText = recordDateElement.textContent?.trim() || '';
+                    if (!dateText) {
+                        resolve(null);
+                        return;
+                    }
 
-                return userProfile;
-            } catch (error) {
-                this.loggingService.error(`Error fetching user profile for ${username}:`, error);
-                return null;
-            } finally {
-                // Remove the request from the active requests map
-                this.activeRequests.delete(username);
-            }
-        })();
+                    const registrationDate = this.parseTurkishDate(dateText);
+                    if (!registrationDate) {
+                        resolve(null);
+                        return;
+                    }
+
+                    const now = new Date();
+                    const { years, months } = this.calculateAge(registrationDate, now);
+
+                    const ratingElement = doc.querySelector('p.muted');
+                    const rating = ratingElement?.textContent?.trim() || '';
+                    const ratingMatch = rating.match(/\((\d+)\)/);
+                    const ratingPoints = ratingMatch ? parseInt(ratingMatch[1], 10) : undefined;
+
+                    const entryCountEl = doc.querySelector('#entry-count-total');
+                    const followerCountEl = doc.querySelector('#user-follower-count');
+                    const followingCountEl = doc.querySelector('#user-following-count');
+
+                    const userProfile: IUserProfile = {
+                        username,
+                        registrationDate: registrationDate.getTime(),
+                        ageInYears: years,
+                        ageInMonths: months,
+                        lastUpdated: Date.now(),
+                        stats: {
+                            rating: rating.replace(/\s*\(\d+\)/, ''),
+                            ratingPoints,
+                            entryCount: entryCountEl ? parseInt(entryCountEl.textContent || '0', 10) : undefined,
+                            followerCount: followerCountEl ? parseInt(followerCountEl.textContent || '0', 10) : undefined,
+                            followingCount: followingCountEl ? parseInt(followingCountEl.textContent || '0', 10) : undefined
+                        }
+                    };
+
+                    this.cache[username] = userProfile;
+                    await this.saveCache();
+
+                    resolve(userProfile);
+                } catch (error) {
+                    this.loggingService.error(`Error fetching user profile for ${username}:`, error);
+                    resolve(null);
+                } finally {
+                    this.activeRequests.delete(username);
+                }
+            });
+        });
 
         // Store the promise in the active requests map
         this.activeRequests.set(username, fetchPromise);
@@ -277,8 +275,7 @@ export class UserProfileService {
         const loadingBadge = this.createLoadingBadge();
         link.parentNode?.insertBefore(loadingBadge, link.nextSibling);
 
-        // Fetch user profile with debounced loading to avoid flickering
-        setTimeout(async () => {
+        this.queueService.add(async () => {
             if (!loadingBadge.parentNode) return;
             const userProfile = await this.getUserProfile(username);
             loadingBadge.remove();
@@ -286,7 +283,7 @@ export class UserProfileService {
             if (userProfile) {
                 this.appendBadge(link, userProfile);
             }
-        }, 300);
+        });
     }
 
     private appendBadge(link: HTMLAnchorElement, userProfile: IUserProfile): void {
@@ -306,26 +303,58 @@ export class UserProfileService {
         // Convert timestamp to Date for display
         const registrationDate = new Date(userProfile.registrationDate);
 
+// Create icon elements
+        const calendarIcon = this.iconComponent.create({
+            name: 'calendar_today',
+            size: 'small',
+            color: '#81c14b'
+        }).outerHTML;
+        const cakeIcon = this.iconComponent.create({name: 'cake', size: 'small', color: '#81c14b'}).outerHTML;
+        const starIcon = this.iconComponent.create({name: 'star', size: 'small', color: '#81c14b'}).outerHTML;
+        const bookIcon = this.iconComponent.create({name: 'menu_book', size: 'small', color: '#81c14b'}).outerHTML;
+        const groupIcon = this.iconComponent.create({name: 'group', size: 'small', color: '#81c14b'}).outerHTML;
+        const followIcon = this.iconComponent.create({name: 'person_add', size: 'small', color: '#81c14b'}).outerHTML;
+
         tooltipContent.innerHTML = `
-            <div><strong>Kayıt:</strong>
-                ${yearNames[registrationDate.getMonth()]}
-                ${registrationDate.getFullYear()}
+            <div class="eksi-user-profile-tooltip-row">
+                <span class="eksi-user-profile-tooltip-icon">${calendarIcon}</span>
+                <span class="eksi-user-profile-tooltip-text"><strong>Kayıt:</strong> ${yearNames[registrationDate.getMonth()]} ${registrationDate.getFullYear()}</span>
             </div>
-            <div><strong>Yaş:</strong>
-                ${userProfile.ageInYears} yıl ${userProfile.ageInMonths} ay
+            <div class="eksi-user-profile-tooltip-row">
+                <span class="eksi-user-profile-tooltip-icon">${cakeIcon}</span>
+                <span class="eksi-user-profile-tooltip-text"><strong>Yaş:</strong> ${userProfile.ageInYears} yıl ${userProfile.ageInMonths} ay</span>
             </div>
             ${userProfile.stats ? `<div class="tooltip-divider"></div>` : ''}
-            ${userProfile.stats?.rating ? `<div><strong>Seviye:</strong> ${userProfile.stats.rating} (${userProfile.stats.ratingPoints})</div>` : ''}
-            ${userProfile.stats?.entryCount ? `<div><strong>Entry:</strong> ${userProfile.stats.entryCount}</div>` : ''}
-            ${userProfile.stats?.followerCount ? `<div><strong>Takipçi:</strong> ${userProfile.stats.followerCount}</div>` : ''}
-            ${userProfile.stats?.followingCount ? `<div><strong>Takip:</strong> ${userProfile.stats.followingCount}</div>` : ''}
+            ${userProfile.stats?.rating ? `
+                <div class="eksi-user-profile-tooltip-row">
+                    <span class="eksi-user-profile-tooltip-icon">${starIcon}</span>
+                    <span class="eksi-user-profile-tooltip-text"><strong>Seviye:</strong> ${userProfile.stats.rating} (${userProfile.stats.ratingPoints})</span>
+                </div>` : ''}
+            ${userProfile.stats?.entryCount ? `
+                <div class="eksi-user-profile-tooltip-row">
+                    <span class="eksi-user-profile-tooltip-icon">${bookIcon}</span>
+                    <span class="eksi-user-profile-tooltip-text"><strong>Entry:</strong> ${userProfile.stats.entryCount}</span>
+                </div>` : ''}
+            ${userProfile.stats?.followerCount ? `
+                <div class="eksi-user-profile-tooltip-row">
+                    <span class="eksi-user-profile-tooltip-icon">${groupIcon}</span>
+                    <span class="eksi-user-profile-tooltip-text"><strong>Takipçi:</strong> ${userProfile.stats.followerCount}</span>
+                </div>` : ''}
+            ${userProfile.stats?.followingCount ? `
+                <div class="eksi-user-profile-tooltip-row">
+                    <span class="eksi-user-profile-tooltip-icon">${followIcon}</span>
+                    <span class="eksi-user-profile-tooltip-text"><strong>Takip:</strong> ${userProfile.stats.followingCount}</span>
+                </div>` : ''}
         `;
+
         document.body.appendChild(tooltipContent);
 
         badge.classList.add('tooltip-trigger');
         badge.setAttribute('data-tooltip-content', tooltipId);
 
-        this.tooltipComponent.setupTooltip(badge);
+        this.tooltipComponent.setupTooltip(badge, {
+            offset: 15
+        });
     }
 
     private createBadge(userProfile: IUserProfile): HTMLElement {
@@ -365,7 +394,7 @@ export class UserProfileService {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
-                margin-left: 8px;
+                margin-right: 8px;
                 padding: 2px 6px;
                 background: rgba(129, 193, 75, 0.1);
                 border-radius: 4px;
@@ -434,6 +463,33 @@ export class UserProfileService {
             
             .eksi-user-profile-tooltip .tooltip-content > div {
                 margin: 2px 0;
+            }
+            
+            .eksi-user-profile-tooltip-row {
+                display: flex;
+                align-items: center;
+                gap: 6px; /* spacing between icon and text */
+                margin: 4px 0; /* vertical spacing between rows */
+            }
+            
+            .eksi-user-profile-tooltip-icon {
+                flex-shrink: 0;
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .eksi-user-profile-tooltip-text {
+                font-size: 12px;
+                line-height: 1.4;
+            }
+            
+            #entry-nick-container #entry-author {
+                display: flex;
+                align-items: center;
+                flex-direction: row-reverse;
             }
             
             @media (prefers-color-scheme: dark) {

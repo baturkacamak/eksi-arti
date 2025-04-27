@@ -81,4 +81,11 @@ export class DOMService implements IDOMService {
     ): void {
         element.addEventListener(event, callback, options);
     }
+
+    /**
+     * Create text node
+     */
+    createTextNode(text: string): Text {
+        return document.createTextNode(text);
+    }
 }

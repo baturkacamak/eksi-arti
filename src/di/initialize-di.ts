@@ -48,6 +48,8 @@ import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
 import { UserProfileService } from '../services/user-profile-service';
+import { AsyncQueueService } from '../services/async-queue-service';
+import { IAsyncQueueService } from '../interfaces/services/IAsyncQueueService';
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
@@ -314,6 +316,7 @@ export function initializeDI(): Container {
         const observerService = container.resolve<IObserverService>('ObserverService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
+        const queueService = container.resolve<IAsyncQueueService>('AsyncQueueService'); // <- NEW
 
         return new UserProfileService(
             domService,
@@ -323,7 +326,16 @@ export function initializeDI(): Container {
             storageService,
             observerService,
             iconComponent,
-            tooltipComponent
+            tooltipComponent,
+            queueService
+        );
+    });
+
+    container.register('AsyncQueueService', () => {
+        return new AsyncQueueService(
+            100, // default delay between tasks (milliseconds)
+            1,   // max 1 concurrent task (sequential processing)
+            2    // max 2 retries if task fails
         );
     });
 
