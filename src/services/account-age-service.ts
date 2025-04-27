@@ -11,7 +11,7 @@ import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
 interface UserAccountAge {
     username: string;
-    registrationDate: Date;
+    registrationDate: number;
     ageInYears: number;
     ageInMonths: number;
     lastUpdated: number;
@@ -82,18 +82,14 @@ export class AccountAgeService {
             );
 
             if (result.success && result.data) {
-                const raw = result.data;
-                for (const user in raw) {
-                    raw[user].registrationDate = new Date(raw[user].registrationDate as any);
-                }
-                this.cache = raw;
+                this.cache = result.data;
+                // No need to convert anything since we're storing timestamps
                 this.cleanExpiredCache();
             }
         } catch (error) {
             this.loggingService.error('Error loading account age cache:', error);
         }
     }
-
 
     private async saveCache(): Promise<void> {
         try {
@@ -186,7 +182,7 @@ export class AccountAgeService {
 
                 const accountAge: UserAccountAge = {
                     username,
-                    registrationDate,
+                    registrationDate: registrationDate.getTime(),
                     ageInYears: years,
                     ageInMonths: months,
                     lastUpdated: Date.now()
@@ -270,37 +266,35 @@ export class AccountAgeService {
     }
 
     private appendBadge(link: HTMLAnchorElement, accountAge: UserAccountAge): void {
-        if (!(accountAge.registrationDate instanceof Date)) {
-            accountAge.registrationDate = new Date(accountAge.registrationDate as any);
-        }
         const badge = this.createBadge(accountAge);
         link.parentNode?.insertBefore(badge, link.nextSibling);
-
 
         const tooltipId = `eksi-age-tooltip-${accountAge.username}`;
         const tooltipContent = this.domService.createElement('div');
         tooltipContent.id = tooltipId;
         tooltipContent.style.display = 'none';
+
         const yearNames = [
             'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
             'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
         ];
-        // e.g. “Kayıt: Nisan 2013” / “Yaş: 12 yıl 3 ay”
-        tooltipContent.innerHTML = `
-          <div><strong>Kayıt:</strong>
-            ${yearNames[accountAge.registrationDate.getMonth()]}
-            ${accountAge.registrationDate.getFullYear()}
-          </div>
-          <div><strong>Yaş:</strong>
-            ${accountAge.ageInYears} yıl ${accountAge.ageInMonths} ay
-          </div>
-        `;
-        document.body.appendChild(tooltipContent);
 
+        // Convert timestamp to Date for display
+        const registrationDate = new Date(accountAge.registrationDate);
+
+        tooltipContent.innerHTML = `
+      <div><strong>Kayıt:</strong>
+        ${yearNames[registrationDate.getMonth()]}
+        ${registrationDate.getFullYear()}
+      </div>
+      <div><strong>Yaş:</strong>
+        ${accountAge.ageInYears} yıl ${accountAge.ageInMonths} ay
+      </div>
+    `;
+        document.body.appendChild(tooltipContent);
 
         badge.classList.add('tooltip-trigger');
         badge.setAttribute('data-tooltip-content', tooltipId);
-
 
         this.tooltipComponent.setupTooltip(badge);
     }
