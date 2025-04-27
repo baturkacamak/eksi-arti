@@ -11,7 +11,7 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
     constructor(private userProfileService: UserProfileService) {}
 
     /**
-     * Sort entries by author account age
+     * Sort entries by author account age (using only cached data)
      */
     public sort(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.getAuthorUsername(a);
@@ -19,41 +19,17 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
 
         if (!authorA || !authorB) return 0;
 
-        // Get account ages from cache or default to 0
         const ageA = this.userProfileService.getUserProfileFromCache(authorA)?.ageInYears || 0;
         const ageB = this.userProfileService.getUserProfileFromCache(authorB)?.ageInYears || 0;
 
-        // Sort in descending order (older accounts first)
-        return ageB - ageA;
+        return ageB - ageA; // Descending: older accounts first
     }
 
     /**
      * Extract author username from entry element
      */
     private getAuthorUsername(entry: HTMLElement): string | null {
-        const authorLink = entry.querySelector('.entry-author');
-        if (authorLink) {
-            return authorLink.textContent?.trim() || null;
-        }
-        return null;
-    }
-
-    /**
-     * Preload account ages for all entries before sorting
-     */
-    public async preloadAccountAges(entries: HTMLElement[]): Promise<void> {
-        const usernames = entries
-            .map(entry => this.getAuthorUsername(entry))
-            .filter((username): username is string => username !== null);
-
-        // Create a unique set of usernames
-        const uniqueUsernames = Array.from(new Set(usernames));
-
-        // Preload account ages for all unique usernames
-        await Promise.all(
-            uniqueUsernames.map(username =>
-                this.userProfileService.getUserProfile(username)
-            )
-        );
+        const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
+        return authorLink?.textContent?.trim() || null;
     }
 }
