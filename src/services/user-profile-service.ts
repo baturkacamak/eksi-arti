@@ -9,26 +9,32 @@ import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {SITE_DOMAIN} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
-interface UserAccountAge {
+interface IUserProfile {
     username: string;
     registrationDate: number;
     ageInYears: number;
     ageInMonths: number;
     lastUpdated: number;
+    stats?: {
+        rating?: string;
+        ratingPoints?: number;
+        entryCount?: number;
+        followerCount?: number;
+        followingCount?: number;
+    };
 }
 
 interface UserAccountCache {
-    [username: string]: UserAccountAge;
+    [username: string]: IUserProfile;
 }
 
-export class AccountAgeService {
-    private static instance: AccountAgeService;
+export class UserProfileService {
     private cache: UserAccountCache = {};
-    private readonly CACHE_KEY = 'eksi_account_age_cache';
-    private readonly CACHE_EXPIRY = 365 * 24 * 60 * 60 * 1000; // 365 days
+    private readonly CACHE_KEY = 'eksi_user_profile_cache';
+    private readonly CACHE_EXPIRY = 15 * 24 * 60 * 60 * 1000; // 15 days
     private observerId: string = '';
     private processedLinks: WeakSet<HTMLElement> = new WeakSet();
-    private activeRequests: Map<string, Promise<UserAccountAge | null>> = new Map();
+    private activeRequests: Map<string, Promise<IUserProfile | null>> = new Map();
 
     public constructor(
         private domService: IDOMService,
@@ -59,17 +65,17 @@ export class AccountAgeService {
                     handler: (elements) => {
                         elements.forEach(element => {
                             if (element instanceof HTMLAnchorElement && !this.processedLinks.has(element)) {
-                                this.addAccountAgeBadge(element);
+                                this.addUserProfileBadge(element);
                             }
                         });
                     },
                     processExisting: false
                 });
 
-                this.loggingService.debug('Account age service initialized');
+                this.loggingService.debug('User profile service initialized');
             }, 1000);
         } catch (error) {
-            this.loggingService.error('Error initializing account age service:', error);
+            this.loggingService.error('Error initializing account user profile:', error);
         }
     }
 
@@ -87,7 +93,7 @@ export class AccountAgeService {
                 this.cleanExpiredCache();
             }
         } catch (error) {
-            this.loggingService.error('Error loading account age cache:', error);
+            this.loggingService.error('Error loading user profile cache:', error);
         }
     }
 
@@ -99,7 +105,7 @@ export class AccountAgeService {
                 StorageArea.LOCAL
             );
         } catch (error) {
-            this.loggingService.error('Error saving account age cache:', error);
+            this.loggingService.error('Error saving user profile cache:', error);
         }
     }
 
@@ -123,29 +129,29 @@ export class AccountAgeService {
         const links = document.querySelectorAll('a.entry-author[href^="/biri/"]') as NodeListOf<HTMLAnchorElement>;
         links.forEach(link => {
             if (!this.processedLinks.has(link)) {
-                this.addAccountAgeBadge(link);
+                this.addUserProfileBadge(link);
             }
         });
     }
 
-    public async getAccountAge(username: string): Promise<UserAccountAge | null> {
+    public async getUserProfile(username: string): Promise<IUserProfile | null> {
         // Check cache first
         if (this.cache[username]) {
-            const cachedAge = this.cache[username];
+            const cachedUserProfile = this.cache[username];
             // Check if cache is still valid
-            if (Date.now() - cachedAge.lastUpdated < this.CACHE_EXPIRY) {
-                return cachedAge;
+            if (Date.now() - cachedUserProfile.lastUpdated < this.CACHE_EXPIRY) {
+                return cachedUserProfile;
             }
         }
 
-        return this.fetchAccountAge(username);
+        return this.fetchUserProfile(username);
     }
 
-    public getAccountAgeFromCache(username: string): UserAccountAge | null {
+    public getUserProfileFromCache(username: string): IUserProfile | null {
         return this.cache[username] || null;
     }
 
-    private async fetchAccountAge(username: string): Promise<UserAccountAge | null> {
+    private async fetchUserProfile(username: string): Promise<IUserProfile | null> {
         // Check if there's already an active request for this user
         if (this.activeRequests.has(username)) {
             return this.activeRequests.get(username)!;
@@ -180,21 +186,39 @@ export class AccountAgeService {
                 const now = new Date();
                 const {years, months} = this.calculateAge(registrationDate, now);
 
-                const accountAge: UserAccountAge = {
+                // Extract the rating
+                const ratingElement = doc.querySelector('p.muted');
+                const rating = ratingElement?.textContent?.trim() || '';
+                const ratingMatch = rating.match(/\((\d+)\)/);
+                const ratingPoints = ratingMatch ? parseInt(ratingMatch[1], 10) : undefined;
+
+                // Extract counts
+                const entryCountEl = doc.querySelector('#entry-count-total');
+                const followerCountEl = doc.querySelector('#user-follower-count');
+                const followingCountEl = doc.querySelector('#user-following-count');
+
+                const userProfile: IUserProfile = {
                     username,
                     registrationDate: registrationDate.getTime(),
                     ageInYears: years,
                     ageInMonths: months,
-                    lastUpdated: Date.now()
+                    lastUpdated: Date.now(),
+                    stats: {
+                        rating: rating.replace(/\s*\(\d+\)/, ''),
+                        ratingPoints,
+                        entryCount: entryCountEl ? parseInt(entryCountEl.textContent || '0', 10) : undefined,
+                        followerCount: followerCountEl ? parseInt(followerCountEl.textContent || '0', 10) : undefined,
+                        followingCount: followingCountEl ? parseInt(followingCountEl.textContent || '0', 10) : undefined
+                    }
                 };
 
                 // Update cache
-                this.cache[username] = accountAge;
+                this.cache[username] = userProfile;
                 await this.saveCache();
 
-                return accountAge;
+                return userProfile;
             } catch (error) {
-                this.loggingService.error(`Error fetching account age for ${username}:`, error);
+                this.loggingService.error(`Error fetching user profile for ${username}:`, error);
                 return null;
             } finally {
                 // Remove the request from the active requests map
@@ -236,7 +260,7 @@ export class AccountAgeService {
         return {years, months};
     }
 
-    private async addAccountAgeBadge(link: HTMLAnchorElement): Promise<void> {
+    private async addUserProfileBadge(link: HTMLAnchorElement): Promise<void> {
         this.processedLinks.add(link);
 
         // Extract username from URL
@@ -253,23 +277,23 @@ export class AccountAgeService {
         const loadingBadge = this.createLoadingBadge();
         link.parentNode?.insertBefore(loadingBadge, link.nextSibling);
 
-        // Fetch account age with debounced loading to avoid flickering
+        // Fetch user profile with debounced loading to avoid flickering
         setTimeout(async () => {
             if (!loadingBadge.parentNode) return;
-            const accountAge = await this.getAccountAge(username);
+            const userProfile = await this.getUserProfile(username);
             loadingBadge.remove();
 
-            if (accountAge) {
-                this.appendBadge(link, accountAge);
+            if (userProfile) {
+                this.appendBadge(link, userProfile);
             }
         }, 300);
     }
 
-    private appendBadge(link: HTMLAnchorElement, accountAge: UserAccountAge): void {
-        const badge = this.createBadge(accountAge);
+    private appendBadge(link: HTMLAnchorElement, userProfile: IUserProfile): void {
+        const badge = this.createBadge(userProfile);
         link.parentNode?.insertBefore(badge, link.nextSibling);
 
-        const tooltipId = `eksi-age-tooltip-${accountAge.username}`;
+        const tooltipId = `eksi-profile-tooltip-${userProfile.username}`;
         const tooltipContent = this.domService.createElement('div');
         tooltipContent.id = tooltipId;
         tooltipContent.style.display = 'none';
@@ -280,17 +304,22 @@ export class AccountAgeService {
         ];
 
         // Convert timestamp to Date for display
-        const registrationDate = new Date(accountAge.registrationDate);
+        const registrationDate = new Date(userProfile.registrationDate);
 
         tooltipContent.innerHTML = `
-      <div><strong>Kayıt:</strong>
-        ${yearNames[registrationDate.getMonth()]}
-        ${registrationDate.getFullYear()}
-      </div>
-      <div><strong>Yaş:</strong>
-        ${accountAge.ageInYears} yıl ${accountAge.ageInMonths} ay
-      </div>
-    `;
+            <div><strong>Kayıt:</strong>
+                ${yearNames[registrationDate.getMonth()]}
+                ${registrationDate.getFullYear()}
+            </div>
+            <div><strong>Yaş:</strong>
+                ${userProfile.ageInYears} yıl ${userProfile.ageInMonths} ay
+            </div>
+            ${userProfile.stats ? `<div class="tooltip-divider"></div>` : ''}
+            ${userProfile.stats?.rating ? `<div><strong>Seviye:</strong> ${userProfile.stats.rating} (${userProfile.stats.ratingPoints})</div>` : ''}
+            ${userProfile.stats?.entryCount ? `<div><strong>Entry:</strong> ${userProfile.stats.entryCount}</div>` : ''}
+            ${userProfile.stats?.followerCount ? `<div><strong>Takipçi:</strong> ${userProfile.stats.followerCount}</div>` : ''}
+            ${userProfile.stats?.followingCount ? `<div><strong>Takip:</strong> ${userProfile.stats.followingCount}</div>` : ''}
+        `;
         document.body.appendChild(tooltipContent);
 
         badge.classList.add('tooltip-trigger');
@@ -299,9 +328,9 @@ export class AccountAgeService {
         this.tooltipComponent.setupTooltip(badge);
     }
 
-    private createBadge(accountAge: UserAccountAge): HTMLElement {
+    private createBadge(userProfile: IUserProfile): HTMLElement {
         const badge = this.domService.createElement('span');
-        badge.className = 'eksi-account-age-badge';
+        badge.className = 'eksi-user-profile-badge';
 
         const icon = this.iconComponent.create({
             name: 'calendar_today',
@@ -310,7 +339,7 @@ export class AccountAgeService {
         });
 
         const text = this.domService.createElement('span');
-        text.textContent = `${accountAge.ageInYears} yıl`;
+        text.textContent = `${userProfile.ageInYears} yıl`;
 
         this.domService.appendChild(badge, icon);
         this.domService.appendChild(badge, text);
@@ -320,7 +349,7 @@ export class AccountAgeService {
 
     private createLoadingBadge(): HTMLElement {
         const badge = this.domService.createElement('span');
-        badge.className = 'eksi-account-age-badge loading';
+        badge.className = 'eksi-user-profile-badge loading';
 
         const spinner = this.domService.createElement('span');
         spinner.className = 'eksi-spinner';
@@ -332,7 +361,7 @@ export class AccountAgeService {
 
     private applyCSSStyles(): void {
         const styles = `
-            .eksi-account-age-badge {
+            .eksi-user-profile-badge {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
@@ -347,11 +376,11 @@ export class AccountAgeService {
                 transition: background-color 0.2s ease;
             }
             
-            .eksi-account-age-badge:hover {
+            .eksi-user-profile-badge:hover {
                 background: rgba(129, 193, 75, 0.2);
             }
             
-            .eksi-account-age-badge.loading {
+            .eksi-user-profile-badge.loading {
                 background: rgba(129, 193, 75, 0.05);
                 padding: 4px 8px;
             }
@@ -371,7 +400,7 @@ export class AccountAgeService {
                 }
             }
             
-            .eksi-account-age-tooltip {
+            .eksi-user-profile-tooltip {
                 display: none;
                 position: absolute;
                 z-index: 10000;
@@ -386,7 +415,7 @@ export class AccountAgeService {
                 white-space: nowrap;
             }
             
-            .eksi-account-age-tooltip::before {
+            .eksi-user-profile-tooltip::before {
                 content: '';
                 position: absolute;
                 top: -6px;
@@ -397,31 +426,31 @@ export class AccountAgeService {
                 border-bottom: 6px solid #2c2c2c;
             }
             
-            .eksi-account-age-tooltip .tooltip-header {
+            .eksi-user-profile-tooltip .tooltip-header {
                 font-weight: bold;
                 margin-bottom: 4px;
                 color: #81c14b;
             }
             
-            .eksi-account-age-tooltip .tooltip-content > div {
+            .eksi-user-profile-tooltip .tooltip-content > div {
                 margin: 2px 0;
             }
             
             @media (prefers-color-scheme: dark) {
-                .eksi-account-age-badge {
+                .eksi-user-profile-badge {
                     background: rgba(129, 193, 75, 0.15);
                 }
                 
-                .eksi-account-age-badge:hover {
+                .eksi-user-profile-badge:hover {
                     background: rgba(129, 193, 75, 0.25);
                 }
                 
-                .eksi-account-age-tooltip {
+                .eksi-user-profile-tooltip {
                     background: #1a1a1a;
                     border: 1px solid #444;
                 }
                 
-                .eksi-account-age-tooltip::before {
+                .eksi-user-profile-tooltip::before {
                     border-bottom-color: #1a1a1a;
                 }
             }

@@ -15,7 +15,7 @@ import {FavoriteCountSortingStrategy} from "../commands/sort/strategies/Favorite
 import {ISortingStrategy} from "../commands/sort/ISortingStrategy";
 import {LengthSortingStrategy} from "../commands/sort/strategies/LengthSortingStrategy";
 import { AccountAgeSortingStrategy } from "../commands/sort/strategies/AccountAgeSortingStrategy";
-import { AccountAgeService } from "../services/account-age-service";
+import { UserProfileService } from "../services/user-profile-service";
 
 /**
  * EntrySorterComponent
@@ -36,7 +36,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         private iconComponent: IIconComponent,
         private observerService: IObserverService,
         private pageUtils: PageUtilsService,
-        private accountAgeService: AccountAgeService
+        private userProfileService: UserProfileService
     ) {
 
         // Initialize strategies
@@ -44,7 +44,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             new DateSortingStrategy(),
             new FavoriteCountSortingStrategy(),
             new LengthSortingStrategy(),
-            new AccountAgeSortingStrategy(this.accountAgeService)
+            new AccountAgeSortingStrategy(this.userProfileService)
         ];
 
         this.applyStyles();

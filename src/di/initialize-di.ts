@@ -47,7 +47,7 @@ import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
-import { AccountAgeService } from '../services/account-age-service';
+import { UserProfileService } from '../services/user-profile-service';
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
@@ -212,7 +212,7 @@ export function initializeDI(): Container {
         const preferencesManager = container.resolve<PreferencesManager>('PreferencesManager');
         const storageService = container.resolve<IStorageService>('StorageService');
         const observerService = container.resolve<IObserverService>('ObserverService');
-        const accountAgeService = container.resolve<AccountAgeService>('AccountAgeService');
+        const userProfileService = container.resolve<UserProfileService>('UserProfileService');
 
         return new UIService(
             domService,
@@ -225,7 +225,7 @@ export function initializeDI(): Container {
             storageService,
             observerService,
             container,
-            accountAgeService
+            userProfileService
         );
     });
 
@@ -305,7 +305,7 @@ export function initializeDI(): Container {
         );
     });
 
-    container.register('AccountAgeService', () => {
+    container.register('UserProfileService', () => {
         const domService = container.resolve<IDOMService>('DOMService');
         const cssService = container.resolve<ICSSService>('CSSService');
         const httpService = container.resolve<IHttpService>('HttpService');
@@ -315,7 +315,7 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
 
-        return new AccountAgeService(
+        return new UserProfileService(
             domService,
             cssService,
             httpService,
@@ -334,7 +334,7 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
-        const accountAgeService = container.resolve<AccountAgeService>('AccountAgeService');
+        const userProfileService = container.resolve<UserProfileService>('UserProfileService');
 
         return new EntrySorterComponent(
             domHandler,
@@ -343,7 +343,7 @@ export function initializeDI(): Container {
             iconComponent,
             observerService,
             pageUtils,
-            accountAgeService
+            userProfileService
         );
     });
 
