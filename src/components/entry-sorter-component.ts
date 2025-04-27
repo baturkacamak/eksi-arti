@@ -16,6 +16,12 @@ import {ISortingStrategy} from "../commands/sort/ISortingStrategy";
 import {LengthSortingStrategy} from "../commands/sort/strategies/LengthSortingStrategy";
 import { AccountAgeSortingStrategy } from "../commands/sort/strategies/AccountAgeSortingStrategy";
 import { UserProfileService } from "../services/user-profile-service";
+import {UserLevelSortingStrategy} from "../commands/sort/strategies/UserLevelSortingStrategy";
+import {TotalEntriesSortingStrategy} from "../commands/sort/strategies/TotalEntriesSortingStrategy";
+import {FollowerSortingStrategy} from "../commands/sort/strategies/FollowerSortingStrategy";
+import {FollowingRatioSortingStrategy} from "../commands/sort/strategies/FollowingRatioSortingStrategy";
+import {ActivityRatioSortingStrategy} from "../commands/sort/strategies/ActivityRatioSortingStrategy";
+import {EngagementRatioSortingStrategy} from "../commands/sort/strategies/EngagementRatioSortingStrategy";
 
 /**
  * EntrySorterComponent
@@ -44,7 +50,13 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             new DateSortingStrategy(),
             new FavoriteCountSortingStrategy(),
             new LengthSortingStrategy(),
-            new AccountAgeSortingStrategy(this.userProfileService)
+            new AccountAgeSortingStrategy(this.userProfileService),
+            new UserLevelSortingStrategy(this.userProfileService),
+            new TotalEntriesSortingStrategy(this.userProfileService),
+            new FollowerSortingStrategy(this.userProfileService),
+            new FollowingRatioSortingStrategy(this.userProfileService),
+            new ActivityRatioSortingStrategy(this.userProfileService),
+            new EngagementRatioSortingStrategy(this.userProfileService),
         ];
 
         this.applyStyles();
