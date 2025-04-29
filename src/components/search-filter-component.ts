@@ -75,7 +75,6 @@ export class SearchFilterComponent implements ISearchFilterComponent {
                 this.injectSearchRow();
                 this.collectAllEntries();
                 this.createSearchHelpTooltip();
-                this.setupKeyboardShortcuts();
 
                 // Observe for new entries
                 this.observerId = observerService.observe({
@@ -103,18 +102,6 @@ export class SearchFilterComponent implements ISearchFilterComponent {
         }
     }
 
-    /**
-     * Inject full search row
-     */
-    /**
-     * Inject full search row
-     */
-    /**
-     * Inject full search row
-     */
-    /**
-     * Inject full search row
-     */
     /**
      * Inject full search row
      */
@@ -267,19 +254,6 @@ export class SearchFilterComponent implements ISearchFilterComponent {
         } catch (error) {
             this.loggingService.error('Error injecting search row:', error);
         }
-    }
-
-    /**
-     * Setup keyboard shortcuts
-     */
-    private setupKeyboardShortcuts(): void {
-        document.addEventListener('keydown', (e) => {
-            // Ctrl+F to focus search
-            if (e.ctrlKey && e.key === 'f' && this.searchInput) {
-                e.preventDefault();
-                this.searchInput.focus();
-            }
-        });
     }
 
     /**
