@@ -1,5 +1,6 @@
 import { ISortingStrategy } from "../ISortingStrategy";
-import { UserProfileService } from "../../../services/user-profile-service";
+import {UserProfileService} from "../../../services/user-profile-service";
+import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
 export class FollowerSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'followers';
@@ -7,7 +8,7 @@ export class FollowerSortingStrategy implements ISortingStrategy {
     public readonly icon: string = 'people';
     public readonly tooltip: string = 'Entry\'leri yazarın takipçi sayısına göre sırala';
 
-    constructor(private userProfileService: UserProfileService) {}
+    constructor(private userProfileService: IUserProfileService) {}
 
     public sort(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.getAuthorUsername(a);
@@ -15,8 +16,11 @@ export class FollowerSortingStrategy implements ISortingStrategy {
 
         if (!authorA || !authorB) return 0;
 
-        const followersA = this.userProfileService.getUserProfileFromCache(authorA)?.followerCount || 0;
-        const followersB = this.userProfileService.getUserProfileFromCache(authorB)?.followerCount || 0;
+        const profileA = this.userProfileService.getUserProfileFromCache(authorA);
+        const profileB = this.userProfileService.getUserProfileFromCache(authorB);
+
+        const followersA = profileA?.stats?.followerCount || 0;
+        const followersB = profileB?.stats?.followerCount || 0;
 
         return followersB - followersA;
     }

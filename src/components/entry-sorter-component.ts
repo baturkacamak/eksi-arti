@@ -15,13 +15,15 @@ import {FavoriteCountSortingStrategy} from "../commands/sort/strategies/Favorite
 import {ISortingStrategy} from "../commands/sort/ISortingStrategy";
 import {LengthSortingStrategy} from "../commands/sort/strategies/LengthSortingStrategy";
 import { AccountAgeSortingStrategy } from "../commands/sort/strategies/AccountAgeSortingStrategy";
-import { UserProfileService } from "../services/user-profile-service";
+import {IUserProfile, UserProfileService} from "../services/user-profile-service";
 import {UserLevelSortingStrategy} from "../commands/sort/strategies/UserLevelSortingStrategy";
 import {TotalEntriesSortingStrategy} from "../commands/sort/strategies/TotalEntriesSortingStrategy";
 import {FollowerSortingStrategy} from "../commands/sort/strategies/FollowerSortingStrategy";
 import {FollowingRatioSortingStrategy} from "../commands/sort/strategies/FollowingRatioSortingStrategy";
 import {ActivityRatioSortingStrategy} from "../commands/sort/strategies/ActivityRatioSortingStrategy";
 import {EngagementRatioSortingStrategy} from "../commands/sort/strategies/EngagementRatioSortingStrategy";
+import {ISelectBoxComponent, SelectOption} from "../interfaces/components/ISelectBoxComponent";
+import {IUserProfileService} from "../interfaces/services/IUserProfileService";
 
 /**
  * EntrySorterComponent
@@ -33,6 +35,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
     private strategies: ISortingStrategy[] = [];
     private static stylesApplied = false;
     private observer: MutationObserver | null = null;
+    private selectBox: ISelectBoxComponent | null = null;
     private observerId: string = '';
 
     constructor(
@@ -42,7 +45,8 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         private iconComponent: IIconComponent,
         private observerService: IObserverService,
         private pageUtils: PageUtilsService,
-        private userProfileService: UserProfileService
+        private userProfileService: IUserProfileService,
+        private selectBoxComponent: ISelectBoxComponent,
     ) {
 
         // Initialize strategies
@@ -237,6 +241,14 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         `;
             document.head.appendChild(darkModeStyles);
 
+            const options: SelectOption[] = this.strategies.map(strategy => ({
+                value: strategy.name,
+                label: strategy.displayName ||
+                    (strategy.name === 'favorite' ? 'favoriler' :
+                        strategy.name === 'length' ? 'uzunluk' : strategy.name),
+                icon: strategy.icon
+            }));
+
             // Create a div for the sort buttons
             const sortButtonsContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(sortButtonsContainer, 'eksi-sort-buttons');
@@ -244,29 +256,20 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             sortButtonsContainer.style.alignItems = 'center';
             sortButtonsContainer.style.marginRight = 'auto'; // Push sort buttons to the left
 
-            // Create and add buttons for each strategy EXCEPT the date sort
-            // We're skipping the date sort (index 0) since you mentioned you don't need it
-            this.strategies.forEach((strategy, index) => {
-                // Skip the date sort (first strategy)
-                if (strategy.name === 'date') return;
-
-                const button = this.createSortButton(strategy);
-                this.domHandler.appendChild(sortButtonsContainer, button);
-                this.sortButtons.push(button);
-
-                // Add separator after each button except the last one
-                if (index < this.strategies.length - 1) {
-                    const buttonSeparator = this.domHandler.createElement('span');
-                    this.domHandler.addClass(buttonSeparator, 'eksi-sort-separator');
-                    buttonSeparator.textContent = '|';
-                    buttonSeparator.style.margin = '0 8px';
-                    buttonSeparator.style.color = '#ccc';
-                    this.domHandler.appendChild(sortButtonsContainer, buttonSeparator);
-                }
+            this.selectBox = this.selectBoxComponent;
+            const selectElement = this.selectBox.create({
+                options: options,
+                onChange: (option) => {
+                    const strategy = this.strategies.find(s => s.name === option.value);
+                    if (strategy) {
+                        this.sortEntries(strategy);
+                    }
+                },
+                placeholder: 'Sıralama',
+                width: '180px'
             });
 
-            // Add the sort buttons to our custom row
-            this.domHandler.appendChild(customControlsRow, sortButtonsContainer);
+            this.domHandler.appendChild(sortButtonsContainer, selectElement);
 
             // Create a placeholder for the search input (which will be added by another component)
             const searchPlaceholder = this.domHandler.createElement('div');

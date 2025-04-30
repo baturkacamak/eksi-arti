@@ -1,5 +1,5 @@
 import { ISortingStrategy } from "../ISortingStrategy";
-import { UserProfileService } from "../../../services/user-profile-service";
+import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
 export class UserLevelSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'user-level';
@@ -26,7 +26,7 @@ export class UserLevelSortingStrategy implements ISortingStrategy {
         // Add more levels as needed
     };
 
-    constructor(private userProfileService: UserProfileService) {}
+    constructor(private userProfileService: IUserProfileService) {}
 
     public sort(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.getAuthorUsername(a);
@@ -37,13 +37,13 @@ export class UserLevelSortingStrategy implements ISortingStrategy {
         const profileA = this.userProfileService.getUserProfileFromCache(authorA);
         const profileB = this.userProfileService.getUserProfileFromCache(authorB);
 
-        const levelA = this.getUserLevelScore(profileA?.rank);
-        const levelB = this.getUserLevelScore(profileB?.rank);
+        const levelA = this.getUserLevelScore(profileA?.stats?.rating);
+        const levelB = this.getUserLevelScore(profileB?.stats?.rating);
 
         // If levels are the same, use level points as tiebreaker
         if (levelA === levelB) {
-            const pointsA = this.getLevelPoints(profileA?.rank);
-            const pointsB = this.getLevelPoints(profileB?.rank);
+            const pointsA = this.getLevelPoints(profileA?.stats?.rating);
+            const pointsB = this.getLevelPoints(profileB?.stats?.rating);
             return pointsB - pointsA;
         }
 

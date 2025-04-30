@@ -1,6 +1,6 @@
 // src/commands/sort/strategies/AccountAgeSortingStrategy.ts
 import { ISortingStrategy } from "../ISortingStrategy";
-import { UserProfileService } from "../../../services/user-profile-service";
+import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
 export class AccountAgeSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'account-age';
@@ -8,7 +8,7 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
     public readonly icon: string = 'account_circle';
     public readonly tooltip: string = 'Entry\'leri yazar hesap yaşına göre sırala';
 
-    constructor(private userProfileService: UserProfileService) {}
+    constructor(private userProfileService: IUserProfileService) {}
 
     /**
      * Sort entries by author account age (using only cached data)
@@ -19,8 +19,11 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
 
         if (!authorA || !authorB) return 0;
 
-        const ageA = this.userProfileService.getUserProfileFromCache(authorA)?.ageInYears || 0;
-        const ageB = this.userProfileService.getUserProfileFromCache(authorB)?.ageInYears || 0;
+        const profileA = this.userProfileService.getUserProfileFromCache(authorA);
+        const profileB = this.userProfileService.getUserProfileFromCache(authorB);
+
+        const ageA = profileA?.ageInYears || 0;
+        const ageB = profileB?.ageInYears || 0;
 
         return ageB - ageA; // Descending: older accounts first
     }

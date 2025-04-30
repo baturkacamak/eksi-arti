@@ -10,7 +10,7 @@ import {SITE_DOMAIN} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IAsyncQueueService} from "../interfaces/services/IAsyncQueueService";
 
-interface IUserProfile {
+export interface IUserProfile {
     username: string;
     registrationDate: number;
     ageInYears: number;

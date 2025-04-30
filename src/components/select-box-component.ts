@@ -453,7 +453,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
 
         const highlightedOption = this.optionsList.querySelector('.highlighted');
         if (highlightedOption) {
-            highlightedOption.scrollIntoView({ block: 'nearest' });
+            (highlightedOption as HTMLElement).scrollIntoView({ block: 'nearest' });
         }
     }
 

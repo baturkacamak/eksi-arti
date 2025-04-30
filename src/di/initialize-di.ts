@@ -47,11 +47,14 @@ import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
-import { UserProfileService } from '../services/user-profile-service';
+import {IUserProfile, UserProfileService} from '../services/user-profile-service';
 import { AsyncQueueService } from '../services/async-queue-service';
 import { IAsyncQueueService } from '../interfaces/services/IAsyncQueueService';
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
+import {ISelectBoxComponent} from "../interfaces/components/ISelectBoxComponent";
+import {SelectBoxComponent} from "../components/select-box-component";
+import {IUserProfileService} from "../interfaces/services/IUserProfileService";
 
 /**
  * Initialize the dependency injection container
@@ -331,6 +334,20 @@ export function initializeDI(): Container {
         );
     });
 
+    container.register('SelectBoxComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+
+        return new SelectBoxComponent(
+            domService,
+            cssService,
+            loggingService,
+            iconComponent
+        );
+    });
+
     container.register('AsyncQueueService', () => {
         return new AsyncQueueService(
             100, // default delay between tasks (milliseconds)
@@ -346,7 +363,8 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
-        const userProfileService = container.resolve<UserProfileService>('UserProfileService');
+        const userProfileService = container.resolve<IUserProfileService>('UserProfileService');
+        const selectBoxComponent = container.resolve<ISelectBoxComponent>('SelectBoxComponent');
 
         return new EntrySorterComponent(
             domHandler,
@@ -355,7 +373,8 @@ export function initializeDI(): Container {
             iconComponent,
             observerService,
             pageUtils,
-            userProfileService
+            userProfileService,
+            selectBoxComponent
         );
     });
 

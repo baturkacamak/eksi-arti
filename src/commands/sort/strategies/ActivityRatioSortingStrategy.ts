@@ -1,5 +1,5 @@
 import { ISortingStrategy } from "../ISortingStrategy";
-import { UserProfileService } from "../../../services/user-profile-service";
+import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
 export class ActivityRatioSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'activity-ratio';
@@ -7,7 +7,7 @@ export class ActivityRatioSortingStrategy implements ISortingStrategy {
     public readonly icon: string = 'trending_up';
     public readonly tooltip: string = 'Entry\'leri yazarın aktivite oranına göre sırala (entry/gün)';
 
-    constructor(private userProfileService: UserProfileService) {}
+    constructor(private userProfileService: IUserProfileService) {}
 
     public sort(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.getAuthorUsername(a);
@@ -25,7 +25,7 @@ export class ActivityRatioSortingStrategy implements ISortingStrategy {
         const profile = this.userProfileService.getUserProfileFromCache(username);
         if (!profile) return 0;
 
-        const entries = profile.entryCount || 0;
+        const entries = profile.stats?.entryCount || 0;
         const ageInDays = (profile.ageInYears || 0) * 365;
 
         // Avoid division by zero

@@ -1,5 +1,6 @@
 import { ISortingStrategy } from "../ISortingStrategy";
-import { UserProfileService } from "../../../services/user-profile-service";
+import {IUserProfile, UserProfileService} from "../../../services/user-profile-service";
+import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
 export class TotalEntriesSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'total-entries';
@@ -7,7 +8,7 @@ export class TotalEntriesSortingStrategy implements ISortingStrategy {
     public readonly icon: string = 'description';
     public readonly tooltip: string = 'Entry\'leri yazarın toplam entry sayısına göre sırala';
 
-    constructor(private userProfileService: UserProfileService) {}
+    constructor(private userProfileService: IUserProfileService) {}
 
     public sort(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.getAuthorUsername(a);
@@ -15,8 +16,11 @@ export class TotalEntriesSortingStrategy implements ISortingStrategy {
 
         if (!authorA || !authorB) return 0;
 
-        const entriesA = this.userProfileService.getUserProfileFromCache(authorA)?.entryCount || 0;
-        const entriesB = this.userProfileService.getUserProfileFromCache(authorB)?.entryCount || 0;
+        const profileA = this.userProfileService.getUserProfileFromCache(authorA);
+        const profileB = this.userProfileService.getUserProfileFromCache(authorB);
+
+        const entriesA = profileA?.stats?.entryCount || 0;
+        const entriesB = profileB?.stats?.entryCount || 0;
 
         return entriesB - entriesA;
     }
