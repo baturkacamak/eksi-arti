@@ -212,7 +212,9 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 this.selectOption(option);
             });
 
-            this.domHandler.appendChild(this.optionsList, optionElement);
+            if (this.optionsList) {
+                this.domHandler.appendChild(this.optionsList, optionElement);
+            }
         });
     }
 
