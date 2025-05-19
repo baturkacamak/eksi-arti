@@ -111,6 +111,12 @@ export class UserProfileService {
         }
     }
 
+    public clearCache(): void {
+        this.cache = {};
+        this.saveCache(); // Persist the cleared cache
+        this.loggingService.debug('User profile cache cleared.');
+    }
+
     private cleanExpiredCache(): void {
         const now = Date.now();
         let hasChanges = false;

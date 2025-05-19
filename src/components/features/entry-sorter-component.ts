@@ -1,69 +1,74 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import { IconComponent } from './icon-component';
-import {LoggingService} from '../services/logging-service';
-import {ObserverService, observerService} from "../services/observer-service";
-import {pageUtils, PageUtilsService} from "../services/page-utils-service";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {IObserverService} from "../interfaces/services/IObserverService";
-import {IEntrySorterComponent} from "../interfaces/components/IEntrySorterComponent";
-import {IIconComponent} from "../interfaces/components/IIconComponent";
-import {DateSortingStrategy} from "../commands/sort/strategies/DateSortingStrategy";
-import {FavoriteCountSortingStrategy} from "../commands/sort/strategies/FavoriteCountSortingStrategy";
-import {ISortingStrategy} from "../commands/sort/ISortingStrategy";
-import {LengthSortingStrategy} from "../commands/sort/strategies/LengthSortingStrategy";
-import { AccountAgeSortingStrategy } from "../commands/sort/strategies/AccountAgeSortingStrategy";
-import {IUserProfile, UserProfileService} from "../services/user-profile-service";
-import {UserLevelSortingStrategy} from "../commands/sort/strategies/UserLevelSortingStrategy";
-import {TotalEntriesSortingStrategy} from "../commands/sort/strategies/TotalEntriesSortingStrategy";
-import {FollowerSortingStrategy} from "../commands/sort/strategies/FollowerSortingStrategy";
-import {FollowingRatioSortingStrategy} from "../commands/sort/strategies/FollowingRatioSortingStrategy";
-import {ActivityRatioSortingStrategy} from "../commands/sort/strategies/ActivityRatioSortingStrategy";
-import {EngagementRatioSortingStrategy} from "../commands/sort/strategies/EngagementRatioSortingStrategy";
-import {ISelectBoxComponent, SelectOption} from "../interfaces/components/ISelectBoxComponent";
-import {IUserProfileService} from "../interfaces/services/IUserProfileService";
+import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
+import { DOMService } from '../../services/dom-service';
+import { CSSService } from '../../services/css-service';
+import { IconComponent } from '../shared/icon-component';
+import { LoggingService } from '../../services/logging-service';
+import { ObserverService, observerService as globalObserverService } from "../../services/observer-service";
+import { pageUtils, PageUtilsService } from "../../services/page-utils-service";
+import { ICSSService } from "../../interfaces/services/ICSSService";
+import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IDOMService } from "../../interfaces/services/IDOMService";
+import { IObserverService, ObserverConfig } from "../../interfaces/services/IObserverService";
+import { IEntrySorterComponent } from "../../interfaces/components/IEntrySorterComponent";
+import { IIconComponent } from "../../interfaces/components/IIconComponent";
+import { DateSortingStrategy } from "../../commands/sorting/strategies/DateSortingStrategy";
+import { FavoriteCountSortingStrategy } from "../../commands/sorting/strategies/FavoriteCountSortingStrategy";
+import { ISortingStrategy } from "../../commands/sorting/ISortingStrategy";
+import { LengthSortingStrategy } from "../../commands/sorting/strategies/LengthSortingStrategy";
+import { AccountAgeSortingStrategy } from "../../commands/sorting/strategies/AccountAgeSortingStrategy";
+import { IUserProfileService } from "../../interfaces/services/IUserProfileService";
+import { UserLevelSortingStrategy } from "../../commands/sorting/strategies/UserLevelSortingStrategy";
+import { TotalEntriesSortingStrategy } from "../../commands/sorting/strategies/TotalEntriesSortingStrategy";
+import { FollowerSortingStrategy } from "../../commands/sorting/strategies/FollowerSortingStrategy";
+import { FollowingRatioSortingStrategy } from "../../commands/sorting/strategies/FollowingRatioSortingStrategy";
+import { ActivityRatioSortingStrategy } from "../../commands/sorting/strategies/ActivityRatioSortingStrategy";
+import { EngagementRatioSortingStrategy } from "../../commands/sorting/strategies/EngagementRatioSortingStrategy";
+import { ISelectBoxComponent, SelectOption } from "../../interfaces/components/ISelectBoxComponent";
 
 /**
  * EntrySorterComponent
  * A component for sorting entries by different criteria
  */
-export class EntrySorterComponent implements IEntrySorterComponent {
-    private sortButtons: HTMLElement[] = [];
+export class EntrySorterComponent extends BaseFeatureComponent implements IEntrySorterComponent {
     private activeStrategy: ISortingStrategy | null = null;
     private strategies: ISortingStrategy[] = [];
-    private static stylesApplied = false;
     private observer: MutationObserver | null = null;
     private selectBox: ISelectBoxComponent | null = null;
-    private observerId: string = '';
+
+    // Specific dependencies
+    private specificPageUtils: PageUtilsService;
+    private specificUserProfileService: IUserProfileService;
+    private specificSelectBoxComponent: ISelectBoxComponent;
 
     constructor(
-        private domHandler: IDOMService,
-        private cssHandler: ICSSService,
-        private loggingService: ILoggingService,
-        private iconComponent: IIconComponent,
-        private observerService: IObserverService,
-        private pageUtils: PageUtilsService,
-        private userProfileService: IUserProfileService,
-        private selectBoxComponent: ISelectBoxComponent,
+        domHandler: IDOMService,
+        cssHandler: ICSSService,
+        loggingService: ILoggingService,
+        iconComponent: IIconComponent,
+        observerServiceInstance: IObserverService,
+        pageUtils: PageUtilsService,
+        userProfileService: IUserProfileService,
+        selectBoxComponent: ISelectBoxComponent,
+        options?: FeatureComponentOptions
     ) {
+        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        this.specificPageUtils = pageUtils;
+        this.specificUserProfileService = userProfileService;
+        this.specificSelectBoxComponent = selectBoxComponent;
 
         // Initialize strategies
         this.strategies = [
             new DateSortingStrategy(),
             new FavoriteCountSortingStrategy(),
             new LengthSortingStrategy(),
-            new AccountAgeSortingStrategy(this.userProfileService),
-            new UserLevelSortingStrategy(this.userProfileService),
-            new TotalEntriesSortingStrategy(this.userProfileService),
-            new FollowerSortingStrategy(this.userProfileService),
-            new FollowingRatioSortingStrategy(this.userProfileService),
-            new ActivityRatioSortingStrategy(this.userProfileService),
-            new EngagementRatioSortingStrategy(this.userProfileService),
+            new AccountAgeSortingStrategy(this.specificUserProfileService),
+            new UserLevelSortingStrategy(this.specificUserProfileService),
+            new TotalEntriesSortingStrategy(this.specificUserProfileService),
+            new FollowerSortingStrategy(this.specificUserProfileService),
+            new FollowingRatioSortingStrategy(this.specificUserProfileService),
+            new ActivityRatioSortingStrategy(this.specificUserProfileService),
+            new EngagementRatioSortingStrategy(this.specificUserProfileService),
         ];
-
-        this.applyStyles();
     }
 
     /**
@@ -74,7 +79,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             this.loggingService.debug('EntrySorterComponent initializing...');
 
             // Debug pageUtils check
-            const isEntryListPage = this.pageUtils.isEntryListPage();
+            const isEntryListPage = this.specificPageUtils.isEntryListPage();
             this.loggingService.debug('isEntryListPage:', isEntryListPage);
 
             // Only initialize on entry list pages
@@ -87,21 +92,7 @@ export class EntrySorterComponent implements IEntrySorterComponent {
             this.addSortButtons();
 
             // Setup observer for page changes
-            this.observerId = this.observerService.observe({
-                selector: '.sub-title-menu',
-                handler: (elements) => {
-                    this.loggingService.debug('Observer triggered, elements found:', elements.length);
-                    elements.forEach(element => {
-                        if (!element.querySelector('.eksi-sort-buttons')) {
-                            this.loggingService.debug('Adding sort buttons from observer...');
-                            this.addSortButtons();
-                        } else {
-                            this.loggingService.debug('Sort buttons already exist in element');
-                        }
-                    });
-                },
-                processExisting: false // We already added buttons in addSortButtons()
-            });
+            this.registerObservers();
 
             this.loggingService.debug('Entry sorter component initialized successfully');
         } catch (error) {
@@ -113,14 +104,28 @@ export class EntrySorterComponent implements IEntrySorterComponent {
      * Apply CSS styles for the component
      */
     private applyStyles(): void {
-        if (EntrySorterComponent.stylesApplied) return;
-
         const styles = `
-            .eksi-sort-buttons {
-                display: inline-flex;
+            .eksi-custom-controls-row {
+                display: flex;
                 align-items: center;
+                margin-bottom: 10px;
+                margin-top: 10px;
+                padding: 8px 10px;
+                border-radius: 6px;
+                background-color: rgba(0, 0, 0, 0.02);
+                border: 1px solid rgba(0, 0, 0, 0.05);
             }
-            
+            @media (prefers-color-scheme: dark) {
+                .eksi-custom-controls-row {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
+            }
+            .eksi-sort-buttons {
+                display: flex;
+                align-items: center;
+                margin-right: auto;
+            }
             .eksi-sort-button {
                 display: inline-flex;
                 align-items: center;
@@ -212,7 +217,6 @@ export class EntrySorterComponent implements IEntrySorterComponent {
         `;
 
         this.cssHandler.addCSS(styles);
-        EntrySorterComponent.stylesApplied = true;
     }
 
     /**
@@ -220,87 +224,81 @@ export class EntrySorterComponent implements IEntrySorterComponent {
      */
     private addSortButtons(): void {
         try {
-            // Find the main content area instead of the sub-title-menu
             const contentArea = document.querySelector('#topic');
             if (!contentArea) return;
 
-            // Check if a container for our custom controls already exists
-            if (document.querySelector('.eksi-custom-controls-row')) return;
+            let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
+            if (!customControlsRow) {
+                customControlsRow = this.domHandler.createElement('div');
+                this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
+                
+                // Insert custom controls row before the entry list or other controls
+                const entryList = contentArea.querySelector('#entry-item-list');
+                const searchRow = contentArea.querySelector('.eksi-search-row'); // Check for existing search row
 
-            // Create a container for our custom row of controls
-            const customControlsRow = this.domHandler.createElement('div');
-            this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
-
-            // Style the custom controls row
-            customControlsRow.style.display = 'flex';
-            customControlsRow.style.alignItems = 'center';
-            customControlsRow.style.marginBottom = '10px';
-            customControlsRow.style.marginTop = '10px';
-            customControlsRow.style.padding = '8px 10px';
-            customControlsRow.style.borderRadius = '6px';
-            customControlsRow.style.backgroundColor = 'rgba(0, 0, 0, 0.02)';
-            customControlsRow.style.border = '1px solid rgba(0, 0, 0, 0.05)';
-
-            // Add dark mode support
-            const darkModeStyles = document.createElement('style');
-            darkModeStyles.textContent = `
-            @media (prefers-color-scheme: dark) {
-                .eksi-custom-controls-row {
-                    background-color: rgba(255, 255, 255, 0.05) !important;
-                    border-color: rgba(255, 255, 255, 0.08) !important;
+                if (searchRow && searchRow.nextSibling) {
+                    contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
+                } else if (searchRow) {
+                     contentArea.appendChild(customControlsRow); // Append after search if it's last
+                } else if (entryList) {
+                    contentArea.insertBefore(customControlsRow, entryList);
+                } else {
+                    contentArea.appendChild(customControlsRow);
+                }
+            } else {
+                 // If row exists, check if our sorter is already there
+                if (customControlsRow.querySelector('.eksi-entry-sorter-select-container')) {
+                    this.loggingService.debug('Entry sorter select box already present in custom controls row.');
+                    return;
                 }
             }
-        `;
-            document.head.appendChild(darkModeStyles);
 
             const options: SelectOption[] = this.strategies.map(strategy => ({
                 value: strategy.name,
-                label: strategy.displayName ||
-                    (strategy.name === 'favorite' ? 'favoriler' :
-                        strategy.name === 'length' ? 'uzunluk' : strategy.name),
+                label: strategy.displayName || (
+                    strategy.name === 'favorite' ? 'Favoriler' :
+                    strategy.name === 'length' ? 'Uzunluk' :
+                    strategy.name === 'account-age' ? 'Hesap Yaşı' : 
+                    strategy.name === 'user-level' ? 'Kullanıcı Seviyesi' :
+                    strategy.name === 'total-entries' ? 'Toplam Entry' :
+                    strategy.name === 'followers' ? 'Takipçi Sayısı' :
+                    strategy.name === 'following-ratio' ? 'Takip Oranı' :
+                    strategy.name === 'activity-ratio' ? 'Aktivite Oranı' :
+                    strategy.name === 'engagement-ratio' ? 'Etkileşim Oranı' :
+                    strategy.name
+                ),
                 icon: strategy.icon
-            }));
+            })); 
 
-            // Create a div for the sort buttons
-            const sortButtonsContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(sortButtonsContainer, 'eksi-sort-buttons');
-            sortButtonsContainer.style.display = 'flex';
-            sortButtonsContainer.style.alignItems = 'center';
-            sortButtonsContainer.style.marginRight = 'auto'; // Push sort buttons to the left
-
-            this.selectBox = this.selectBoxComponent;
-            const selectElement = this.selectBox.create({
+            const selectContainer = this.domHandler.createElement('div');
+            this.domHandler.addClass(selectContainer, 'eksi-sort-buttons');
+            this.domHandler.addClass(selectContainer, 'eksi-entry-sorter-select-container');
+            
+            const selectElement = this.specificSelectBoxComponent.create({
                 options: options,
-                onChange: (option) => {
-                    const strategy = this.strategies.find(s => s.name === option.value);
+                onChange: (selectedOption) => {
+                    const strategy = this.strategies.find(s => s.name === selectedOption.value);
                     if (strategy) {
                         this.sortEntries(strategy);
+                        this.activeStrategy = strategy;
                     }
                 },
-                placeholder: 'Sıralama',
-                width: '180px'
+                placeholder: 'Sırala...',
+                width: '200px',
+                className: 'eksi-entry-sorter-select'
             });
-
-            this.domHandler.appendChild(sortButtonsContainer, selectElement);
-
-            // Create a placeholder for the search input (which will be added by another component)
-            const searchPlaceholder = this.domHandler.createElement('div');
-            this.domHandler.addClass(searchPlaceholder, 'eksi-search-placeholder');
-            searchPlaceholder.style.marginLeft = 'auto'; // Push to the right
-            searchPlaceholder.id = 'eksi-search-container';
-            this.domHandler.appendChild(customControlsRow, searchPlaceholder);
-
-            // Insert our custom controls row before the content
-            const firstContent = contentArea.querySelector('#entry-item-list');
-            if (firstContent) {
-                contentArea.insertBefore(customControlsRow, firstContent);
+            this.domHandler.appendChild(selectContainer, selectElement);
+            
+            // Prepend the sorter to the customControlsRow so it appears on the left
+            if(customControlsRow.firstChild){
+                customControlsRow.insertBefore(selectContainer, customControlsRow.firstChild);
             } else {
-                contentArea.appendChild(customControlsRow);
+                customControlsRow.appendChild(selectContainer);
             }
 
-            this.loggingService.debug('Sort buttons added to page in custom row');
+            this.loggingService.debug('Entry sorter select box added.');
         } catch (error) {
-            this.loggingService.error('Error adding sort buttons:', error);
+            this.loggingService.error('Error adding sort select box:', error);
         }
     }
 
@@ -401,73 +399,33 @@ export class EntrySorterComponent implements IEntrySorterComponent {
     private sortEntries(strategy: ISortingStrategy): void {
         try {
             const entryList = document.querySelector('#entry-item-list');
-            if (!entryList) return;
-
-            // Get all entries
-            const entries = Array.from(entryList.querySelectorAll('li[data-id]'));
+            if (!entryList) {
+                this.loggingService.warn('#entry-item-list not found for sorting.');
+                return;
+            }
+            const entries = Array.from(entryList.querySelectorAll('li[data-id]')) as HTMLElement[];
             if (entries.length === 0) return;
 
-            // Sort entries
-            const sortedEntries = [...entries].sort((a, b) =>
-                strategy.sort(a as HTMLElement, b as HTMLElement)
+            this.loggingService.debug(`Sorting ${entries.length} entries using ${strategy.name}`);
+            // Pre-fetch data if strategy requires it
+            const prefetchPromises = entries.map(entry => 
+                typeof (strategy as any).prefetchData === 'function' ? (strategy as any).prefetchData(entry) : Promise.resolve()
             );
-
-            // Create a document fragment for efficient DOM operations
-            const fragment = document.createDocumentFragment();
-            sortedEntries.forEach(entry => fragment.appendChild(entry));
-
-            // Clear and repopulate the entry list
-            entryList.innerHTML = '';
-            entryList.appendChild(fragment);
-
-           this.loggingService.debug(`Entries sorted using ${strategy.name} strategy`);
-        } catch (error) {
-          this.loggingService.error('Error sorting entries:', error);
-        }
-    }
-
-
-    /**
-     * Observe page changes to add sort buttons when navigating
-     */
-    private observePageChanges(): void {
-        try {
-            if (this.observer) {
-                this.observer.disconnect();
-            }
-
-            const mainContent = document.querySelector('#main');
-            if (!mainContent) return;
-
-            this.observer = new MutationObserver((mutations) => {
-                for (const mutation of mutations) {
-                    // Check if the entry list might have changed
-                    if (mutation.type === 'childList') {
-                        // Look for subtitle menu as an indicator of page change
-                        const hasSubtitleMenu = document.querySelector('.sub-title-menu');
-                        if (hasSubtitleMenu && !hasSubtitleMenu.querySelector('.eksi-sort-buttons')) {
-                            setTimeout(() => this.addSortButtons(), 100);
-                        }
-                    }
-                }
+            
+            Promise.all(prefetchPromises).then(() => {
+                const sortedEntries = [...entries].sort((a, b) => strategy.sort(a, b));
+                const fragment = document.createDocumentFragment();
+                sortedEntries.forEach(entry => fragment.appendChild(entry));
+                entryList.innerHTML = ''; 
+                entryList.appendChild(fragment);
+                this.loggingService.debug(`Entries sorted and re-appended using ${strategy.name} strategy`);
+                this.activeStrategy = strategy;
+            }).catch(error => {
+                this.loggingService.error('Error during prefetch or sorting:', error);
             });
 
-            this.observer.observe(mainContent, {
-                childList: true,
-                subtree: true
-            });
-
-           this.loggingService.debug('Page change observer started');
         } catch (error) {
-          this.loggingService.error('Error setting up page change observer:', error);
-
-            // Fallback to periodic checking
-            setInterval(() => {
-                const subtitleMenu = document.querySelector('.sub-title-menu');
-                if (subtitleMenu && !subtitleMenu.querySelector('.eksi-sort-buttons')) {
-                    this.addSortButtons();
-                }
-            }, 2000);
+            this.loggingService.error('Error in sortEntries execution:', error);
         }
     }
 
@@ -482,5 +440,156 @@ export class EntrySorterComponent implements IEntrySorterComponent {
 
         this.sortButtons = [];
         this.activeStrategy = null;
+    }
+
+    protected getStyles(): string | null {
+        return `
+            .eksi-custom-controls-row {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                margin-top: 10px;
+                padding: 8px 10px;
+                border-radius: 6px;
+                background-color: rgba(0, 0, 0, 0.02);
+                border: 1px solid rgba(0, 0, 0, 0.05);
+            }
+            @media (prefers-color-scheme: dark) {
+                .eksi-custom-controls-row {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
+            }
+            .eksi-sort-buttons { /* Container for the select box */
+                display: flex; 
+                align-items: center;
+                margin-right: auto; /* Push sort select box to the left */
+            }
+            .eksi-entry-sorter-select-container .eksi-selectbox-container { 
+                /* Styles for the select box can be added here if needed for this specific context */
+            }
+        `;
+    }
+
+    protected shouldInitialize(): boolean {
+        const shouldInit = this.specificPageUtils.isEntryListPage();
+        this.loggingService.debug(`EntrySorterComponent.shouldInitialize: ${shouldInit}`);
+        return shouldInit;
+    }
+
+    protected setupUI(): void {
+        this.loggingService.debug('EntrySorterComponent.setupUI executing');
+        try {
+            const contentArea = document.querySelector('#topic');
+            if (!contentArea) {
+                this.loggingService.warn('#topic content area not found for EntrySorterComponent UI setup.');
+                return;
+            }
+
+            let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
+            const sorterContainerExists = customControlsRow?.querySelector('.eksi-entry-sorter-select-container');
+
+            if (sorterContainerExists) {
+                this.loggingService.debug('Entry sorter select box already present in custom controls row.');
+                return; 
+            }
+
+            if (!customControlsRow) {
+                customControlsRow = this.domHandler.createElement('div');
+                this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
+                const entryList = contentArea.querySelector('#entry-item-list');
+                const searchRow = contentArea.querySelector('.eksi-search-row');
+                
+                if (searchRow && searchRow.nextSibling) contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
+                else if (searchRow) contentArea.appendChild(customControlsRow);
+                else if (entryList) contentArea.insertBefore(customControlsRow, entryList);
+                else contentArea.appendChild(customControlsRow);
+                this.loggingService.debug('Created .eksi-custom-controls-row for sorter.');
+            }
+            
+            const options: SelectOption[] = this.strategies.map(strategy => ({
+                value: strategy.name,
+                label: strategy.displayName || strategy.name, 
+                icon: strategy.icon
+            })); 
+
+            const selectContainer = this.domHandler.createElement('div');
+            this.domHandler.addClass(selectContainer, 'eksi-sort-buttons'); 
+            this.domHandler.addClass(selectContainer, 'eksi-entry-sorter-select-container');
+            
+            const selectElement = this.specificSelectBoxComponent.create({
+                options: options,
+                onChange: (selectedOption) => {
+                    const strategy = this.strategies.find(s => s.name === selectedOption.value);
+                    if (strategy) {
+                        this.sortEntries(strategy);
+                        this.activeStrategy = strategy;
+                    }
+                },
+                placeholder: 'Sırala...',
+                width: '200px',
+                className: 'eksi-entry-sorter-select'
+            });
+            this.domHandler.appendChild(selectContainer, selectElement);
+            
+            // Prepend to ensure it is on the left of other controls in the row
+            if(customControlsRow.firstChild){
+                customControlsRow.insertBefore(selectContainer, customControlsRow.firstChild);
+            } else {
+                customControlsRow.appendChild(selectContainer);
+            }
+            this.loggingService.debug('Entry sorter select box added/ensured in custom controls row.');
+        } catch (error) {
+            this.loggingService.error('Error in EntrySorterComponent.setupUI:', error);
+        }
+    }
+
+    protected setupListeners(): void {
+        // No global listeners specific to this component beyond what selectbox handles itself.
+    }
+
+    protected registerObservers(): void {
+        const observerOptions: ObserverConfig = {
+            selector: '#topic', 
+            handler: () => {
+                if (!this.specificPageUtils.isEntryListPage()) {
+                    this.loggingService.debug('EntrySorter observer: Not an entry list page, skipping UI re-check.');
+                    return; 
+                }
+                this.loggingService.debug('EntrySorter observer: #topic potentially changed. Re-evaluating sorter UI.');
+                // Simple check: if our specific container isn't there, try to set up UI again.
+                if (!document.querySelector('.eksi-custom-controls-row .eksi-entry-sorter-select-container')) {
+                    this.loggingService.debug('EntrySorter UI not found via observer, attempting to re-add.');
+                    this.setupUI(); 
+                }
+            },
+            processExisting: true, 
+            subtree: true,
+        };
+        this.observerId = this.observerServiceInstance.observe(observerOptions);
+        this.loggingService.debug(`EntrySorterComponent observer registered (ID: ${this.observerId}) for #topic.`);
+    }
+
+    protected cleanup(): void {
+        this.loggingService.debug('Cleaning up EntrySorterComponent UI elements.');
+        this.activeStrategy = null;
+        const sorterContainer = document.querySelector('.eksi-entry-sorter-select-container');
+        if (sorterContainer && sorterContainer.parentElement) {
+            if (sorterContainer.parentElement.classList.contains('eksi-custom-controls-row')){
+                 sorterContainer.parentElement.removeChild(sorterContainer);
+                 this.loggingService.debug('Removed sorter select container from custom controls row.');
+                 // If customControlsRow is now empty and was created by this component, and no other components use it,
+                 // it could be removed. This logic might need to be more robust if row is shared.
+                 if(sorterContainer.parentElement.children.length === 0){
+                     const customRow = sorterContainer.parentElement;
+                     customRow.parentElement?.removeChild(customRow);
+                     this.loggingService.debug('Removed empty custom controls row.');
+                 }
+            } else { 
+                sorterContainer.parentElement.removeChild(sorterContainer);
+                 this.loggingService.debug('Removed sorter select container (not in custom controls row).');
+            }
+        }
+        // BaseFeatureComponent will call unobserve for this.observerId
     }
 }

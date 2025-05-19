@@ -1,4 +1,5 @@
 export interface CountdownOptions {
+    initialSeconds?: number;
     autoStart?: boolean;
     showIcon?: boolean;
     icon?: any | null;
