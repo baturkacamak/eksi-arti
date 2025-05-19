@@ -1,4 +1,3 @@
-// src/commands/sort/strategies/AccountAgeSortingStrategy.ts
 import { ISortingStrategy } from "../ISortingStrategy";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
@@ -35,4 +34,4 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
         const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
         return authorLink?.textContent?.trim() || null;
     }
-}
+} 

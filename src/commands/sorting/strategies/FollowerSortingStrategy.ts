@@ -1,5 +1,4 @@
 import { ISortingStrategy } from "../ISortingStrategy";
-import {UserProfileService} from "../../../services/user-profile-service";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
 export class FollowerSortingStrategy implements ISortingStrategy {
@@ -29,4 +28,4 @@ export class FollowerSortingStrategy implements ISortingStrategy {
         const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
         return authorLink?.textContent?.trim() || null;
     }
-}
+} 

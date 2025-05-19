@@ -24,5 +24,4 @@ export interface ISortingStrategy {
    * Tooltip text to display in UI
    */
   tooltip: string;
-  sort(a: HTMLElement, b: HTMLElement): number;
-}
+} 

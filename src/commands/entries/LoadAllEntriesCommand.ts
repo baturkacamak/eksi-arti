@@ -26,7 +26,7 @@ export class LoadAllEntriesCommand implements ICommand {
       await this.notificationService.show(
         `<div style="display: flex; align-items: center">
           ${this.iconComponent.create({name: 'file_download', color: '#1e88e5', size: 'medium'}).outerHTML}
-          <span>Tüm entry'ler yükleniyor...</span>
+          <span>Tüm entry\'ler yükleniyor...</span>
         </div>`,
         { theme: "info", timeout: 0 }
       );
@@ -54,7 +54,7 @@ export class LoadAllEntriesCommand implements ICommand {
                 color: '#1e88e5',
                 size: 'medium'
               }).outerHTML}
-              <span>Entry'ler yükleniyor... (${currentEntryCount} entry)</span>
+              <span>Entry\'ler yükleniyor... (${currentEntryCount} entry)</span>
             </div>`
           );
           await delay(2);
@@ -69,7 +69,7 @@ export class LoadAllEntriesCommand implements ICommand {
         await this.notificationService.show(
           `<div style="display: flex; align-items: center">
             ${this.iconComponent.create({name: 'check_circle', color: '#43a047', size: 'medium'}).outerHTML}
-            <span>Tüm entry'ler yüklendi. (Toplam: ${totalEntries})</span>
+            <span>Tüm entry\'ler yüklendi. (Toplam: ${totalEntries})</span>
           </div>`,
           { theme: "success", timeout: 5 }
         );
@@ -80,7 +80,7 @@ export class LoadAllEntriesCommand implements ICommand {
       await this.notificationService.show(
         `<div style="display: flex; align-items: center">
           ${this.iconComponent.create({name: 'error', color: '#e53935', size: 'medium'}).outerHTML}
-          <span>Entry'ler yüklenirken hata oluştu.</span>
+          <span>Entry\'ler yüklenirken hata oluştu.</span>
         </div>`,
         { theme: "error", timeout: 5 }
       );
@@ -95,6 +95,6 @@ export class LoadAllEntriesCommand implements ICommand {
   }
 
   public getDescription(): string {
-    return "Tüm entry'leri yükle";
+    return "Tüm entry\'leri yükle";
   }
-}
+} 

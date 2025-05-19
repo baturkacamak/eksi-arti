@@ -18,4 +18,4 @@ export class LengthSortingStrategy implements ISortingStrategy {
     const whitespaceMatches = content.textContent?.match(/\s+/g);
     return whitespaceMatches ? whitespaceMatches.length : 0;
   }
-}
+} 

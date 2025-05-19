@@ -13,4 +13,4 @@ export class DateSortingStrategy implements ISortingStrategy {
     const bId = parseInt(b.getAttribute("data-id") || "0");
     return bId - aId;
   }
-}
+} 

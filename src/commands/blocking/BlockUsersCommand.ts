@@ -41,4 +41,4 @@ export class BlockUsersCommand implements ICommand {
     const actionType = this.blockType === BlockType.MUTE ? "sessiz al" : "engelle";
     return `Entry #${this.entryId} için favorileyenleri ${actionType}`;
   }
-}
+} 

@@ -1,6 +1,6 @@
-import { ICommand } from "../interfaces/ICommand";
-import { ICommandHistory } from "../interfaces/ICommandHistory";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ICommand } from "./interfaces/ICommand";
+import { ICommandHistory } from "./interfaces/ICommandHistory";
+import { ILoggingService } from "../interfaces/services/ILoggingService";
 
 /**
  * Implementation of ICommandHistory for tracking executed commands
@@ -107,4 +107,4 @@ export class CommandHistory implements ICommandHistory {
   public getExecutedCommands(): ICommand[] {
     return [...this.executedCommands];
   }
-}
+} 

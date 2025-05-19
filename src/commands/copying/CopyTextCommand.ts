@@ -49,4 +49,4 @@ export class CopyTextCommand implements ICommand {
     const shortText = this.text.substring(0, 30) + (this.text.length > 30 ? "..." : "");
     return `"${shortText}" metnini kopyala`;
   }
-}
+} 

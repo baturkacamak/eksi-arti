@@ -165,4 +165,4 @@ export class CaptureScreenshotCommand implements ICommand {
     const entryId = this.entryElement.getAttribute("data-id") || "unknown";
     return `Entry #${entryId} ekran görüntüsünü ${actionType}`;
   }
-}
+} 

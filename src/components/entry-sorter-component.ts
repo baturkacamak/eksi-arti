@@ -71,29 +71,41 @@ export class EntrySorterComponent implements IEntrySorterComponent {
      */
     public initialize(): void {
         try {
+            this.loggingService.debug('EntrySorterComponent initializing...');
+
+            // Debug pageUtils check
+            const isEntryListPage = this.pageUtils.isEntryListPage();
+            this.loggingService.debug('isEntryListPage:', isEntryListPage);
+
             // Only initialize on entry list pages
-            if (!pageUtils.isEntryListPage()) {
+            if (!isEntryListPage) {
+                this.loggingService.debug('Not an entry list page, skipping initialization');
                 return;
             }
 
+            this.loggingService.debug('Adding sort buttons...');
             this.addSortButtons();
 
             // Setup observer for page changes
-            this.observerId = observerService.observe({
+            this.observerId = this.observerService.observe({
                 selector: '.sub-title-menu',
                 handler: (elements) => {
+                    this.loggingService.debug('Observer triggered, elements found:', elements.length);
                     elements.forEach(element => {
                         if (!element.querySelector('.eksi-sort-buttons')) {
+                            this.loggingService.debug('Adding sort buttons from observer...');
                             this.addSortButtons();
+                        } else {
+                            this.loggingService.debug('Sort buttons already exist in element');
                         }
                     });
                 },
                 processExisting: false // We already added buttons in addSortButtons()
             });
 
-           this.loggingService.debug('Entry sorter component initialized');
+            this.loggingService.debug('Entry sorter component initialized successfully');
         } catch (error) {
-          this.loggingService.error('Error initializing entry sorter component:', error);
+            this.loggingService.error('Error initializing entry sorter component:', error);
         }
     }
 

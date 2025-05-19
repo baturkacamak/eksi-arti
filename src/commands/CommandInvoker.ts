@@ -1,7 +1,7 @@
-import { ICommand } from "../interfaces/ICommand";
-import { ICommandInvoker } from "../interfaces/ICommandInvoker";
-import { ICommandHistory } from "../interfaces/ICommandHistory";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ICommand } from "./interfaces/ICommand";
+import { ICommandInvoker } from "./interfaces/ICommandInvoker";
+import { ICommandHistory } from "./interfaces/ICommandHistory";
+import { ILoggingService } from "../interfaces/services/ILoggingService";
 
 /**
  * Implementation of ICommandInvoker to execute commands
@@ -99,4 +99,4 @@ export class CommandInvoker implements ICommandInvoker {
     this.history.clear();
     this.loggingService.debug("Command history cleared");
   }
-}
+} 

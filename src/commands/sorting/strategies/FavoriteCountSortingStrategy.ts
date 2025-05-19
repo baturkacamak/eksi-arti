@@ -13,4 +13,4 @@ export class FavoriteCountSortingStrategy implements ISortingStrategy {
     const bFav = parseInt(b.getAttribute("data-favorite-count") || "0");
     return bFav - aFav;
   }
-}
+} 

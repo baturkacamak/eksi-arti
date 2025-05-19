@@ -46,4 +46,4 @@ export class UserLevelSortingStrategy implements ISortingStrategy {
         const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
         return authorLink?.textContent?.trim() || null;
     }
-}
+} 

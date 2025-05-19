@@ -1,16 +1,16 @@
-import { ICommand } from '../interfaces/ICommand';
-import { ICommandFactory } from '../interfaces/ICommandFactory';
-import { BlockUsersCommand } from '../block/BlockUsersCommand';
-import { CaptureScreenshotCommand, IHtml2Canvas } from '../screenshot/CaptureScreenshotCommand';
-import { CopyTextCommand } from '../copy/CopyTextCommand';
-import { LoadAllEntriesCommand } from '../entry/LoadAllEntriesCommand';
-import { SortEntriesCommand } from '../sort/SortEntriesCommand';
-import { ISortingStrategy } from '../sort/ISortingStrategy';
-import { BlockType } from '../../constants';
-import { ILoggingService } from '../../interfaces/services/ILoggingService';
-import { INotificationService } from '../../interfaces/services/INotificationService';
-import { IIconComponent } from '../../interfaces/components/IIconComponent';
-import { IBlockUsersService } from '../../interfaces/services/IBlockUsersService';
+import { ICommand } from './interfaces/ICommand';
+import { ICommandFactory } from './interfaces/ICommandFactory';
+import { BlockUsersCommand } from './blocking/BlockUsersCommand';
+import { CaptureScreenshotCommand, IHtml2Canvas } from './screenshots/CaptureScreenshotCommand';
+import { CopyTextCommand } from './copying/CopyTextCommand';
+import { LoadAllEntriesCommand } from './entries/LoadAllEntriesCommand';
+import { SortEntriesCommand } from './sorting/SortEntriesCommand';
+import { ISortingStrategy } from './sorting/ISortingStrategy';
+import { BlockType } from '../constants';
+import { ILoggingService } from '../interfaces/services/ILoggingService';
+import { INotificationService } from '../interfaces/services/INotificationService';
+import { IIconComponent } from '../interfaces/components/IIconComponent';
+import { IBlockUsersService } from '../interfaces/services/IBlockUsersService';
 
 /**
  * Implementation of ICommandFactory - creates command objects with proper dependencies
@@ -82,4 +82,4 @@ export class CommandFactory implements ICommandFactory {
             strategy
         );
     }
-}
+} 

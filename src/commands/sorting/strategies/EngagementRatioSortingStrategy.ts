@@ -1,11 +1,11 @@
 import { ISortingStrategy } from "../ISortingStrategy";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
 
-export class ActivityRatioSortingStrategy implements ISortingStrategy {
-    public readonly name: string = 'activity-ratio';
-    public readonly displayName: string = 'Aktivite Oranı';
-    public readonly icon: string = 'trending_up';
-    public readonly tooltip: string = 'Entry\'leri yazarın aktivite oranına göre sırala (entry/gün)';
+export class EngagementRatioSortingStrategy implements ISortingStrategy {
+    public readonly name: string = 'engagement-ratio';
+    public readonly displayName: string = 'Etkileşim Oranı';
+    public readonly icon: string = 'insights';
+    public readonly tooltip: string = 'Entry\'leri yazarın etkileşim oranına göre sırala (takipçi/entry)';
 
     constructor(private userProfileService: IUserProfileService) {}
 
@@ -15,27 +15,27 @@ export class ActivityRatioSortingStrategy implements ISortingStrategy {
 
         if (!authorA || !authorB) return 0;
 
-        const ratioA = this.getActivityRatio(authorA);
-        const ratioB = this.getActivityRatio(authorB);
+        const ratioA = this.getEngagementRatio(authorA);
+        const ratioB = this.getEngagementRatio(authorB);
 
         return ratioB - ratioA;
     }
 
-    private getActivityRatio(username: string): number {
+    private getEngagementRatio(username: string): number {
         const profile = this.userProfileService.getUserProfileFromCache(username);
         if (!profile) return 0;
 
+        const followers = profile.stats?.followerCount || 0;
         const entries = profile.stats?.entryCount || 0;
-        const ageInDays = (profile.ageInYears || 0) * 365;
 
         // Avoid division by zero
-        if (ageInDays === 0) return 0;
+        if (entries === 0) return 0;
 
-        return entries / ageInDays;
+        return followers / entries;
     }
 
     private getAuthorUsername(entry: HTMLElement): string | null {
         const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
         return authorLink?.textContent?.trim() || null;
     }
-}
+} 

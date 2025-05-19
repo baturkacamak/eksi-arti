@@ -73,6 +73,6 @@ export class SortEntriesCommand implements ICommand {
   }
 
   public getDescription(): string {
-    return `Entry'leri ${this.strategy.tooltip.toLowerCase()} sırala`;
+    return `Entry\'leri ${this.strategy.tooltip.toLowerCase()} sırala`;
   }
-}
+} 
