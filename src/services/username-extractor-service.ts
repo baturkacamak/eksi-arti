@@ -1,19 +1,17 @@
 import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
+import { SELECTORS, PATHS } from "../constants";
 
 /**
  * Service for extracting usernames from entry elements
  * Provides consistent username extraction across the application
  */
 export class UsernameExtractorService implements IUsernameExtractorService {
-    private static readonly AUTHOR_SELECTOR = '.entry-author';
-    private static readonly BIRI_PATH = '/biri/';
-
     /**
      * Extract username from an entry element
      * Uses URL-based extraction to match cache keys used by UserProfileService
      */
     public extractFromEntry(entry: HTMLElement): string | null {
-        const authorLink = entry.querySelector<HTMLAnchorElement>(UsernameExtractorService.AUTHOR_SELECTOR);
+        const authorLink = entry.querySelector<HTMLAnchorElement>(SELECTORS.ENTRY_AUTHOR);
         return this.extractFromLink(authorLink);
     }
 
@@ -41,11 +39,11 @@ export class UsernameExtractorService implements IUsernameExtractorService {
      * @private
      */
     private extractFromHref(href: string | null): string | null {
-        if (!href || !href.includes(UsernameExtractorService.BIRI_PATH)) {
+        if (!href || !href.includes(PATHS.BIRI)) {
             return null;
         }
         
-        const parts = href.split(UsernameExtractorService.BIRI_PATH);
+        const parts = href.split(PATHS.BIRI);
         return parts[1] || null;
     }
 

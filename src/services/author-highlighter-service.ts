@@ -11,6 +11,7 @@ import {IObserverService} from "../interfaces/services/IObserverService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/services/IAuthorHighlighterService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
+import { SELECTORS } from "../constants";
 
 /**
  * Color management utility functions
@@ -470,7 +471,7 @@ export class AuthorHighlighterService {
             if (entry.querySelector('.eksi-author-badge')) return;
 
             // Find author element to add badge next to
-            const authorElement = entry.querySelector('.entry-author');
+            const authorElement = entry.querySelector(SELECTORS.ENTRY_AUTHOR);
             if (!authorElement) return;
 
             // Create badge element
@@ -815,11 +816,11 @@ export class AuthorHighlighterService {
             }
 
             // Check if author is already configured
-            if (this.config.authors[author]) {
-                // Show author menu instead
-                const authorElement = entry.querySelector('.entry-author');
-                if (authorElement) {
-                    this.showAuthorMenu(author, authorElement as HTMLElement);
+                            if (this.config.authors[author]) {
+                    // Show author menu instead
+                    const authorElement = entry.querySelector(SELECTORS.ENTRY_AUTHOR);
+                    if (authorElement) {
+                        this.showAuthorMenu(author, authorElement as HTMLElement);
                 }
                 return true;
             }

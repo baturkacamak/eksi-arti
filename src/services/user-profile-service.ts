@@ -6,7 +6,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
-import {SITE_DOMAIN} from "../constants";
+import {SITE_DOMAIN, SELECTORS, Endpoints, PATHS} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IAsyncQueueService} from "../interfaces/services/IAsyncQueueService";
 import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
@@ -65,7 +65,7 @@ export class UserProfileService {
 
                 // Setup observer for new links
                 this.observerId = this.observerService.observe({
-                    selector: 'a.entry-author[href^="/biri/"]',
+                    selector: `a${SELECTORS.ENTRY_AUTHOR}[href^="${PATHS.BIRI}"]`,
                     handler: (elements) => {
                         elements.forEach(element => {
                             if (element instanceof HTMLAnchorElement && !this.processedLinks.has(element)) {
@@ -136,7 +136,7 @@ export class UserProfileService {
     }
 
     private processExistingLinks(): void {
-        const links = document.querySelectorAll('a.entry-author[href^="/biri/"]') as NodeListOf<HTMLAnchorElement>;
+        const links = document.querySelectorAll(`a${SELECTORS.ENTRY_AUTHOR}[href^="${PATHS.BIRI}"]`) as NodeListOf<HTMLAnchorElement>;
         links.forEach(link => {
             if (!this.processedLinks.has(link)) {
                 this.addUserProfileBadge(link);
@@ -169,7 +169,7 @@ export class UserProfileService {
         const fetchPromise = new Promise<IUserProfile | null>((resolve) => {
             this.queueService.add(async () => {
                 try {
-                    const url = `https://${SITE_DOMAIN}/biri/${encodeURIComponent(username)}`;
+                    const url = Endpoints.USER_PROFILE(username);
                     const html = await this.httpService.get(url);
 
                     const parser = new DOMParser();
@@ -492,7 +492,7 @@ export class UserProfileService {
                 line-height: 1.4;
             }
             
-            #entry-nick-container #entry-author {
+            ${SELECTORS.ENTRY_NICK_CONTAINER} {
                 display: flex;
                 align-items: center;
                 flex-direction: row-reverse;

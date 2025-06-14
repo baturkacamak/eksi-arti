@@ -1,7 +1,7 @@
 // src/services/vote-monitoring-service.ts
 import { LoggingService} from './logging-service';
 import { HttpService } from './http-service';
-import { SITE_DOMAIN } from '../constants';
+import { SITE_DOMAIN, SELECTORS, PATHS } from '../constants';
 import { storageService } from './storage-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";
@@ -41,12 +41,12 @@ export class VoteMonitoringService {
      */
     private async extractUsername(): Promise<void> {
         try {
-            const usernameElement = document.querySelector('a[href^="/biri/"]');
+            const usernameElement = document.querySelector(`a${SELECTORS.ENTRY_AUTHOR}[href^="${PATHS.BIRI}"]`);
 
             if (usernameElement) {
                 const hrefAttribute = usernameElement.getAttribute('href');
                 if (hrefAttribute) {
-                    const username = hrefAttribute.split('/biri/')[1];
+                    const username = hrefAttribute.split(PATHS.BIRI)[1];
                     if (username) {
                         this.userNick = username;
                         // Save to storage

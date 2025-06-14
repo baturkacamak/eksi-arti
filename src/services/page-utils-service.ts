@@ -1,5 +1,6 @@
 import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
 import { UsernameExtractorService } from "./username-extractor-service";
+import { SELECTORS, PATHS } from "../constants";
 
 /**
  * Service providing utility methods for page detection and common DOM operations
@@ -26,7 +27,7 @@ export class PageUtilsService {
      * @returns true if the current page contains an entry list
      */
     public isEntryListPage(): boolean {
-        return !!document.querySelector('#entry-item-list') || !!document.querySelector('#topic');
+        return !!document.querySelector(SELECTORS.ENTRY_ITEM_LIST) || !!document.querySelector(SELECTORS.TOPIC);
     }
 
     /**
@@ -34,7 +35,7 @@ export class PageUtilsService {
      * @returns true if the current page is a user profile
      */
     public isUserProfilePage(): boolean {
-        return window.location.href.includes('/biri/');
+        return window.location.href.includes(PATHS.BIRI);
     }
 
     /**
@@ -42,7 +43,7 @@ export class PageUtilsService {
      * @returns true if the current page is the trash page
      */
     public isTrashPage(): boolean {
-        return window.location.pathname === '/cop';
+        return window.location.pathname === PATHS.COP;
     }
 
     /**
@@ -51,7 +52,8 @@ export class PageUtilsService {
      */
     public getCurrentEntryId(): string | null {
         // Try to get from URL first
-        const match = window.location.pathname.match(/\/entry\/(\d+)/);
+        const entryPattern = new RegExp(`${PATHS.ENTRY}(\\d+)`);
+        const match = window.location.pathname.match(entryPattern);
         if (match && match[1]) {
             return match[1];
         }
@@ -79,7 +81,7 @@ export class PageUtilsService {
         }
 
         // For entry pages, try to get the author of the main entry
-        const authorElement = document.querySelector<HTMLAnchorElement>('.entry-author');
+        const authorElement = document.querySelector<HTMLAnchorElement>(SELECTORS.ENTRY_AUTHOR);
         if (authorElement) {
             return this.usernameExtractorService.extractFromLink(authorElement);
         }

@@ -71,11 +71,27 @@ export function buildUrl(path: string): string {
     return `https://${domain}${normalizedPath}`;
 }
 
+// DOM Selectors
+export const SELECTORS = {
+    ENTRY_AUTHOR: '.entry-author',
+    ENTRY_ITEM_LIST: '#entry-item-list',
+    TOPIC: '#topic',
+    ENTRY_NICK_CONTAINER: '#entry-nick-container #entry-author',
+};
+
+// URL Paths
+export const PATHS = {
+    BIRI: '/biri/',
+    COP: '/cop',
+    ENTRY: '/entry/',
+};
+
 // Endpoints now use the buildUrl function
 export const Endpoints = {
     BLOCK: buildUrl('userrelation/addrelation'),
     FAVORITES: buildUrl('entry/favorileyenler'),
-    ADD_NOTE: buildUrl('biri/{username}/note'),
+    ADD_NOTE: buildUrl(`biri/{username}/note`),
+    USER_PROFILE: (username: string) => buildUrl(`biri/${encodeURIComponent(username)}`),
 };
 
 // Update this function to rebuild endpoints when domain changes
