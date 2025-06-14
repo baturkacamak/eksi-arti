@@ -11,20 +11,23 @@ import { IDOMService } from "../../interfaces/services/IDOMService";
 import { IObserverService, ObserverConfig } from "../../interfaces/services/IObserverService";
 import { IEntrySorterComponent } from "../../interfaces/components/IEntrySorterComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
-import { DateSortingStrategy } from "../../commands/sorting/strategies/DateSortingStrategy";
-import { FavoriteCountSortingStrategy } from "../../commands/sorting/strategies/FavoriteCountSortingStrategy";
 import { ISortingStrategy } from "../../commands/sorting/ISortingStrategy";
-import { LengthSortingStrategy } from "../../commands/sorting/strategies/LengthSortingStrategy";
-import { AccountAgeSortingStrategy } from "../../commands/sorting/strategies/AccountAgeSortingStrategy";
 import { IUserProfileService } from "../../interfaces/services/IUserProfileService";
-import { UserLevelSortingStrategy } from "../../commands/sorting/strategies/UserLevelSortingStrategy";
-import { TotalEntriesSortingStrategy } from "../../commands/sorting/strategies/TotalEntriesSortingStrategy";
-import { FollowerSortingStrategy } from "../../commands/sorting/strategies/FollowerSortingStrategy";
-import { FollowingRatioSortingStrategy } from "../../commands/sorting/strategies/FollowingRatioSortingStrategy";
-import { ActivityRatioSortingStrategy } from "../../commands/sorting/strategies/ActivityRatioSortingStrategy";
-import { EngagementRatioSortingStrategy } from "../../commands/sorting/strategies/EngagementRatioSortingStrategy";
 import { ISelectBoxComponent, SelectOption } from "../../interfaces/components/ISelectBoxComponent";
 import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
+import { SortingDataExtractor } from "../../commands/sorting/SortingDataExtractor";
+import {
+    DateDataStrategy,
+    FavoriteCountDataStrategy,
+    LengthDataStrategy,
+    TotalEntriesDataStrategy,
+    UserLevelDataStrategy,
+    AccountAgeDataStrategy,
+    FollowerDataStrategy,
+    ActivityRatioDataStrategy,
+    FollowingRatioDataStrategy,
+    EngagementRatioDataStrategy
+} from "../../commands/sorting/strategies/DataDrivenStrategies";
 
 /**
  * EntrySorterComponent
@@ -43,6 +46,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     private specificUserProfileService: IUserProfileService;
     private specificSelectBoxComponent: ISelectBoxComponent;
     private specificUsernameExtractorService: IUsernameExtractorService;
+    private sortingDataExtractor: SortingDataExtractor;
 
     constructor(
         domHandler: IDOMService,
@@ -61,19 +65,20 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         this.specificUserProfileService = userProfileService;
         this.specificSelectBoxComponent = selectBoxComponent;
         this.specificUsernameExtractorService = usernameExtractorService;
+        this.sortingDataExtractor = new SortingDataExtractor(userProfileService, usernameExtractorService);
 
-        // Initialize strategies
+        // Initialize new data-driven strategies (much cleaner and more performant)
         this.strategies = [
-            new DateSortingStrategy(),
-            new FavoriteCountSortingStrategy(),
-            new LengthSortingStrategy(),
-            new AccountAgeSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
-            new UserLevelSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
-            new TotalEntriesSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
-            new FollowerSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
-            new FollowingRatioSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
-            new ActivityRatioSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
-            new EngagementRatioSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new DateDataStrategy(),
+            new FavoriteCountDataStrategy(),
+            new LengthDataStrategy(),
+            new AccountAgeDataStrategy(),
+            new UserLevelDataStrategy(),
+            new TotalEntriesDataStrategy(),
+            new FollowerDataStrategy(),
+            new FollowingRatioDataStrategy(),
+            new ActivityRatioDataStrategy(),
+            new EngagementRatioDataStrategy(),
         ];
     }
 
@@ -497,7 +502,28 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             );
             
             Promise.all(prefetchPromises).then(() => {
-                const sortedEntries = [...entries].sort((a, b) => strategy.sort(a, b, sortDirection));
+                // Pre-cache usernames for better performance if it's a user profile strategy
+                if (typeof (strategy as any).preCacheUsernames === 'function') {
+                    (strategy as any).preCacheUsernames(entries);
+                }
+                
+                // Use data-driven approach if available, fallback to legacy approach
+                let sortedEntries: HTMLElement[];
+                if (strategy.sortData) {
+                    // Extract sorting data once for all entries (O(n) operation)
+                    const sortingDataArray = entries.map(entry => this.sortingDataExtractor.extractSortingData(entry));
+                    
+                    // Sort the data (O(n log n) but pure function operations)
+                    const sortedData = [...sortingDataArray].sort((a, b) => strategy.sortData!(a, b, sortDirection));
+                    
+                    // Return sorted elements
+                    sortedEntries = sortedData.map(data => data.element);
+                } else if (strategy.sort) {
+                    // Legacy HTMLElement-based sorting
+                    sortedEntries = [...entries].sort((a, b) => strategy.sort!(a, b, sortDirection));
+                } else {
+                    throw new Error(`Strategy "${strategy.name}" has neither sort nor sortData method`);
+                }
                 const fragment = document.createDocumentFragment();
                 sortedEntries.forEach(entry => fragment.appendChild(entry));
                 entryList.innerHTML = ''; 

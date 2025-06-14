@@ -11,6 +11,7 @@ import { ILoggingService } from '../interfaces/services/ILoggingService';
 import { INotificationService } from '../interfaces/services/INotificationService';
 import { IIconComponent } from '../interfaces/components/IIconComponent';
 import { IBlockUsersService } from '../interfaces/services/IBlockUsersService';
+import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 
 /**
  * Implementation of ICommandFactory - creates command objects with proper dependencies
@@ -21,7 +22,8 @@ export class CommandFactory implements ICommandFactory {
         private notificationService: INotificationService,
         private iconComponent: IIconComponent,
         private blockUsersService: IBlockUsersService,
-        private html2canvas: IHtml2Canvas
+        private html2canvas: IHtml2Canvas,
+        private sortingDataExtractor: SortingDataExtractor
     ) {}
 
     /**
@@ -80,7 +82,8 @@ export class CommandFactory implements ICommandFactory {
         return new SortEntriesCommand(
             this.loggingService,
             strategy,
-            direction
+            direction,
+            this.sortingDataExtractor
         );
     }
 } 

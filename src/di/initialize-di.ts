@@ -57,6 +57,7 @@ import {SelectBoxComponent} from "../components/shared/select-box-component";
 import {IUserProfileService} from "../interfaces/services/IUserProfileService";
 import {UsernameExtractorService} from "../services/username-extractor-service";
 import {IUsernameExtractorService} from "../interfaces/services/IUsernameExtractorService";
+import {SortingDataExtractor} from "../commands/sorting/SortingDataExtractor";
 
 /**
  * Initialize the dependency injection container
@@ -77,6 +78,12 @@ export function initializeDI(): Container {
     container.register('PreferencesManager', () => preferencesManager);
     container.register('ContainerThemeService', () => containerThemeService);
     container.register('UsernameExtractorService', () => new UsernameExtractorService());
+    
+    container.register('SortingDataExtractor', () => {
+        const userProfileService = container.resolve<IUserProfileService>('UserProfileService');
+        const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
+        return new SortingDataExtractor(userProfileService, usernameExtractorService);
+    });
 
     // Register services with dependencies
     container.register('HttpService', () => {

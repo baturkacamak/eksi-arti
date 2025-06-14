@@ -16,8 +16,8 @@ export class FollowerSortingStrategy extends BaseUserProfileSortingStrategy {
     }
 
     protected compare(a: HTMLElement, b: HTMLElement): number {
-        const authorA = this.usernameExtractorService.extractFromEntry(a);
-        const authorB = this.usernameExtractorService.extractFromEntry(b);
+        const authorA = this.getCachedUsername(a);
+        const authorB = this.getCachedUsername(b);
 
         if (!authorA || !authorB) return 0;
 

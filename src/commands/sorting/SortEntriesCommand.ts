@@ -1,6 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { ISortingStrategy } from "./ISortingStrategy";
+import { SortingDataExtractor } from "./SortingDataExtractor";
 
 /**
  * Command for sorting entries by a specific strategy
@@ -12,7 +13,8 @@ export class SortEntriesCommand implements ICommand {
   constructor(
     private loggingService: ILoggingService,
     private strategy: ISortingStrategy,
-    private direction: 'asc' | 'desc' = 'desc'
+    private direction: 'asc' | 'desc' = 'desc',
+    private sortingDataExtractor?: SortingDataExtractor
   ) {}
 
   public async execute(): Promise<boolean> {
@@ -30,9 +32,23 @@ export class SortEntriesCommand implements ICommand {
         }
         return -1;
       });
-      const sortedEntries = [...entries].sort((a, b) =>
-        this.strategy.sort(a as HTMLElement, b as HTMLElement, this.direction)
-      );
+      // Use data-driven approach if available, fallback to legacy approach
+      let sortedEntries: HTMLElement[];
+      if (this.strategy.sortData && this.sortingDataExtractor) {
+        // Extract sorting data once for all entries (O(n) operation)
+        const sortingDataArray = entries.map(entry => this.sortingDataExtractor!.extractSortingData(entry as HTMLElement));
+        
+        // Sort the data (O(n log n) but pure function operations)
+        const sortedData = [...sortingDataArray].sort((a, b) => this.strategy.sortData!(a, b, this.direction));
+        
+        // Return sorted elements
+        sortedEntries = sortedData.map(data => data.element);
+      } else if (this.strategy.sort) {
+                 // Legacy HTMLElement-based sorting
+         sortedEntries = [...entries].sort((a, b) => this.strategy.sort!(a as HTMLElement, b as HTMLElement, this.direction)) as HTMLElement[];
+      } else {
+        throw new Error(`Strategy "${this.strategy.name}" has neither sort nor sortData method`);
+      }
       const fragment = document.createDocumentFragment();
       sortedEntries.forEach(entry => fragment.appendChild(entry));
       this.entryList.innerHTML = "";
