@@ -1,3 +1,5 @@
+import { UsernameExtractor } from "../utils/username-extractor";
+
 /**
  * Service providing utility methods for page detection and common DOM operations
  */
@@ -69,16 +71,16 @@ export class PageUtilsService {
     public getCurrentAuthor(): string | null {
         // For profile pages
         if (this.isUserProfilePage()) {
-            const authorFromUrl = window.location.pathname.split('/biri/')[1];
+            const authorFromUrl = UsernameExtractor.extractFromUrl(window.location.pathname);
             if (authorFromUrl) {
                 return decodeURIComponent(authorFromUrl);
             }
         }
 
         // For entry pages, try to get the author of the main entry
-        const authorElement = document.querySelector('.entry-author');
+        const authorElement = document.querySelector<HTMLAnchorElement>('.entry-author');
         if (authorElement) {
-            return authorElement.textContent?.trim() || null;
+            return UsernameExtractor.extractFromLink(authorElement);
         }
 
         return null;

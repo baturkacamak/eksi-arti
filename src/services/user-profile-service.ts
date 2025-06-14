@@ -9,6 +9,7 @@ import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {SITE_DOMAIN} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IAsyncQueueService} from "../interfaces/services/IAsyncQueueService";
+import { UsernameExtractor } from "../utils/username-extractor";
 
 export interface IUserProfile {
     username: string;
@@ -267,8 +268,8 @@ export class UserProfileService {
     private async addUserProfileBadge(link: HTMLAnchorElement): Promise<void> {
         this.processedLinks.add(link);
 
-        // Extract username from URL
-        const username = link.getAttribute('href')?.split('/biri/')[1];
+        // Extract username from URL using centralized utility
+        const username = UsernameExtractor.extractFromLink(link);
         if (!username) return;
 
         // Check cache first

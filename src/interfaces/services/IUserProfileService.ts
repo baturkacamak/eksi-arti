@@ -95,9 +95,9 @@ export interface IUserProfileService {
     /**
      * Get user profile from cache if available
      * @param username Username to look up
-     * @returns User profile or undefined if not in cache
+     * @returns User profile or null if not in cache
      */
-    getUserProfileFromCache(username: string): IUserProfile | undefined;
+    getUserProfileFromCache(username: string): IUserProfile | null;
 
     /**
      * Fetch user profile from server

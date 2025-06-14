@@ -1,5 +1,6 @@
 import { ISortingStrategy } from "../ISortingStrategy";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
+import { UsernameExtractor } from "../../../utils/username-extractor";
 
 export class AccountAgeSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'account-age';
@@ -13,25 +14,36 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
      * Sort entries by author account age (using only cached data)
      */
     public sort(a: HTMLElement, b: HTMLElement): number {
-        const authorA = this.getAuthorUsername(a);
-        const authorB = this.getAuthorUsername(b);
+        const authorA = UsernameExtractor.extractFromEntry(a);
+        const authorB = UsernameExtractor.extractFromEntry(b);
 
-        if (!authorA || !authorB) return 0;
+        if (!authorA || !authorB) {
+            return 0;
+        }
 
         const profileA = this.userProfileService.getUserProfileFromCache(authorA);
         const profileB = this.userProfileService.getUserProfileFromCache(authorB);
 
-        const ageA = profileA?.ageInYears || 0;
-        const ageB = profileB?.ageInYears || 0;
+        // If one profile is missing, sort it to the end
+        if (!profileA && !profileB) {
+            return 0; // Both missing, keep original order
+        }
+        if (!profileA) {
+            return 1; // A missing, B should come first
+        }
+        if (!profileB) {
+            return -1; // B missing, A should come first
+        }
 
-        return ageB - ageA; // Descending: older accounts first
-    }
+        const ageA = profileA.ageInYears;
+        const ageB = profileB.ageInYears;
 
-    /**
-     * Extract author username from entry element
-     */
-    private getAuthorUsername(entry: HTMLElement): string | null {
-        const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
-        return authorLink?.textContent?.trim() || null;
+        // Sort by age descending (older accounts first)
+        if (ageA !== ageB) {
+            return ageB - ageA;
+        }
+
+        // If ages are the same, sort by username for stable sorting
+        return authorA.localeCompare(authorB);
     }
 } 

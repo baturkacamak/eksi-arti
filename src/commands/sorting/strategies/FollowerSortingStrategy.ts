@@ -1,5 +1,6 @@
 import { ISortingStrategy } from "../ISortingStrategy";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
+import { UsernameExtractor } from "../../../utils/username-extractor";
 
 export class FollowerSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'followers';
@@ -10,8 +11,8 @@ export class FollowerSortingStrategy implements ISortingStrategy {
     constructor(private userProfileService: IUserProfileService) {}
 
     public sort(a: HTMLElement, b: HTMLElement): number {
-        const authorA = this.getAuthorUsername(a);
-        const authorB = this.getAuthorUsername(b);
+        const authorA = UsernameExtractor.extractFromEntry(a);
+        const authorB = UsernameExtractor.extractFromEntry(b);
 
         if (!authorA || !authorB) return 0;
 
@@ -22,10 +23,5 @@ export class FollowerSortingStrategy implements ISortingStrategy {
         const followersB = profileB?.stats?.followerCount || 0;
 
         return followersB - followersA;
-    }
-
-    private getAuthorUsername(entry: HTMLElement): string | null {
-        const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
-        return authorLink?.textContent?.trim() || null;
     }
 } 
