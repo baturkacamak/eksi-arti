@@ -1,16 +1,16 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
+import { DOMService } from '../../services/dom-service';
+import { CSSService } from '../../services/css-service';
 import { IconComponent } from './icon-component';
-import { LoggingService } from '../services/logging-service';
-import { IDOMService } from "../interfaces/services/IDOMService";
-import { ICSSService } from "../interfaces/services/ICSSService";
-import { ILoggingService } from "../interfaces/services/ILoggingService";
-import { IIconComponent } from "../interfaces/components/IIconComponent";
+import { LoggingService } from '../../services/logging-service';
+import { IDOMService } from "../../interfaces/services/IDOMService";
+import { ICSSService } from "../../interfaces/services/ICSSService";
+import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IIconComponent } from "../../interfaces/components/IIconComponent";
 import {
     ISelectBoxComponent,
     SelectBoxProps,
     SelectOption
-} from "../interfaces/components/ISelectBoxComponent";
+} from "../../interfaces/components/ISelectBoxComponent";
 
 export class SelectBoxComponent implements ISelectBoxComponent {
     private container: HTMLElement | null = null;

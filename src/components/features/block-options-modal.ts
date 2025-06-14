@@ -37,6 +37,8 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         this.specificCommandFactory = commandFactory;
         this.specificCommandInvoker = commandInvoker;
         this.entryId = entryId;
+        // Initialize specificContainer - we'll get it from the global container later if needed
+        this.specificContainer = {} as Container;
     }
 
     public display(): void {

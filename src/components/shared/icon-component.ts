@@ -1,10 +1,10 @@
-import {DOMService} from '../services/dom-service';
-import {CSSService} from '../services/css-service';
-import {LoggingService} from '../services/logging-service';
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {IconProps, IconTransitionOptions, IIconComponent} from "../interfaces/components/IIconComponent";
+import {DOMService} from '../../services/dom-service';
+import {CSSService} from '../../services/css-service';
+import {LoggingService} from '../../services/logging-service';
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {IconProps, IconTransitionOptions, IIconComponent} from "../../interfaces/components/IIconComponent";
 
 export class IconComponent implements IIconComponent {
     private static stylesApplied = false;

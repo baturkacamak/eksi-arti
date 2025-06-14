@@ -1,4 +1,4 @@
-import { ResumeModal } from '../../components/resume-modal';
+import { ResumeModal } from '../../components/features/resume-modal';
 import { BlockerState } from '../../types';
 
 export interface IResumeModalFactory {

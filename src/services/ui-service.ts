@@ -1,26 +1,26 @@
 import {DOMService} from './dom-service';
 import {CSSService} from './css-service';
-import {BlockOptionsModal} from '../components/block-options-modal';
-import {ResumeModal} from '../components/resume-modal';
+import {BlockOptionsModal} from '../components/features/block-options-modal';
+import {ResumeModal} from '../components/features/resume-modal';
 import { StorageService, storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
 import {LoggingService} from "./logging-service";
 import {NotificationService} from "./notification-service";
-import {IconComponent} from "../components/icon-component";
-import {CopyButtonComponent} from "../components/copy-button-component";
-import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
-import {EntrySorterComponent} from "../components/entry-sorter-component";
+import {IconComponent} from "../components/shared/icon-component";
+import {CopyButtonComponent} from "../components/shared/copy-button-component";
+import {ScreenshotButtonComponent} from "../components/features/screenshot-button-component";
+import {EntrySorterComponent} from "../components/features/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
-import {SearchFilterComponent} from "../components/search-filter-component";
+import {SearchFilterComponent} from "../components/features/search-filter-component";
 import {AuthorHighlighterService} from "./author-highlighter-service";
 import {ObserverService, observerService} from "./observer-service";
 import {BlockUsersService} from "./block-users-service";
 import {Container} from "../di/container";
 import {PreferencesManager} from "./preferences-manager";
 import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
-import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
+import {BlockFavoritesButtonComponent} from "../components/features/block-favorites-button-component";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
@@ -211,7 +211,7 @@ export class UIService {
                         const resumeModalFactory = this.container.resolve<ResumeModalFactory>('ResumeModalFactory');
                         const resumeModal = resumeModalFactory.create(entryId, savedState);
                         document.body.style.overflow = 'hidden';
-                        resumeModal.show();
+                        resumeModal.display();
                     } catch (err) {
                         this.loggingService.error('Error showing resume modal:', err);
                     }
@@ -220,7 +220,7 @@ export class UIService {
                         const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockModalFactory');
                         const optionsModal = blockModalFactory.create(entryId);
                         document.body.style.overflow = 'hidden';
-                        optionsModal.show();
+                        optionsModal.display();
                     } catch (err) {
                         this.loggingService.error('Error showing options modal:', err);
                     }

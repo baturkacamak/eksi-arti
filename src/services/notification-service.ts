@@ -230,7 +230,7 @@ export class NotificationService implements INotificationService {
                     // Create the modal using the factory
                     const resumeModal = resumeModalFactory.create(entryId, result.data);
                     document.body.style.overflow = 'hidden';
-                    resumeModal.show();
+                    resumeModal.display();
                 } else {
                     this.loggingService.error('No saved operation state found');
                 }

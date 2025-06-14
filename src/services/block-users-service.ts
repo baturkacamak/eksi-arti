@@ -11,7 +11,7 @@ import {LoggingService} from './logging-service';
 import {PreferencesService} from "./preferences-service";
 import {delay} from "./utilities";
 import {NotificationService} from './notification-service';
-import {IconComponent} from "../components/icon-component";
+import {IconComponent} from "../components/shared/icon-component";
 import {IHtmlParserService} from "../interfaces/services/IHtmlParserService";
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";

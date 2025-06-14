@@ -1,4 +1,4 @@
-import {ComponentContainer} from "../../components/component-container";
+import {ComponentContainer} from "../../components/shared/component-container";
 
 export interface IContainerService {
     getEntryControlsContainer(entry: HTMLElement): ComponentContainer;

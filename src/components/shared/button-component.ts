@@ -1,7 +1,7 @@
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ButtonProps, ButtonSize, ButtonVariant, IButtonComponent} from "../interfaces/components/IButtonComponent";
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {ButtonProps, ButtonSize, ButtonVariant, IButtonComponent} from "../../interfaces/components/IButtonComponent";
 
 /**
  * Button Component

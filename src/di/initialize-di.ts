@@ -10,26 +10,26 @@ import {PreferencesService} from '../services/preferences-service';
 import {PreferencesManager, preferencesManager} from '../services/preferences-manager';
 import {NotificationService} from '../services/notification-service';
 import {BlockUsersService} from '../services/block-users-service';
-import {IconComponent} from '../components/icon-component';
-import {TooltipComponent} from '../components/tooltip-component';
-import {ButtonComponent} from '../components/button-component';
-import {ProgressBarComponent} from '../components/progress-bar-component';
-import {CountdownComponent} from '../components/countdown-component';
+import {IconComponent} from '../components/shared/icon-component';
+import {TooltipComponent} from '../components/shared/tooltip-component';
+import {ButtonComponent} from '../components/shared/button-component';
+import {ProgressBarComponent} from '../components/shared/progress-bar-component';
+import {CountdownComponent} from '../components/features/countdown-component';
 import {TrashService} from '../services/trash-service';
 import {AuthorHighlighterService} from '../services/author-highlighter-service';
 import {UIService} from '../services/ui-service';
 import {ObserverService, observerService} from '../services/observer-service';
 import {PageUtilsService, pageUtils} from '../services/page-utils-service';
 import {PostManagementService} from "../services/post-management-service";
-import {EntrySorterComponent} from "../components/entry-sorter-component";
-import {ScreenshotButtonComponent} from "../components/screenshot-button-component";
-import {CopyButtonComponent} from "../components/copy-button-component";
+import {EntrySorterComponent} from "../components/features/entry-sorter-component";
+import {ScreenshotButtonComponent} from "../components/features/screenshot-button-component";
+import {CopyButtonComponent} from "../components/shared/copy-button-component";
 import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
-import {NotificationComponent} from "../components/notification-component";
+import {NotificationComponent} from "../components/shared/notification-component";
 import {ContainerService} from "../services/container-service";
-import {BlockFavoritesButtonComponent} from "../components/block-favorites-button-component";
+import {BlockFavoritesButtonComponent} from "../components/features/block-favorites-button-component";
 import {containerThemeService} from "../services/container-theme-service";
-import {SearchFilterComponent} from "../components/search-filter-component";
+import {SearchFilterComponent} from "../components/features/search-filter-component";
 import {IStorageService} from "../interfaces/services/IStorageService";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
@@ -53,7 +53,7 @@ import { IAsyncQueueService } from '../interfaces/services/IAsyncQueueService';
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {ISelectBoxComponent} from "../interfaces/components/ISelectBoxComponent";
-import {SelectBoxComponent} from "../components/select-box-component";
+import {SelectBoxComponent} from "../components/shared/select-box-component";
 import {IUserProfileService} from "../interfaces/services/IUserProfileService";
 
 /**
@@ -124,7 +124,8 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
-        return new CountdownComponent(domService, cssService, loggingService, iconComponent);
+        const observerService = container.resolve<IObserverService>('ObserverService');
+        return new CountdownComponent(domService, cssService, loggingService, iconComponent, observerService);
     });
 
     // Register NotificationComponent before NotificationService
@@ -140,8 +141,8 @@ export function initializeDI(): Container {
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
-        const containerService = container.resolve<ContainerService>('ContainerService');
         const observerService = container.resolve<IObserverService>('ObserverService');
+        const containerService = container.resolve<ContainerService>('ContainerService');
         const blockModalFactory = container.resolve<IBlockOptionsModalFactory>('BlockOptionsModalFactory');
 
         return new BlockFavoritesButtonComponent(
@@ -149,8 +150,8 @@ export function initializeDI(): Container {
             cssHandler,
             loggingService,
             iconComponent,
-            containerService,
             observerService,
+            containerService,
             container,
             blockModalFactory
         );
@@ -297,16 +298,16 @@ export function initializeDI(): Container {
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
-        const containerService = container.resolve<ContainerService>('ContainerService');
         const observerService = container.resolve<IObserverService>('ObserverService');
+        const containerService = container.resolve<ContainerService>('ContainerService');
 
         return new ScreenshotButtonComponent(
             domHandler,
             cssHandler,
             loggingService,
             iconComponent,
-            containerService,
-            observerService
+            observerService,
+            containerService
         );
     });
 
@@ -414,8 +415,8 @@ export function initializeDI(): Container {
             cssHandler,
             loggingService,
             iconComponent,
-            tooltipComponent,
             observerService,
+            tooltipComponent,
             pageUtils
         );
     });

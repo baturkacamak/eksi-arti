@@ -3,7 +3,7 @@
  * Entry point for options page functionality
  */
 import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
-import {TooltipComponent} from "./components/tooltip-component";
+import {TooltipComponent} from "./components/shared/tooltip-component";
 import {LoggingService} from "./services/logging-service";
 import {CSSService} from "./services/css-service";
 import {DOMService} from "./services/dom-service";

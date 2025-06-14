@@ -1,16 +1,16 @@
 import { Container } from "../di/container";
 import { ICommandHistory } from "../commands/interfaces/ICommandHistory";
-import { CommandFactory } from "../commands/factory/CommandFactory";
-import { CommandHistory } from "../commands/history/CommandHistory";
-import { CommandInvoker } from "../commands/invoker/CommandInvoker";
-import { LengthSortingStrategy } from "../commands/sort/strategies/LengthSortingStrategy";
-import { DateSortingStrategy } from "../commands/sort/strategies/DateSortingStrategy";
-import { FavoriteCountSortingStrategy } from "../commands/sort/strategies/FavoriteCountSortingStrategy";
+import { CommandFactory } from "../commands/CommandFactory";
+import { CommandHistory } from "../commands/CommandHistory";
+import { CommandInvoker } from "../commands/CommandInvoker";
+import { LengthSortingStrategy } from "../commands/sorting/strategies/LengthSortingStrategy";
+import { DateSortingStrategy } from "../commands/sorting/strategies/DateSortingStrategy";
+import { FavoriteCountSortingStrategy } from "../commands/sorting/strategies/FavoriteCountSortingStrategy";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {INotificationService} from "../interfaces/services/INotificationService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
-import {IHtml2Canvas} from "../commands/screenshot/CaptureScreenshotCommand";
+import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
 
 /**
  * Initialize command-related dependencies in the DI container

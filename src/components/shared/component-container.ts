@@ -1,16 +1,16 @@
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import {LoggingService} from '../services/logging-service';
+import { DOMService } from '../../services/dom-service';
+import { CSSService } from '../../services/css-service';
+import {LoggingService} from '../../services/logging-service';
 import {
     ContainerShape,
     ContainerSize,
     ContainerTheme, ContainerThemeConfig,
     containerThemeService
-} from "../services/container-theme-service";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IComponentContainerConfig, IContainer} from "../interfaces/IContainer";
+} from "../../services/container-theme-service";
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IComponentContainerConfig, IContainer} from "../../interfaces/IContainer";
 
 /**
  * Component Container Class

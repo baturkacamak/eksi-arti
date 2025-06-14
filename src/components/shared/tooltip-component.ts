@@ -1,8 +1,8 @@
-import { DOMService } from '../services/dom-service';
-import {LoggingService} from "../services/logging-service";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
+import { DOMService } from '../../services/dom-service';
+import {LoggingService} from "../../services/logging-service";
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
 
 export interface TooltipOptions {
     position?: 'top' | 'bottom' | 'left' | 'right';

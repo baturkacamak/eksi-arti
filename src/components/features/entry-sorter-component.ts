@@ -34,6 +34,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     private strategies: ISortingStrategy[] = [];
     private observer: MutationObserver | null = null;
     private selectBox: ISelectBoxComponent | null = null;
+    private sortButtons: HTMLElement[] = [];
 
     // Specific dependencies
     private specificPageUtils: PageUtilsService;
@@ -362,8 +363,8 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             // Skip if this strategy is already active
             if (this.activeStrategy === strategy) return;
 
-            // Update active button styling
-            this.sortButtons.forEach(btn => {
+            // Update active button styling (if using buttons instead of select box)
+            this.sortButtons.forEach((btn: HTMLElement) => {
                 btn.style.backgroundColor = '';
                 btn.style.color = '#666';
                 btn.style.fontWeight = 'normal';
@@ -371,12 +372,14 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 this.domHandler.removeClass(btn, 'animate');
             });
 
-            // Style the active button
-            button.style.backgroundColor = 'rgba(129, 193, 75, 0.1)';
-            button.style.color = '#81c14b';
-            button.style.fontWeight = '500';
-            this.domHandler.addClass(button, 'active');
-            this.domHandler.addClass(button, 'animate');
+            // Style the active button (if provided)
+            if (button) {
+                button.style.backgroundColor = 'rgba(129, 193, 75, 0.1)';
+                button.style.color = '#81c14b';
+                button.style.fontWeight = '500';
+                this.domHandler.addClass(button, 'active');
+                this.domHandler.addClass(button, 'animate');
+            }
 
             // Set active strategy
             this.activeStrategy = strategy;
@@ -384,10 +387,12 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             // Sort entries
             this.sortEntries(strategy);
 
-            // Remove animation class after it completes
-            setTimeout(() => {
-                this.domHandler.removeClass(button, 'animate');
-            }, 500);
+            // Remove animation class after it completes (if button provided)
+            if (button) {
+                setTimeout(() => {
+                    this.domHandler.removeClass(button, 'animate');
+                }, 500);
+            }
         } catch (error) {
             this.loggingService.error('Error handling sort button click:', error);
         }

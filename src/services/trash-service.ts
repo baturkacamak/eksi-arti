@@ -3,7 +3,7 @@ import { HttpService } from './http-service';
 import { DOMService } from './dom-service';
 import { LoggingService } from './logging-service';
 import { NotificationService } from './notification-service';
-import { IconComponent } from '../components/icon-component';
+import { IconComponent } from '../components/shared/icon-component';
 import { SITE_DOMAIN } from '../constants';
 import { ObserverService } from "./observer-service";
 import { PageUtilsService } from "./page-utils-service";

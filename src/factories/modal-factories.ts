@@ -3,10 +3,10 @@ import { DOMService } from '../services/dom-service';
 import { CSSService } from '../services/css-service';
 import { LoggingService } from '../services/logging-service';
 import { BlockUsersService } from '../services/block-users-service';
-import { BlockOptionsModal } from '../components/block-options-modal';
-import { ResumeModal } from '../components/resume-modal';
+import { BlockOptionsModal } from '../components/features/block-options-modal';
+import { ResumeModal } from '../components/features/resume-modal';
 import { BlockerState } from '../types';
-import {ButtonComponent} from "../components/button-component";
+import {ButtonComponent} from "../components/shared/button-component";
 import {Container} from "../di/container";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
@@ -34,15 +34,18 @@ export class BlockOptionsModalFactory {
      * Create a new BlockOptionsModal instance
      */
     create(entryId: string): BlockOptionsModal {
+        const iconComponent = this.container.resolve<any>('IconComponent');
+        const observerService = this.container.resolve<any>('ObserverService');
         return new BlockOptionsModal(
-            entryId,
             this.domHandler,
             this.cssHandler,
             this.loggingService,
-            this.container,
+            iconComponent,
+            observerService,
             this.buttonComponent,
             this.commandFactory,
             this.commandInvoker,
+            entryId
         );
     }
 }
@@ -64,15 +67,19 @@ export class ResumeModalFactory {
      * Create a new ResumeModal instance
      */
     create(entryId: string, savedState: BlockerState): ResumeModal {
+        const iconComponent = this.container.resolve<any>('IconComponent');
+        const observerService = this.container.resolve<any>('ObserverService');
         return new ResumeModal(
-            entryId,
-            savedState,
             this.domHandler,
             this.cssHandler,
             this.loggingService,
+            iconComponent,
+            observerService,
             this.buttonComponent,
             this.blockUsersService,
             this.container,
+            entryId,
+            savedState
         );
     }
 }

@@ -2,10 +2,10 @@
  * ProgressBarComponent
  * A standalone component for displaying a progress bar
  */
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {IProgressBarComponent, ProgressBarOptions} from "../interfaces/components/IProgressBarComponent";
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {IProgressBarComponent, ProgressBarOptions} from "../../interfaces/components/IProgressBarComponent";
 
 export class ProgressBarComponent implements IProgressBarComponent {
     private progressBarElement: HTMLElement | null = null;

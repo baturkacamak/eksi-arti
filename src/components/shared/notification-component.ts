@@ -1,8 +1,8 @@
-import { preferencesManager } from "../services/preferences-manager";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ExtendedNotificationOptions, INotificationComponent} from "../interfaces/components/INotificationComponent";
+import { preferencesManager } from "../../services/preferences-manager";
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {ExtendedNotificationOptions, INotificationComponent} from "../../interfaces/components/INotificationComponent";
 
 export class NotificationComponent implements INotificationComponent {
     private notificationElement: HTMLElement | null = null;

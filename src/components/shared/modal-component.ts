@@ -1,12 +1,12 @@
-import {DOMService} from '../services/dom-service';
-import {CSSService} from '../services/css-service';
+import {DOMService} from '../../services/dom-service';
+import {CSSService} from '../../services/css-service';
 import {ButtonComponent} from './button-component';
-import {LoggingService} from "../services/logging-service";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ButtonSize, ButtonVariant} from "../interfaces/components/IButtonComponent";
-import {IModalComponent} from "../interfaces/components/IModalComponent";
+import {LoggingService} from "../../services/logging-service";
+import {ICSSService} from "../../interfaces/services/ICSSService";
+import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IDOMService} from "../../interfaces/services/IDOMService";
+import {ButtonSize, ButtonVariant} from "../../interfaces/components/IButtonComponent";
+import {IModalComponent} from "../../interfaces/components/IModalComponent";
 
 export class ModalComponent implements IModalComponent {
     protected modalElement: HTMLElement | null = null;

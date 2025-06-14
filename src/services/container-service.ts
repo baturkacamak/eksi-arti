@@ -1,6 +1,6 @@
 
 // src/services/container-service.ts
-import { ComponentContainer } from '../components/component-container';
+import { ComponentContainer } from '../components/shared/component-container';
 import { LoggingService} from './logging-service';
 import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
 import {DOMService} from "./dom-service";

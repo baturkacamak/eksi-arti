@@ -1,6 +1,6 @@
 import { ICommand } from "./ICommand";
 import { BlockType } from "../../constants";
-import { ISortingStrategy } from "../sort/ISortingStrategy";
+import { ISortingStrategy } from "../sorting/ISortingStrategy";
 
 /**
  * Interface for command factory

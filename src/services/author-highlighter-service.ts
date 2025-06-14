@@ -1,7 +1,7 @@
 // src/services/author-highlighter-service.ts
 import {storageService, StorageService} from './storage-service';
-import { IconComponent } from '../components/icon-component';
-import { TooltipComponent } from '../components/tooltip-component';
+import { IconComponent } from '../components/shared/icon-component';
+import { TooltipComponent } from '../components/shared/tooltip-component';
 import {ObserverService, observerService} from "./observer-service";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
