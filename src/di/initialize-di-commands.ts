@@ -11,6 +11,7 @@ import {INotificationService} from "../interfaces/services/INotificationService"
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
+import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
 
 /**
  * Initialize command-related dependencies in the DI container
@@ -47,13 +48,15 @@ export function initializeCommandDI(container: Container): void {
     const iconComponent = container.resolve<IIconComponent>("IconComponent");
     const blockUsersService = container.resolve<IBlockUsersService>("BlockUsersService");
     const html2canvas = container.resolve<IHtml2Canvas>("Html2Canvas");
+    const sortingDataExtractor = container.resolve<SortingDataExtractor>("SortingDataExtractor");
 
     return new CommandFactory(
       loggingService,
       notificationService,
       iconComponent,
       blockUsersService,
-      html2canvas
+      html2canvas,
+      sortingDataExtractor
     );
   });
 }
