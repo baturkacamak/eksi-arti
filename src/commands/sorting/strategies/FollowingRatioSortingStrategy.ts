@@ -1,22 +1,24 @@
-import { ISortingStrategy } from "../ISortingStrategy";
-import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
+import { BaseUserProfileSortingStrategy } from "../BaseUserProfileSortingStrategy";
+import { IUserProfileService } from "../../../interfaces/services/IUserProfileService";
 import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
-export class FollowingRatioSortingStrategy implements ISortingStrategy {
+export class FollowingRatioSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'following-ratio';
     public readonly displayName: string = 'Takip Oranı';
     public readonly icon: string = 'group_add';
     public readonly tooltip: string = 'Entry\'leri yazarın takip oranına göre sırala (takip edilen/takipçi)';
 
     constructor(
-        private userProfileService: IUserProfileService,
-        private usernameExtractorService: IUsernameExtractorService
-    ) {}
+        userProfileService: IUserProfileService,
+        usernameExtractorService: IUsernameExtractorService
+    ) {
+        super(userProfileService, usernameExtractorService);
+    }
 
     /**
      * Sort entries by author following ratio (following/follower ratio)
      */
-    public sort(a: HTMLElement, b: HTMLElement): number {
+    protected compare(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.usernameExtractorService.extractFromEntry(a);
         const authorB = this.usernameExtractorService.extractFromEntry(b);
 
@@ -28,7 +30,7 @@ export class FollowingRatioSortingStrategy implements ISortingStrategy {
         const ratioA = this.calculateFollowingRatio(profileA);
         const ratioB = this.calculateFollowingRatio(profileB);
 
-        return ratioB - ratioA; // Descending order
+        return ratioB - ratioA; // Descending by default (highest ratio first)
     }
 
     private calculateFollowingRatio(profile: any): number {

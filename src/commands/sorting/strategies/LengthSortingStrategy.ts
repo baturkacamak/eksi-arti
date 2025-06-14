@@ -1,15 +1,15 @@
-import { ISortingStrategy } from "../ISortingStrategy";
+import { BaseSortingStrategy } from "../BaseSortingStrategy";
 
 /**
  * Strategy for sorting entries by content length
  */
-export class LengthSortingStrategy implements ISortingStrategy {
-  name = "length";
-  icon = "format_line_spacing";
-  tooltip = "Uzunluğa göre sırala";
+export class LengthSortingStrategy extends BaseSortingStrategy {
+  readonly name = "length";
+  readonly icon = "format_line_spacing";
+  readonly tooltip = "Uzunluğa göre sırala";
 
-  sort(a: HTMLElement, b: HTMLElement): number {
-    return this.getEntryLength(b) - this.getEntryLength(a);
+  protected compare(a: HTMLElement, b: HTMLElement): number {
+    return this.getEntryLength(b) - this.getEntryLength(a); // Descending by default (longest first)
   }
 
   private getEntryLength(entry: HTMLElement): number {

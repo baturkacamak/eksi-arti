@@ -1,8 +1,8 @@
-import { ISortingStrategy } from "../ISortingStrategy";
+import { BaseUserProfileSortingStrategy } from "../BaseUserProfileSortingStrategy";
 import { IUserProfileService } from "../../../interfaces/services/IUserProfileService";
 import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
-export class UserLevelSortingStrategy implements ISortingStrategy {
+export class UserLevelSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'user-level';
     public readonly displayName: string = 'Kullanıcı Seviyesi';
     public readonly icon: string = 'star';
@@ -17,14 +17,13 @@ export class UserLevelSortingStrategy implements ISortingStrategy {
     ];
 
     constructor(
-        private userProfileService: IUserProfileService,
-        private usernameExtractorService: IUsernameExtractorService
-    ) {}
+        userProfileService: IUserProfileService,
+        usernameExtractorService: IUsernameExtractorService
+    ) {
+        super(userProfileService, usernameExtractorService);
+    }
 
-    /**
-     * Sort entries by author user level (using only cached data)
-     */
-    public sort(a: HTMLElement, b: HTMLElement): number {
+    protected compare(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.usernameExtractorService.extractFromEntry(a);
         const authorB = this.usernameExtractorService.extractFromEntry(b);
 
@@ -39,11 +38,11 @@ export class UserLevelSortingStrategy implements ISortingStrategy {
         // First sort by level order
         const levelComparison = levelB.levelIndex - levelA.levelIndex;
         if (levelComparison !== 0) {
-            return levelComparison;
+            return levelComparison; // Descending by default (higher level first)
         }
 
         // If same level, sort by points
-        return levelB.points - levelA.points;
+        return levelB.points - levelA.points; // Descending by default (higher points first)
     }
 
     private getUserLevel(profile: any): { levelIndex: number, points: number } {

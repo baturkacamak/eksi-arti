@@ -1,22 +1,24 @@
-import { ISortingStrategy } from "../ISortingStrategy";
-import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
+import { BaseUserProfileSortingStrategy } from "../BaseUserProfileSortingStrategy";
+import { IUserProfileService } from "../../../interfaces/services/IUserProfileService";
 import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
-export class AccountAgeSortingStrategy implements ISortingStrategy {
+export class AccountAgeSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'account-age';
     public readonly displayName: string = 'Hesap Yaşı';
     public readonly icon: string = 'account_circle';
     public readonly tooltip: string = 'Entry\'leri yazar hesap yaşına göre sırala';
 
     constructor(
-        private userProfileService: IUserProfileService,
-        private usernameExtractorService: IUsernameExtractorService
-    ) {}
+        userProfileService: IUserProfileService,
+        usernameExtractorService: IUsernameExtractorService
+    ) {
+        super(userProfileService, usernameExtractorService);
+    }
 
     /**
      * Sort entries by author account age (using only cached data)
      */
-    public sort(a: HTMLElement, b: HTMLElement): number {
+    protected compare(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.usernameExtractorService.extractFromEntry(a);
         const authorB = this.usernameExtractorService.extractFromEntry(b);
 
@@ -43,7 +45,7 @@ export class AccountAgeSortingStrategy implements ISortingStrategy {
 
         // Sort by age descending (older accounts first)
         if (ageA !== ageB) {
-            return ageB - ageA;
+            return ageB - ageA; // Descending by default (older first)
         }
 
         // If ages are the same, sort by username for stable sorting

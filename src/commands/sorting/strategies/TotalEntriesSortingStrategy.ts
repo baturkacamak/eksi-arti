@@ -1,19 +1,21 @@
-import { ISortingStrategy } from "../ISortingStrategy";
-import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
+import { BaseUserProfileSortingStrategy } from "../BaseUserProfileSortingStrategy";
+import { IUserProfileService } from "../../../interfaces/services/IUserProfileService";
 import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
-export class TotalEntriesSortingStrategy implements ISortingStrategy {
+export class TotalEntriesSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'total-entries';
     public readonly displayName: string = 'Entry Sayısı';
     public readonly icon: string = 'format_list_numbered';
     public readonly tooltip: string = 'Entry\'leri yazarın toplam entry sayısına göre sırala';
 
     constructor(
-        private userProfileService: IUserProfileService,
-        private usernameExtractorService: IUsernameExtractorService
-    ) {}
+        userProfileService: IUserProfileService,
+        usernameExtractorService: IUsernameExtractorService
+    ) {
+        super(userProfileService, usernameExtractorService);
+    }
 
-    public sort(a: HTMLElement, b: HTMLElement): number {
+    protected compare(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.usernameExtractorService.extractFromEntry(a);
         const authorB = this.usernameExtractorService.extractFromEntry(b);
 
@@ -25,6 +27,6 @@ export class TotalEntriesSortingStrategy implements ISortingStrategy {
         const entriesA = profileA?.stats?.entryCount || 0;
         const entriesB = profileB?.stats?.entryCount || 0;
 
-        return entriesB - entriesA;
+        return entriesB - entriesA; // Descending by default (most entries first)
     }
 } 

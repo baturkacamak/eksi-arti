@@ -76,10 +76,11 @@ export class CommandFactory implements ICommandFactory {
     /**
      * Create a SortEntriesCommand
      */
-    public createSortEntriesCommand(strategy: ISortingStrategy): ICommand {
+    public createSortEntriesCommand(strategy: ISortingStrategy, direction: 'asc' | 'desc' = 'desc'): ICommand {
         return new SortEntriesCommand(
             this.loggingService,
-            strategy
+            strategy,
+            direction
         );
     }
 } 

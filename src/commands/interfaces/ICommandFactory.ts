@@ -32,5 +32,5 @@ export interface ICommandFactory {
   /**
    * Create a SortEntriesCommand
    */
-  createSortEntriesCommand(strategy: ISortingStrategy): ICommand;
+  createSortEntriesCommand(strategy: ISortingStrategy, direction?: 'asc' | 'desc'): ICommand;
 }

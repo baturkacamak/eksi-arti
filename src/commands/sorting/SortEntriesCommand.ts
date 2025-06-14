@@ -11,7 +11,8 @@ export class SortEntriesCommand implements ICommand {
 
   constructor(
     private loggingService: ILoggingService,
-    private strategy: ISortingStrategy
+    private strategy: ISortingStrategy,
+    private direction: 'asc' | 'desc' = 'desc'
   ) {}
 
   public async execute(): Promise<boolean> {
@@ -30,13 +31,13 @@ export class SortEntriesCommand implements ICommand {
         return -1;
       });
       const sortedEntries = [...entries].sort((a, b) =>
-        this.strategy.sort(a as HTMLElement, b as HTMLElement)
+        this.strategy.sort(a as HTMLElement, b as HTMLElement, this.direction)
       );
       const fragment = document.createDocumentFragment();
       sortedEntries.forEach(entry => fragment.appendChild(entry));
       this.entryList.innerHTML = "";
       this.entryList.appendChild(fragment);
-      this.loggingService.debug(`Entries sorted using ${this.strategy.name} strategy`);
+      this.loggingService.debug(`Entries sorted using ${this.strategy.name} strategy (${this.direction})`);
       return true;
     } catch (error) {
       this.loggingService.error("Error executing SortEntriesCommand:", error);
@@ -73,6 +74,7 @@ export class SortEntriesCommand implements ICommand {
   }
 
   public getDescription(): string {
-    return `Entry\'leri ${this.strategy.tooltip.toLowerCase()} sırala`;
+    const directionText = this.direction === 'asc' ? 'artan' : 'azalan';
+    return `Entry\'leri ${this.strategy.tooltip.toLowerCase()} ${directionText} sırala`;
   }
 } 

@@ -1,16 +1,16 @@
-import { ISortingStrategy } from "../ISortingStrategy";
+import { BaseSortingStrategy } from "../BaseSortingStrategy";
 
 /**
  * Strategy for sorting entries by favorite count
  */
-export class FavoriteCountSortingStrategy implements ISortingStrategy {
-  name = "favorite";
-  icon = "favorite";
-  tooltip = "Favori sayısına göre sırala";
+export class FavoriteCountSortingStrategy extends BaseSortingStrategy {
+  readonly name = "favorite";
+  readonly icon = "favorite";
+  readonly tooltip = "Favori sayısına göre sırala";
 
-  sort(a: HTMLElement, b: HTMLElement): number {
+  protected compare(a: HTMLElement, b: HTMLElement): number {
     const aFav = parseInt(a.getAttribute("data-favorite-count") || "0");
     const bFav = parseInt(b.getAttribute("data-favorite-count") || "0");
-    return bFav - aFav;
+    return bFav - aFav; // Descending by default (most favorites first)
   }
 } 

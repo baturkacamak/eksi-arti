@@ -32,6 +32,7 @@ import { IUsernameExtractorService } from "../../interfaces/services/IUsernameEx
  */
 export class EntrySorterComponent extends BaseFeatureComponent implements IEntrySorterComponent {
     private activeStrategy: ISortingStrategy | null = null;
+    private currentDirection: 'asc' | 'desc' = 'desc';
     private strategies: ISortingStrategy[] = [];
     private observer: MutationObserver | null = null;
     private selectBox: ISelectBoxComponent | null = null;
@@ -284,6 +285,9 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 onChange: (selectedOption) => {
                     const strategy = this.strategies.find(s => s.name === selectedOption.value);
                     if (strategy) {
+                        // Set direction to strategy's default when switching strategies
+                        this.currentDirection = strategy.defaultDirection || 'desc';
+                        this.updateDirectionToggleInUI();
                         this.sortEntries(strategy);
                         this.activeStrategy = strategy;
                     }
@@ -293,6 +297,10 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 className: 'eksi-entry-sorter-select'
             });
             this.domHandler.appendChild(selectContainer, selectElement);
+
+            // Add direction toggle button
+            const directionToggle = this.createDirectionToggle();
+            this.domHandler.appendChild(selectContainer, directionToggle);
             
             // Prepend the sorter to the customControlsRow so it appears on the left
             if(customControlsRow.firstChild){
@@ -304,6 +312,71 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             this.loggingService.debug('Entry sorter select box added.');
         } catch (error) {
             this.loggingService.error('Error adding sort select box:', error);
+        }
+    }
+
+    /**
+     * Create direction toggle button
+     */
+    private createDirectionToggle(): HTMLElement {
+        const toggle = this.domHandler.createElement('button');
+        this.domHandler.addClass(toggle, 'eksi-direction-toggle');
+        
+        toggle.style.marginLeft = '8px';
+        toggle.style.padding = '5px 8px';
+        toggle.style.border = '1px solid #ddd';
+        toggle.style.borderRadius = '4px';
+        toggle.style.backgroundColor = '#f8f9fa';
+        toggle.style.cursor = 'pointer';
+        toggle.style.fontSize = '12px';
+        toggle.style.display = 'flex';
+        toggle.style.alignItems = 'center';
+        toggle.style.gap = '4px';
+        toggle.style.transition = 'all 0.2s ease';
+        
+        this.updateDirectionToggleText(toggle);
+        
+        this.domHandler.addEventListener(toggle, 'click', () => {
+            this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
+            this.updateDirectionToggleText(toggle);
+            
+            // Re-sort with new direction if there's an active strategy
+            if (this.activeStrategy) {
+                this.sortEntries(this.activeStrategy, this.currentDirection);
+            }
+        });
+        
+        return toggle;
+    }
+
+    /**
+     * Update the direction toggle button text and icon
+     */
+    private updateDirectionToggleText(toggle: HTMLElement): void {
+        const isDesc = this.currentDirection === 'desc';
+        const iconName = isDesc ? 'arrow_downward' : 'arrow_upward';
+        const text = isDesc ? 'Azalan' : 'Artan';
+        
+        const icon = this.iconComponent.create({
+            name: iconName,
+            size: 'small'
+        });
+        
+        toggle.innerHTML = '';
+        toggle.appendChild(icon as HTMLElement);
+        toggle.appendChild(document.createTextNode(text));
+        
+        // Update tooltip
+        toggle.setAttribute('title', `Sıralama yönü: ${text}`);
+    }
+
+    /**
+     * Update direction toggle in the UI
+     */
+    private updateDirectionToggleInUI(): void {
+        const toggle = document.querySelector('.eksi-direction-toggle') as HTMLElement;
+        if (toggle) {
+            this.updateDirectionToggleText(toggle);
         }
     }
 
@@ -405,7 +478,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     /**
      * Sort entries using the specified strategy
      */
-    private sortEntries(strategy: ISortingStrategy): void {
+    private sortEntries(strategy: ISortingStrategy, direction?: 'asc' | 'desc'): void {
         try {
             const entryList = document.querySelector('#entry-item-list');
             if (!entryList) {
@@ -415,19 +488,21 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             const entries = Array.from(entryList.querySelectorAll('li[data-id]')) as HTMLElement[];
             if (entries.length === 0) return;
 
-            this.loggingService.debug(`Sorting ${entries.length} entries using ${strategy.name}`);
+            const sortDirection = direction || this.currentDirection;
+            this.loggingService.debug(`Sorting ${entries.length} entries using ${strategy.name} (${sortDirection})`);
+            
             // Pre-fetch data if strategy requires it
             const prefetchPromises = entries.map(entry => 
                 typeof (strategy as any).prefetchData === 'function' ? (strategy as any).prefetchData(entry) : Promise.resolve()
             );
             
             Promise.all(prefetchPromises).then(() => {
-                const sortedEntries = [...entries].sort((a, b) => strategy.sort(a, b));
+                const sortedEntries = [...entries].sort((a, b) => strategy.sort(a, b, sortDirection));
                 const fragment = document.createDocumentFragment();
                 sortedEntries.forEach(entry => fragment.appendChild(entry));
                 entryList.innerHTML = ''; 
                 entryList.appendChild(fragment);
-                this.loggingService.debug(`Entries sorted and re-appended using ${strategy.name} strategy`);
+                this.loggingService.debug(`Entries sorted and re-appended using ${strategy.name} strategy (${sortDirection})`);
                 this.activeStrategy = strategy;
             }).catch(error => {
                 this.loggingService.error('Error during prefetch or sorting:', error);
@@ -469,13 +544,47 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                     border-color: rgba(255, 255, 255, 0.08) !important;
                 }
             }
-            .eksi-sort-buttons { /* Container for the select box */
+            .eksi-sort-buttons { /* Container for the select box and direction toggle */
                 display: flex; 
                 align-items: center;
                 margin-right: auto; /* Push sort select box to the left */
             }
             .eksi-entry-sorter-select-container .eksi-selectbox-container { 
                 /* Styles for the select box can be added here if needed for this specific context */
+            }
+            .eksi-direction-toggle {
+                margin-left: 8px;
+                padding: 5px 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background-color: #f8f9fa;
+                cursor: pointer;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                transition: all 0.2s ease;
+                color: #666;
+            }
+            .eksi-direction-toggle:hover {
+                background-color: rgba(129, 193, 75, 0.1);
+                border-color: #81c14b;
+                color: #81c14b;
+            }
+            .eksi-direction-toggle .material-icons {
+                font-size: 14px;
+            }
+            @media (prefers-color-scheme: dark) {
+                .eksi-direction-toggle {
+                    background-color: rgba(255, 255, 255, 0.08);
+                    border-color: rgba(255, 255, 255, 0.15);
+                    color: #aaa;
+                }
+                .eksi-direction-toggle:hover {
+                    background-color: rgba(129, 193, 75, 0.15);
+                    border-color: #81c14b;
+                    color: #81c14b;
+                }
             }
         `;
     }
@@ -531,6 +640,9 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 onChange: (selectedOption) => {
                     const strategy = this.strategies.find(s => s.name === selectedOption.value);
                     if (strategy) {
+                        // Set direction to strategy's default when switching strategies
+                        this.currentDirection = strategy.defaultDirection || 'desc';
+                        this.updateDirectionToggleInUI();
                         this.sortEntries(strategy);
                         this.activeStrategy = strategy;
                     }
@@ -540,6 +652,10 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 className: 'eksi-entry-sorter-select'
             });
             this.domHandler.appendChild(selectContainer, selectElement);
+
+            // Add direction toggle button
+            const directionToggle = this.createDirectionToggle();
+            this.domHandler.appendChild(selectContainer, directionToggle);
             
             // Prepend to ensure it is on the left of other controls in the row
             if(customControlsRow.firstChild){

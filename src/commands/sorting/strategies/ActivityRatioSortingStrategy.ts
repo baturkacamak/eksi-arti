@@ -1,22 +1,24 @@
-import { ISortingStrategy } from "../ISortingStrategy";
-import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
+import { BaseUserProfileSortingStrategy } from "../BaseUserProfileSortingStrategy";
+import { IUserProfileService } from "../../../interfaces/services/IUserProfileService";
 import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
-export class ActivityRatioSortingStrategy implements ISortingStrategy {
+export class ActivityRatioSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'activity-ratio';
     public readonly displayName: string = 'Aktivite Oranı';
     public readonly icon: string = 'speed';
     public readonly tooltip: string = 'Entry\'leri yazarın günlük entry oranına göre sırala';
 
     constructor(
-        private userProfileService: IUserProfileService,
-        private usernameExtractorService: IUsernameExtractorService
-    ) {}
+        userProfileService: IUserProfileService,
+        usernameExtractorService: IUsernameExtractorService
+    ) {
+        super(userProfileService, usernameExtractorService);
+    }
 
     /**
      * Sort entries by author activity ratio (entries per day since registration)
      */
-    public sort(a: HTMLElement, b: HTMLElement): number {
+    protected compare(a: HTMLElement, b: HTMLElement): number {
         const authorA = this.usernameExtractorService.extractFromEntry(a);
         const authorB = this.usernameExtractorService.extractFromEntry(b);
 
@@ -28,7 +30,7 @@ export class ActivityRatioSortingStrategy implements ISortingStrategy {
         const ratioA = this.calculateActivityRatio(profileA);
         const ratioB = this.calculateActivityRatio(profileB);
 
-        return ratioB - ratioA; // Descending order
+        return ratioB - ratioA; // Descending by default (most active first)
     }
 
     private calculateActivityRatio(profile: any): number {
