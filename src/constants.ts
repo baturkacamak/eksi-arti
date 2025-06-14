@@ -90,8 +90,8 @@ export const PATHS = {
 export const Endpoints = {
     BLOCK: buildUrl('userrelation/addrelation'),
     FAVORITES: buildUrl('entry/favorileyenler'),
-    ADD_NOTE: buildUrl(`biri/{username}/note`),
-    USER_PROFILE: (username: string) => buildUrl(`biri/${encodeURIComponent(username)}`),
+    ADD_NOTE: buildUrl(`${PATHS.BIRI.slice(1)}{username}/note`),
+    USER_PROFILE: (username: string) => buildUrl(`${PATHS.BIRI.slice(1)}${encodeURIComponent(username)}`),
 };
 
 // Update this function to rebuild endpoints when domain changes

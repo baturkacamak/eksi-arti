@@ -1,6 +1,6 @@
 import {DOMService} from './dom-service';
 import {LoggingService} from "./logging-service";
-import {SITE_DOMAIN} from "../constants";
+import {SITE_DOMAIN, PATHS} from "../constants";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IHtmlParserService} from "../interfaces/services/IHtmlParserService";
@@ -57,7 +57,7 @@ export class HtmlParserService implements IHtmlParserService {
 
                 anchors.forEach((a) => {
                     const href = a.getAttribute('href');
-                    if (href && href.includes('biri')) {
+                    if (href && href.includes(PATHS.BIRI)) {
                         userUrls.push(`https://${SITE_DOMAIN}${href}`);
                     }
                 });
@@ -94,7 +94,7 @@ export class HtmlParserService implements IHtmlParserService {
     private fallbackParseFavoritesHtml(html: string): string[] {
         try {
             const userUrls: string[] = [];
-            const regex = /<a\s+href="(\/biri\/[^"]+)"/g;
+            const regex = new RegExp(`<a\\s+href="(${PATHS.BIRI.replace('/', '\\/')}[^"]+)"`, 'g');
             let match;
 
             while ((match = regex.exec(html)) !== null) {
@@ -103,7 +103,7 @@ export class HtmlParserService implements IHtmlParserService {
 
             if (userUrls.length === 0) {
                 // If first regex fails to find any results, try a more lenient one
-                const fallbackRegex = /href=["']([^"']*\/biri\/[^"']*)["']/g;
+                const fallbackRegex = new RegExp(`href=["']([^"']*${PATHS.BIRI.replace('/', '\\/')}[^"']*)["']`, 'g');
                 while ((match = fallbackRegex.exec(html)) !== null) {
                     userUrls.push(`https://${SITE_DOMAIN}${match[1]}`);
                 }
