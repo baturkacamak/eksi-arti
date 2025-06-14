@@ -1,29 +1,5 @@
 import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
-
-/**
- * Simple implementation of username extractor for compatibility
- * This is used as a fallback when DI is not available
- */
-class SimpleUsernameExtractor implements IUsernameExtractorService {
-    extractFromEntry(entry: HTMLElement): string | null {
-        const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
-        return this.extractFromLink(authorLink);
-    }
-
-    extractFromLink(authorLink: HTMLAnchorElement | null): string | null {
-        if (!authorLink) return null;
-        
-        const href = authorLink.getAttribute('href');
-        if (!href || !href.includes('/biri/')) return null;
-        
-        return href.split('/biri/')[1] || null;
-    }
-
-    extractFromUrl(url: string): string | null {
-        if (!url.includes('/biri/')) return null;
-        return url.split('/biri/')[1] || null;
-    }
-}
+import { UsernameExtractorService } from "./username-extractor-service";
 
 /**
  * Service providing utility methods for page detection and common DOM operations
@@ -129,4 +105,4 @@ export function createPageUtilsService(usernameExtractorService: IUsernameExtrac
 }
 
 // Export compatibility singleton for existing code
-export const pageUtils = PageUtilsService.getInstance(new SimpleUsernameExtractor());
+export const pageUtils = PageUtilsService.getInstance(UsernameExtractorService.createSimple());
