@@ -19,7 +19,7 @@ import {TrashService} from '../services/trash-service';
 import {AuthorHighlighterService} from '../services/author-highlighter-service';
 import {UIService} from '../services/ui-service';
 import {ObserverService, observerService} from '../services/observer-service';
-import {PageUtilsService, pageUtils} from '../services/page-utils-service';
+import {PageUtilsService, createPageUtilsService} from '../services/page-utils-service';
 import {PostManagementService} from "../services/post-management-service";
 import {EntrySorterComponent} from "../components/features/entry-sorter-component";
 import {ScreenshotButtonComponent} from "../components/features/screenshot-button-component";
@@ -55,6 +55,8 @@ import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {ISelectBoxComponent} from "../interfaces/components/ISelectBoxComponent";
 import {SelectBoxComponent} from "../components/shared/select-box-component";
 import {IUserProfileService} from "../interfaces/services/IUserProfileService";
+import {UsernameExtractorService} from "../services/username-extractor-service";
+import {IUsernameExtractorService} from "../interfaces/services/IUsernameExtractorService";
 
 /**
  * Initialize the dependency injection container
@@ -67,10 +69,14 @@ export function initializeDI(): Container {
     container.register('DOMService', () => new DOMService());
     container.register('CSSService', () => new CSSService());
     container.register('ObserverService', () => observerService);
-    container.register('PageUtilsService', () => pageUtils);
+    container.register('PageUtilsService', () => {
+        const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
+        return createPageUtilsService(usernameExtractorService);
+    });
     container.register('StorageService', () => storageService);
     container.register('PreferencesManager', () => preferencesManager);
     container.register('ContainerThemeService', () => containerThemeService);
+    container.register('UsernameExtractorService', () => new UsernameExtractorService());
 
     // Register services with dependencies
     container.register('HttpService', () => {
@@ -320,7 +326,8 @@ export function initializeDI(): Container {
         const observerService = container.resolve<IObserverService>('ObserverService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
-        const queueService = container.resolve<IAsyncQueueService>('AsyncQueueService'); // <- NEW
+        const queueService = container.resolve<IAsyncQueueService>('AsyncQueueService');
+        const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
 
         return new UserProfileService(
             domService,
@@ -331,7 +338,8 @@ export function initializeDI(): Container {
             observerService,
             iconComponent,
             tooltipComponent,
-            queueService
+            queueService,
+            usernameExtractorService
         );
     });
 
@@ -366,6 +374,7 @@ export function initializeDI(): Container {
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
         const userProfileService = container.resolve<IUserProfileService>('UserProfileService');
         const selectBoxComponent = container.resolve<ISelectBoxComponent>('SelectBoxComponent');
+        const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
 
         return new EntrySorterComponent(
             domHandler,
@@ -375,7 +384,8 @@ export function initializeDI(): Container {
             observerService,
             pageUtils,
             userProfileService,
-            selectBoxComponent
+            selectBoxComponent,
+            usernameExtractorService
         );
     });
 

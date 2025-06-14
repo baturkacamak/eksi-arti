@@ -1,6 +1,6 @@
 import { ISortingStrategy } from "../ISortingStrategy";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
-import { UsernameExtractor } from "../../../utils/username-extractor";
+import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
 export class FollowerSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'followers';
@@ -8,11 +8,14 @@ export class FollowerSortingStrategy implements ISortingStrategy {
     public readonly icon: string = 'people';
     public readonly tooltip: string = 'Entry\'leri yazarın takipçi sayısına göre sırala';
 
-    constructor(private userProfileService: IUserProfileService) {}
+    constructor(
+        private userProfileService: IUserProfileService,
+        private usernameExtractorService: IUsernameExtractorService
+    ) {}
 
     public sort(a: HTMLElement, b: HTMLElement): number {
-        const authorA = UsernameExtractor.extractFromEntry(a);
-        const authorB = UsernameExtractor.extractFromEntry(b);
+        const authorA = this.usernameExtractorService.extractFromEntry(a);
+        const authorB = this.usernameExtractorService.extractFromEntry(b);
 
         if (!authorA || !authorB) return 0;
 

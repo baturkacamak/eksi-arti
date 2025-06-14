@@ -9,7 +9,7 @@ import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {SITE_DOMAIN} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IAsyncQueueService} from "../interfaces/services/IAsyncQueueService";
-import { UsernameExtractor } from "../utils/username-extractor";
+import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
 
 export interface IUserProfile {
     username: string;
@@ -48,6 +48,7 @@ export class UserProfileService {
         private iconComponent: IIconComponent,
         private tooltipComponent: ITooltipComponent,
         private queueService: IAsyncQueueService,
+        private usernameExtractorService: IUsernameExtractorService,
     ) {
         this.applyCSSStyles();
     }
@@ -269,7 +270,7 @@ export class UserProfileService {
         this.processedLinks.add(link);
 
         // Extract username from URL using centralized utility
-        const username = UsernameExtractor.extractFromLink(link);
+        const username = this.usernameExtractorService.extractFromLink(link);
         if (!username) return;
 
         // Check cache first

@@ -1,4 +1,29 @@
-import { UsernameExtractor } from "../utils/username-extractor";
+import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
+
+/**
+ * Simple implementation of username extractor for compatibility
+ * This is used as a fallback when DI is not available
+ */
+class SimpleUsernameExtractor implements IUsernameExtractorService {
+    extractFromEntry(entry: HTMLElement): string | null {
+        const authorLink = entry.querySelector<HTMLAnchorElement>('.entry-author');
+        return this.extractFromLink(authorLink);
+    }
+
+    extractFromLink(authorLink: HTMLAnchorElement | null): string | null {
+        if (!authorLink) return null;
+        
+        const href = authorLink.getAttribute('href');
+        if (!href || !href.includes('/biri/')) return null;
+        
+        return href.split('/biri/')[1] || null;
+    }
+
+    extractFromUrl(url: string): string | null {
+        if (!url.includes('/biri/')) return null;
+        return url.split('/biri/')[1] || null;
+    }
+}
 
 /**
  * Service providing utility methods for page detection and common DOM operations
@@ -6,16 +31,16 @@ import { UsernameExtractor } from "../utils/username-extractor";
 export class PageUtilsService {
     private static instance: PageUtilsService;
 
-    private constructor() {
+    private constructor(private usernameExtractorService: IUsernameExtractorService) {
         // Private constructor for singleton
     }
 
     /**
      * Get the singleton instance
      */
-    public static getInstance(): PageUtilsService {
+    public static getInstance(usernameExtractorService: IUsernameExtractorService): PageUtilsService {
         if (!PageUtilsService.instance) {
-            PageUtilsService.instance = new PageUtilsService();
+            PageUtilsService.instance = new PageUtilsService(usernameExtractorService);
         }
         return PageUtilsService.instance;
     }
@@ -71,7 +96,7 @@ export class PageUtilsService {
     public getCurrentAuthor(): string | null {
         // For profile pages
         if (this.isUserProfilePage()) {
-            const authorFromUrl = UsernameExtractor.extractFromUrl(window.location.pathname);
+            const authorFromUrl = this.usernameExtractorService.extractFromUrl(window.location.pathname);
             if (authorFromUrl) {
                 return decodeURIComponent(authorFromUrl);
             }
@@ -80,7 +105,7 @@ export class PageUtilsService {
         // For entry pages, try to get the author of the main entry
         const authorElement = document.querySelector<HTMLAnchorElement>('.entry-author');
         if (authorElement) {
-            return UsernameExtractor.extractFromLink(authorElement);
+            return this.usernameExtractorService.extractFromLink(authorElement);
         }
 
         return null;
@@ -98,5 +123,10 @@ export class PageUtilsService {
     }
 }
 
-// Export the singleton instance
-export const pageUtils = PageUtilsService.getInstance();
+// Export factory function for DI container
+export function createPageUtilsService(usernameExtractorService: IUsernameExtractorService): PageUtilsService {
+    return PageUtilsService.getInstance(usernameExtractorService);
+}
+
+// Export compatibility singleton for existing code
+export const pageUtils = PageUtilsService.getInstance(new SimpleUsernameExtractor());

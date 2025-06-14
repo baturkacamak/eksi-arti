@@ -4,7 +4,7 @@ import { CSSService } from '../../services/css-service';
 import { IconComponent } from '../shared/icon-component';
 import { LoggingService } from '../../services/logging-service';
 import { ObserverService, observerService as globalObserverService } from "../../services/observer-service";
-import { pageUtils, PageUtilsService } from "../../services/page-utils-service";
+import { PageUtilsService } from "../../services/page-utils-service";
 import { ICSSService } from "../../interfaces/services/ICSSService";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IDOMService } from "../../interfaces/services/IDOMService";
@@ -24,6 +24,7 @@ import { FollowingRatioSortingStrategy } from "../../commands/sorting/strategies
 import { ActivityRatioSortingStrategy } from "../../commands/sorting/strategies/ActivityRatioSortingStrategy";
 import { EngagementRatioSortingStrategy } from "../../commands/sorting/strategies/EngagementRatioSortingStrategy";
 import { ISelectBoxComponent, SelectOption } from "../../interfaces/components/ISelectBoxComponent";
+import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
 
 /**
  * EntrySorterComponent
@@ -36,10 +37,11 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     private selectBox: ISelectBoxComponent | null = null;
     private sortButtons: HTMLElement[] = [];
 
-    // Specific dependencies
+    // Store specific instances to avoid DI issues
     private specificPageUtils: PageUtilsService;
     private specificUserProfileService: IUserProfileService;
     private specificSelectBoxComponent: ISelectBoxComponent;
+    private specificUsernameExtractorService: IUsernameExtractorService;
 
     constructor(
         domHandler: IDOMService,
@@ -50,25 +52,27 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         pageUtils: PageUtilsService,
         userProfileService: IUserProfileService,
         selectBoxComponent: ISelectBoxComponent,
+        usernameExtractorService: IUsernameExtractorService,
         options?: FeatureComponentOptions
     ) {
         super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
         this.specificPageUtils = pageUtils;
         this.specificUserProfileService = userProfileService;
         this.specificSelectBoxComponent = selectBoxComponent;
+        this.specificUsernameExtractorService = usernameExtractorService;
 
         // Initialize strategies
         this.strategies = [
             new DateSortingStrategy(),
             new FavoriteCountSortingStrategy(),
             new LengthSortingStrategy(),
-            new AccountAgeSortingStrategy(this.specificUserProfileService),
-            new UserLevelSortingStrategy(this.specificUserProfileService),
-            new TotalEntriesSortingStrategy(this.specificUserProfileService),
-            new FollowerSortingStrategy(this.specificUserProfileService),
-            new FollowingRatioSortingStrategy(this.specificUserProfileService),
-            new ActivityRatioSortingStrategy(this.specificUserProfileService),
-            new EngagementRatioSortingStrategy(this.specificUserProfileService),
+            new AccountAgeSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new UserLevelSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new TotalEntriesSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new FollowerSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new FollowingRatioSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new ActivityRatioSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
+            new EngagementRatioSortingStrategy(this.specificUserProfileService, this.specificUsernameExtractorService),
         ];
     }
 

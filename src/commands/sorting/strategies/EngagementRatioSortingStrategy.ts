@@ -1,6 +1,6 @@
 import { ISortingStrategy } from "../ISortingStrategy";
 import {IUserProfileService} from "../../../interfaces/services/IUserProfileService";
-import { UsernameExtractor } from "../../../utils/username-extractor";
+import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
 
 export class EngagementRatioSortingStrategy implements ISortingStrategy {
     public readonly name: string = 'engagement-ratio';
@@ -8,14 +8,17 @@ export class EngagementRatioSortingStrategy implements ISortingStrategy {
     public readonly icon: string = 'trending_up';
     public readonly tooltip: string = 'Entry\'leri yazar etkileşim oranına göre sırala (takipçi/takip edilen)';
 
-    constructor(private userProfileService: IUserProfileService) {}
+    constructor(
+        private userProfileService: IUserProfileService,
+        private usernameExtractorService: IUsernameExtractorService
+    ) {}
 
     /**
      * Sort entries by author engagement ratio (follower/following ratio)
      */
     public sort(a: HTMLElement, b: HTMLElement): number {
-        const authorA = UsernameExtractor.extractFromEntry(a);
-        const authorB = UsernameExtractor.extractFromEntry(b);
+        const authorA = this.usernameExtractorService.extractFromEntry(a);
+        const authorB = this.usernameExtractorService.extractFromEntry(b);
 
         if (!authorA || !authorB) return 0;
 
