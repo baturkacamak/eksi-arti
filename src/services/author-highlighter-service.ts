@@ -226,23 +226,7 @@ export class AuthorHighlighterService {
                 margin: 5px 0 !important;
             }
             
-            /* Author badge styles */
-            .eksi-author-badge {
-                display: inline-flex;
-                align-items: center;
-                margin-left: 6px;
-                padding: 2px 6px;
-                border-radius: 10px;
-                font-size: 11px;
-                font-weight: 500;
-                opacity: 0.9;
-                line-height: 1;
-                transition: opacity 0.2s ease;
-            }
-            
-            .eksi-author-badge:hover {
-                opacity: 1;
-            }
+
             
             /* Author note indicator */
             .eksi-author-note-indicator {
@@ -395,10 +379,7 @@ export class AuthorHighlighterService {
                     background-color: ${settings.color};
                 }
                 
-                li[data-id][data-author="${author}"] .eksi-author-badge {
-                    background-color: ${settings.color};
-                    color: ${textColor};
-                }
+
                 
                 li[data-id][data-author="${author}"] .eksi-author-note-indicator {
                     background-color: ${settings.color};
@@ -444,62 +425,13 @@ export class AuthorHighlighterService {
 
                 // Update last seen time
                 this.updateAuthorLastSeen(author);
-
-                // Add author badge if needed
-                this.addAuthorBadge(entry, author, authorConfig);
             }
         } catch (error) {
           this.loggingService.error('Error processing entry:', error);
         }
     }
 
-    /**
-     * Add author badge to an entry
-     */
-    private addAuthorBadge(entry: HTMLElement, author: string, config: AuthorHighlight): void {
-        try {
-            // Check if badge already exists
-            if (entry.querySelector('.eksi-author-badge')) return;
 
-            // Find author element to add badge next to
-            const authorElement = entry.querySelector(SELECTORS.ENTRY_AUTHOR);
-            if (!authorElement) return;
-
-            // Create badge element
-            const badge = this.domHandler.createElement('span');
-            this.domHandler.addClass(badge, 'eksi-author-badge');
-            badge.textContent = '●';
-
-            // Add note indicator if there's a note
-            if (config.notes) {
-                const noteIndicator = this.domHandler.createElement('span');
-                this.domHandler.addClass(noteIndicator, 'eksi-author-note-indicator');
-                noteIndicator.textContent = 'i';
-                noteIndicator.title = 'Not: ' + config.notes;
-
-                // Add tooltip
-                this.tooltipComponent.setupTooltip(noteIndicator, {
-                    position: 'top',
-                    triggerEvent: 'hover',
-                    theme: 'dark'
-                });
-
-                this.domHandler.appendChild(badge, noteIndicator);
-            }
-
-            // Add badge after author
-            authorElement.parentNode?.insertBefore(badge, authorElement.nextSibling);
-
-            // Add click event to manage this author
-            this.domHandler.addEventListener(badge, 'click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showAuthorMenu(author, badge);
-            });
-        } catch (error) {
-          this.loggingService.error('Error adding author badge:', error);
-        }
-    }
 
     /**
      * Update author last seen timestamp
@@ -585,10 +517,6 @@ export class AuthorHighlighterService {
             const entries = document.querySelectorAll(`li[data-id][data-author="${author}"]`);
             entries.forEach(entry => {
                 this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
-
-                // Remove author badge
-                const badge = entry.querySelector('.eksi-author-badge');
-                if (badge) badge.remove();
             });
 
           this.loggingService.info('Author removed from highlighting', { author });
@@ -693,10 +621,6 @@ export class AuthorHighlighterService {
                 entries.forEach(entry => {
                     this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
-
-                // Remove all badges
-                const badges = document.querySelectorAll('.eksi-author-badge');
-                badges.forEach(badge => badge.remove());
             }
 
           this.loggingService.info('Author highlighting toggled', { enabled: newState });
@@ -777,15 +701,12 @@ export class AuthorHighlighterService {
             // Save config
             await this.saveConfig();
 
-            // Remove all highlights and badges
+            // Remove all highlights
             if (wasEnabled) {
                 const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
                 entries.forEach(entry => {
                     this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
-
-                const badges = document.querySelectorAll('.eksi-author-badge');
-                badges.forEach(badge => badge.remove());
             }
 
           this.loggingService.info('Author highlighter config reset to defaults');
@@ -1025,7 +946,7 @@ export class AuthorHighlighterService {
     }
 
     /**
-     * Show author menu when clicking on badge
+     * Show author menu for the given element
      */
     private showAuthorMenu(author: string, element: HTMLElement): void {
         try {
@@ -1395,9 +1316,7 @@ export class AuthorHighlighterService {
             styleElement.remove();
         }
 
-        // Remove author badges
-        const badges = document.querySelectorAll('.eksi-author-badge');
-        badges.forEach(badge => badge.remove());
+
 
         // Remove highlights
         const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
