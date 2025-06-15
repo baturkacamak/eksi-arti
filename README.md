@@ -120,8 +120,5 @@ eksi-arti/
 ## 📄 Lisans
 MIT Lisansı altında yayımlanmıştır. Detaylar için LICENSE dosyasına bakın.
 
-## 🙏 Teşekkür
-Bu proje, Batur Kacamak'ın orijinal userscript'i temel alınarak geliştirilmiştir.
-
 ## ⚠️ Sorumluluk Reddi
 Bu uzantı Ekşi Sözlük ile resmi olarak ilişkili değildir. Kullanırken site kurallarına ve görgü kurallarına özen gösterin.
