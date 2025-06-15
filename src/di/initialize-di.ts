@@ -58,6 +58,9 @@ import {IUserProfileService} from "../interfaces/services/IUserProfileService";
 import {UsernameExtractorService} from "../services/username-extractor-service";
 import {IUsernameExtractorService} from "../interfaces/services/IUsernameExtractorService";
 import {SortingDataExtractor} from "../commands/sorting/SortingDataExtractor";
+import {AuthorHighlightButtonComponent} from "../components/features/author-highlight-button-component";
+import {IAuthorHighlightButtonComponent} from "../interfaces/components/features/IAuthorHighlightButtonComponent";
+import {IAuthorHighlighterService} from "../interfaces/services/IAuthorHighlighterService";
 
 /**
  * Initialize the dependency injection container
@@ -321,6 +324,28 @@ export function initializeDI(): Container {
             iconComponent,
             observerService,
             containerService
+        );
+    });
+
+    container.register('AuthorHighlightButtonComponent', () => {
+        const domHandler = container.resolve<IDOMService>('DOMService');
+        const cssHandler = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const observerService = container.resolve<IObserverService>('ObserverService');
+        const containerService = container.resolve<ContainerService>('ContainerService');
+        const authorHighlighterService = container.resolve<IAuthorHighlighterService>('AuthorHighlighterService');
+        const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
+
+        return new AuthorHighlightButtonComponent(
+            domHandler,
+            cssHandler,
+            loggingService,
+            iconComponent,
+            observerService,
+            containerService,
+            authorHighlighterService,
+            tooltipComponent
         );
     });
 

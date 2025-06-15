@@ -109,7 +109,7 @@ export class AuthorHighlighterService {
         highlightEntireEntry: true,
         animationEnabled: true,
         animationDuration: 300,
-        showContextMenu: true
+        showContextMenu: false
     };
 
     private observer: MutationObserver | null = null;

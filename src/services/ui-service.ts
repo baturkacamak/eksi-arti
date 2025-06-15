@@ -10,6 +10,7 @@ import {NotificationService} from "./notification-service";
 import {IconComponent} from "../components/shared/icon-component";
 import {CopyButtonComponent} from "../components/shared/copy-button-component";
 import {ScreenshotButtonComponent} from "../components/features/screenshot-button-component";
+import {AuthorHighlightButtonComponent} from "../components/features/author-highlight-button-component";
 import {EntrySorterComponent} from "../components/features/entry-sorter-component";
 import {PostManagementService} from "./post-management-service";
 import {TrashService} from "./trash-service";
@@ -38,6 +39,7 @@ export class UIService {
 
     private copyButtonComponent: CopyButtonComponent;
     private screenshotButtonComponent: ScreenshotButtonComponent;
+    private authorHighlightButtonComponent: AuthorHighlightButtonComponent;
     private entrySorterComponent: EntrySorterComponent;
     private postManagementService: PostManagementService;
     private authorHighlighterService: AuthorHighlighterService;
@@ -63,6 +65,7 @@ export class UIService {
         // Resolve components from container instead of creating them directly
         this.copyButtonComponent = container.resolve<CopyButtonComponent>('CopyButtonComponent');
         this.screenshotButtonComponent = container.resolve<ScreenshotButtonComponent>('ScreenshotButtonComponent');
+        this.authorHighlightButtonComponent = container.resolve<AuthorHighlightButtonComponent>('AuthorHighlightButtonComponent');
         this.entrySorterComponent = container.resolve<EntrySorterComponent>('EntrySorterComponent');
         this.postManagementService = container.resolve<PostManagementService>('PostManagementService');
         this.searchFilterComponent = container.resolve<SearchFilterComponent>('SearchFilterComponent');
@@ -110,6 +113,7 @@ export class UIService {
 
                                 this.copyButtonComponent.initialize();
                                 this.screenshotButtonComponent.initialize();
+                                this.authorHighlightButtonComponent.initialize();
                                 this.blockFavoritesButtonComponent.initialize();
                             } catch (err) {
                                 this.loggingService.error('Error adding menu item to dropdown:', err);
@@ -263,6 +267,10 @@ export class UIService {
 
         if (this.screenshotButtonComponent) {
             this.screenshotButtonComponent.destroy();
+        }
+
+        if (this.authorHighlightButtonComponent) {
+            this.authorHighlightButtonComponent.destroy();
         }
 
         if (this.entrySorterComponent) {
