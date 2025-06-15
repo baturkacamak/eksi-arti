@@ -33,7 +33,7 @@ interface UserAccountCache {
 export class UserProfileService {
     private cache: UserAccountCache = {};
     private readonly CACHE_KEY = 'eksi_user_profile_cache';
-    private readonly CACHE_EXPIRY = 15 * 24 * 60 * 60 * 1000; // 15 days
+    private readonly CACHE_EXPIRY = 45 * 24 * 60 * 60 * 1000; // 45 days
     private observerId: string = '';
     private processedLinks: WeakSet<HTMLElement> = new WeakSet();
     private activeRequests: Map<string, Promise<IUserProfile | null>> = new Map();
