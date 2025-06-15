@@ -81,7 +81,7 @@ export class VoteMonitoringService {
             });
 
             // Look for username in top navigation
-            const topNavSelector = `#top-navigation > a[href*="${PATHS.BIRI}"]`;
+            const topNavSelector = `#top-navigation a[href*="${PATHS.BIRI}"]`;
             this.loggingService.debug('Attempting to extract username from top navigation', {
                 selector: topNavSelector,
                 currentUrl: window.location.href,
