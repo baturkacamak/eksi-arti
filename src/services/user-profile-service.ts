@@ -6,7 +6,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
-import {SITE_DOMAIN, SELECTORS, Endpoints, PATHS} from "../constants";
+import {SELECTORS, Endpoints, PATHS} from "../constants";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IAsyncQueueService} from "../interfaces/services/IAsyncQueueService";
 import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";

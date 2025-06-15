@@ -1,6 +1,6 @@
 import {DOMService} from './dom-service';
 import {LoggingService} from "./logging-service";
-import {SITE_DOMAIN, PATHS} from "../constants";
+import {buildUrl, PATHS} from "../constants";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IHtmlParserService} from "../interfaces/services/IHtmlParserService";
@@ -58,7 +58,7 @@ export class HtmlParserService implements IHtmlParserService {
                 anchors.forEach((a) => {
                     const href = a.getAttribute('href');
                     if (href && href.includes(PATHS.BIRI)) {
-                        userUrls.push(`https://${SITE_DOMAIN}${href}`);
+                        userUrls.push(buildUrl(href));
                     }
                 });
 
@@ -98,14 +98,14 @@ export class HtmlParserService implements IHtmlParserService {
             let match;
 
             while ((match = regex.exec(html)) !== null) {
-                userUrls.push(`https://${SITE_DOMAIN}${match[1]}`);
+                userUrls.push(buildUrl(match[1]));
             }
 
             if (userUrls.length === 0) {
                 // If first regex fails to find any results, try a more lenient one
                 const fallbackRegex = new RegExp(`href=["']([^"']*${PATHS.BIRI.replace('/', '\\/')}[^"']*)["']`, 'g');
                 while ((match = fallbackRegex.exec(html)) !== null) {
-                    userUrls.push(`https://${SITE_DOMAIN}${match[1]}`);
+                    userUrls.push(buildUrl(match[1]));
                 }
             }
 

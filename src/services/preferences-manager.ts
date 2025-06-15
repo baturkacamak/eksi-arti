@@ -4,41 +4,10 @@
  */
 
 import {LoggingService} from './logging-service';
-import { BlockType, STORAGE_KEYS } from '../constants';
+import { BlockType, STORAGE_KEYS, DEFAULT_PREFERENCES } from '../constants';
 import {storageService} from "./storage-service";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IExtensionPreferences, IPreferencesManager} from "../interfaces/services/IPreferencesManager";
-
-// Default preferences
-const DEFAULT_PREFERENCES: IExtensionPreferences = {
-    // General settings
-    enableNotifications: true,
-    notificationDuration: 5,
-    customMenuSelector: '',
-
-    // Blocking settings
-    defaultBlockType: BlockType.MUTE,
-    defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
-    requestDelay: 7,
-    retryDelay: 5,
-    maxRetries: 3,
-
-    // Appearance settings
-    theme: 'system',
-    notificationPosition: 'top-right',
-
-    // Advanced settings
-    saveOperationHistory: true,
-    enableDebugMode: false,
-
-    // Vote monitoring defaults
-    voteMonitoringEnabled: true,
-    voteMonitoringInterval: 1,
-
-    // Legacy support
-    preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
-    menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu'
-};
 
 export class PreferencesManager {
     private static instance: IPreferencesManager;

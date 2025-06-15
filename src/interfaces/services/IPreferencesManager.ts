@@ -25,10 +25,6 @@ export interface IExtensionPreferences {
     // Vote monitoring settings
     voteMonitoringEnabled: boolean;
     voteMonitoringInterval: number;
-
-    // Other
-    preferenceStorageKey: string;
-    menuItemSelector: string;
 }
 
 export interface IPreferencesManager {

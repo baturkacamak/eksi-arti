@@ -3,7 +3,7 @@ import {CSSService} from './css-service';
 import {BlockOptionsModal} from '../components/features/block-options-modal';
 import {ResumeModal} from '../components/features/resume-modal';
 import { StorageService, storageService} from './storage-service';
-import {STORAGE_KEYS} from '../constants';
+import {STORAGE_KEYS, SELECTORS} from '../constants';
 import {BlockerState} from '../types';
 import {LoggingService} from "./logging-service";
 import {NotificationService} from "./notification-service";
@@ -161,13 +161,13 @@ export class UIService {
             // Use custom selector if provided and not empty, otherwise use default
             this.menuItemSelector = preferences.customMenuSelector && preferences.customMenuSelector.trim() !== ''
                 ? preferences.customMenuSelector
-                : preferences.menuItemSelector;
+                : SELECTORS.MENU_ITEM;
 
             this.loggingService.debug('Using menu selector:', this.menuItemSelector);
         } catch (error) {
             this.loggingService.error('Error loading menu selector from preferences:', error);
             // Fallback to default selector
-            this.menuItemSelector = '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu';
+            this.menuItemSelector = SELECTORS.MENU_ITEM;
         }
     }
 

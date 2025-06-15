@@ -1,5 +1,5 @@
 import { BlockerPreferences } from '../types';
-import {BlockType, SITE_DOMAIN, STORAGE_KEYS} from '../constants';
+import {BlockType, STORAGE_KEYS, Endpoints} from '../constants';
 import {storageService, StorageService} from './storage-service';
 import {LoggingService} from './logging-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
@@ -87,7 +87,7 @@ export class PreferencesService implements IPreferencesService {
             return preferences.defaultNoteTemplate
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
-                .replace('{entryLink}', `https://${SITE_DOMAIN}/entry/${entryId}`);
+                .replace('{entryLink}', Endpoints.ENTRY_URL(entryId));
         } catch (error) {
             // In case of error, use default template
           this.loggingService.error('Error generating custom note', error, 'PreferencesService');
@@ -96,7 +96,7 @@ export class PreferencesService implements IPreferencesService {
             return this.defaultPreferences.defaultNoteTemplate
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
-                .replace('{entryLink}', `https://${SITE_DOMAIN}/entry/${entryId}`);
+                .replace('{entryLink}', Endpoints.ENTRY_URL(entryId));
         }
     }
 

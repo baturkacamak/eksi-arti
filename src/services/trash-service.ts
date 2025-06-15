@@ -4,7 +4,7 @@ import { DOMService } from './dom-service';
 import { LoggingService } from './logging-service';
 import { NotificationService } from './notification-service';
 import { IconComponent } from '../components/shared/icon-component';
-import { SITE_DOMAIN } from '../constants';
+import { Endpoints } from '../constants';
 import { ObserverService } from "./observer-service";
 import { PageUtilsService } from "./page-utils-service";
 import {IHttpService} from "../interfaces/services/IHttpService";
@@ -214,7 +214,7 @@ export class TrashService {
             trashItems.appendChild(pageSeparator);
 
             // Fetch and process the next page
-            const html = await this.httpService.get(`https://${SITE_DOMAIN}/cop?p=${nextPage}`);
+            const html = await this.httpService.get(Endpoints.COP_PAGE(nextPage));
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             const newTrashItems = doc.querySelectorAll('#trash-items li');
@@ -425,7 +425,7 @@ export class TrashService {
      */
     private async reviveEntry(entryId: string): Promise<boolean> {
         try {
-            const url = `https://${SITE_DOMAIN}/cop/canlandir?id=${entryId}`;
+            const url = Endpoints.RESTORE_ENTRY(entryId);
             const response = await this.httpService.post(url);
             return response.includes("canlandirildi") || response.includes("success");
         } catch (error) {

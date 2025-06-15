@@ -1,7 +1,7 @@
 // src/services/vote-monitoring-service.ts
 import { LoggingService} from './logging-service';
 import { HttpService } from './http-service';
-import { SITE_DOMAIN, SELECTORS, PATHS } from '../constants';
+import { SELECTORS, PATHS } from '../constants';
 import { storageService } from './storage-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";

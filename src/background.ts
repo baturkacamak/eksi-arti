@@ -5,7 +5,7 @@
 
 import { preferencesManager } from './services/preferences-manager';
 import {LoggingService} from './services/logging-service';
-import {getCurrentDomain} from "./constants";
+import {Endpoints} from "./constants";
 
 const loggingService = new LoggingService();
 /**
@@ -70,7 +70,7 @@ async function checkForNewVote() {
         }
 
         const userNick = storage.userNick;
-        const baseUrl = `https://${getCurrentDomain()}/son-oylananlari?nick=${userNick}&p=1`;
+        const baseUrl = Endpoints.VOTE_HISTORY(userNick, 1);
         const timestamp = Date.now();
         const urlWithTimestamp = `${baseUrl}&_=${timestamp}`;
 
