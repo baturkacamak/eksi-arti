@@ -67,8 +67,12 @@ export class PreferencesModal extends BaseFeatureComponent {
         if (!this.contentElement) {
             this.setupUI();
         }
-        // Show the modal first to create the DOM structure
-        this.modalComponent.show();
+        // Show the modal first to create the DOM structure with options
+        this.modalComponent.show({
+            showCloseButton: true,
+            allowBackdropClose: true,
+            allowEscapeClose: true
+        });
         // Then inject our content into the modal
         this.injectContentIntoModal();
     }

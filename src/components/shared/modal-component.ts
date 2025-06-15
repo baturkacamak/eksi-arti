@@ -6,10 +6,15 @@ import {ICSSService} from "../../interfaces/services/ICSSService";
 import {ILoggingService} from "../../interfaces/services/ILoggingService";
 import {IDOMService} from "../../interfaces/services/IDOMService";
 import {ButtonSize, ButtonVariant} from "../../interfaces/components/IButtonComponent";
-import {IModalComponent} from "../../interfaces/components/IModalComponent";
+import {IModalComponent, ModalOptions} from "../../interfaces/components/IModalComponent";
 
 export class ModalComponent implements IModalComponent {
     protected modalElement: HTMLElement | null = null;
+    private options: ModalOptions = {
+        showCloseButton: true,
+        allowBackdropClose: true,
+        allowEscapeClose: true
+    };
 
     constructor(
         protected domHandler: IDOMService,
@@ -21,17 +26,34 @@ export class ModalComponent implements IModalComponent {
     }
 
     /**
-     * Show modal
+     * Show modal with optional configuration
      */
-    show(): void {
+    show(options?: ModalOptions): void {
         try {
+            if (options) {
+                this.updateOptions(options);
+            }
             this.createElement();
             this.appendModalToDOM();
 
-            // Add keydown listener for Escape key to close modal
-            document.addEventListener('keydown', this.handleEscapeKey);
+            // Add keydown listener for Escape key to close modal (if enabled)
+            if (this.options.allowEscapeClose !== false) {
+                document.addEventListener('keydown', this.handleEscapeKey);
+            }
         } catch (err) {
             this.loggingService.error('Error showing modal:', err);
+        }
+    }
+
+    /**
+     * Update modal options
+     */
+    updateOptions(options: ModalOptions): void {
+        this.options = { ...this.options, ...options };
+        
+        // If modal is already created, update the close button visibility
+        if (this.modalElement) {
+            this.updateCloseButtonVisibility();
         }
     }
 
@@ -39,7 +61,7 @@ export class ModalComponent implements IModalComponent {
      * Handle Escape key press
      */
     private handleEscapeKey = (e: KeyboardEvent): void => {
-        if (e.key === 'Escape' && this.modalElement) {
+        if (e.key === 'Escape' && this.modalElement && this.options.allowEscapeClose !== false) {
             this.close();
         }
     };
@@ -58,14 +80,66 @@ export class ModalComponent implements IModalComponent {
         const modalContent = this.domHandler.createElement('div');
         this.domHandler.addClass(modalContent, 'eksi-modal-content');
 
+        // Add close button if enabled
+        if (this.options.showCloseButton !== false) {
+            const closeButton = this.createCloseButton();
+            this.domHandler.appendChild(modalContent, closeButton);
+        }
+
+        // Add title if provided
+        if (this.options.title) {
+            const titleElement = this.domHandler.createElement('div');
+            this.domHandler.addClass(titleElement, 'eksi-modal-title');
+            titleElement.textContent = this.options.title;
+            this.domHandler.appendChild(modalContent, titleElement);
+        }
+
         this.domHandler.appendChild(this.modalElement, modalContent);
 
-        // Add backdrop click to close
-        this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
-            if (e.target === this.modalElement) {
-                this.close();
-            }
+        // Add backdrop click to close (if enabled)
+        if (this.options.allowBackdropClose !== false) {
+            this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
+                if (e.target === this.modalElement) {
+                    this.close();
+                }
+            });
+        }
+    }
+
+    /**
+     * Create close button element
+     */
+    private createCloseButton(): HTMLElement {
+        const closeButton = this.domHandler.createElement('button');
+        this.domHandler.addClass(closeButton, 'eksi-modal-close');
+        closeButton.innerHTML = '×';
+        closeButton.setAttribute('aria-label', 'Close modal');
+        closeButton.setAttribute('type', 'button');
+        
+        this.domHandler.addEventListener(closeButton, 'click', () => {
+            this.close();
         });
+
+        return closeButton;
+    }
+
+    /**
+     * Update close button visibility
+     */
+    private updateCloseButtonVisibility(): void {
+        if (!this.modalElement) return;
+
+        const existingCloseButton = this.modalElement.querySelector('.eksi-modal-close');
+        const modalContent = this.modalElement.querySelector('.eksi-modal-content');
+        
+        if (this.options.showCloseButton !== false && !existingCloseButton && modalContent) {
+            // Add close button if it should be shown but doesn't exist
+            const closeButton = this.createCloseButton();
+            modalContent.insertBefore(closeButton, modalContent.firstChild);
+        } else if (this.options.showCloseButton === false && existingCloseButton) {
+            // Remove close button if it shouldn't be shown but exists
+            existingCloseButton.remove();
+        }
     }
 
     /**
@@ -142,6 +216,48 @@ export class ModalComponent implements IModalComponent {
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         animation: eksiModalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         transform: translateY(0);
+        position: relative;
+      }
+
+      @keyframes eksiModalSlideIn {
+        from { 
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to { 
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .eksi-modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        font-weight: 300;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .eksi-modal-close:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #666;
+      }
+
+      .eksi-modal-close:focus {
+        outline: none;
+        background-color: rgba(0, 0, 0, 0.1);
+        color: #333;
       }
 
       .eksi-modal-title {
@@ -151,6 +267,10 @@ export class ModalComponent implements IModalComponent {
         color: #222;
         border-bottom: 1px solid #eee;
         padding-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
       }
 
       .eksi-modal-options {
@@ -249,6 +369,20 @@ export class ModalComponent implements IModalComponent {
           border-bottom-color: #444;
         }
         
+        .eksi-modal-close {
+          color: #999;
+        }
+
+        .eksi-modal-close:hover {
+          background-color: rgba(255, 255, 255, 0.05);
+          color: #ccc;
+        }
+
+        .eksi-modal-close:focus {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+        
         .eksi-modal-options select,
         .eksi-modal-options textarea {
           background-color: #333;
@@ -261,15 +395,11 @@ export class ModalComponent implements IModalComponent {
         }
         
         .eksi-stat-label {
-          color: #aaa;
+          color: #999;
         }
         
         .eksi-stat-value {
           color: #e0e0e0;
-        }
-        
-        .eksi-modal-progress-container {
-          background-color: #444;
         }
       }
     `;

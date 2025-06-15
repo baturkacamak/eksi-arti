@@ -58,8 +58,12 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         if (!this.contentElement) {
             this.setupUI();
         }
-        // Show the modal first to create the DOM structure
-        this.modalComponent.show();
+        // Show the modal first to create the DOM structure with options
+        this.modalComponent.show({
+            showCloseButton: false, // We create our own close button in the title
+            allowBackdropClose: true,
+            allowEscapeClose: true
+        });
         // Then inject our content into the modal
         this.injectContentIntoModal();
     }
@@ -73,19 +77,30 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             .eksi-modal-content {
                 max-width: 500px;
             }
-            .eksi-modal-thread-blocking { 
-                padding: 16px 20px; 
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                border: 1px solid #dee2e6; 
-                border-radius: 8px; 
-                margin: 12px 0;
-                text-align: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                transition: all 0.2s ease;
+            .eksi-modal-title {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                color: #222;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 12px;
             }
-            .eksi-modal-thread-blocking:hover {
-                background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            .eksi-modal-title-content {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex: 1;
+            }
+
+            .eksi-modal-thread-blocking { 
+                padding: 12px 0; 
+                margin: 16px 0;
+                text-align: center;
+                border-top: 1px solid rgba(0,0,0,0.08);
+                border-bottom: 1px solid rgba(0,0,0,0.08);
             }
             .toggle-with-tooltip {
                 display: flex;
@@ -98,29 +113,38 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 margin-bottom: 0;
             }
             .eksi-modal-thread-blocking .eksi-toggle-label {
-                font-size: 13px;
+                font-size: 14px;
                 font-weight: 500;
-                color: #495057;
+                color: #333;
                 margin-left: 10px;
             }
             .eksi-modal-thread-blocking .tooltip-trigger.icon-only {
-                width: 18px;
-                height: 18px;
-                font-size: 11px;
-                background-color: rgba(108, 117, 125, 0.2);
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+                background-color: rgba(108, 117, 125, 0.15);
                 color: #6c757d;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-left: 5px;
+                margin-left: 8px;
                 cursor: help;
                 font-weight: bold;
                 transition: all 0.2s ease;
+                opacity: 0.7;
             }
             .eksi-modal-thread-blocking .tooltip-trigger.icon-only:hover {
-                background-color: rgba(108, 117, 125, 0.3);
+                background-color: rgba(108, 117, 125, 0.25);
                 color: #495057;
+                opacity: 1;
+            }
+            /* Dark mode support for title */
+            @media (prefers-color-scheme: dark) {
+                .eksi-modal-title {
+                    color: #f0f0f0;
+                    border-bottom-color: #444;
+                }
             }
         `;
     }
@@ -133,12 +157,30 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
         const modalTitle = this.domHandler.createElement('div');
         this.domHandler.addClass(modalTitle, 'eksi-modal-title');
-        modalTitle.innerHTML = `
+        
+        // Create title content container
+        const titleContent = this.domHandler.createElement('div');
+        this.domHandler.addClass(titleContent, 'eksi-modal-title-content');
+        titleContent.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM13 12L13 7L11 7L11 12L16 12L16 14L11 14L11 17L13 17L13 14.5L17 14.5L17 12H13Z" fill="#333"/>
             </svg>
             İşlem Seçin
         `;
+        
+        // Create close button
+        const closeButton = this.domHandler.createElement('button');
+        this.domHandler.addClass(closeButton, 'eksi-modal-close');
+        closeButton.innerHTML = '×';
+        closeButton.setAttribute('aria-label', 'Close modal');
+        closeButton.setAttribute('type', 'button');
+        this.domHandler.addEventListener(closeButton, 'click', () => {
+            this.close();
+        });
+        
+        // Append title content and close button to title
+        this.domHandler.appendChild(modalTitle, titleContent);
+        this.domHandler.appendChild(modalTitle, closeButton);
 
         const optionsContainer = this.domHandler.createElement('div');
         this.domHandler.addClass(optionsContainer, 'eksi-modal-options');
@@ -241,7 +283,14 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         // For now, we'll use a simple approach and inject via DOM
         const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
         if (modalElement && this.contentElement) {
-            modalElement.innerHTML = '';
+            // Don't clear innerHTML as it removes the close button
+            // Instead, find existing content and replace it, or append if no content exists
+            const existingContent = modalElement.querySelector('.eksi-modal-title, .eksi-modal-options');
+            if (existingContent) {
+                // Remove only our content, not the close button
+                const elementsToRemove = modalElement.querySelectorAll('.eksi-modal-title, .eksi-modal-options');
+                elementsToRemove.forEach(el => el.remove());
+            }
             modalElement.appendChild(this.contentElement);
         }
     }

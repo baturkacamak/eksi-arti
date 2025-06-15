@@ -52,8 +52,13 @@ export class ResumeModal extends BaseFeatureComponent {
         if (!this.contentElement) {
             this.setupUI();
         }
-        // Show the modal first to create the DOM structure
-        this.modalComponent.show();
+        // Show the modal first to create the DOM structure with options
+        // Disable close button for important operations
+        this.modalComponent.show({
+            showCloseButton: false,
+            allowBackdropClose: false,
+            allowEscapeClose: true
+        });
         // Then inject our content into the modal
         this.injectContentIntoModal();
     }
