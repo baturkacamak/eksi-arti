@@ -167,16 +167,28 @@ export class ModalComponent implements IModalComponent {
     }
 
     /**
-     * Close modal
+     * Close modal with transition
      */
     close(): void {
+        if (!this.modalElement) return;
+
         document.removeEventListener('keydown', this.handleEscapeKey);
 
-        if (this.modalElement && this.modalElement.parentNode) {
-            document.body.style.overflow = ''; // Restore scrolling
-            this.modalElement.parentNode.removeChild(this.modalElement);
-            this.modalElement = null;
+        // Add closing animation classes
+        this.domHandler.addClass(this.modalElement, 'eksi-modal-closing');
+        const modalContent = this.modalElement.querySelector('.eksi-modal-content');
+        if (modalContent) {
+            this.domHandler.addClass(modalContent as HTMLElement, 'eksi-modal-content-closing');
         }
+
+        // Wait for animation to complete before removing from DOM
+        setTimeout(() => {
+            if (this.modalElement && this.modalElement.parentNode) {
+                document.body.style.overflow = ''; // Restore scrolling
+                this.modalElement.parentNode.removeChild(this.modalElement);
+                this.modalElement = null;
+            }
+        }, 300); // Match the animation duration
     }
 
     /**
@@ -206,6 +218,11 @@ export class ModalComponent implements IModalComponent {
         to { opacity: 1; }
       }
 
+      @keyframes eksiModalFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+
       .eksi-modal-content {
         background-color: #fff;
         padding: 24px;
@@ -227,6 +244,17 @@ export class ModalComponent implements IModalComponent {
         to { 
           opacity: 1;
           transform: translateY(0);
+        }
+      }
+
+      @keyframes eksiModalSlideOut {
+        from { 
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to { 
+          opacity: 0;
+          transform: translateY(-20px);
         }
       }
 
@@ -258,6 +286,15 @@ export class ModalComponent implements IModalComponent {
         outline: none;
         background-color: rgba(0, 0, 0, 0.1);
         color: #333;
+      }
+
+      /* Closing animations */
+      .eksi-modal-closing {
+        animation: eksiModalFadeOut 0.3s ease forwards;
+      }
+
+      .eksi-modal-content-closing {
+        animation: eksiModalSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
 
       .eksi-modal-title {
