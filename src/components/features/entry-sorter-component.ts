@@ -74,6 +74,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         selectBoxComponent: ISelectBoxComponent,
         usernameExtractorService: IUsernameExtractorService,
         buttonComponent: IButtonComponent,
+        sortingDataExtractor: SortingDataExtractor,
         options?: FeatureComponentOptions
     ) {
         super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
@@ -81,7 +82,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         this.specificUserProfileService = userProfileService;
         this.specificSelectBoxComponent = selectBoxComponent;
         this.specificUsernameExtractorService = usernameExtractorService;
-        this.sortingDataExtractor = new SortingDataExtractor(userProfileService, usernameExtractorService);
+        this.sortingDataExtractor = sortingDataExtractor;
         this.buttonComponent = buttonComponent;
 
         // Initialize new data-driven strategies (much cleaner and more performant)
