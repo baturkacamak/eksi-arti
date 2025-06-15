@@ -253,19 +253,30 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     protected shouldInitialize(): boolean {
-        return this.specificPageUtils.isEntryListPage();
+        const shouldInit = this.specificPageUtils.isEntryListPage();
+        this.loggingService.debug(`SearchFilterComponent shouldInitialize: ${shouldInit}`);
+        return shouldInit;
     }
 
     protected setupUI(): void {
+        this.loggingService.debug('SearchFilterComponent setupUI: Starting UI setup');
         this.injectSearchRowDOM();
         this.createSearchHelpTooltip();
     }
 
     protected setupListeners(): void {
-        if (!this.searchInput) return;
+        this.loggingService.debug('SearchFilterComponent setupListeners: Starting listener setup');
+        if (!this.searchInput) {
+            this.loggingService.error('SearchFilterComponent setupListeners: searchInput is null! DOM injection may have failed.');
+            this.loggingService.debug(`SearchFilterComponent state: searchRow=${!!this.searchRow}, searchContainer=${!!this.searchContainer}, clearButton=${!!this.clearButton}`);
+            return;
+        }
+
+        this.loggingService.debug('Setting up search input listeners');
 
         this.domHandler.addEventListener(this.searchInput, 'input', debounce((e) => {
             const value = this.searchInput?.value || '';
+            this.loggingService.debug(`Search input changed: "${value}"`);
             if (this.clearButton) {
                 this.clearButton.style.display = value.length > 0 ? 'flex' : 'none';
             }
@@ -273,8 +284,11 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         }, 300));
 
         this.domHandler.addEventListener(this.searchInput, 'keydown', (e) => {
+            this.loggingService.debug(`Search keydown event: key="${(e as KeyboardEvent).key}", filterMode=${this.filterMode}, highlightedElements.length=${this.highlightedElements.length}`);
             this.handleSearchKeydown(e as KeyboardEvent);
         });
+        
+        this.loggingService.debug('SearchFilterComponent setupListeners: Listeners setup completed successfully');
     }
 
     protected registerObservers(): void {
@@ -321,30 +335,38 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
      * Inject full search row DOM elements
      */
     private injectSearchRowDOM(): void {
+        this.loggingService.debug('injectSearchRowDOM: Starting DOM injection');
         try {
             let customControlsRow = document.querySelector('.eksi-custom-controls-row');
+            this.loggingService.debug(`injectSearchRowDOM: customControlsRow found: ${!!customControlsRow}`);
+            
             const topicElement = document.querySelector('#topic');
+            this.loggingService.debug(`injectSearchRowDOM: topicElement found: ${!!topicElement}`);
+            
             if (!topicElement) {
                 this.loggingService.error('Topic element not found for search row injection');
                 return;
             }
 
+            this.loggingService.debug('injectSearchRowDOM: Creating search row elements');
             this.searchRow = this.domHandler.createElement('div');
             this.domHandler.addClass(this.searchRow, 'eksi-search-row');
             this.searchRow.style.width = '100%';
             this.searchRow.style.marginTop = '5px';
             this.searchRow.style.marginBottom = '15px';
+            this.loggingService.debug(`injectSearchRowDOM: searchRow created: ${!!this.searchRow}`);
 
             this.searchContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(this.searchContainer, 'eksi-search-container');
             this.searchContainer.style.width = '100%';
+            this.loggingService.debug(`injectSearchRowDOM: searchContainer created: ${!!this.searchContainer}`);
 
             this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
             this.searchInput.type = 'text';
             this.searchInput.placeholder = 'Entry içeriklerinde ara (hem vurgular hem filtreler)...';
             this.searchInput.autocomplete = 'off';
-
             this.domHandler.addClass(this.searchInput, 'eksi-search-input');
+            this.loggingService.debug(`injectSearchRowDOM: searchInput created: ${!!this.searchInput}, type: ${this.searchInput.type}`);
 
             const searchIcon = this.iconComponent.create({
                 name: 'search',
@@ -352,10 +374,13 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                 color: '#81c14b',
                 className: 'eksi-search-icon'
             });
+            this.loggingService.debug(`injectSearchRowDOM: searchIcon created: ${!!searchIcon}`);
 
             this.controlsContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(this.controlsContainer, 'eksi-search-controls');
+            this.loggingService.debug(`injectSearchRowDOM: controlsContainer created: ${!!this.controlsContainer}`);
 
+            this.loggingService.debug('injectSearchRowDOM: Creating toggle buttons');
             const caseButton = this.createToggleButton('text_format', 'Büyük/küçük harf duyarlı', this.caseSensitive, (active) => {
                 this.caseSensitive = active;
                 this.performSearch();
@@ -371,10 +396,12 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                 this.performSearch();
             });
 
+            this.loggingService.debug('injectSearchRowDOM: Creating action buttons');
             const prevButton = this.createActionButton('navigate_before', 'Önceki eşleşme (Shift+Enter)', () => this.navigateHighlights('prev'));
             const nextButton = this.createActionButton('navigate_next', 'Sonraki eşleşme (Enter)', () => this.navigateHighlights('next'));
             const helpButton = this.createHelpButton();
 
+            this.loggingService.debug('injectSearchRowDOM: Creating clear button');
             this.clearButton = this.domHandler.createElement('span');
             this.domHandler.addClass(this.clearButton, 'eksi-search-clear');
             this.clearButton.style.display = 'none';
@@ -399,11 +426,14 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.resultCounter = this.domHandler.createElement('span');
             this.domHandler.addClass(this.resultCounter, 'eksi-search-counter');
             this.resultCounter.style.display = 'none';
+            this.loggingService.debug(`injectSearchRowDOM: resultCounter created: ${!!this.resultCounter}`);
 
+            this.loggingService.debug('injectSearchRowDOM: Appending elements to containers');
             this.domHandler.appendChild(this.searchContainer, searchIcon);
             this.domHandler.appendChild(this.searchContainer, this.searchInput);
             this.domHandler.appendChild(this.searchContainer, this.clearButton);
             this.domHandler.appendChild(this.searchContainer, this.resultCounter);
+            this.loggingService.debug('injectSearchRowDOM: searchContainer elements appended');
 
             this.domHandler.appendChild(this.controlsContainer, caseButton);
             this.domHandler.appendChild(this.controlsContainer, regexButton);
@@ -411,20 +441,29 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.domHandler.appendChild(this.controlsContainer, helpButton);
             this.domHandler.appendChild(this.controlsContainer, prevButton);
             this.domHandler.appendChild(this.controlsContainer, nextButton);
+            this.loggingService.debug('injectSearchRowDOM: controlsContainer elements appended');
 
             this.domHandler.appendChild(this.searchRow, this.searchContainer);
             this.domHandler.appendChild(this.searchRow, this.controlsContainer);
+            this.loggingService.debug('injectSearchRowDOM: searchRow containers appended');
 
+            this.loggingService.debug('injectSearchRowDOM: Inserting searchRow into DOM');
             if (customControlsRow) {
+                this.loggingService.debug('injectSearchRowDOM: Inserting after customControlsRow');
                 customControlsRow.parentNode?.insertBefore(this.searchRow, customControlsRow.nextSibling);
             } else {
                 const entryList = topicElement.querySelector('#entry-item-list');
+                this.loggingService.debug(`injectSearchRowDOM: entryList found: ${!!entryList}`);
                 if (entryList) {
+                    this.loggingService.debug('injectSearchRowDOM: Inserting before entryList');
                     topicElement.insertBefore(this.searchRow, entryList);
                 } else {
+                    this.loggingService.debug('injectSearchRowDOM: Appending to topicElement');
                     topicElement.appendChild(this.searchRow);
                 }
             }
+            
+            this.loggingService.debug(`injectSearchRowDOM: DOM injection completed. searchInput is: ${!!this.searchInput}`);
             this.loggingService.debug('Search row DOM injected');
         } catch (error) {
             this.loggingService.error('Error injecting search row DOM:', error);
@@ -435,15 +474,31 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
      * Handle keydown events in search input
      */
     private handleSearchKeydown(e: KeyboardEvent): void {
+        this.loggingService.debug(`handleSearchKeydown: key="${e.key}", shiftKey=${e.shiftKey}, filterMode=${this.filterMode}, highlightedElements.length=${this.highlightedElements.length}`);
+        
         if (e.key === 'Enter' && !this.filterMode && this.highlightedElements.length > 0) {
+            this.loggingService.debug('Enter key pressed - navigating highlights');
             e.preventDefault();
             if (e.shiftKey) {
+                this.loggingService.debug('Navigating to previous highlight');
                 this.navigateHighlights('prev');
             } else {
+                this.loggingService.debug('Navigating to next highlight');
                 this.navigateHighlights('next');
             }
+        } else if (e.key === 'Enter') {
+            this.loggingService.debug(`Enter key pressed but conditions not met: filterMode=${this.filterMode}, highlightedElements.length=${this.highlightedElements.length}`);
+            // If we're in filter mode, switch to highlight mode when Enter is pressed
+            if (this.filterMode && this.searchInput && this.searchInput.value.trim()) {
+                this.loggingService.debug('Switching from filter mode to highlight mode and performing search');
+                this.filterMode = false;
+                this.performSearch();
+                e.preventDefault();
+            }
         }
+        
         if (e.key === 'Escape') {
+            this.loggingService.debug('Escape key pressed - clearing search');
             e.preventDefault();
             if (this.searchInput) {
                 this.searchInput.value = '';
@@ -544,51 +599,79 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     private collectAllEntries(): void {
+        this.loggingService.debug('collectAllEntries: Starting to collect entries');
         this.allEntries = Array.from(document.querySelectorAll('#entry-item-list li[data-id], #topic li[data-id]')) as HTMLElement[];
-        this.allEntries.forEach(entry => {
+        this.loggingService.debug(`collectAllEntries: Found ${this.allEntries.length} entries`);
+        
+        this.allEntries.forEach((entry, index) => {
             entry.style.transition = 'opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease';
+            const content = entry.querySelector('.content');
+            const contentText = content ? (content.textContent || '').substring(0, 50) + '...' : 'No content';
+            this.loggingService.debug(`collectAllEntries: Entry ${index}: ${contentText}`);
         });
     }
 
     public performSearch(): void {
         try {
-            if (!this.searchInput) return;
+            this.loggingService.debug('performSearch: Starting search process');
+            if (!this.searchInput) {
+                this.loggingService.debug('performSearch: searchInput is null, returning');
+                return;
+            }
+            
             const searchText = this.searchInput.value.trim();
+            this.loggingService.debug(`performSearch: searchText="${searchText}", filterMode=${this.filterMode}, allEntries.length=${this.allEntries.length}`);
+            
             this.clearHighlights();
             this.resetVisibility();
             this.filteredEntries.clear();
             this.highlightedElements = [];
             this.currentIndex = -1;
+            
             if (searchText.length < 1) {
+                this.loggingService.debug('performSearch: Empty search text, hiding result counter');
                 if (this.resultCounter) {
                     this.resultCounter.style.display = 'none';
                 }
                 return;
             }
+            
             let pattern: RegExp;
             if (this.useRegex) {
                 try {
                     pattern = new RegExp(searchText, this.caseSensitive ? 'g' : 'gi');
+                    this.loggingService.debug(`performSearch: Created regex pattern: ${pattern}`);
                 } catch (e) {
+                    this.loggingService.debug('performSearch: Regex creation failed, falling back to search pattern');
                     pattern = this.createSearchPattern(searchText);
                 }
             } else {
                 pattern = this.createSearchPattern(searchText);
+                this.loggingService.debug(`performSearch: Created search pattern: ${pattern}`);
             }
-            this.allEntries.forEach(entry => {
+            
+            this.loggingService.debug(`performSearch: Processing ${this.allEntries.length} entries`);
+            this.allEntries.forEach((entry, index) => {
                 this.applyFilterOrHighlightToEntry(entry, pattern);
             });
+            
+            this.loggingService.debug(`performSearch: After processing - filteredEntries.size=${this.filteredEntries.size}, highlightedElements.length=${this.highlightedElements.length}`);
+            
             if (this.resultCounter) {
                 if (this.filterMode) {
                     this.resultCounter.textContent = `${this.filteredEntries.size} sonuç`;
+                    this.loggingService.debug(`performSearch: Updated result counter for filter mode: ${this.filteredEntries.size} results`);
                 } else {
                     this.resultCounter.textContent = this.highlightedElements.length > 0
                         ? `${this.currentIndex + 1}/${this.highlightedElements.length} eşleşme`
                         : 'Eşleşme bulunamadı';
+                    this.loggingService.debug(`performSearch: Updated result counter for highlight mode: ${this.highlightedElements.length} matches`);
                 }
                 this.resultCounter.style.display = 'inline-block';
             }
+            
             if (!this.filterMode && this.highlightedElements.length > 0) {
+                this.loggingService.debug('performSearch: Navigating to first highlight');
                 this.navigateHighlights('next');
             }
         } catch (error) {
@@ -599,19 +682,31 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     private applyFilterOrHighlightToEntry(entry: HTMLElement, pattern?: RegExp): void {
         if (!pattern) {
             if (!this.searchInput || !this.searchInput.value.trim()) {
+                this.loggingService.debug('applyFilterOrHighlightToEntry: No pattern and no search input, returning');
                 return;
             }
             const searchText = this.searchInput.value.trim();
             pattern = this.createSearchPattern(searchText);
         }
+        
         const content = entry.querySelector('.content');
-        if (!content) return;
+        if (!content) {
+            this.loggingService.debug('applyFilterOrHighlightToEntry: No content found in entry, returning');
+            return;
+        }
+        
         const text = content.textContent || '';
+        this.loggingService.debug(`applyFilterOrHighlightToEntry: Processing entry with text length=${text.length}, pattern=${pattern}`);
+        
         pattern.lastIndex = 0;
         const isMatch = pattern.test(text);
         pattern.lastIndex = 0;
+        
+        this.loggingService.debug(`applyFilterOrHighlightToEntry: isMatch=${isMatch}, filterMode=${this.filterMode}`);
+        
         if (this.filterMode) {
             if (isMatch) {
+                this.loggingService.debug('applyFilterOrHighlightToEntry: Match found in filter mode - showing entry and highlighting');
                 this.showEntry(entry);
                 this.filteredEntries.add(entry);
                 const contentElement = entry.querySelector('.content');
@@ -619,12 +714,16 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                     this.highlightText(contentElement as HTMLElement, pattern);
                 }
             } else {
+                this.loggingService.debug('applyFilterOrHighlightToEntry: No match in filter mode - hiding entry');
                 this.hideEntry(entry);
             }
         } else {
             this.showEntry(entry);
             if (isMatch) {
+                this.loggingService.debug('applyFilterOrHighlightToEntry: Match found in highlight mode - highlighting text');
                 this.highlightText(content as HTMLElement, pattern);
+            } else {
+                this.loggingService.debug('applyFilterOrHighlightToEntry: No match in highlight mode - showing entry without highlight');
             }
         }
     }
@@ -700,10 +799,15 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     private createSearchPattern(text: string): RegExp {
+        this.loggingService.debug(`createSearchPattern: Creating pattern for text="${text}", normalizeChars=${this.normalizeChars}, caseSensitive=${this.caseSensitive}`);
+        
         let escapedText = text.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+        this.loggingService.debug(`createSearchPattern: Escaped text="${escapedText}"`);
+        
         const parts: string[] = [];
         let insideQuotes = false;
         let currentPart = '';
+        
         for (let i = 0; i < escapedText.length; i++) {
             const char = escapedText[i];
             if (char === '"') {
@@ -744,8 +848,12 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         if (currentPart) {
             parts.push(currentPart);
         }
+        
         const pattern = parts.join('');
-        return new RegExp(pattern, this.caseSensitive ? 'g' : 'gi');
+        const regex = new RegExp(pattern, this.caseSensitive ? 'g' : 'gi');
+        this.loggingService.debug(`createSearchPattern: Final pattern="${pattern}", regex=${regex}`);
+        
+        return regex;
     }
 
     private hideEntry(entry: HTMLElement): void {
@@ -803,6 +911,25 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         this.currentIndex = -1;
         if (this.resultCounter) {
             this.resultCounter.style.display = 'none';
+        }
+    }
+
+    public initialize(): void {
+        try {
+            this.loggingService.debug(`Initializing ${this.constructor.name}`);
+            if (this.shouldInitialize()) {
+                // Override the base initialization order - we need to setup UI before listeners
+                this.setupUI();
+                this.setupListeners();
+                this.registerObservers();
+                this.postInitialize();
+                this.loggingService.debug(`${this.constructor.name} initialized successfully.`);
+            } else {
+                this.loggingService.debug(`Skipping initialization for ${this.constructor.name} as conditions not met.`);
+            }
+        } catch (error) {
+            this.loggingService.error(`Error initializing ${this.constructor.name}:`, error);
+            this.handleInitializationError(error);
         }
     }
 }
