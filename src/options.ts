@@ -47,6 +47,9 @@ class OptionsPage {
 
             this.initializeTooltips();
 
+            // Load username information
+            await this.loadUsernameInfo();
+
             this.isInitialized = true;
             this.loggingService.debug('Options page initialized');
         } catch (error) {
@@ -457,6 +460,21 @@ class OptionsPage {
                 });
             });
 
+            // Username management buttons
+            const refreshUsernameButton = document.getElementById('refreshUsername');
+            if (refreshUsernameButton) {
+                refreshUsernameButton.addEventListener('click', () => {
+                    this.refreshUsername();
+                });
+            }
+
+            const clearUsernameButton = document.getElementById('clearUsername');
+            if (clearUsernameButton) {
+                clearUsernameButton.addEventListener('click', () => {
+                    this.clearUsername();
+                });
+            }
+
             // Enter key to save
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && e.ctrlKey) {
@@ -742,6 +760,120 @@ class OptionsPage {
             return error.message;
         }
         return String(error);
+    }
+
+    /**
+     * Load and display cached username information
+     */
+    async loadUsernameInfo() {
+        try {
+            // Get username info directly from storage instead of content script
+            const storage = await chrome.storage.local.get(['userNick', 'usernameLastExtracted']);
+            
+            const username = storage.userNick || null;
+            const lastExtracted = storage.usernameLastExtracted || null;
+            
+            let cacheAge: string | null = null;
+            let isExpired = false;
+            
+            if (lastExtracted) {
+                const ageMs = Date.now() - lastExtracted;
+                const ageHours = ageMs / (1000 * 60 * 60);
+                
+                if (ageHours < 1) {
+                    cacheAge = `${Math.round(ageMs / (1000 * 60))} dakika`;
+                } else if (ageHours < 24) {
+                    cacheAge = `${Math.round(ageHours)} saat`;
+                } else {
+                    cacheAge = `${Math.round(ageHours / 24)} gün`;
+                }
+                
+                isExpired = ageMs > 24 * 60 * 60 * 1000;
+            }
+            
+            const usernameElement = document.getElementById('cachedUsername');
+            const cacheAgeElement = document.getElementById('cacheAge');
+            
+            if (usernameElement && cacheAgeElement) {
+                usernameElement.textContent = username || 'Bulunamadı';
+                
+                if (cacheAge) {
+                    cacheAgeElement.textContent = `(${cacheAge} önce)`;
+                    cacheAgeElement.className = isExpired ? 'cache-age expired' : 'cache-age';
+                } else {
+                    cacheAgeElement.textContent = '';
+                    cacheAgeElement.className = 'cache-age';
+                }
+            }
+            
+            this.loggingService.debug('Username info loaded from storage', { username, cacheAge, isExpired });
+        } catch (error) {
+            this.loggingService.error('Error loading username info from storage', error);
+            this.setUsernameDisplayError();
+        }
+    }
+
+    /**
+     * Set username display to error state
+     */
+    setUsernameDisplayError() {
+        const usernameElement = document.getElementById('cachedUsername');
+        const cacheAgeElement = document.getElementById('cacheAge');
+        
+        if (usernameElement) usernameElement.textContent = 'Hata';
+        if (cacheAgeElement) {
+            cacheAgeElement.textContent = '';
+            cacheAgeElement.className = 'cache-age';
+        }
+    }
+
+    /**
+     * Clear cached username
+     */
+    async clearUsername() {
+        try {
+            // Clear directly from storage
+            await chrome.storage.local.remove(['userNick', 'usernameLastExtracted']);
+            
+            await this.loadUsernameInfo();
+            this.showStatus('Kullanıcı adı önbelleği temizlendi', 'success');
+            this.loggingService.debug('Username cache cleared from options page');
+        } catch (error) {
+            this.loggingService.error('Error clearing username cache from storage', error);
+            this.showStatus('Önbellek temizlenirken hata oluştu', 'error');
+        }
+    }
+
+    /**
+     * Refresh username from page (requires Eksisozluk tab)
+     */
+    async refreshUsername() {
+        try {
+            // Find Eksisozluk tab and send refresh message
+            const tabs = await chrome.tabs.query({url: 'https://eksisozluk.com/*'});
+            
+            if (tabs.length === 0) {
+                this.showStatus('Eksisözlük sekmesi bulunamadı. Lütfen bir Eksisözlük sayfası açın.', 'error');
+                return;
+            }
+            
+            // Use the first Eksisozluk tab found
+            const tab = tabs[0];
+            
+            const response = await chrome.tabs.sendMessage(tab.id!, {
+                action: 'refreshUsername'
+            });
+            
+            if (response && response.success) {
+                await this.loadUsernameInfo();
+                this.showStatus('Kullanıcı adı yenilendi', 'success');
+            } else {
+                this.showStatus('Kullanıcı adı yenilenirken hata oluştu', 'error');
+            }
+        } catch (error) {
+            this.loggingService.error('Error refreshing username', error);
+            this.showStatus('Kullanıcı adı yenilemek için bir Eksisözlük sekmesi açık olmalı', 'error');
+        }
     }
 }
 

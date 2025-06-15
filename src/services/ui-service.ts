@@ -171,6 +171,31 @@ export class UIService {
                     this.loggingService.debug('Debug helpers added to window.eksiArtiDebug');
                 }
 
+                // Set up message listener for username management
+                chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+                    this.loggingService.debug('Message received in UIService', { action: message.action });
+                    
+                    try {
+                        switch (message.action) {
+                            case 'refreshUsername':
+                                this.voteMonitoringService.refreshUsername().then(success => {
+                                    sendResponse({ success });
+                                }).catch(error => {
+                                    this.loggingService.error('Error refreshing username', error);
+                                    sendResponse({ success: false, error: error.message });
+                                });
+                                return true; // Keep channel open for async response
+                                
+                            default:
+                                // Don't handle other messages, let them pass through
+                                return false;
+                        }
+                    } catch (error) {
+                        this.loggingService.error('Error handling message in UIService', error);
+                        sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+                    }
+                });
+
                 // Add version info to console
                 this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
             }, 500);

@@ -34,7 +34,8 @@
     "storage",
     "contextMenus",
     "alarms",
-    "notifications"
+    "notifications",
+    "tabs"
   ],
   "web_accessible_resources": [
     {

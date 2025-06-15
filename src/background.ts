@@ -39,6 +39,62 @@ function setupVoteMonitoring() {
         }
     });
 
+    // Set up notification click handler
+    chrome.notifications.onClicked.addListener(async (notificationId) => {
+        loggingService.debug('Notification clicked', { notificationId });
+        
+        try {
+            // Get the stored URL for this notification
+            const storage = await chrome.storage.local.get([
+                `notification_${notificationId}_url`,
+                `notification_${notificationId}_title`
+            ]);
+            
+            const entryUrl = storage[`notification_${notificationId}_url`];
+            const entryTitle = storage[`notification_${notificationId}_title`];
+            
+            loggingService.debug('Retrieved notification data', { 
+                entryUrl, 
+                entryTitle 
+            });
+            
+            if (entryUrl) {
+                // Open the entry in a new tab
+                chrome.tabs.create({ url: entryUrl });
+                loggingService.debug('Opened entry in new tab', { url: entryUrl });
+                
+                // Clear the notification
+                chrome.notifications.clear(notificationId);
+                
+                // Clean up stored notification data
+                chrome.storage.local.remove([
+                    `notification_${notificationId}_url`,
+                    `notification_${notificationId}_title`
+                ]);
+                
+                loggingService.debug('Notification clicked and cleaned up', { notificationId });
+            } else {
+                loggingService.error('No URL found for notification', { notificationId });
+            }
+        } catch (error) {
+            loggingService.error('Error handling notification click', {
+                error: error instanceof Error ? error.message : String(error),
+                notificationId
+            });
+        }
+    });
+
+    // Set up notification closed handler for cleanup
+    chrome.notifications.onClosed.addListener(async (notificationId, byUser) => {
+        loggingService.debug('Notification closed', { notificationId, byUser });
+        
+        // Clean up stored notification data when notification is closed
+        chrome.storage.local.remove([
+            `notification_${notificationId}_url`,
+            `notification_${notificationId}_title`
+        ]);
+    });
+
     // Listen for changes to the monitoring settings
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         loggingService.debug('Vote monitoring message received', { 
@@ -179,75 +235,121 @@ async function checkForNewVote() {
             htmlPreview: html.substring(0, 200) + '...'
         });
 
-        // Parse out the entry title
-        const titleRegex = /<h1 id="title" data-title="([^"]+)" data-id="\d+"/;
-        loggingService.debug('Attempting to parse entry title with regex', { regex: titleRegex.toString() });
+        // Parse out the entry title and ID
+        const titleRegex = /<h1 id="title" data-title="([^"]+)" data-id="(\d+)"/;
+        loggingService.debug('Attempting to parse entry title and ID with regex', { regex: titleRegex.toString() });
         
         const match = html.match(titleRegex);
         loggingService.debug('Regex match result', { 
             matchFound: !!match, 
             matchGroups: match ? match.length : 0,
-            titleMatch: match ? match[1] : null
+            titleMatch: match ? match[1] : null,
+            entryIdMatch: match ? match[2] : null
         });
 
-        if (match && match[1]) {
+        if (match && match[1] && match[2]) {
             const currentTitle = match[1];
-            loggingService.debug('Successfully extracted current title', { currentTitle });
+            const entryId = match[2];
+            // Correct Eksisozluk entry URL format
+            const entryUrl = `https://eksisozluk.com/entry/${entryId}`;
+            
+            loggingService.debug('Successfully extracted current title and entry info', { 
+                currentTitle, 
+                entryId, 
+                entryUrl 
+            });
 
             // Get previous title from storage
-            const titleStorage = await chrome.storage.local.get(['previousTitle']);
+            const titleStorage = await chrome.storage.local.get(['previousTitle', 'previousEntryId']);
             const previousTitle = titleStorage.previousTitle || '';
+            const previousEntryId = titleStorage.previousEntryId || '';
             
-            loggingService.debug('Retrieved previous title from storage', { 
+            loggingService.debug('Retrieved previous entry info from storage', { 
                 previousTitle,
+                previousEntryId,
                 hasPreviousTitle: !!previousTitle
             });
 
             // If there's a change, show notification
-            if (previousTitle && currentTitle !== previousTitle) {
-                loggingService.debug('New vote detected - titles differ', {
+            if (previousTitle && (currentTitle !== previousTitle || entryId !== previousEntryId)) {
+                loggingService.debug('New vote detected - entry info changed', {
                     currentTitle,
-                    previousTitle
+                    previousTitle,
+                    currentEntryId: entryId,
+                    previousEntryId
                 });
 
-                // Create notification
-                const notificationResult = chrome.notifications.create('', {
+                // Create enhanced notification
+                const notificationId = `vote-notification-${Date.now()}`;
+                const notificationResult = chrome.notifications.create(notificationId, {
                     type: 'basic',
                     iconUrl: 'icons/icon128.png',
-                    title: 'Yeni Oy Bildirim',
-                    message: `Yeni oy: ${currentTitle}`
+                    title: '🗳️ Yeni Oy Aldınız!',
+                    message: `"${currentTitle}" başlıklı entrinize oy verildi.\n\nTıklayarak entrye gidin.`,
+                    priority: 2
                 });
                 
-                loggingService.debug('Notification created', { notificationId: notificationResult });
+                // Store entry URL for click handler
+                await chrome.storage.local.set({
+                    [`notification_${notificationId}_url`]: entryUrl,
+                    [`notification_${notificationId}_title`]: currentTitle
+                });
+                
+                loggingService.debug('Enhanced notification created', { 
+                    notificationId, 
+                    entryUrl,
+                    title: currentTitle
+                });
             } else if (!previousTitle) {
-                loggingService.debug('First run - no previous title to compare, setting baseline', { currentTitle });
+                loggingService.debug('First run - no previous entry to compare, setting baseline', { 
+                    currentTitle, 
+                    entryId 
+                });
             } else {
-                loggingService.debug('No new votes - titles match', { currentTitle, previousTitle });
+                loggingService.debug('No new votes - entry info unchanged', { 
+                    currentTitle, 
+                    previousTitle,
+                    currentEntryId: entryId,
+                    previousEntryId
+                });
             }
 
-            // Update stored title
-            await chrome.storage.local.set({'previousTitle': currentTitle});
-            loggingService.debug('Updated previous title in storage', { previousTitle: currentTitle });
+            // Update stored entry info
+            await chrome.storage.local.set({
+                'previousTitle': currentTitle,
+                'previousEntryId': entryId
+            });
+            loggingService.debug('Updated previous entry info in storage', { 
+                previousTitle: currentTitle,
+                previousEntryId: entryId
+            });
         } else {
-            loggingService.error('Failed to parse entry title from HTML', { 
+            loggingService.error('Failed to parse entry title and ID from HTML', { 
                 htmlLength: html.length,
                 regexUsed: titleRegex.toString(),
                 htmlSample: html.substring(0, 500)
             });
             
             // Try alternative parsing methods
-            loggingService.debug('Attempting alternative title parsing methods');
+            loggingService.debug('Attempting alternative title and ID parsing methods');
             
-            // Look for any h1 elements
-            const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
+            // Look for any h1 elements with data attributes
+            const h1Match = html.match(/<h1[^>]*data-title="([^"]*)"[^>]*data-id="([^"]*)"[^>]*>/);
             if (h1Match) {
-                loggingService.debug('Found h1 element', { h1Content: h1Match[1] });
+                loggingService.debug('Found h1 element with alternative pattern', { 
+                    title: h1Match[1], 
+                    id: h1Match[2] 
+                });
             }
             
-            // Look for title attributes
+            // Look for title and ID attributes separately
             const titleAttrMatch = html.match(/data-title="([^"]+)"/);
-            if (titleAttrMatch) {
-                loggingService.debug('Found data-title attribute', { titleAttr: titleAttrMatch[1] });
+            const idAttrMatch = html.match(/data-id="(\d+)"/);
+            if (titleAttrMatch && idAttrMatch) {
+                loggingService.debug('Found separate title and ID attributes', { 
+                    titleAttr: titleAttrMatch[1],
+                    idAttr: idAttrMatch[1]
+                });
             }
         }
     } catch (error) {
@@ -352,6 +454,8 @@ function setupMessageListeners() {
                         logs: loggingService.getLogs()
                     });
                     break;
+
+
 
                 default:
                    loggingService.debug('Unknown message action', message.action);

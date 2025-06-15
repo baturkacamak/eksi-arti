@@ -519,3 +519,85 @@ textarea:not(:focus):not(:placeholder-shown) {
         border-bottom: 3px solid var(--primary-color);
     }
 }
+
+/* Button styles for consistency */
+.btn.small {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: auto;
+}
+
+.btn.danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn.danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Username management styles */
+.username-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.username-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-weight: 500;
+}
+
+.username-display .material-icons {
+    font-size: 18px;
+    color: var(--accent-color);
+}
+
+.cache-age {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: normal;
+    padding: 2px 6px;
+    background-color: var(--background-tertiary);
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
+.cache-age.expired {
+    background-color: #ffc107;
+    color: #856404;
+}
+
+.username-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.username-actions .btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.username-actions .material-icons {
+    font-size: 16px;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .cache-age {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .cache-age.expired {
+    background-color: #ffc107;
+    color: #212529;
+}
