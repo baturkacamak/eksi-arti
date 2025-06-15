@@ -8,10 +8,70 @@ import {LoggingService} from './services/logging-service';
 import {Endpoints} from "./constants";
 
 const loggingService = new LoggingService();
+
+// Global flag to prevent duplicate setup
+let voteMonitoringSetup = false;
+
+/**
+ * Safely decode HTML entities from text
+ * This function is XSS-safe as it only decodes common HTML entities
+ */
+function decodeHtmlEntities(text: string): string {
+    const htmlEntities: { [key: string]: string } = {
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&quot;': '"',
+        '&#x27;': "'",
+        '&#39;': "'",
+        '&#x2F;': '/',
+        '&#47;': '/',
+        '&#x5C;': '\\',
+        '&#92;': '\\',
+        '&#x60;': '`',
+        '&#96;': '`',
+        '&#x131;': 'ı',
+        '&#305;': 'ı',
+        '&#x130;': 'İ',
+        '&#304;': 'İ',
+        '&#x11E;': 'Ğ',
+        '&#286;': 'Ğ',
+        '&#x11F;': 'ğ',
+        '&#287;': 'ğ',
+        '&#x15E;': 'Ş',
+        '&#350;': 'Ş',
+        '&#x15F;': 'ş',
+        '&#351;': 'ş',
+        '&#xDC;': 'Ü',
+        '&#220;': 'Ü',
+        '&#xFC;': 'ü',
+        '&#252;': 'ü',
+        '&#xD6;': 'Ö',
+        '&#214;': 'Ö',
+        '&#xF6;': 'ö',
+        '&#246;': 'ö',
+        '&#xC7;': 'Ç',
+        '&#199;': 'Ç',
+        '&#xE7;': 'ç',
+        '&#231;': 'ç'
+    };
+    
+    // Only decode known safe entities - this prevents XSS
+    return text.replace(/&[#\w]+;/g, (entity) => {
+        return htmlEntities[entity] || entity;
+    });
+}
+
 /**
  * Set up vote monitoring
  */
 function setupVoteMonitoring() {
+    // Prevent duplicate setup
+    if (voteMonitoringSetup) {
+        loggingService.debug('Vote monitoring already set up, skipping duplicate setup');
+        return;
+    }
+    
     loggingService.debug('Setting up vote monitoring');
     
     // Set up alarm for checking votes
@@ -38,6 +98,10 @@ function setupVoteMonitoring() {
             loggingService.debug('Ignoring non-vote-check alarm', { alarmName: alarm.name });
         }
     });
+
+    // Mark vote monitoring as set up
+    voteMonitoringSetup = true;
+    loggingService.debug('Vote monitoring setup completed');
 
     // Set up notification click handler
     chrome.notifications.onClicked.addListener(async (notificationId) => {
@@ -248,7 +312,7 @@ async function checkForNewVote() {
         });
 
         if (match && match[1] && match[2]) {
-            const currentTitle = match[1];
+            const currentTitle = decodeHtmlEntities(match[1]);
             const entryId = match[2];
             // Correct Eksisozluk entry URL format
             const entryUrl = `https://eksisozluk.com/entry/${entryId}`;
