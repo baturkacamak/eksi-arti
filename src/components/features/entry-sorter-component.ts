@@ -39,7 +39,6 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     private currentDirection: 'asc' | 'desc' = 'desc';
     private strategies: ISortingStrategy[] = [];
     private observer: MutationObserver | null = null;
-    private selectBox: ISelectBoxComponent | null = null;
     private sortButtons: HTMLElement[] = [];
 
     // Store specific instances to avoid DI issues
@@ -49,6 +48,19 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     private specificUsernameExtractorService: IUsernameExtractorService;
     private sortingDataExtractor: SortingDataExtractor;
     private buttonComponent: IButtonComponent;
+
+    // Strategy display name mapping
+    private readonly strategyDisplayNames: Record<string, string> = {
+        'favorite': 'Favoriler',
+        'length': 'Uzunluk',
+        'account-age': 'Hesap Yaşı',
+        'user-level': 'Kullanıcı Seviyesi',
+        'total-entries': 'Toplam Entry',
+        'followers': 'Takipçi Sayısı',
+        'following-ratio': 'Takip Oranı',
+        'activity-ratio': 'Aktivite Oranı',
+        'engagement-ratio': 'Etkileşim Oranı'
+    };
 
     constructor(
         domHandler: IDOMService,
@@ -103,8 +115,8 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 return;
             }
 
-            this.loggingService.debug('Adding sort buttons...');
-            this.addSortButtons();
+            this.loggingService.debug('Setting up UI...');
+            this.setupUI();
 
             // Setup observer for page changes
             this.registerObservers();
@@ -116,213 +128,74 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     }
 
     /**
-     * Apply CSS styles for the component
+     * Get display name for a strategy
      */
-    private applyStyles(): void {
-        const styles = `
-            .eksi-custom-controls-row {
-                display: flex;
-                align-items: center;
-                margin-bottom: 10px;
-                margin-top: 10px;
-                padding: 8px 10px;
-                border-radius: 6px;
-                background-color: rgba(0, 0, 0, 0.02);
-                border: 1px solid rgba(0, 0, 0, 0.05);
-            }
-            @media (prefers-color-scheme: dark) {
-                .eksi-custom-controls-row {
-                    background-color: rgba(255, 255, 255, 0.05) !important;
-                    border-color: rgba(255, 255, 255, 0.08) !important;
-                }
-            }
-            .eksi-sort-buttons {
-                display: flex;
-                align-items: center;
-                margin-right: auto;
-            }
-            .eksi-sort-button {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                padding: 4px 8px;
-                margin: 0 3px;
-                border-radius: 4px;
-                transition: all 0.2s ease;
-                user-select: none;
-                color: #666;
-                position: relative;
-            }
-            
-            .eksi-sort-button:hover {
-                background-color: rgba(129, 193, 75, 0.1);
-                color: #81c14b;
-            }
-            
-            .eksi-sort-button.active {
-                background-color: rgba(129, 193, 75, 0.2);
-                color: #81c14b;
-                font-weight: 500;
-            }
-            
-            .eksi-sort-button .material-icons {
-                margin-right: 4px;
-                font-size: 16px;
-            }
-            
-            .eksi-sort-separator {
-                margin: 0 6px;
-                color: #ccc;
-            }
-            
-            /* Tooltip styles */
-            .eksi-sort-button .eksi-tooltip {
-                position: absolute;
-                top: -30px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: rgba(0, 0, 0, 0.7);
-                color: white;
-                padding: 3px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease;
-                pointer-events: none;
-                white-space: nowrap;
-                z-index: 1000;
-            }
-            
-            .eksi-sort-button:hover .eksi-tooltip {
-                opacity: 1;
-                visibility: visible;
-            }
-            
-            /* Animation for active sort */
-            @keyframes eksiSortPulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-                100% { transform: scale(1); }
-            }
-            
-            .eksi-sort-button.animate .material-icons {
-                animation: eksiSortPulse 0.5s ease;
-            }
-            
-            /* Dark mode support */
-            @media (prefers-color-scheme: dark) {
-                .eksi-sort-button {
-                    color: #aaa;
-                }
-                
-                .eksi-sort-button:hover {
-                    background-color: rgba(129, 193, 75, 0.15);
-                }
-                
-                .eksi-sort-button.active {
-                    background-color: rgba(129, 193, 75, 0.25);
-                }
-                
-                .eksi-sort-separator {
-                    color: #555;
-                }
-            }
-        `;
-
-        this.cssHandler.addCSS(styles);
+    private getStrategyDisplayName(strategy: ISortingStrategy): string {
+        return strategy.displayName || this.strategyDisplayNames[strategy.name] || strategy.name;
     }
 
     /**
-     * Add sort buttons to the page
+     * Create or get the custom controls row
      */
-    private addSortButtons(): void {
-        try {
-            const contentArea = document.querySelector('#topic');
-            if (!contentArea) return;
-
-            let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
-            if (!customControlsRow) {
-                customControlsRow = this.domHandler.createElement('div');
-                this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
-                
-                // Insert custom controls row before the entry list or other controls
-                const entryList = contentArea.querySelector('#entry-item-list');
-                const searchRow = contentArea.querySelector('.eksi-search-row'); // Check for existing search row
-
-                if (searchRow && searchRow.nextSibling) {
-                    contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
-                } else if (searchRow) {
-                     contentArea.appendChild(customControlsRow); // Append after search if it's last
-                } else if (entryList) {
-                    contentArea.insertBefore(customControlsRow, entryList);
-                } else {
-                    contentArea.appendChild(customControlsRow);
-                }
-            } else {
-                 // If row exists, check if our sorter is already there
-                if (customControlsRow.querySelector('.eksi-entry-sorter-select-container')) {
-                    this.loggingService.debug('Entry sorter select box already present in custom controls row.');
-                    return;
-                }
-            }
-
-            const options: SelectOption[] = this.strategies.map(strategy => ({
-                value: strategy.name,
-                label: strategy.displayName || (
-                    strategy.name === 'favorite' ? 'Favoriler' :
-                    strategy.name === 'length' ? 'Uzunluk' :
-                    strategy.name === 'account-age' ? 'Hesap Yaşı' : 
-                    strategy.name === 'user-level' ? 'Kullanıcı Seviyesi' :
-                    strategy.name === 'total-entries' ? 'Toplam Entry' :
-                    strategy.name === 'followers' ? 'Takipçi Sayısı' :
-                    strategy.name === 'following-ratio' ? 'Takip Oranı' :
-                    strategy.name === 'activity-ratio' ? 'Aktivite Oranı' :
-                    strategy.name === 'engagement-ratio' ? 'Etkileşim Oranı' :
-                    strategy.name
-                ),
-                icon: strategy.icon
-            })); 
-
-            const selectContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(selectContainer, 'eksi-sort-buttons');
-            this.domHandler.addClass(selectContainer, 'eksi-entry-sorter-select-container');
-            
-            const selectElement = this.specificSelectBoxComponent.create({
-                options: options,
-                onChange: (selectedOption) => {
-                    const strategy = this.strategies.find(s => s.name === selectedOption.value);
-                    if (strategy) {
-                        // Set direction to strategy's default when switching strategies
-                        this.currentDirection = strategy.defaultDirection || 'desc';
-                        this.updateDirectionToggleInUI();
-                        this.sortEntries(strategy);
-                        this.activeStrategy = strategy;
-                    }
-                },
-                placeholder: 'Sırala...',
-                width: '200px',
-                className: 'eksi-entry-sorter-select'
-            });
-            this.domHandler.appendChild(selectContainer, selectElement);
-
-            // Add direction toggle button
-            const directionToggle = this.createDirectionToggle();
-            this.domHandler.appendChild(selectContainer, directionToggle);
-            
-            // Prepend the sorter to the customControlsRow so it appears on the left
-            if(customControlsRow.firstChild){
-                customControlsRow.insertBefore(selectContainer, customControlsRow.firstChild);
-            } else {
-                customControlsRow.appendChild(selectContainer);
-            }
-
-            this.loggingService.debug('Entry sorter select box added.');
-        } catch (error) {
-            this.loggingService.error('Error adding sort select box:', error);
+    private getOrCreateCustomControlsRow(): HTMLElement | null {
+        const contentArea = document.querySelector('#topic');
+        if (!contentArea) {
+            this.loggingService.warn('#topic content area not found for EntrySorterComponent UI setup.');
+            return null;
         }
+
+        let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
+        
+        if (!customControlsRow) {
+            customControlsRow = this.domHandler.createElement('div');
+            this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
+            
+            const entryList = contentArea.querySelector('#entry-item-list');
+            const searchRow = contentArea.querySelector('.eksi-search-row');
+            
+            if (searchRow && searchRow.nextSibling) {
+                contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
+            } else if (searchRow) {
+                contentArea.appendChild(customControlsRow);
+            } else if (entryList) {
+                contentArea.insertBefore(customControlsRow, entryList);
+            } else {
+                contentArea.appendChild(customControlsRow);
+            }
+            
+            this.loggingService.debug('Created .eksi-custom-controls-row for sorter.');
+        }
+        
+        return customControlsRow;
     }
+
+    /**
+     * Create select options from strategies
+     */
+    private createSelectOptions(): SelectOption[] {
+        return this.strategies.map(strategy => ({
+            value: strategy.name,
+            label: this.getStrategyDisplayName(strategy),
+            icon: strategy.icon
+        }));
+    }
+
+    /**
+     * Handle strategy selection change
+     */
+    private handleStrategyChange = (selectedOption: SelectOption): void => {
+        const strategy = this.strategies.find(s => s.name === selectedOption.value);
+        if (strategy) {
+            // Keep the current direction - don't reset to strategy's default
+            // Only use strategy's default if no direction has been set yet (first time)
+            if (this.activeStrategy === null) {
+                this.currentDirection = strategy.defaultDirection || 'desc';
+                this.updateDirectionToggleInUI();
+            }
+            this.sortEntries(strategy);
+            this.activeStrategy = strategy;
+        }
+    };
 
     /**
      * Create direction toggle button
@@ -359,138 +232,12 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     }
 
     /**
-     * Update the direction toggle button text and icon with smooth animation
-     * (Fallback method - main update now uses button replacement)
-     */
-    private updateDirectionToggleText(toggle: HTMLElement): void {
-        const isDesc = this.currentDirection === 'desc';
-        const text = isDesc ? 'Azalan' : 'Artan';
-        
-        // Add pulse animation class
-        this.domHandler.addClass(toggle, 'direction-changing');
-        
-        // Update CSS classes for animated icon rotation
-        this.domHandler.removeClass(toggle, 'direction-asc');
-        this.domHandler.removeClass(toggle, 'direction-desc');
-        this.domHandler.addClass(toggle, `direction-${this.currentDirection}`);
-        
-        // Update aria-label and title
-        toggle.setAttribute('aria-label', `Sıralama yönü: ${text}`);
-        toggle.setAttribute('title', `Sıralama yönü: ${text}`);
-        
-        // Use ButtonComponent's updateText method if available
-        if (this.buttonComponent && typeof this.buttonComponent.updateText === 'function') {
-            this.buttonComponent.updateText(text);
-        }
-        
-        // Remove pulse animation class after animation completes
-        setTimeout(() => {
-            this.domHandler.removeClass(toggle, 'direction-changing');
-        }, 400);
-    }
-
-    /**
      * Update direction toggle in the UI
      */
     private updateDirectionToggleInUI(): void {
         // Use ButtonComponent's setAnimationState method for smooth updates
         if (this.buttonComponent && this.buttonComponent.setAnimationState) {
             this.buttonComponent.setAnimationState(this.currentDirection);
-        }
-    }
-
-    /**
-     * Create a sort button for a specific strategy
-     */
-    private createSortButton(strategy: ISortingStrategy): HTMLElement {
-        const button = this.domHandler.createElement('div');
-        this.domHandler.addClass(button, 'eksi-sort-button');
-        button.setAttribute('data-sort', strategy.name);
-
-        // Improve button styling
-        button.style.padding = '5px 8px';
-        button.style.borderRadius = '4px';
-        button.style.cursor = 'pointer';
-        button.style.fontSize = '13px';
-        button.style.transition = 'all 0.2s ease';
-
-        // Create icon using IconComponent
-        const icon = this.iconComponent.create({
-            name: strategy.icon,
-            size: 'small'
-        });
-
-        // Style the icon
-        (icon as HTMLElement).style.marginRight = '5px';
-        (icon as HTMLElement).style.fontSize = '16px';
-        (icon as HTMLElement).style.verticalAlign = 'middle';
-
-        // Create text node - use displayName or Turkish versions of the names for better UX
-        const displayName = strategy.displayName || (
-            strategy.name === 'favorite' ? 'favoriler' :
-                strategy.name === 'length' ? 'uzunluk' :
-                    strategy.name === 'account-age' ? 'hesap yaşı' :
-                        strategy.name
-        );
-        const text = document.createTextNode(displayName);
-
-        // Assemble button
-        this.domHandler.appendChild(button, icon);
-        this.domHandler.appendChild(button, text);
-
-        // Add tooltip if needed
-        if (strategy.tooltip) {
-            button.setAttribute('title', strategy.tooltip);
-        }
-
-        // Add click handler
-        this.domHandler.addEventListener(button, 'click', async () => {
-            await this.handleSortButtonClick(strategy, button);
-        });
-
-        return button;
-    }
-
-    /**
-     * Handle sort button click
-     */
-    private async handleSortButtonClick(strategy: ISortingStrategy, button: HTMLElement): Promise<void> {
-        try {
-            // Skip if this strategy is already active
-            if (this.activeStrategy === strategy) return;
-
-            // Update active button styling (if using buttons instead of select box)
-            this.sortButtons.forEach((btn: HTMLElement) => {
-                btn.style.backgroundColor = '';
-                btn.style.color = '#666';
-                btn.style.fontWeight = 'normal';
-                this.domHandler.removeClass(btn, 'active');
-                this.domHandler.removeClass(btn, 'animate');
-            });
-
-            // Style the active button (if provided)
-            if (button) {
-                button.style.backgroundColor = 'rgba(129, 193, 75, 0.1)';
-                button.style.color = '#81c14b';
-                button.style.fontWeight = '500';
-                this.domHandler.addClass(button, 'active');
-                this.domHandler.addClass(button, 'animate');
-            }
-
-            // Set active strategy
-            this.activeStrategy = strategy;
-
-            // Sort entries
-            this.sortEntries(strategy);
-
-            // Remove animation class after it completes (if button provided)
-            if (button) {
-                setTimeout(() => {
-                    this.domHandler.removeClass(button, 'animate');
-                }, 500);
-            }
-        } catch (error) {
-            this.loggingService.error('Error handling sort button click:', error);
         }
     }
 
@@ -607,38 +354,16 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     protected setupUI(): void {
         this.loggingService.debug('EntrySorterComponent.setupUI executing');
         try {
-            const contentArea = document.querySelector('#topic');
-            if (!contentArea) {
-                this.loggingService.warn('#topic content area not found for EntrySorterComponent UI setup.');
-                return;
-            }
+            const customControlsRow = this.getOrCreateCustomControlsRow();
+            if (!customControlsRow) return;
 
-            let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
-            const sorterContainerExists = customControlsRow?.querySelector('.eksi-entry-sorter-select-container');
-
+            const sorterContainerExists = customControlsRow.querySelector('.eksi-entry-sorter-select-container');
             if (sorterContainerExists) {
                 this.loggingService.debug('Entry sorter select box already present in custom controls row.');
                 return; 
             }
 
-            if (!customControlsRow) {
-                customControlsRow = this.domHandler.createElement('div');
-                this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
-                const entryList = contentArea.querySelector('#entry-item-list');
-                const searchRow = contentArea.querySelector('.eksi-search-row');
-                
-                if (searchRow && searchRow.nextSibling) contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
-                else if (searchRow) contentArea.appendChild(customControlsRow);
-                else if (entryList) contentArea.insertBefore(customControlsRow, entryList);
-                else contentArea.appendChild(customControlsRow);
-                this.loggingService.debug('Created .eksi-custom-controls-row for sorter.');
-            }
-            
-            const options: SelectOption[] = this.strategies.map(strategy => ({
-                value: strategy.name,
-                label: strategy.displayName || strategy.name, 
-                icon: strategy.icon
-            })); 
+            const options = this.createSelectOptions();
 
             const selectContainer = this.domHandler.createElement('div');
             this.domHandler.addClass(selectContainer, 'eksi-sort-buttons'); 
@@ -646,16 +371,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             
             const selectElement = this.specificSelectBoxComponent.create({
                 options: options,
-                onChange: (selectedOption) => {
-                    const strategy = this.strategies.find(s => s.name === selectedOption.value);
-                    if (strategy) {
-                        // Set direction to strategy's default when switching strategies
-                        this.currentDirection = strategy.defaultDirection || 'desc';
-                        this.updateDirectionToggleInUI();
-                        this.sortEntries(strategy);
-                        this.activeStrategy = strategy;
-                    }
-                },
+                onChange: this.handleStrategyChange,
                 placeholder: 'Sırala...',
                 width: '200px',
                 className: 'eksi-entry-sorter-select'
