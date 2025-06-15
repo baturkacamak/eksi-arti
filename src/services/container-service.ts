@@ -134,9 +134,9 @@ export class ContainerService {
             const containerElement = container.getElement();
             if (containerElement) {
                 if (firstContent) {
-                    targetElement.insertBefore(containerElement, firstContent);
+                    this.domHandler.insertBefore(targetElement, containerElement, firstContent);
                 } else {
-                    targetElement.appendChild(containerElement);
+                    this.domHandler.appendChild(targetElement, containerElement);
                 }
             }
 

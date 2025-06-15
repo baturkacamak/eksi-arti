@@ -155,14 +155,14 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             const entryList = contentArea.querySelector('#entry-item-list');
             const searchRow = contentArea.querySelector('.eksi-search-row');
             
-            if (searchRow && searchRow.nextSibling && contentArea.contains(searchRow.nextSibling)) {
-                contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
+            if (searchRow && searchRow.nextSibling) {
+                this.domHandler.insertBefore(contentArea, customControlsRow, searchRow.nextSibling);
             } else if (searchRow) {
-                contentArea.appendChild(customControlsRow);
-            } else if (entryList && contentArea.contains(entryList)) {
-                contentArea.insertBefore(customControlsRow, entryList);
+                this.domHandler.appendChild(contentArea, customControlsRow);
+            } else if (entryList) {
+                this.domHandler.insertBefore(contentArea, customControlsRow, entryList);
             } else {
-                contentArea.appendChild(customControlsRow);
+                this.domHandler.appendChild(contentArea, customControlsRow);
             }
             
             this.loggingService.debug('Created .eksi-custom-controls-row for sorter.');
@@ -385,11 +385,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             this.domHandler.appendChild(selectContainer, directionToggle);
             
             // Prepend to ensure it is on the left of other controls in the row
-            if(customControlsRow.firstChild && customControlsRow.contains(customControlsRow.firstChild)){
-                customControlsRow.insertBefore(selectContainer, customControlsRow.firstChild);
-            } else {
-                customControlsRow.appendChild(selectContainer);
-            }
+            this.domHandler.insertBefore(customControlsRow, selectContainer, customControlsRow.firstChild);
             this.loggingService.debug('Entry sorter select box added/ensured in custom controls row.');
         } catch (error) {
             this.loggingService.error('Error in EntrySorterComponent.setupUI:', error);

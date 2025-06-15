@@ -281,7 +281,9 @@ export class UserProfileService {
 
         // Create loading badge
         const loadingBadge = this.createLoadingBadge();
-        link.parentNode?.insertBefore(loadingBadge, link.nextSibling);
+        if (link.parentNode) {
+            this.domService.insertBefore(link.parentNode, loadingBadge, link.nextSibling);
+        }
 
         if (!loadingBadge.parentNode) return;
         const userProfile = await this.getUserProfile(username);
@@ -294,7 +296,9 @@ export class UserProfileService {
 
     private appendBadge(link: HTMLAnchorElement, userProfile: IUserProfile): void {
         const badge = this.createBadge(userProfile);
-        link.parentNode?.insertBefore(badge, link.nextSibling);
+        if (link.parentNode) {
+            this.domService.insertBefore(link.parentNode, badge, link.nextSibling);
+        }
 
         const tooltipId = `eksi-profile-tooltip-${userProfile.username}`;
         const tooltipContent = this.domService.createElement('div');

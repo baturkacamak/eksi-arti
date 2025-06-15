@@ -20,4 +20,6 @@ export interface IDOMService {
         callback: EventListenerOrEventListenerObject,
         options?: boolean | AddEventListenerOptions
     ): void;
+    insertBefore(parent: Node, newNode: Node, referenceNode: Node | null): void;
+    createTextNode(text: string): Text;
 }

@@ -88,4 +88,25 @@ export class DOMService implements IDOMService {
     createTextNode(text: string): Text {
         return document.createTextNode(text);
     }
+
+    /**
+     * Safe insert before - validates parent-child relationships before insertion
+     */
+    insertBefore(parent: Node, newNode: Node, referenceNode: Node | null): void {
+        // If referenceNode is null, append to parent (standard behavior)
+        if (!referenceNode) {
+            parent.appendChild(newNode);
+            return;
+        }
+
+        // Verify that referenceNode is actually a child of parent
+        if (!parent.contains(referenceNode)) {
+            // Fallback to appendChild if reference node is not a valid child
+            parent.appendChild(newNode);
+            return;
+        }
+
+        // Safe to insert before the reference node
+        parent.insertBefore(newNode, referenceNode);
+    }
 }

@@ -450,28 +450,16 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.loggingService.debug('injectSearchRowDOM: Inserting searchRow into DOM');
             if (customControlsRow && customControlsRow.parentNode) {
                 this.loggingService.debug('injectSearchRowDOM: Inserting after customControlsRow');
-                const parentNode = customControlsRow.parentNode;
-                const nextSibling = customControlsRow.nextSibling;
-                
-                if (nextSibling && parentNode.contains(nextSibling)) {
-                    parentNode.insertBefore(this.searchRow, nextSibling);
-                } else {
-                    // If nextSibling is not available or not a child, append after customControlsRow
-                    if (parentNode === topicElement) {
-                        topicElement.appendChild(this.searchRow);
-                    } else {
-                        parentNode.appendChild(this.searchRow);
-                    }
-                }
+                this.domHandler.insertBefore(customControlsRow.parentNode, this.searchRow, customControlsRow.nextSibling);
             } else {
                 const entryList = topicElement.querySelector('#entry-item-list');
                 this.loggingService.debug(`injectSearchRowDOM: entryList found: ${!!entryList}`);
-                if (entryList && topicElement.contains(entryList)) {
+                if (entryList) {
                     this.loggingService.debug('injectSearchRowDOM: Inserting before entryList');
-                    topicElement.insertBefore(this.searchRow, entryList);
+                    this.domHandler.insertBefore(topicElement, this.searchRow, entryList);
                 } else {
                     this.loggingService.debug('injectSearchRowDOM: Appending to topicElement');
-                    topicElement.appendChild(this.searchRow);
+                    this.domHandler.appendChild(topicElement, this.searchRow);
                 }
             }
             

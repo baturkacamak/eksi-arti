@@ -522,7 +522,9 @@ export class TrashService {
             });
 
             // Insert controls at the top
-            trashItems.parentNode?.insertBefore(controlsContainer, trashItems);
+            if (trashItems.parentNode) {
+                this.domHandler.insertBefore(trashItems.parentNode, controlsContainer, trashItems);
+            }
 
         } catch (error) {
             this.loggingService.error('Error adding bulk revive controls:', error);
@@ -588,7 +590,7 @@ export class TrashService {
             item.style.paddingLeft = '40px';
 
             // Insert checkbox container at the beginning of the item
-            item.insertBefore(checkboxContainer, item.firstChild);
+            this.domHandler.insertBefore(item, checkboxContainer, item.firstChild);
         } catch (error) {
             this.loggingService.error('Error adding checkbox to trash item:', error);
         }
