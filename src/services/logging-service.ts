@@ -137,35 +137,65 @@ export class LoggingService implements ILoggingService {
     private outputToConsole(entry: LogEntry): void {
         const timestamp = new Date(entry.timestamp).toISOString();
         const source = entry.source ? `[${entry.source}]` : '';
-        const prefix = `[${this.appName}] [${entry.level}] ${source}`;
+        
+        // Color styles for different parts of the log
+        const timestampStyle = 'color: #888; font-weight: bold; background: #f0f0f0; padding: 2px 4px; border-radius: 3px;';
+        const appNameStyle = 'color: #2563eb; font-weight: bold;';
+        const sourceStyle = 'color: #7c3aed; font-style: italic;';
+        
+        // Level-specific colors
+        const levelStyles = {
+            [LogLevel.DEBUG]: 'color: #6b7280; font-weight: bold;',
+            [LogLevel.INFO]: 'color: #059669; font-weight: bold;',
+            [LogLevel.WARN]: 'color: #d97706; font-weight: bold;',
+            [LogLevel.ERROR]: 'color: #dc2626; font-weight: bold; background: #fee2e2; padding: 2px 4px; border-radius: 3px;'
+        };
+
+        const resetStyle = 'color: inherit; font-weight: normal; background: none; padding: 0;';
+        
+        // Build the styled message
+        const styledMessage = `%c[${timestamp}]%c %c[${this.appName}]%c %c[${entry.level}]%c${source ? ` %c${source}%c` : ''} ${entry.message}`;
+        
+        const styles = [
+            timestampStyle,
+            resetStyle,
+            appNameStyle,
+            resetStyle,
+            levelStyles[entry.level],
+            resetStyle
+        ];
+        
+        if (source) {
+            styles.push(sourceStyle, resetStyle);
+        }
 
         switch (entry.level) {
             case LogLevel.DEBUG:
                 if (entry.data) {
-                    console.log(`${prefix} ${entry.message}`, entry.data);
+                    console.log(styledMessage, ...styles, entry.data);
                 } else {
-                    console.log(`${prefix} ${entry.message}`);
+                    console.log(styledMessage, ...styles);
                 }
                 break;
             case LogLevel.INFO:
                 if (entry.data) {
-                    console.info(`${prefix} ${entry.message}`, entry.data);
+                    console.info(styledMessage, ...styles, entry.data);
                 } else {
-                    console.info(`${prefix} ${entry.message}`);
+                    console.info(styledMessage, ...styles);
                 }
                 break;
             case LogLevel.WARN:
                 if (entry.data) {
-                    console.warn(`${prefix} ${entry.message}`, entry.data);
+                    console.warn(styledMessage, ...styles, entry.data);
                 } else {
-                    console.warn(`${prefix} ${entry.message}`);
+                    console.warn(styledMessage, ...styles);
                 }
                 break;
             case LogLevel.ERROR:
                 if (entry.data) {
-                    console.error(`${prefix} ${entry.message}`, entry.data);
+                    console.error(styledMessage, ...styles, entry.data);
                 } else {
-                    console.error(`${prefix} ${entry.message}`);
+                    console.error(styledMessage, ...styles);
                 }
                 break;
         }
