@@ -16,6 +16,7 @@ import { IUserProfileService } from "../../interfaces/services/IUserProfileServi
 import { ISelectBoxComponent, SelectOption } from "../../interfaces/components/ISelectBoxComponent";
 import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
 import { SortingDataExtractor } from "../../commands/sorting/SortingDataExtractor";
+import { IButtonComponent, ButtonVariant, ButtonSize } from "../../interfaces/components/IButtonComponent";
 import {
     DateDataStrategy,
     FavoriteCountDataStrategy,
@@ -47,6 +48,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     private specificSelectBoxComponent: ISelectBoxComponent;
     private specificUsernameExtractorService: IUsernameExtractorService;
     private sortingDataExtractor: SortingDataExtractor;
+    private buttonComponent: IButtonComponent;
 
     constructor(
         domHandler: IDOMService,
@@ -58,6 +60,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         userProfileService: IUserProfileService,
         selectBoxComponent: ISelectBoxComponent,
         usernameExtractorService: IUsernameExtractorService,
+        buttonComponent: IButtonComponent,
         options?: FeatureComponentOptions
     ) {
         super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
@@ -66,6 +69,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         this.specificSelectBoxComponent = selectBoxComponent;
         this.specificUsernameExtractorService = usernameExtractorService;
         this.sortingDataExtractor = new SortingDataExtractor(userProfileService, usernameExtractorService);
+        this.buttonComponent = buttonComponent;
 
         // Initialize new data-driven strategies (much cleaner and more performant)
         this.strategies = [
@@ -324,32 +328,31 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
      * Create direction toggle button
      */
     private createDirectionToggle(): HTMLElement {
-        const toggle = this.domHandler.createElement('button');
-        this.domHandler.addClass(toggle, 'eksi-direction-toggle');
+        const isDesc = this.currentDirection === 'desc';
+        const iconName = isDesc ? 'arrow_downward' : 'arrow_upward';
+        const text = isDesc ? 'Azalan' : 'Artan';
         
-        toggle.style.marginLeft = '8px';
-        toggle.style.padding = '5px 8px';
-        toggle.style.border = '1px solid #ddd';
-        toggle.style.borderRadius = '4px';
-        toggle.style.backgroundColor = '#f8f9fa';
-        toggle.style.cursor = 'pointer';
-        toggle.style.fontSize = '12px';
-        toggle.style.display = 'flex';
-        toggle.style.alignItems = 'center';
-        toggle.style.gap = '4px';
-        toggle.style.transition = 'all 0.2s ease';
-        
-        this.updateDirectionToggleText(toggle);
-        
-        this.domHandler.addEventListener(toggle, 'click', () => {
-            this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
-            this.updateDirectionToggleText(toggle);
-            
-            // Re-sort with new direction if there's an active strategy
-            if (this.activeStrategy) {
-                this.sortEntries(this.activeStrategy, this.currentDirection);
+        const toggle = this.buttonComponent.create({
+            text: text,
+            variant: ButtonVariant.SECONDARY,
+            size: ButtonSize.SMALL,
+            icon: iconName,
+            iconPosition: 'left',
+            ariaLabel: `Sıralama yönü: ${text}`,
+            className: 'eksi-direction-toggle',
+            onClick: () => {
+                this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
+                this.updateDirectionToggleInUI();
+                
+                // Re-sort with new direction if there's an active strategy
+                if (this.activeStrategy) {
+                    this.sortEntries(this.activeStrategy, this.currentDirection);
+                }
             }
         });
+        
+        // Add custom styling for the direction toggle
+        toggle.style.marginLeft = '8px';
         
         return toggle;
     }
@@ -362,16 +365,19 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         const iconName = isDesc ? 'arrow_downward' : 'arrow_upward';
         const text = isDesc ? 'Azalan' : 'Artan';
         
+        // Create new icon element
         const icon = this.iconComponent.create({
             name: iconName,
             size: 'small'
         });
         
+        // Update button content manually since ButtonComponent doesn't have an update method
         toggle.innerHTML = '';
         toggle.appendChild(icon as HTMLElement);
         toggle.appendChild(document.createTextNode(text));
         
-        // Update tooltip
+        // Update aria-label and title
+        toggle.setAttribute('aria-label', `Sıralama yönü: ${text}`);
         toggle.setAttribute('title', `Sıralama yönü: ${text}`);
     }
 
@@ -580,37 +586,6 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             }
             .eksi-direction-toggle {
                 margin-left: 8px;
-                padding: 5px 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                background-color: #f8f9fa;
-                cursor: pointer;
-                font-size: 12px;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                transition: all 0.2s ease;
-                color: #666;
-            }
-            .eksi-direction-toggle:hover {
-                background-color: rgba(129, 193, 75, 0.1);
-                border-color: #81c14b;
-                color: #81c14b;
-            }
-            .eksi-direction-toggle .material-icons {
-                font-size: 14px;
-            }
-            @media (prefers-color-scheme: dark) {
-                .eksi-direction-toggle {
-                    background-color: rgba(255, 255, 255, 0.08);
-                    border-color: rgba(255, 255, 255, 0.15);
-                    color: #aaa;
-                }
-                .eksi-direction-toggle:hover {
-                    background-color: rgba(129, 193, 75, 0.15);
-                    border-color: #81c14b;
-                    color: #81c14b;
-                }
             }
         `;
     }

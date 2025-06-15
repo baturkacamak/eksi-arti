@@ -382,6 +382,7 @@ export function initializeDI(): Container {
         const userProfileService = container.resolve<IUserProfileService>('UserProfileService');
         const selectBoxComponent = container.resolve<ISelectBoxComponent>('SelectBoxComponent');
         const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
+        const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
 
         return new EntrySorterComponent(
             domHandler,
@@ -392,7 +393,8 @@ export function initializeDI(): Container {
             pageUtils,
             userProfileService,
             selectBoxComponent,
-            usernameExtractorService
+            usernameExtractorService,
+            buttonComponent
         );
     });
 
