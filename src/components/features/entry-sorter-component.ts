@@ -155,11 +155,11 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             const entryList = contentArea.querySelector('#entry-item-list');
             const searchRow = contentArea.querySelector('.eksi-search-row');
             
-            if (searchRow && searchRow.nextSibling) {
+            if (searchRow && searchRow.nextSibling && contentArea.contains(searchRow.nextSibling)) {
                 contentArea.insertBefore(customControlsRow, searchRow.nextSibling);
             } else if (searchRow) {
                 contentArea.appendChild(customControlsRow);
-            } else if (entryList) {
+            } else if (entryList && contentArea.contains(entryList)) {
                 contentArea.insertBefore(customControlsRow, entryList);
             } else {
                 contentArea.appendChild(customControlsRow);
@@ -385,7 +385,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             this.domHandler.appendChild(selectContainer, directionToggle);
             
             // Prepend to ensure it is on the left of other controls in the row
-            if(customControlsRow.firstChild){
+            if(customControlsRow.firstChild && customControlsRow.contains(customControlsRow.firstChild)){
                 customControlsRow.insertBefore(selectContainer, customControlsRow.firstChild);
             } else {
                 customControlsRow.appendChild(selectContainer);

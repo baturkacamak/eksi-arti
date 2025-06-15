@@ -133,7 +133,7 @@ export class ComponentContainer {
         try {
             if (position === 'start') {
                 // Add to the beginning
-                if (this.containerElement.firstChild) {
+                if (this.containerElement.firstChild && this.containerElement.contains(this.containerElement.firstChild)) {
                     this.containerElement.insertBefore(component, this.containerElement.firstChild);
                 } else {
                     this.containerElement.appendChild(component);
@@ -142,8 +142,14 @@ export class ComponentContainer {
             } else if (typeof position === 'number' && position >= 0 && position < this.components.length) {
                 // Add at specific position
                 const referenceNode = this.components[position];
-                this.containerElement.insertBefore(component, referenceNode);
-                this.components.splice(position, 0, component);
+                if (referenceNode && this.containerElement.contains(referenceNode)) {
+                    this.containerElement.insertBefore(component, referenceNode);
+                    this.components.splice(position, 0, component);
+                } else {
+                    // Fallback to appending if reference node is not valid
+                    this.containerElement.appendChild(component);
+                    this.components.push(component);
+                }
             } else {
                 // Add to the end (default)
                 this.containerElement.appendChild(component);
@@ -348,8 +354,16 @@ export class ComponentContainer {
     public insertBefore(referenceElement: HTMLElement): ComponentContainer {
         if (this.containerElement && referenceElement && referenceElement.parentNode) {
             try {
-                referenceElement.parentNode.insertBefore(this.containerElement, referenceElement);
-               this.loggingService.debug('Container inserted before reference element', { containerId: this.config.id });
+                const parentNode = referenceElement.parentNode;
+                // Verify that referenceElement is actually a child of its parentNode
+                if (parentNode.contains(referenceElement)) {
+                    parentNode.insertBefore(this.containerElement, referenceElement);
+                    this.loggingService.debug('Container inserted before reference element', { containerId: this.config.id });
+                } else {
+                    // Fallback to appendChild if reference element is not properly connected
+                    parentNode.appendChild(this.containerElement);
+                    this.loggingService.warn('Reference element not in parent, appended container instead', { containerId: this.config.id });
+                }
             } catch (error) {
               this.loggingService.error('Error inserting container before reference element:', error);
             }

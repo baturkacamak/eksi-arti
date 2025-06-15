@@ -448,13 +448,25 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.loggingService.debug('injectSearchRowDOM: searchRow containers appended');
 
             this.loggingService.debug('injectSearchRowDOM: Inserting searchRow into DOM');
-            if (customControlsRow) {
+            if (customControlsRow && customControlsRow.parentNode) {
                 this.loggingService.debug('injectSearchRowDOM: Inserting after customControlsRow');
-                customControlsRow.parentNode?.insertBefore(this.searchRow, customControlsRow.nextSibling);
+                const parentNode = customControlsRow.parentNode;
+                const nextSibling = customControlsRow.nextSibling;
+                
+                if (nextSibling && parentNode.contains(nextSibling)) {
+                    parentNode.insertBefore(this.searchRow, nextSibling);
+                } else {
+                    // If nextSibling is not available or not a child, append after customControlsRow
+                    if (parentNode === topicElement) {
+                        topicElement.appendChild(this.searchRow);
+                    } else {
+                        parentNode.appendChild(this.searchRow);
+                    }
+                }
             } else {
                 const entryList = topicElement.querySelector('#entry-item-list');
                 this.loggingService.debug(`injectSearchRowDOM: entryList found: ${!!entryList}`);
-                if (entryList) {
+                if (entryList && topicElement.contains(entryList)) {
                     this.loggingService.debug('injectSearchRowDOM: Inserting before entryList');
                     topicElement.insertBefore(this.searchRow, entryList);
                 } else {

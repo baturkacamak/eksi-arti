@@ -187,8 +187,13 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
             this.domHandler.addClass(newLabelElement, 'eksi-countdown-label');
             newLabelElement.textContent = label;
             const iconEl = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
-            if (iconEl && iconEl.nextSibling) this.countdownInstanceElement.insertBefore(newLabelElement, iconEl.nextSibling);
-            else this.countdownInstanceElement.insertBefore(newLabelElement, this.countdownInstanceElement.firstChild);
+            if (iconEl && iconEl.nextSibling && this.countdownInstanceElement.contains(iconEl.nextSibling)) {
+                this.countdownInstanceElement.insertBefore(newLabelElement, iconEl.nextSibling);
+            } else if (this.countdownInstanceElement.firstChild && this.countdownInstanceElement.contains(this.countdownInstanceElement.firstChild)) {
+                this.countdownInstanceElement.insertBefore(newLabelElement, this.countdownInstanceElement.firstChild);
+            } else {
+                this.countdownInstanceElement.appendChild(newLabelElement);
+            }
         }
         this.instanceOptions.label = label;
     }
@@ -200,7 +205,11 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
         if (iconElement) {
             iconElement.parentNode?.replaceChild(newIconElement, iconElement);
         } else if (this.instanceOptions.showIcon) {
-            this.countdownInstanceElement.insertBefore(newIconElement, this.countdownInstanceElement.firstChild);
+            if (this.countdownInstanceElement.firstChild && this.countdownInstanceElement.contains(this.countdownInstanceElement.firstChild)) {
+                this.countdownInstanceElement.insertBefore(newIconElement, this.countdownInstanceElement.firstChild);
+            } else {
+                this.countdownInstanceElement.appendChild(newIconElement);
+            }
         }
         this.instanceOptions.icon = iconProps;
     }
