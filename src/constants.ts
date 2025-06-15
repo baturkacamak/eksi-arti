@@ -34,7 +34,7 @@ export const DEFAULT_PREFERENCES = {
 
     // Advanced settings
     saveOperationHistory: true,
-    enableDebugMode: true,
+    enableDebugMode: process.env.NODE_ENV === 'development',
 
     // Vote monitoring settings
     voteMonitoringEnabled: true,
