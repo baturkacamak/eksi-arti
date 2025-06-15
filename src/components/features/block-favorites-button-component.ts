@@ -202,11 +202,11 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
                         const resumeModalFactory = this.specificContainer.resolve<IResumeModalFactory>('ResumeModalFactory');
                         const resumeModal = resumeModalFactory.create(entryId, savedState);
                         document.body.style.overflow = 'hidden';
-                        if (typeof (resumeModal as ResumeModal).display === 'function') {
-                            (resumeModal as ResumeModal).display();
-                        } else {
-                            (resumeModal as any).show();
-                        }
+                                                  if (typeof (resumeModal as ResumeModal).display === 'function') {
+                             (resumeModal as ResumeModal).display();
+                          } else {
+                              (resumeModal as any).display();
+                          }
                     } catch (err) {
                         this.loggingService.error('Error showing resume modal:', err);
                     }
@@ -214,11 +214,11 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
                     try {
                         const optionsModal = this.specificBlockModalFactory.create(entryId);
                         document.body.style.overflow = 'hidden';
-                        if (typeof (optionsModal as BlockOptionsModal).display === 'function') {
-                            (optionsModal as BlockOptionsModal).display();
-                        } else {
-                            (optionsModal as any).show();
-                        }
+                                                  if (typeof (optionsModal as BlockOptionsModal).display === 'function') {
+                             (optionsModal as BlockOptionsModal).display();
+                          } else {
+                              (optionsModal as any).display();
+                          }
                     } catch (err) {
                         this.loggingService.error('Error showing options modal:', err);
                     }

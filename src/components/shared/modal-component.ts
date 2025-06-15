@@ -45,10 +45,27 @@ export class ModalComponent implements IModalComponent {
     };
 
     /**
-     * Create modal element - to be implemented by subclasses
+     * Create modal element with basic structure
      */
     protected createElement(): void {
-        throw new Error('Method createElement must be implemented by subclass');
+        if (this.modalElement) return;
+
+        // Create the modal container
+        this.modalElement = this.domHandler.createElement('div');
+        this.domHandler.addClass(this.modalElement, 'eksi-modal');
+
+        // Create the modal content container
+        const modalContent = this.domHandler.createElement('div');
+        this.domHandler.addClass(modalContent, 'eksi-modal-content');
+
+        this.domHandler.appendChild(this.modalElement, modalContent);
+
+        // Add backdrop click to close
+        this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
+            if (e.target === this.modalElement) {
+                this.close();
+            }
+        });
     }
 
     /**

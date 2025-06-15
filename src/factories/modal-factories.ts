@@ -17,6 +17,7 @@ import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IToggleSwitchComponent} from "../interfaces/components/IToggleSwitchComponent";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
+import {IModalComponent} from "../interfaces/components/IModalComponent";
 
 /**
  * Factory for creating BlockOptionsModal instances
@@ -40,6 +41,7 @@ export class BlockOptionsModalFactory {
         const observerService = this.container.resolve<any>('ObserverService');
         const toggleSwitchComponent = this.container.resolve<IToggleSwitchComponent>('ToggleSwitchComponent');
         const tooltipComponent = this.container.resolve<ITooltipComponent>('TooltipComponent');
+        const modalComponent = this.container.resolve<IModalComponent>('ModalComponent');
         return new BlockOptionsModal(
             this.domHandler,
             this.cssHandler,
@@ -51,6 +53,7 @@ export class BlockOptionsModalFactory {
             this.commandInvoker,
             toggleSwitchComponent,
             tooltipComponent,
+            modalComponent,
             entryId
         );
     }
@@ -75,6 +78,7 @@ export class ResumeModalFactory {
     create(entryId: string, savedState: BlockerState): ResumeModal {
         const iconComponent = this.container.resolve<any>('IconComponent');
         const observerService = this.container.resolve<any>('ObserverService');
+        const modalComponent = this.container.resolve<IModalComponent>('ModalComponent');
         return new ResumeModal(
             this.domHandler,
             this.cssHandler,
@@ -84,6 +88,7 @@ export class ResumeModalFactory {
             this.buttonComponent,
             this.blockUsersService,
             this.container,
+            modalComponent,
             entryId,
             savedState
         );

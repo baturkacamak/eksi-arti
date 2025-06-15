@@ -15,6 +15,7 @@ import {TooltipComponent} from '../components/shared/tooltip-component';
 import {ToggleSwitchComponent} from '../components/shared/toggle-switch-component';
 import {ButtonComponent} from '../components/shared/button-component';
 import {ProgressBarComponent} from '../components/shared/progress-bar-component';
+import {ModalComponent} from '../components/shared/modal-component';
 import {CountdownComponent} from '../components/features/countdown-component';
 import {TrashService} from '../services/trash-service';
 import {AuthorHighlighterService} from '../services/author-highlighter-service';
@@ -143,6 +144,14 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ProgressBarComponent(domService, cssService, loggingService);
+    });
+
+    container.register('ModalComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
+        return new ModalComponent(domService, cssService, loggingService, buttonComponent);
     });
 
     container.register('CountdownComponent', () => {

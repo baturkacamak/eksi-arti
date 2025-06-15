@@ -11,19 +11,21 @@ import { IObserverService } from '../../interfaces/services/IObserverService';
 import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IButtonComponent";
 import { IToggleSwitchComponent } from "../../interfaces/components/IToggleSwitchComponent";
 import { ITooltipComponent } from "../../interfaces/components/ITooltipComponent";
+import { IModalComponent } from "../../interfaces/components/IModalComponent";
 
 export class BlockOptionsModal extends BaseFeatureComponent {
-    private modalElement?: HTMLElement;
     private entryId: string;
     private threadBlockingEnabled: boolean = false;
-    private toggleSwitchComponent: IToggleSwitchComponent;
-    private tooltipComponent: ITooltipComponent;
+    private contentElement?: HTMLElement;
 
     // Specific dependencies
     private specificContainer: Container;
     private specificButtonComponent: IButtonComponent;
     private specificCommandFactory: ICommandFactory;
     private specificCommandInvoker: ICommandInvoker;
+    private toggleSwitchComponent: IToggleSwitchComponent;
+    private tooltipComponent: ITooltipComponent;
+    private modalComponent: IModalComponent;
 
     constructor(
         domHandler: IDOMService,
@@ -36,6 +38,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         commandInvoker: ICommandInvoker,
         toggleSwitchComponent: IToggleSwitchComponent,
         tooltipComponent: ITooltipComponent,
+        modalComponent: IModalComponent,
         entryId: string,
         options?: FeatureComponentOptions
     ) {
@@ -45,39 +48,31 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         this.specificCommandInvoker = commandInvoker;
         this.toggleSwitchComponent = toggleSwitchComponent;
         this.tooltipComponent = tooltipComponent;
+        this.modalComponent = modalComponent;
         this.entryId = entryId;
         // Initialize specificContainer - we'll get it from the global container later if needed
         this.specificContainer = {} as Container;
     }
 
     public display(): void {
-        if (!this.modalElement) {
+        if (!this.contentElement) {
             this.setupUI();
         }
-        if (this.modalElement) {
-            document.body.appendChild(this.modalElement);
-            this.modalElement.style.display = 'flex';
-        }
+        // Show the modal first to create the DOM structure
+        this.modalComponent.show();
+        // Then inject our content into the modal
+        this.injectContentIntoModal();
     }
 
     public close(): void {
-        if (this.modalElement) {
-            this.modalElement.style.display = 'none';
-            if (this.modalElement.parentElement) {
-                this.modalElement.parentElement.removeChild(this.modalElement);
-            }
-            this.modalElement = undefined;
-        }
+        this.modalComponent.close();
     }
 
     protected getStyles(): string | null {
-        // Basic modal styles, similar to other refactored modals
         return `
-            .eksi-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
-            .eksi-modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
-            .eksi-modal-title { font-size: 1.5em; margin-bottom: 20px; display: flex; align-items: center; }
-            .eksi-modal-title svg { margin-right: 8px; }
-            .eksi-modal-options { display: flex; flex-direction: column; gap: 10px; }
+            .eksi-modal-content {
+                max-width: 500px;
+            }
             .eksi-modal-thread-blocking { 
                 padding: 16px 20px; 
                 background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -127,18 +122,14 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 background-color: rgba(108, 117, 125, 0.3);
                 color: #495057;
             }
-            /* Button styles would be handled by ButtonComponent's CSS */
         `;
     }
 
     protected shouldInitialize(): boolean { return true; }
 
     protected setupUI(): void {
-        this.modalElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.modalElement, 'eksi-modal');
-
-        const modalContent = this.domHandler.createElement('div');
-        this.domHandler.addClass(modalContent, 'eksi-modal-content');
+        // Create modal content (not the modal itself)
+        this.contentElement = this.domHandler.createElement('div');
 
         const modalTitle = this.domHandler.createElement('div');
         this.domHandler.addClass(modalTitle, 'eksi-modal-title');
@@ -232,42 +223,43 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         this.domHandler.appendChild(optionsContainer, threadBlockingContainer);
         this.domHandler.appendChild(optionsContainer, cancelButton);
 
-        this.domHandler.appendChild(modalContent, modalTitle);
-        this.domHandler.appendChild(modalContent, optionsContainer);
-        this.domHandler.appendChild(this.modalElement, modalContent);
-
-        this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
-            if (e.target === this.modalElement) {
-                this.close();
-            }
-        });
+        this.domHandler.appendChild(this.contentElement, modalTitle);
+        this.domHandler.appendChild(this.contentElement, optionsContainer);
     }
 
     protected registerObservers(): void { /* No observers */ }
 
     protected cleanup(): void {
-        if (this.modalElement && this.modalElement.parentElement) {
-            this.modalElement.parentElement.removeChild(this.modalElement);
+        this.contentElement = undefined;
+    }
+
+    private injectContentIntoModal(): void {
+        if (!this.contentElement) return;
+        
+        // We need to get access to the modal's content container
+        // This assumes the modal component provides a way to inject content
+        // For now, we'll use a simple approach and inject via DOM
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
+        if (modalElement && this.contentElement) {
+            modalElement.innerHTML = '';
+            modalElement.appendChild(this.contentElement);
         }
-        this.modalElement = undefined;
     }
 
     private async handleOptionSelected(blockType: BlockType): Promise<void> {
+        // Find the button that was clicked for loading state
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
         let buttonToLoad: HTMLButtonElement | undefined;
-        if (this.modalElement) { 
+        
+        if (modalElement) { 
             if (blockType === BlockType.MUTE) {
-                buttonToLoad = this.modalElement.querySelector('.eksi-button-primary') as HTMLButtonElement || undefined;
+                buttonToLoad = modalElement.querySelector('.eksi-button-primary') as HTMLButtonElement || undefined;
             } else {
-                buttonToLoad = this.modalElement.querySelector('.eksi-button-secondary') as HTMLButtonElement || undefined;
+                buttonToLoad = modalElement.querySelector('.eksi-button-secondary') as HTMLButtonElement || undefined;
             }
         }
         
         if (buttonToLoad) {
-             // As ButtonComponent service instance is used, its setLoading should ideally handle which button it targets.
-             // If ButtonComponent's setLoading operates on its internally stored `this.buttonElement` 
-             // (which is set on create), this direct call to the service might not target the correct button visually.
-             // This relies on ButtonComponent.setLoading being context-aware or the interface needing an element parameter.
-             // For now, assuming this.specificButtonComponent.setLoading can somehow apply to the context.
             this.specificButtonComponent.setLoading(true, 'İşleniyor...'); 
         }
 
@@ -278,7 +270,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 this.close(); 
             } catch (error) {
                 this.loggingService.error('Error executing block users command:', error);
-                if (buttonToLoad) { // Attempt to stop loading on error
+                if (buttonToLoad) {
                     this.specificButtonComponent.setLoading(false);
                 }
             }

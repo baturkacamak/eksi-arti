@@ -14,15 +14,18 @@ import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { IObserverService } from '../../interfaces/services/IObserverService';
 import { IPreferencesService } from "../../interfaces/services/IPreferencesService";
 import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IButtonComponent";
+import { IModalComponent } from "../../interfaces/components/IModalComponent";
 
 export class PreferencesModal extends BaseFeatureComponent {
     private preferences?: BlockerPreferences;
     private isLoaded: boolean = false;
-    private modalElement?: HTMLElement;
+    private contentElement?: HTMLElement;
 
+    // Specific dependencies
     private specificPreferencesService: IPreferencesService;
     private specificNotificationComponent: NotificationComponent;
     private specificButtonComponent: IButtonComponent;
+    private modalComponent: IModalComponent;
 
     constructor(
         domHandler: IDOMService,
@@ -33,12 +36,14 @@ export class PreferencesModal extends BaseFeatureComponent {
         preferencesService: IPreferencesService,
         notificationComponent: NotificationComponent,
         buttonComponent: IButtonComponent,
+        modalComponent: IModalComponent,
         options?: FeatureComponentOptions
     ) {
         super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
         this.specificPreferencesService = preferencesService;
         this.specificNotificationComponent = notificationComponent;
         this.specificButtonComponent = buttonComponent;
+        this.modalComponent = modalComponent;
     }
 
     private async loadPreferences(): Promise<void> {
@@ -58,52 +63,24 @@ export class PreferencesModal extends BaseFeatureComponent {
                 return;
             }
         }
-        if (!this.modalElement) {
+        
+        if (!this.contentElement) {
             this.setupUI();
         }
-        if (this.modalElement) {
-            document.body.appendChild(this.modalElement);
-            this.modalElement.style.display = 'flex';
-        }
+        // Show the modal first to create the DOM structure
+        this.modalComponent.show();
+        // Then inject our content into the modal
+        this.injectContentIntoModal();
     }
 
     public close(): void {
-        if (this.modalElement) {
-            this.modalElement.style.display = 'none';
-            if (this.modalElement.parentElement) {
-                this.modalElement.parentElement.removeChild(this.modalElement);
-            }
-            this.modalElement = undefined;
-        }
+        this.modalComponent.close();
     }
 
     protected getStyles(): string | null {
         return `
-            .eksi-modal {
-                display: none;
-                position: fixed;
-                z-index: 1000;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                overflow: auto;
-                background-color: rgba(0,0,0,0.4);
-                align-items: center;
-                justify-content: center;
-            }
             .eksi-modal-content {
-                background-color: #fefefe;
-                margin: auto;
-                padding: 20px;
-                border: 1px solid #888;
-                width: 80%;
                 max-width: 500px;
-                border-radius: 8px;
-            }
-            .eksi-modal-title {
-                font-size: 1.5em;
-                margin-bottom: 15px;
             }
             .eksi-modal-options label {
                 display: block;
@@ -119,10 +96,6 @@ export class PreferencesModal extends BaseFeatureComponent {
                 border-radius: 4px;
                 box-sizing: border-box;
             }
-            .eksi-modal-buttons {
-                text-align: right;
-                margin-top: 20px;
-            }
         `;
     }
 
@@ -136,11 +109,8 @@ export class PreferencesModal extends BaseFeatureComponent {
             return;
         }
 
-        this.modalElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.modalElement, 'eksi-modal');
-
-        const modalContent = this.domHandler.createElement('div');
-        this.domHandler.addClass(modalContent, 'eksi-modal-content');
+        // Create modal content (not the modal itself)
+        this.contentElement = this.domHandler.createElement('div');
 
         const modalTitle = this.domHandler.createElement('div');
         this.domHandler.addClass(modalTitle, 'eksi-modal-title');
@@ -188,16 +158,9 @@ export class PreferencesModal extends BaseFeatureComponent {
         this.domHandler.appendChild(buttonsContainer, saveButton);
         this.domHandler.appendChild(buttonsContainer, cancelButton);
 
-        this.domHandler.appendChild(modalContent, modalTitle);
-        this.domHandler.appendChild(modalContent, optionsContainer);
-        this.domHandler.appendChild(modalContent, buttonsContainer);
-        this.domHandler.appendChild(this.modalElement, modalContent);
-
-        this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
-            if (e.target === this.modalElement) {
-                this.close();
-            }
-        });
+        this.domHandler.appendChild(this.contentElement, modalTitle);
+        this.domHandler.appendChild(this.contentElement, optionsContainer);
+        this.domHandler.appendChild(this.contentElement, buttonsContainer);
     }
 
     protected registerObservers(): void {
@@ -205,38 +168,50 @@ export class PreferencesModal extends BaseFeatureComponent {
     }
 
     protected cleanup(): void {
-        if (this.modalElement && this.modalElement.parentElement) {
-            this.modalElement.parentElement.removeChild(this.modalElement);
-        }
-        this.modalElement = undefined;
+        this.contentElement = undefined;
         this.isLoaded = false;
         this.preferences = undefined;
     }
 
+    private injectContentIntoModal(): void {
+        if (!this.contentElement) return;
+        
+        // We need to get access to the modal's content container
+        // This assumes the modal component provides a way to inject content
+        // For now, we'll use a simple approach and inject via DOM
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
+        if (modalElement && this.contentElement) {
+            modalElement.innerHTML = '';
+            modalElement.appendChild(this.contentElement);
+        }
+    }
+
     private async savePreferences(): Promise<void> {
-        if (!this.preferences || !this.modalElement) {
-            this.loggingService.error('Cannot save preferences: preferences not loaded or modal not present');
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
+        if (!modalElement) return;
+
+        const defaultBlockTypeSelect = modalElement.querySelector('#defaultBlockType') as HTMLSelectElement;
+        const noteTemplateTextarea = modalElement.querySelector('#noteTemplate') as HTMLTextAreaElement;
+
+        if (!defaultBlockTypeSelect || !noteTemplateTextarea) {
+            this.loggingService.error('Could not find form elements');
             return;
         }
 
-        const blockTypeSelect = this.modalElement.querySelector<HTMLSelectElement>('#defaultBlockType');
-        const noteTemplateTextarea = this.modalElement.querySelector<HTMLTextAreaElement>('#noteTemplate');
+        const newPreferences: BlockerPreferences = {
+            defaultBlockType: defaultBlockTypeSelect.value as BlockType,
+            defaultNoteTemplate: noteTemplateTextarea.value,
+            preferenceStorageKey: this.preferences?.preferenceStorageKey || 'blocker_preferences'
+        };
 
-        if (blockTypeSelect && noteTemplateTextarea) {
-            const updatedPreferences: BlockerPreferences = {
-                ...this.preferences,
-                defaultBlockType: blockTypeSelect.value as BlockType,
-                defaultNoteTemplate: noteTemplateTextarea.value
-            };
-
-            try {
-                await this.specificPreferencesService.savePreferences(updatedPreferences);
-                await this.specificNotificationComponent.show('Tercihler kaydedildi.', { timeout: 3 });
-                this.close();
-            } catch (error) {
-                this.loggingService.error('Error saving preferences:', error);
-                await this.specificNotificationComponent.show('Tercihler kaydedilemedi.', { timeout: 5 });
-            }
+        try {
+            await this.specificPreferencesService.savePreferences(newPreferences);
+            this.preferences = newPreferences;
+            await this.specificNotificationComponent.show('Tercihler kaydedildi!', { timeout: 3 });
+            this.close();
+        } catch (error) {
+            this.loggingService.error('Error saving preferences:', error);
+            await this.specificNotificationComponent.show('Tercihler kaydedilemedi.', { timeout: 5 });
         }
     }
 } 

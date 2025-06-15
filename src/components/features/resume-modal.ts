@@ -12,16 +12,18 @@ import { IDOMService } from "../../interfaces/services/IDOMService";
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { IObserverService } from '../../interfaces/services/IObserverService';
 import { ButtonVariant, IButtonComponent, ButtonProps } from "../../interfaces/components/IButtonComponent";
+import { IModalComponent } from "../../interfaces/components/IModalComponent";
 
 export class ResumeModal extends BaseFeatureComponent {
-    private modalElement?: HTMLElement;
     private entryId: string;
     private savedState: BlockerState;
+    private contentElement?: HTMLElement;
 
     // Specific dependencies
     private specificBlockUsersService: BlockUsersService;
     private specificContainer: Container;
     private specificButtonComponent: IButtonComponent;
+    private modalComponent: IModalComponent;
 
     constructor(
         domHandler: IDOMService,
@@ -32,6 +34,7 @@ export class ResumeModal extends BaseFeatureComponent {
         buttonComponent: IButtonComponent,
         blockUsersService: BlockUsersService,
         container: Container,
+        modalComponent: IModalComponent,
         entryId: string,
         savedState: BlockerState,
         options?: FeatureComponentOptions
@@ -40,46 +43,31 @@ export class ResumeModal extends BaseFeatureComponent {
         this.specificButtonComponent = buttonComponent;
         this.specificBlockUsersService = blockUsersService;
         this.specificContainer = container;
+        this.modalComponent = modalComponent;
         this.entryId = entryId;
         this.savedState = savedState;
     }
 
-    // Public method to trigger showing the modal
     public display(): void {
-        if (!this.modalElement) {
-            this.setupUI(); // Create the modal element if it doesn't exist
+        if (!this.contentElement) {
+            this.setupUI();
         }
-        if (this.modalElement) {
-            document.body.appendChild(this.modalElement); // Add to DOM
-            this.modalElement.style.display = 'flex'; 
-        }
+        // Show the modal first to create the DOM structure
+        this.modalComponent.show();
+        // Then inject our content into the modal
+        this.injectContentIntoModal();
     }
 
     public close(): void {
-        if (this.modalElement) {
-            this.modalElement.style.display = 'none';
-            if (this.modalElement.parentElement) {
-                this.modalElement.parentElement.removeChild(this.modalElement);
-            }
-            this.modalElement = undefined; 
-        }
+        this.modalComponent.close();
     }
 
     protected getStyles(): string | null {
-        // Assuming basic modal styles are similar to PreferencesModal or handled globally.
-        // If ResumeModal had specific styles beyond .eksi-modal-* structure, they'd go here.
-        // For now, return a basic set, can be expanded or rely on global modal styles.
         return `
-            .eksi-modal {
-                display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-                overflow: auto; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;
-            }
             .eksi-modal-content {
-                background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888;
-                width: 80%; max-width: 600px; border-radius: 8px; text-align: left;
+                max-width: 600px;
+                text-align: left;
             }
-            .eksi-modal-title { font-size: 1.5em; margin-bottom: 15px; display: flex; align-items: center; }
-            .eksi-modal-title svg { margin-right: 8px; }
             .eksi-modal-message { margin-bottom: 20px; }
             .eksi-modal-stats { display: flex; justify-content: space-around; margin: 15px 0; }
             .eksi-stat { text-align: center; }
@@ -88,20 +76,16 @@ export class ResumeModal extends BaseFeatureComponent {
             .eksi-modal-progress-container { background-color: #e0e0e0; border-radius: 4px; margin: 10px 0; overflow: hidden; }
             .eksi-modal-progress-bar { background-color: #81c14b; height: 20px; width: 0%; transition: width 0.3s ease; }
             .eksi-modal-progress-text { text-align: center; font-size: 0.9em; margin-top: 5px; }
-            .eksi-modal-buttons { text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
         `;
     }
 
     protected shouldInitialize(): boolean {
-        return true; // Initialized when an operation needs to be resumed.
+        return true;
     }
 
     protected setupUI(): void {
-        this.modalElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.modalElement, 'eksi-modal');
-
-        const modalContent = this.domHandler.createElement('div');
-        this.domHandler.addClass(modalContent, 'eksi-modal-content');
+        // Create modal content (not the modal itself)
+        this.contentElement = this.domHandler.createElement('div');
 
         const modalTitle = this.domHandler.createElement('div');
         this.domHandler.addClass(modalTitle, 'eksi-modal-title');
@@ -160,32 +144,35 @@ export class ResumeModal extends BaseFeatureComponent {
         this.domHandler.appendChild(buttonsContainer, newButton);
         this.domHandler.appendChild(buttonsContainer, cancelButton);
 
-        this.domHandler.appendChild(modalContent, modalTitle);
-        this.domHandler.appendChild(modalContent, message);
-        this.domHandler.appendChild(modalContent, buttonsContainer);
-        this.domHandler.appendChild(this.modalElement, modalContent);
-
-        this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
-            if (e.target === this.modalElement) {
-                this.close();
-            }
-        });
+        this.domHandler.appendChild(this.contentElement, modalTitle);
+        this.domHandler.appendChild(this.contentElement, message);
+        this.domHandler.appendChild(this.contentElement, buttonsContainer);
     }
 
     protected registerObservers(): void { /* No observers for this modal */ }
 
     protected cleanup(): void {
-        if (this.modalElement && this.modalElement.parentElement) {
-            this.modalElement.parentElement.removeChild(this.modalElement);
+        this.contentElement = undefined;
+    }
+
+    private injectContentIntoModal(): void {
+        if (!this.contentElement) return;
+        
+        // We need to get access to the modal's content container
+        // This assumes the modal component provides a way to inject content
+        // For now, we'll use a simple approach and inject via DOM
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
+        if (modalElement && this.contentElement) {
+            modalElement.innerHTML = '';
+            modalElement.appendChild(this.contentElement);
         }
-        this.modalElement = undefined;
     }
 
     private handleResumeOperation(): void {
-        const resumeButton = this.modalElement?.querySelector('.eksi-button-primary') as HTMLButtonElement; // Assuming ButtonComponent adds this class or a more specific selector is needed
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
+        const resumeButton = modalElement?.querySelector('.eksi-button-primary') as HTMLButtonElement;
+        
         if (resumeButton) {
-            // The specificButtonComponent is a service. Its setLoading method should ideally know which button to target.
-            // If it operates on a last-created basis or needs a specific element, this might need adjustment in IButtonComponent.
             this.specificButtonComponent.setLoading(true, 'Devam Ediliyor...');
         }
 
@@ -197,21 +184,25 @@ export class ResumeModal extends BaseFeatureComponent {
     }
 
     private handleNewOperation(): void {
-        const newButton = this.modalElement?.querySelector('.eksi-button-secondary') as HTMLButtonElement;
+        const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
+        const newButton = modalElement?.querySelector('.eksi-button-secondary') as HTMLButtonElement;
+        
         if (newButton) {
-            this.specificButtonComponent.setLoading(true, 'Hazırlanıyor...');
+            this.specificButtonComponent.setLoading(true, 'Başlatılıyor...');
         }
 
         setTimeout(async () => {
-            this.close();
+            // Clear the saved state
             await storageService.removeItem(STORAGE_KEYS.CURRENT_OPERATION);
-            
+            this.close();
+
+            // Trigger the block options modal using the factory
             const blockOptionsModalFactory = this.specificContainer.resolve<BlockOptionsModalFactory>('BlockOptionsModalFactory');
             const optionsModal = blockOptionsModalFactory.create(this.entryId);
             if (typeof (optionsModal as any).display === 'function') { // Check if the modal from factory has display method
-                 (optionsModal as any).display();
+                (optionsModal as any).display();
             } else {
-                (optionsModal as any).show(); // Fallback to show if display not found (original method)
+                (optionsModal as any).display(); // Fallback to display if display not found (original method)
             }
         }, 500);
     }
