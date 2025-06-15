@@ -222,17 +222,8 @@ export class AuthorHighlighterService {
                 transition: background-color ${this.config.animationDuration}ms ease-out;
                 border-radius: 4px;
                 position: relative;
-            }
-            
-            li[data-id].eksi-highlighted-author:before {
-                content: '';
-                position: absolute;
-                left: -8px;
-                top: 0;
-                bottom: 0;
-                width: 4px;
-                border-radius: 2px;
-                opacity: 0.7;
+                padding: 10px !important;
+                margin: 5px 0 !important;
             }
             
             /* Author badge styles */
