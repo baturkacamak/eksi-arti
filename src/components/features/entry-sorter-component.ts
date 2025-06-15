@@ -51,6 +51,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
 
     // Strategy display name mapping
     private readonly strategyDisplayNames: Record<string, string> = {
+        'date': 'Tarih',
         'favorite': 'Favoriler',
         'length': 'Uzunluk',
         'account-age': 'Hesap Yaşı',
