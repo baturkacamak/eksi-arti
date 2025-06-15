@@ -16,7 +16,7 @@ import { IUserProfileService } from "../../interfaces/services/IUserProfileServi
 import { ISelectBoxComponent, SelectOption } from "../../interfaces/components/ISelectBoxComponent";
 import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
 import { SortingDataExtractor } from "../../commands/sorting/SortingDataExtractor";
-import { IButtonComponent, ButtonVariant, ButtonSize } from "../../interfaces/components/IButtonComponent";
+import { IButtonComponent, ButtonVariant, ButtonSize, ButtonAnimation } from "../../interfaces/components/IButtonComponent";
 import {
     DateDataStrategy,
     FavoriteCountDataStrategy,
@@ -329,17 +329,18 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
      */
     private createDirectionToggle(): HTMLElement {
         const isDesc = this.currentDirection === 'desc';
-        const iconName = isDesc ? 'arrow_downward' : 'arrow_upward';
         const text = isDesc ? 'Azalan' : 'Artan';
         
         const toggle = this.buttonComponent.create({
             text: text,
             variant: ButtonVariant.SECONDARY,
             size: ButtonSize.SMALL,
-            icon: iconName,
+            icon: 'arrow_upward', // Always use upward arrow, ButtonComponent will rotate it
             iconPosition: 'left',
             ariaLabel: `Sıralama yönü: ${text}`,
             className: 'eksi-direction-toggle',
+            animation: ButtonAnimation.DIRECTION_TOGGLE,
+            animationState: this.currentDirection,
             onClick: () => {
                 this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
                 this.updateDirectionToggleInUI();
@@ -358,36 +359,43 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     }
 
     /**
-     * Update the direction toggle button text and icon
+     * Update the direction toggle button text and icon with smooth animation
+     * (Fallback method - main update now uses button replacement)
      */
     private updateDirectionToggleText(toggle: HTMLElement): void {
         const isDesc = this.currentDirection === 'desc';
-        const iconName = isDesc ? 'arrow_downward' : 'arrow_upward';
         const text = isDesc ? 'Azalan' : 'Artan';
         
-        // Create new icon element
-        const icon = this.iconComponent.create({
-            name: iconName,
-            size: 'small'
-        });
+        // Add pulse animation class
+        this.domHandler.addClass(toggle, 'direction-changing');
         
-        // Update button content manually since ButtonComponent doesn't have an update method
-        toggle.innerHTML = '';
-        toggle.appendChild(icon as HTMLElement);
-        toggle.appendChild(document.createTextNode(text));
+        // Update CSS classes for animated icon rotation
+        this.domHandler.removeClass(toggle, 'direction-asc');
+        this.domHandler.removeClass(toggle, 'direction-desc');
+        this.domHandler.addClass(toggle, `direction-${this.currentDirection}`);
         
         // Update aria-label and title
         toggle.setAttribute('aria-label', `Sıralama yönü: ${text}`);
         toggle.setAttribute('title', `Sıralama yönü: ${text}`);
+        
+        // Use ButtonComponent's updateText method if available
+        if (this.buttonComponent && typeof this.buttonComponent.updateText === 'function') {
+            this.buttonComponent.updateText(text);
+        }
+        
+        // Remove pulse animation class after animation completes
+        setTimeout(() => {
+            this.domHandler.removeClass(toggle, 'direction-changing');
+        }, 400);
     }
 
     /**
      * Update direction toggle in the UI
      */
     private updateDirectionToggleInUI(): void {
-        const toggle = document.querySelector('.eksi-direction-toggle') as HTMLElement;
-        if (toggle) {
-            this.updateDirectionToggleText(toggle);
+        // Use ButtonComponent's setAnimationState method for smooth updates
+        if (this.buttonComponent && this.buttonComponent.setAnimationState) {
+            this.buttonComponent.setAnimationState(this.currentDirection);
         }
     }
 

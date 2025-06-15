@@ -1,7 +1,7 @@
 import {ICSSService} from "../../interfaces/services/ICSSService";
 import {ILoggingService} from "../../interfaces/services/ILoggingService";
 import {IDOMService} from "../../interfaces/services/IDOMService";
-import {ButtonProps, ButtonSize, ButtonVariant, IButtonComponent} from "../../interfaces/components/IButtonComponent";
+import {ButtonProps, ButtonSize, ButtonVariant, ButtonAnimation, IButtonComponent} from "../../interfaces/components/IButtonComponent";
 
 /**
  * Button Component
@@ -10,6 +10,8 @@ import {ButtonProps, ButtonSize, ButtonVariant, IButtonComponent} from "../../in
 export class ButtonComponent implements IButtonComponent {
     private buttonElement: HTMLButtonElement | null = null;
     private static stylesApplied = false;
+    private currentAnimation: ButtonAnimation = ButtonAnimation.NONE;
+    private currentAnimationState: string | number = '';
 
     /**
      * Constructor
@@ -49,6 +51,19 @@ export class ButtonComponent implements IButtonComponent {
             // Add custom class if provided
             if (props.className) {
                 this.domHandler.addClass(this.buttonElement, props.className);
+            }
+
+            // Handle animations
+            if (props.animation && props.animation !== ButtonAnimation.NONE) {
+                this.currentAnimation = props.animation;
+                this.currentAnimationState = props.animationState || '';
+                this.domHandler.addClass(this.buttonElement, `eksi-button-${props.animation}`);
+                
+                // Apply initial animation state
+                if (props.animation === ButtonAnimation.DIRECTION_TOGGLE) {
+                    const direction = props.animationState || 'desc';
+                    this.domHandler.addClass(this.buttonElement, `direction-${direction}`);
+                }
             }
 
             // Add aria label if provided
@@ -162,6 +177,134 @@ export class ButtonComponent implements IButtonComponent {
         } else {
             this.domHandler.removeClass(this.buttonElement, 'eksi-button-disabled');
         }
+    }
+
+    /**
+     * Set animation state (generic method for all animation types)
+     */
+    public setAnimationState(state: string | number): void {
+        if (!this.buttonElement) return;
+
+        this.currentAnimationState = state;
+
+        switch (this.currentAnimation) {
+            case ButtonAnimation.DIRECTION_TOGGLE:
+                this.handleDirectionToggle(state as 'asc' | 'desc');
+                break;
+            case ButtonAnimation.ROTATE:
+                this.handleRotation(state as number);
+                break;
+            // Add more animation types here as needed
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Trigger a one-time animation
+     */
+    public triggerAnimation(animationType?: ButtonAnimation): void {
+        if (!this.buttonElement) return;
+
+        const animation = animationType || this.currentAnimation;
+        
+        switch (animation) {
+            case ButtonAnimation.PULSE:
+                this.triggerPulse();
+                break;
+            case ButtonAnimation.BOUNCE:
+                this.triggerBounce();
+                break;
+            case ButtonAnimation.SHAKE:
+                this.triggerShake();
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Handle direction toggle animation
+     */
+    private handleDirectionToggle(direction: 'asc' | 'desc'): void {
+        if (!this.buttonElement) return;
+
+        // Add pulse animation class
+        this.domHandler.addClass(this.buttonElement, 'direction-changing');
+
+        // Update direction classes
+        this.domHandler.removeClass(this.buttonElement, 'direction-asc');
+        this.domHandler.removeClass(this.buttonElement, 'direction-desc');
+        this.domHandler.addClass(this.buttonElement, `direction-${direction}`);
+
+        // Update text based on direction
+        const text = direction === 'desc' ? 'Azalan' : 'Artan';
+        this.updateText(text);
+
+        // Update aria-label
+        this.buttonElement.setAttribute('aria-label', `Sıralama yönü: ${text}`);
+        this.buttonElement.setAttribute('title', `Sıralama yönü: ${text}`);
+
+        // Remove pulse animation class after animation completes
+        setTimeout(() => {
+            if (this.buttonElement) {
+                this.domHandler.removeClass(this.buttonElement, 'direction-changing');
+            }
+        }, 400);
+    }
+
+    /**
+     * Handle rotation animation
+     */
+    private handleRotation(degrees: number): void {
+        if (!this.buttonElement) return;
+        
+        const icon = this.buttonElement.querySelector('.material-icons') as HTMLElement;
+        if (icon) {
+            icon.style.transform = `rotate(${degrees}deg)`;
+        }
+    }
+
+    /**
+     * Trigger pulse animation
+     */
+    private triggerPulse(): void {
+        if (!this.buttonElement) return;
+        
+        this.domHandler.addClass(this.buttonElement, 'eksi-button-pulse-active');
+        setTimeout(() => {
+            if (this.buttonElement) {
+                this.domHandler.removeClass(this.buttonElement, 'eksi-button-pulse-active');
+            }
+        }, 600);
+    }
+
+    /**
+     * Trigger bounce animation
+     */
+    private triggerBounce(): void {
+        if (!this.buttonElement) return;
+        
+        this.domHandler.addClass(this.buttonElement, 'eksi-button-bounce-active');
+        setTimeout(() => {
+            if (this.buttonElement) {
+                this.domHandler.removeClass(this.buttonElement, 'eksi-button-bounce-active');
+            }
+        }, 600);
+    }
+
+    /**
+     * Trigger shake animation
+     */
+    private triggerShake(): void {
+        if (!this.buttonElement) return;
+        
+        this.domHandler.addClass(this.buttonElement, 'eksi-button-shake-active');
+        setTimeout(() => {
+            if (this.buttonElement) {
+                this.domHandler.removeClass(this.buttonElement, 'eksi-button-shake-active');
+            }
+        }, 600);
     }
 
     /**
@@ -405,6 +548,72 @@ export class ButtonComponent implements IButtonComponent {
         }
       }
       
+      /* Animation System */
+      
+      /* Direction toggle animation */
+      .eksi-button-direction-toggle .material-icons {
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform-origin: center;
+      }
+      
+      .eksi-button-direction-toggle.direction-asc .material-icons {
+        transform: rotate(0deg);
+      }
+      
+      .eksi-button-direction-toggle.direction-desc .material-icons {
+        transform: rotate(180deg);
+      }
+      
+      .eksi-button-direction-toggle.direction-changing {
+        animation: direction-pulse 0.4s ease-out;
+      }
+      
+      /* Rotate animation */
+      .eksi-button-rotate .material-icons {
+        transition: transform 0.3s ease;
+        transform-origin: center;
+      }
+      
+      /* Pulse animation */
+      .eksi-button-pulse-active {
+        animation: button-pulse 0.6s ease-out;
+      }
+      
+      /* Bounce animation */
+      .eksi-button-bounce-active {
+        animation: button-bounce 0.6s ease-out;
+      }
+      
+      /* Shake animation */
+      .eksi-button-shake-active {
+        animation: button-shake 0.6s ease-out;
+      }
+      
+      /* Keyframes */
+      @keyframes direction-pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      
+      @keyframes button-pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
+      
+      @keyframes button-bounce {
+        0%, 20%, 60%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        80% { transform: translateY(-5px); }
+      }
+      
+      @keyframes button-shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+
       /* Dark mode support */
       @media (prefers-color-scheme: dark) {
         .eksi-button-default {

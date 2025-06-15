@@ -12,6 +12,15 @@ export enum ButtonSize {
     LARGE = 'large',
 }
 
+export enum ButtonAnimation {
+    NONE = 'none',
+    DIRECTION_TOGGLE = 'direction-toggle',
+    PULSE = 'pulse',
+    ROTATE = 'rotate',
+    BOUNCE = 'bounce',
+    SHAKE = 'shake'
+}
+
 export interface ButtonProps {
     text: string;
     variant?: ButtonVariant;
@@ -23,6 +32,9 @@ export interface ButtonProps {
     fullWidth?: boolean;
     className?: string;
     onClick?: (event: MouseEvent) => void;
+    // Animation system
+    animation?: ButtonAnimation;
+    animationState?: string | number; // Generic state for animations (e.g., 'asc'/'desc', degrees, etc.)
 }
 
 export interface IButtonComponent {
@@ -30,4 +42,6 @@ export interface IButtonComponent {
     updateText(text: string): void;
     setDisabled(disabled: boolean): void;
     setLoading(loading: boolean, loadingText?: string): void;
+    setAnimationState?(state: string | number): void;
+    triggerAnimation?(animationType?: ButtonAnimation): void;
 }
