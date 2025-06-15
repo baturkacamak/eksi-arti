@@ -61,6 +61,7 @@ import {SortingDataExtractor} from "../commands/sorting/SortingDataExtractor";
 import {AuthorHighlightButtonComponent} from "../components/features/author-highlight-button-component";
 import {IAuthorHighlightButtonComponent} from "../interfaces/components/features/IAuthorHighlightButtonComponent";
 import {IAuthorHighlighterService} from "../interfaces/services/IAuthorHighlighterService";
+import {VoteMonitoringService} from "../services/vote-monitoring-service";
 
 /**
  * Initialize the dependency injection container
@@ -489,6 +490,11 @@ export function initializeDI(): Container {
     container.register('EventBus', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new EventBus(loggingService);
+    });
+
+    container.register('VoteMonitoringService', () => {
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new VoteMonitoringService(loggingService);
     });
 
     initializeCommandDI(container);

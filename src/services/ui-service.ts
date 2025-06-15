@@ -31,6 +31,7 @@ import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import { UserProfileService } from './user-profile-service';
+import {VoteMonitoringService} from './vote-monitoring-service';
 
 export class UIService {
     private initialized: boolean = false;
@@ -48,6 +49,7 @@ export class UIService {
     private trashService: TrashService;
     private blockFavoritesButtonComponent: BlockFavoritesButtonComponent;
     private searchFilterComponent: SearchFilterComponent;
+    private voteMonitoringService: VoteMonitoringService;
 
     constructor(
         private domHandler: IDOMService,
@@ -75,6 +77,7 @@ export class UIService {
 
         // Use getInstance for singleton services
         this.authorHighlighterService = container.resolve<AuthorHighlighterService>('AuthorHighlighterService');
+        this.voteMonitoringService = container.resolve<VoteMonitoringService>('VoteMonitoringService');
     }
 
     /**
@@ -142,6 +145,31 @@ export class UIService {
                 await this.authorHighlighterService.initialize();
 
                 await this.userProfileService.initialize();
+
+                // Initialize vote monitoring service to extract username and set up monitoring
+                try {
+                    const voteInitResult = await this.voteMonitoringService.initialize();
+                    this.loggingService.debug('Vote monitoring service initialization result', { success: voteInitResult });
+                } catch (error) {
+                    this.loggingService.error('Failed to initialize vote monitoring service', {
+                        error: error instanceof Error ? error.message : String(error)
+                    });
+                }
+
+                // Add debug helper to window for testing
+                if (this.preferencesManager.getPreferences().enableDebugMode) {
+                    (window as any).eksiArtiDebug = {
+                        voteMonitoring: {
+                            getSettings: () => this.voteMonitoringService.getSettings(),
+                            setUsername: (username: string) => this.voteMonitoringService.setUsername(username),
+                            testExtraction: async () => {
+                                this.loggingService.debug('Testing username extraction manually');
+                                return await this.voteMonitoringService.initialize();
+                            }
+                        }
+                    };
+                    this.loggingService.debug('Debug helpers added to window.eksiArtiDebug');
+                }
 
                 // Add version info to console
                 this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
