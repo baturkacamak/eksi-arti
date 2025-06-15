@@ -5,7 +5,6 @@ export interface IExtensionPreferences {
     // General settings
     enableNotifications: boolean;
     notificationDuration: number;
-    customMenuSelector: string;
 
     // Blocking settings
     defaultBlockType: BlockType;

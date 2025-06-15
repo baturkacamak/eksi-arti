@@ -11,7 +11,6 @@ export class PreferencesService implements IPreferencesService {
         defaultBlockType: BlockType.MUTE,
         defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
         preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
-        menuItemSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
         notificationPosition: 'top-right'
     };
 

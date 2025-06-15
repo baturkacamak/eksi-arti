@@ -79,8 +79,8 @@ export class UIService {
      */
     async initialize(): Promise<void> {
         try {
-            // Get preferences first to ensure we have the correct menu selector
-            await this.loadMenuSelector();
+            // Set the menu selector directly
+            this.menuItemSelector = SELECTORS.MENU_ITEM;
 
             // Initialize observer service
             observerService.initialize();
@@ -147,29 +147,7 @@ export class UIService {
         }
     }
 
-    /**
-     * Load menu selector from preferences
-     */
-    private async loadMenuSelector(): Promise<void> {
-        try {
-            // Initialize preferences manager if not already
-            await this.preferencesManager.initialize();
 
-            // Get preferences
-            const preferences = this.preferencesManager.getPreferences();
-
-            // Use custom selector if provided and not empty, otherwise use default
-            this.menuItemSelector = preferences.customMenuSelector && preferences.customMenuSelector.trim() !== ''
-                ? preferences.customMenuSelector
-                : SELECTORS.MENU_ITEM;
-
-            this.loggingService.debug('Using menu selector:', this.menuItemSelector);
-        } catch (error) {
-            this.loggingService.error('Error loading menu selector from preferences:', error);
-            // Fallback to default selector
-            this.menuItemSelector = SELECTORS.MENU_ITEM;
-        }
-    }
 
     /**
      * Add styles for menu items

@@ -12,7 +12,6 @@ export interface BlockerPreferences {
     defaultBlockType: BlockType;
     defaultNoteTemplate: string;
     preferenceStorageKey: string;
-    menuItemSelector: string;
     notificationPosition?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 }
 

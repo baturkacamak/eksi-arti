@@ -6,12 +6,20 @@ export enum BlockType {
 // Base domain configuration - can be updated when domain changes
 export const SITE_DOMAIN = 'eksisozluk.com';
 
+// DOM Selectors
+export const SELECTORS = {
+    ENTRY_AUTHOR: '.entry-author',
+    ENTRY_ITEM_LIST: '#entry-item-list',
+    TOPIC: '#topic',
+    ENTRY_NICK_CONTAINER: '#entry-nick-container #entry-author',
+    MENU_ITEM: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
+};
+
 // Default preferences configuration
 export const DEFAULT_PREFERENCES = {
     // General settings
     enableNotifications: true,
     notificationDuration: 5,
-    customMenuSelector: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
 
     // Blocking settings
     defaultBlockType: BlockType.MUTE,
@@ -55,15 +63,6 @@ export function buildUrl(path: string): string {
 
     return `https://${domain}${normalizedPath}`;
 }
-
-// DOM Selectors
-export const SELECTORS = {
-    ENTRY_AUTHOR: '.entry-author',
-    ENTRY_ITEM_LIST: '#entry-item-list',
-    TOPIC: '#topic',
-    ENTRY_NICK_CONTAINER: '#entry-nick-container #entry-author',
-    MENU_ITEM: '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu',
-};
 
 // URL Paths
 export const PATHS = {

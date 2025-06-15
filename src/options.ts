@@ -269,7 +269,7 @@ class OptionsPage {
             // General Settings
             this.setCheckboxValue('enableNotifications', this.preferences.enableNotifications);
             this.setInputValue('notificationDuration', this.preferences.notificationDuration);
-            this.setInputValue('customMenuSelector', this.preferences.customMenuSelector || this.preferences.menuItemSelector);
+
 
             // Blocking Settings
             this.setSelectValue('defaultBlockType', this.preferences.defaultBlockType);
@@ -304,11 +304,7 @@ class OptionsPage {
             // General Settings
             this.preferences.enableNotifications = this.getCheckboxValue('enableNotifications');
             this.preferences.notificationDuration = this.getNumberValue('notificationDuration', 1, 30, 5);
-            this.preferences.customMenuSelector = this.getInputValue('customMenuSelector');
 
-            // Use custom selector if provided, otherwise use default
-            this.preferences.menuItemSelector = this.preferences.customMenuSelector ||
-                '.feedback-container .other.dropdown ul.dropdown-menu.right.toggles-menu';
 
             // Blocking Settings
             this.preferences.defaultBlockType = this.getSelectValue('defaultBlockType');
