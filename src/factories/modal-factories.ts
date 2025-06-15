@@ -15,6 +15,8 @@ import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {IButtonComponent} from "../interfaces/components/IButtonComponent";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
+import {IToggleSwitchComponent} from "../interfaces/components/IToggleSwitchComponent";
+import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 
 /**
  * Factory for creating BlockOptionsModal instances
@@ -36,6 +38,8 @@ export class BlockOptionsModalFactory {
     create(entryId: string): BlockOptionsModal {
         const iconComponent = this.container.resolve<any>('IconComponent');
         const observerService = this.container.resolve<any>('ObserverService');
+        const toggleSwitchComponent = this.container.resolve<IToggleSwitchComponent>('ToggleSwitchComponent');
+        const tooltipComponent = this.container.resolve<ITooltipComponent>('TooltipComponent');
         return new BlockOptionsModal(
             this.domHandler,
             this.cssHandler,
@@ -45,6 +49,8 @@ export class BlockOptionsModalFactory {
             this.buttonComponent,
             this.commandFactory,
             this.commandInvoker,
+            toggleSwitchComponent,
+            tooltipComponent,
             entryId
         );
     }

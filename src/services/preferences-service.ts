@@ -77,25 +77,67 @@ export class PreferencesService implements IPreferencesService {
     /**
      * Generate custom note using template
      */
-    async generateCustomNote(postTitle: string, entryId: string, blockType: BlockType): Promise<string> {
+    async generateCustomNote(postTitle: string, entryId: string, blockType: BlockType, includeThreadBlocking: boolean = false): Promise<string> {
         try {
             // Get preferences asynchronously for better reliability
             const preferences = await this.getPreferences();
-            const actionType = blockType === BlockType.MUTE ? 'sessize alındı' : 'engellendi';
+            let actionType: string;
+            
+            switch (blockType) {
+                case BlockType.MUTE:
+                    actionType = 'sessize alındı';
+                    break;
+                case BlockType.BLOCK:
+                    actionType = 'engellendi';
+                    break;
+                case BlockType.BLOCK_THREADS:
+                    actionType = 'başlıkları engellendi';
+                    break;
+                default:
+                    actionType = 'engellendi';
+            }
 
-            return preferences.defaultNoteTemplate
+            let noteText = preferences.defaultNoteTemplate
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
                 .replace('{entryLink}', Endpoints.ENTRY_URL(entryId));
+
+            // Add thread blocking info if enabled
+            if (includeThreadBlocking && blockType !== BlockType.BLOCK_THREADS) {
+                noteText += ' (Başlıkları da engellendi)';
+            }
+
+            return noteText;
         } catch (error) {
             // In case of error, use default template
           this.loggingService.error('Error generating custom note', error, 'PreferencesService');
-            const actionType = blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
+            let actionType: string;
+            
+            switch (blockType) {
+                case BlockType.MUTE:
+                    actionType = 'sessize alındı';
+                    break;
+                case BlockType.BLOCK:
+                    actionType = 'engellendi';
+                    break;
+                case BlockType.BLOCK_THREADS:
+                    actionType = 'başlıkları engellendi';
+                    break;
+                default:
+                    actionType = 'engellendi';
+            }
 
-            return this.defaultPreferences.defaultNoteTemplate
+            let noteText = this.defaultPreferences.defaultNoteTemplate
                 .replace('{postTitle}', postTitle)
                 .replace('{actionType}', actionType)
                 .replace('{entryLink}', Endpoints.ENTRY_URL(entryId));
+
+            // Add thread blocking info if enabled
+            if (includeThreadBlocking && blockType !== BlockType.BLOCK_THREADS) {
+                noteText += ' (Başlıkları da engellendi)';
+            }
+
+            return noteText;
         }
     }
 

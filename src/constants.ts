@@ -1,6 +1,7 @@
 export enum BlockType {
     MUTE = 'u', // Sessiz alma
     BLOCK = 'm', // Engelleme
+    BLOCK_THREADS = 'i', // Başlık engelleme
 }
 
 // Base domain configuration - can be updated when domain changes

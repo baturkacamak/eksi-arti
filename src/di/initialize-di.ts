@@ -12,6 +12,7 @@ import {NotificationService} from '../services/notification-service';
 import {BlockUsersService} from '../services/block-users-service';
 import {IconComponent} from '../components/shared/icon-component';
 import {TooltipComponent} from '../components/shared/tooltip-component';
+import {ToggleSwitchComponent} from '../components/shared/toggle-switch-component';
 import {ButtonComponent} from '../components/shared/button-component';
 import {ProgressBarComponent} from '../components/shared/progress-bar-component';
 import {CountdownComponent} from '../components/features/countdown-component';
@@ -52,6 +53,7 @@ import { AsyncQueueService } from '../services/async-queue-service';
 import { IAsyncQueueService } from '../interfaces/services/IAsyncQueueService';
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
+import {IToggleSwitchComponent} from "../interfaces/components/IToggleSwitchComponent";
 import {ISelectBoxComponent} from "../interfaces/components/ISelectBoxComponent";
 import {SelectBoxComponent} from "../components/shared/select-box-component";
 import {IUserProfileService} from "../interfaces/services/IUserProfileService";
@@ -120,6 +122,13 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new TooltipComponent(domService, cssService, loggingService);
+    });
+
+    container.register('ToggleSwitchComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new ToggleSwitchComponent(domService, cssService, loggingService);
     });
 
     container.register('ButtonComponent', () => {

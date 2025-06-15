@@ -9,7 +9,7 @@ export interface ICommandFactory {
   /**
    * Create a BlockUsersCommand
    */
-  createBlockUsersCommand(entryId: string, blockType: BlockType): ICommand;
+      createBlockUsersCommand(entryId: string, blockType: BlockType, includeThreadBlocking?: boolean): ICommand;
 
   /**
    * Create a CaptureScreenshotCommand

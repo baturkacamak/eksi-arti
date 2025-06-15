@@ -4,6 +4,7 @@ import {LoggingService} from '../../services/logging-service';
 import {ICSSService} from "../../interfaces/services/ICSSService";
 import {IDOMService} from "../../interfaces/services/IDOMService";
 import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import {IToggleSwitchComponent} from "../../interfaces/components/IToggleSwitchComponent";
 
 /**
  * Toggle Switch Properties Interface
@@ -24,7 +25,7 @@ export interface ToggleSwitchProps {
  * Toggle Switch Component
  * Reusable toggle switch component for creating consistent toggle switches across the extension
  */
-export class ToggleSwitchComponent {
+export class ToggleSwitchComponent implements IToggleSwitchComponent {
     private domHandler: IDOMService;
     private cssHandler: ICSSService;
     private containerElement: HTMLElement | null = null;
@@ -36,10 +37,14 @@ export class ToggleSwitchComponent {
     /**
      * Constructor
      */
-    constructor() {
-        this.domHandler = new DOMService();
-        this.cssHandler = new CSSService();
-        this.loggingService = new LoggingService();
+    constructor(
+        domHandler?: IDOMService,
+        cssHandler?: ICSSService,
+        loggingService?: ILoggingService
+    ) {
+        this.domHandler = domHandler || new DOMService();
+        this.cssHandler = cssHandler || new CSSService();
+        this.loggingService = loggingService || new LoggingService();
         this.applyToggleSwitchStyles();
     }
 
@@ -198,6 +203,7 @@ export class ToggleSwitchComponent {
         width: 50px;
         height: 24px;
         flex-shrink: 0;
+        margin: 0 5px;
       }
       
       /* Size variants */
@@ -220,6 +226,7 @@ export class ToggleSwitchComponent {
         z-index: 1;
         cursor: pointer;
         margin: 0;
+        left: 0;
       }
       
       /* Slider styles */

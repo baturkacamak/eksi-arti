@@ -5,6 +5,7 @@ import { BlockType } from "../../constants";
  */
 export interface IBlockUsersService {
   setBlockType(type: BlockType): void;
+  setThreadBlocking(enabled: boolean): void;
   getBlockTypeText(): string;
   loadState(): Promise<boolean>;
   saveState(): Promise<void>;

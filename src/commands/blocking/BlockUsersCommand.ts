@@ -9,21 +9,25 @@ import { ILoggingService } from "../../interfaces/services/ILoggingService";
 export class BlockUsersCommand implements ICommand {
   private entryId: string;
   private blockType: BlockType;
+  private includeThreadBlocking: boolean;
   private wasExecuted: boolean = false;
 
   constructor(
     private blockUsersService: IBlockUsersService,
     private loggingService: ILoggingService,
     entryId: string,
-    blockType: BlockType
+    blockType: BlockType,
+    includeThreadBlocking: boolean = false
   ) {
     this.entryId = entryId;
     this.blockType = blockType;
+    this.includeThreadBlocking = includeThreadBlocking;
   }
 
   public async execute(): Promise<boolean> {
     try {
       this.blockUsersService.setBlockType(this.blockType);
+      this.blockUsersService.setThreadBlocking(this.includeThreadBlocking);
       await this.blockUsersService.blockUsers(this.entryId);
       this.wasExecuted = true;
       return true;

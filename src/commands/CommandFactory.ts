@@ -29,12 +29,13 @@ export class CommandFactory implements ICommandFactory {
     /**
      * Create a BlockUsersCommand
      */
-    public createBlockUsersCommand(entryId: string, blockType: BlockType): ICommand {
+    public createBlockUsersCommand(entryId: string, blockType: BlockType, includeThreadBlocking: boolean = false): ICommand {
         return new BlockUsersCommand(
             this.blockUsersService,
             this.loggingService,
             entryId,
-            blockType
+            blockType,
+            includeThreadBlocking
         );
     }
 

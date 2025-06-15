@@ -9,10 +9,15 @@ import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { IObserverService } from '../../interfaces/services/IObserverService';
 import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IButtonComponent";
+import { IToggleSwitchComponent } from "../../interfaces/components/IToggleSwitchComponent";
+import { ITooltipComponent } from "../../interfaces/components/ITooltipComponent";
 
 export class BlockOptionsModal extends BaseFeatureComponent {
     private modalElement?: HTMLElement;
     private entryId: string;
+    private threadBlockingEnabled: boolean = false;
+    private toggleSwitchComponent: IToggleSwitchComponent;
+    private tooltipComponent: ITooltipComponent;
 
     // Specific dependencies
     private specificContainer: Container;
@@ -29,6 +34,8 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         buttonComponent: IButtonComponent,
         commandFactory: ICommandFactory,
         commandInvoker: ICommandInvoker,
+        toggleSwitchComponent: IToggleSwitchComponent,
+        tooltipComponent: ITooltipComponent,
         entryId: string,
         options?: FeatureComponentOptions
     ) {
@@ -36,6 +43,8 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         this.specificButtonComponent = buttonComponent;
         this.specificCommandFactory = commandFactory;
         this.specificCommandInvoker = commandInvoker;
+        this.toggleSwitchComponent = toggleSwitchComponent;
+        this.tooltipComponent = tooltipComponent;
         this.entryId = entryId;
         // Initialize specificContainer - we'll get it from the global container later if needed
         this.specificContainer = {} as Container;
@@ -69,6 +78,55 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             .eksi-modal-title { font-size: 1.5em; margin-bottom: 20px; display: flex; align-items: center; }
             .eksi-modal-title svg { margin-right: 8px; }
             .eksi-modal-options { display: flex; flex-direction: column; gap: 10px; }
+            .eksi-modal-thread-blocking { 
+                padding: 16px 20px; 
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border: 1px solid #dee2e6; 
+                border-radius: 8px; 
+                margin: 12px 0;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                transition: all 0.2s ease;
+            }
+            .eksi-modal-thread-blocking:hover {
+                background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            .toggle-with-tooltip {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+            .eksi-modal-thread-blocking .eksi-toggle-container {
+                justify-content: center;
+                margin-bottom: 0;
+            }
+            .eksi-modal-thread-blocking .eksi-toggle-label {
+                font-size: 13px;
+                font-weight: 500;
+                color: #495057;
+                margin-left: 10px;
+            }
+            .eksi-modal-thread-blocking .tooltip-trigger.icon-only {
+                width: 18px;
+                height: 18px;
+                font-size: 11px;
+                background-color: rgba(108, 117, 125, 0.2);
+                color: #6c757d;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 5px;
+                cursor: help;
+                font-weight: bold;
+                transition: all 0.2s ease;
+            }
+            .eksi-modal-thread-blocking .tooltip-trigger.icon-only:hover {
+                background-color: rgba(108, 117, 125, 0.3);
+                color: #495057;
+            }
             /* Button styles would be handled by ButtonComponent's CSS */
         `;
     }
@@ -118,8 +176,60 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             fullWidth: true
         });
 
+        // Create thread blocking toggle switch - placed after buttons
+        const threadBlockingContainer = this.domHandler.createElement('div');
+        this.domHandler.addClass(threadBlockingContainer, 'eksi-modal-thread-blocking');
+        
+        // Create toggle with tooltip info icon
+        const toggleWrapper = this.domHandler.createElement('div');
+        this.domHandler.addClass(toggleWrapper, 'toggle-with-tooltip');
+        
+        const threadToggle = this.toggleSwitchComponent.create({
+            id: 'threadBlockingToggle',
+            label: 'Başlıkları da engelle',
+            checked: false,
+            size: 'medium',
+            ariaLabel: 'Kullanıcının açtığı başlıkları da engelle',
+            onChange: (checked: boolean) => {
+                this.threadBlockingEnabled = checked;
+            }
+        });
+
+        // Create info icon for tooltip
+        const infoIcon = this.domHandler.createElement('span');
+        this.domHandler.addClass(infoIcon, 'tooltip-trigger');
+        this.domHandler.addClass(infoIcon, 'icon-only');
+        infoIcon.setAttribute('data-tooltip-content', 'thread-blocking-tooltip');
+        infoIcon.setAttribute('data-tooltip-position', 'top');
+        infoIcon.innerHTML = '?';
+        infoIcon.setAttribute('aria-label', 'Başlık engelleme hakkında bilgi');
+        infoIcon.setAttribute('tabindex', '0');
+
+        // Create hidden tooltip content
+        const tooltipContent = this.domHandler.createElement('div');
+        tooltipContent.id = 'thread-blocking-tooltip';
+        tooltipContent.style.display = 'none';
+        tooltipContent.innerHTML = `
+            <div>
+                <p>Kullanıcının açtığı başlıkları da engeller</p>
+            </div>
+        `;
+
+        this.domHandler.appendChild(toggleWrapper, threadToggle);
+        this.domHandler.appendChild(toggleWrapper, infoIcon);
+        this.domHandler.appendChild(threadBlockingContainer, toggleWrapper);
+        this.domHandler.appendChild(document.body, tooltipContent);
+
+        // Setup tooltip
+        this.tooltipComponent.setupTooltip(infoIcon, {
+            position: 'top',
+            theme: 'dark',
+            triggerEvent: 'hover'
+        });
+
         this.domHandler.appendChild(optionsContainer, muteButton);
         this.domHandler.appendChild(optionsContainer, blockButton);
+        this.domHandler.appendChild(optionsContainer, threadBlockingContainer);
         this.domHandler.appendChild(optionsContainer, cancelButton);
 
         this.domHandler.appendChild(modalContent, modalTitle);
@@ -163,7 +273,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
         setTimeout(async () => {
             try {
-                const blockUsersCommand = this.specificCommandFactory.createBlockUsersCommand(this.entryId, blockType);
+                const blockUsersCommand = this.specificCommandFactory.createBlockUsersCommand(this.entryId, blockType, this.threadBlockingEnabled);
                 await this.specificCommandInvoker.execute(blockUsersCommand);
                 this.close(); 
             } catch (error) {

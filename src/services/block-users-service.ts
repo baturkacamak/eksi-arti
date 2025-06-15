@@ -29,6 +29,7 @@ export class BlockUsersService {
     private requestDelay: number = 7; // Default seconds between regular requests to avoid rate limiting
     private maxRetries: number = 3; // Default maximum number of retries
     private blockType: BlockType = BlockType.MUTE; // Default to mute
+    private includeThreadBlocking: boolean = false; // Per-operation thread blocking
     private entryId: string | null = null;
     private processedUsers: Set<string> = new Set();
     private pendingUsers: string[] = [];
@@ -85,10 +86,26 @@ export class BlockUsersService {
     }
 
     /**
+     * Set thread blocking option
+     */
+    setThreadBlocking(enabled: boolean): void {
+        this.includeThreadBlocking = enabled;
+    }
+
+    /**
      * Get block type text description
      */
     getBlockTypeText(): string {
-        return this.blockType === BlockType.MUTE ? 'sessiz alındı' : 'engellendi';
+        switch (this.blockType) {
+            case BlockType.MUTE:
+                return 'sessiz alındı';
+            case BlockType.BLOCK:
+                return 'engellendi';
+            case BlockType.BLOCK_THREADS:
+                return 'başlıkları engellendi';
+            default:
+                return 'engellendi';
+        }
     }
 
     /**
@@ -436,6 +453,12 @@ export class BlockUsersService {
             }
 
             await this.retryOperation(() => this.blockUser(userId));
+            
+            // Check if thread blocking is enabled and perform additional thread block
+            if (this.includeThreadBlocking) {
+                await this.retryOperation(() => this.blockUserThreads(userId));
+            }
+            
             await this.retryOperation(() => this.addNoteToUser(userUrl, userId, postTitle));
 
             return true;
@@ -482,6 +505,23 @@ export class BlockUsersService {
     }
 
     /**
+     * Block user threads/topics by ID
+     */
+    private async blockUserThreads(userId: string): Promise<boolean> {
+        if (!userId) {
+            throw new Error('User ID is required for thread blocking');
+        }
+
+        try {
+            await this.httpService.post(`${Endpoints.BLOCK}/${userId}?r=i`);
+            return true;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            throw new Error(`Failed to block user threads: ${errorMessage}`);
+        }
+    }
+
+    /**
      * Add a note to a user
      */
     private async addNoteToUser(userUrl: string, userId: string, postTitle: string): Promise<boolean> {
@@ -493,7 +533,7 @@ export class BlockUsersService {
             const username = this.getUsernameFromUrl(userUrl);
             const noteUrl = Endpoints.ADD_NOTE.replace('{username}', username);
 
-            const noteText = await this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType);
+            const noteText = await this.preferencesService.generateCustomNote(postTitle, this.entryId, this.blockType, this.includeThreadBlocking);
 
             const data = `who=${userId}&usernote=${encodeURIComponent(noteText)}`;
             await this.httpService.post(noteUrl, data);
