@@ -107,8 +107,31 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             .eksi-modal-title-content {
                 display: flex;
                 align-items: center;
-                gap: 10px;
                 flex: 1;
+            }
+            .eksi-modal-title-content .title-left {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .modal-info-icon {
+                width: 20px;
+                height: 20px;
+                background: none;
+                border: none;
+                color: #6c757d;
+                cursor: help;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                padding: 2px;
+            }
+            .modal-info-icon:hover {
+                background-color: #e9ecef;
+                color: #495057;
+                transform: scale(1.05);
             }
 
             /* Action buttons section */
@@ -303,6 +326,13 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 .eksi-modal-cancel-section {
                     border-top-color: #495057;
                 }
+                .modal-info-icon {
+                    color: #adb5bd;
+                }
+                .modal-info-icon:hover {
+                    background-color: #495057;
+                    color: #f8f9fa;
+                }
             }
         `;
     }
@@ -320,10 +350,14 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         const titleContent = this.domHandler.createElement('div');
         this.domHandler.addClass(titleContent, 'eksi-modal-title-content');
         titleContent.innerHTML = `
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM13 12L13 7L11 7L11 12L16 12L16 14L11 14L11 17L13 17L13 14.5L17 14.5L17 12H13Z" fill="#495057"/>
-            </svg>
-            İşlem Seçin
+            <div class="title-left">
+                <button class="tooltip-trigger modal-info-icon" data-tooltip-content="modal-info-tooltip" data-tooltip-position="bottom" aria-label="Bu modal hakkında bilgi" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v4z"/>
+                    </svg>
+                </button>
+                İşlem Seçin
+            </div>
         `;
         
         const closeButton = this.domHandler.createElement('button');
@@ -527,8 +561,27 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             </div>
         `;
 
+        const modalInfoTooltipContent = this.domHandler.createElement('div');
+        modalInfoTooltipContent.id = 'modal-info-tooltip';
+        modalInfoTooltipContent.style.display = 'none';
+        modalInfoTooltipContent.innerHTML = `
+            <div>
+                <p><strong>Favori Engelleme Sistemi</strong></p>
+                <p>Bu modal, bir entry'yi favorileyen kullanıcıları toplu olarak engellemenizi sağlar.</p>
+                <p><strong>Nasıl Çalışır:</strong></p>
+                <ul>
+                    <li>• Entry'nin favori listesi çekilir</li>
+                    <li>• Seçtiğiniz işlem (sessiz al/engelle) tüm favorileyen kullanıcılara uygulanır</li>
+                    <li>• Ek seçeneklerle başlıkları ve yazarı da engelleyebilirsiniz</li>
+                    <li>• Her kullanıcıya özel not ekleyebilirsiniz</li>
+                </ul>
+                <p><strong>Faydalı:</strong> Spam, troll veya kalitesiz içerik favorileyen grupları engellemek için ideal.</p>
+            </div>
+        `;
+
         this.domHandler.appendChild(document.body, threadTooltipContent);
         this.domHandler.appendChild(document.body, authorTooltipContent);
+        this.domHandler.appendChild(document.body, modalInfoTooltipContent);
 
         // Setup tooltips
         this.tooltipComponent.setupTooltip(threadInfoIcon, {
@@ -542,6 +595,16 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             theme: 'dark',
             triggerEvent: 'hover'
         });
+
+        // Setup modal info tooltip
+        const modalInfoIcon = titleContent.querySelector('.modal-info-icon') as HTMLElement;
+        if (modalInfoIcon) {
+            this.tooltipComponent.setupTooltip(modalInfoIcon, {
+                position: 'bottom',
+                theme: 'dark',
+                triggerEvent: 'hover'
+            });
+        }
     }
 
     protected registerObservers(): void { /* No observers */ }
