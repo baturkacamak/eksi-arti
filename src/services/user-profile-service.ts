@@ -343,7 +343,7 @@ export class UserProfileService {
             ${userProfile.stats?.entryCount ? `
                 <div class="eksi-user-profile-tooltip-row">
                     <span class="eksi-user-profile-tooltip-icon">${bookIcon}</span>
-                    <span class="eksi-user-profile-tooltip-text"><strong>Entry:</strong> ${userProfile.stats.entryCount}</span>
+                    <span class="eksi-user-profile-tooltip-text"><strong>Yazı:</strong> ${userProfile.stats.entryCount}</span>
                 </div>` : ''}
             ${userProfile.stats?.followerCount ? `
                 <div class="eksi-user-profile-tooltip-row">
