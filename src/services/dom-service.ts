@@ -99,14 +99,20 @@ export class DOMService implements IDOMService {
             return;
         }
 
-        // Verify that referenceNode is actually a child of parent
-        if (!parent.contains(referenceNode)) {
-            // Fallback to appendChild if reference node is not a valid child
+        // Verify that referenceNode is actually a DIRECT child of parent
+        if (referenceNode.parentNode !== parent) {
+            // Fallback to appendChild if reference node is not a direct child
             parent.appendChild(newNode);
             return;
         }
 
-        // Safe to insert before the reference node
-        parent.insertBefore(newNode, referenceNode);
+        try {
+            // Safe to insert before the reference node
+            parent.insertBefore(newNode, referenceNode);
+        } catch (error) {
+            // Final fallback - if insertion still fails, append to parent
+            console.warn('DOMService: insertBefore failed, falling back to appendChild:', error);
+            parent.appendChild(newNode);
+        }
     }
 }
