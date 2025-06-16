@@ -45,6 +45,13 @@ export class LoadAllEntriesCommand implements ICommand {
           this.loadMoreButton.click();
           loadCount++;
           
+          // Wait for the button to finish loading using state monitoring
+          await this.waitForButtonReady(signal);
+          
+          if (signal.aborted) {
+            break;
+          }
+          
           const currentEntryCount = document.querySelectorAll(".topic-item").length;
           
           // Call progress callback instead of showing notification
@@ -56,7 +63,6 @@ export class LoadAllEntriesCommand implements ICommand {
             });
           }
           
-          await delay(2);
           hasMoreEntries = this.loadMoreButton.offsetParent !== null &&
             this.loadMoreButton.textContent?.includes("daha fazla göster");
         } else {
@@ -86,6 +92,53 @@ export class LoadAllEntriesCommand implements ICommand {
       }
       return false;
     }
+  }
+
+  /**
+   * Wait for the load more button to be ready for the next click by monitoring its state
+   */
+  private async waitForButtonReady(signal: AbortSignal): Promise<void> {
+    const maxWaitTime = 10000; // Maximum 10 seconds to prevent infinite waiting
+    const startTime = Date.now();
+    
+    return new Promise((resolve) => {
+      const checkButtonState = () => {
+        if (signal.aborted) {
+          resolve();
+          return;
+        }
+
+        const currentTime = Date.now();
+        if (currentTime - startTime > maxWaitTime) {
+          this.loggingService.warn("Button state wait timeout, proceeding anyway");
+          resolve();
+          return;
+        }
+
+        const buttonText = this.loadMoreButton?.textContent?.toLowerCase() || '';
+        
+        // If button shows loading state, keep waiting
+        if (buttonText.includes('yükleniyor')) {
+          setTimeout(checkButtonState, 100); // Check every 100ms
+          return;
+        }
+        
+        // If button shows ready state or disappeared, we can proceed
+        if (buttonText.includes('daha fazla göster') || 
+            !this.loadMoreButton || 
+            this.loadMoreButton.offsetParent === null) {
+          // Add a small buffer delay to ensure DOM is fully updated
+          setTimeout(resolve, 50);
+          return;
+        }
+        
+        // For any other state, continue checking
+        setTimeout(checkButtonState, 100);
+      };
+      
+      // Start checking immediately
+      checkButtonState();
+    });
   }
 
   public abort(): void {
