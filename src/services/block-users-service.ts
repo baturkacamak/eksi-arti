@@ -300,9 +300,10 @@ export class BlockUsersService {
                     completionMessage = `✅ ${this.processedUsers.size} / ${this.totalUserCount} kullanıcı ${this.getBlockTypeText()}. ${this.skippedUsers.length} kullanıcı artık mevcut değil.`;
                 }
                 
-                // Show completion status in widget before hiding
+                // Show completion status in widget before hiding - include skipped users in count
+                const totalProcessed = this.processedUsers.size + this.skippedUsers.length;
                 this.progressWidget.updateProgress({
-                    current: this.processedUsers.size,
+                    current: totalProcessed,
                     total: this.totalUserCount,
                     message: completionMessage
                 });
@@ -320,9 +321,10 @@ export class BlockUsersService {
             this.loggingService.error('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
-            // Show error in widget before hiding
+            // Show error in widget before hiding - include skipped users in count
+            const totalProcessed = this.processedUsers.size + this.skippedUsers.length;
             this.progressWidget.updateProgress({
-                current: this.processedUsers.size,
+                current: totalProcessed,
                 total: this.totalUserCount,
                 message: `❌ Hata oluştu: ${errorMessage}`
             });
@@ -361,7 +363,7 @@ export class BlockUsersService {
                 this.eventBus.publish('blockUsers:userProcessed', {
                     entryId: this.entryId,
                     username,
-                    current: this.processedUsers.size,
+                    current: this.processedUsers.size + this.skippedUsers.length,
                     total: this.totalUserCount
                 });
                 this.updateProgress(username);
@@ -383,11 +385,12 @@ export class BlockUsersService {
                     this.skippedUsers.push(username);
                     this.loggingService.debug(`User ${username} appears to be deleted, skipping`);
                     
-                    // Update progress display showing the skip
+                    // Update progress display showing the skip - include skipped users in count
+                    const totalProcessed = this.processedUsers.size + this.skippedUsers.length;
                     this.progressWidget.updateProgress({
-                        current: this.processedUsers.size,
+                        current: totalProcessed,
                         total: this.totalUserCount,
-                        message: `${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi • ${username} atlandı (silinmiş)`
+                        message: `${totalProcessed} / ${this.totalUserCount} kullanıcı işlendi • ${username} atlandı (silinmiş)`
                     });
                     
                     // Reset error count for deleted users since this isn't really an "error"
@@ -399,9 +402,10 @@ export class BlockUsersService {
                 }
 
                 if (this.errorCount >= this.maxErrors) {
-                    // Show error count in widget
+                    // Show error count in widget - include skipped users in count
+                    const totalProcessed = this.processedUsers.size + this.skippedUsers.length;
                     this.progressWidget.updateProgress({
-                        current: this.processedUsers.size,
+                        current: totalProcessed,
                         total: this.totalUserCount,
                         message: `❌ Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.`
                     });
