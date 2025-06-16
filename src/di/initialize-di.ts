@@ -453,6 +453,7 @@ export function initializeDI(): Container {
         const observerService = container.resolve<IObserverService>('ObserverService');
         const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
         const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
+        const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
 
         return new PostManagementService(
             domHandler,
@@ -463,6 +464,7 @@ export function initializeDI(): Container {
             observerService,
             commandFactory,
             commandInvoker,
+            buttonComponent,
         );
     });
 

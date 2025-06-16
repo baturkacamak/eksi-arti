@@ -1,6 +1,7 @@
 import { ICommand } from "./ICommand";
 import { BlockType } from "../../constants";
 import { ISortingStrategy } from "../sorting/ISortingStrategy";
+import { LoadAllEntriesCallbacks } from '../entries/LoadAllEntriesCommand';
 
 /**
  * Interface for command factory
@@ -27,7 +28,7 @@ export interface ICommandFactory {
   /**
    * Create a LoadAllEntriesCommand
    */
-  createLoadAllEntriesCommand(loadMoreButton: HTMLElement): ICommand;
+  createLoadAllEntriesCommand(loadMoreButton: HTMLElement, callbacks?: LoadAllEntriesCallbacks): ICommand;
 
   /**
    * Create a SortEntriesCommand

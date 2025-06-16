@@ -3,13 +3,11 @@ import { ICommandFactory } from './interfaces/ICommandFactory';
 import { BlockUsersCommand } from './blocking/BlockUsersCommand';
 import { CaptureScreenshotCommand, IHtml2Canvas } from './screenshots/CaptureScreenshotCommand';
 import { CopyTextCommand } from './copying/CopyTextCommand';
-import { LoadAllEntriesCommand } from './entries/LoadAllEntriesCommand';
+import { LoadAllEntriesCommand, LoadAllEntriesCallbacks } from './entries/LoadAllEntriesCommand';
 import { SortEntriesCommand } from './sorting/SortEntriesCommand';
 import { ISortingStrategy } from './sorting/ISortingStrategy';
 import { BlockType } from '../constants';
 import { ILoggingService } from '../interfaces/services/ILoggingService';
-import { INotificationService } from '../interfaces/services/INotificationService';
-import { IIconComponent } from '../interfaces/components/IIconComponent';
 import { IBlockUsersService } from '../interfaces/services/IBlockUsersService';
 import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 
@@ -19,8 +17,6 @@ import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 export class CommandFactory implements ICommandFactory {
     constructor(
         private loggingService: ILoggingService,
-        private notificationService: INotificationService,
-        private iconComponent: IIconComponent,
         private blockUsersService: IBlockUsersService,
         private html2canvas: IHtml2Canvas,
         private sortingDataExtractor: SortingDataExtractor
@@ -67,12 +63,11 @@ export class CommandFactory implements ICommandFactory {
     /**
      * Create a LoadAllEntriesCommand
      */
-    public createLoadAllEntriesCommand(loadMoreButton: HTMLElement): ICommand {
+    public createLoadAllEntriesCommand(loadMoreButton: HTMLElement, callbacks?: LoadAllEntriesCallbacks): ICommand {
         return new LoadAllEntriesCommand(
             this.loggingService,
-            this.notificationService,
-            this.iconComponent,
-            loadMoreButton
+            loadMoreButton,
+            callbacks
         );
     }
 

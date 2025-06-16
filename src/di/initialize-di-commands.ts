@@ -7,8 +7,6 @@ import { LengthSortingStrategy } from "../commands/sorting/strategies/LengthSort
 import { DateSortingStrategy } from "../commands/sorting/strategies/DateSortingStrategy";
 import { FavoriteCountSortingStrategy } from "../commands/sorting/strategies/FavoriteCountSortingStrategy";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {INotificationService} from "../interfaces/services/INotificationService";
-import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
 import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
@@ -44,16 +42,12 @@ export function initializeCommandDI(container: Container): void {
   // Register command factory
   container.register("CommandFactory", () => {
     const loggingService = container.resolve<ILoggingService>("LoggingService");
-    const notificationService = container.resolve<INotificationService>("NotificationService");
-    const iconComponent = container.resolve<IIconComponent>("IconComponent");
     const blockUsersService = container.resolve<IBlockUsersService>("BlockUsersService");
     const html2canvas = container.resolve<IHtml2Canvas>("Html2Canvas");
     const sortingDataExtractor = container.resolve<SortingDataExtractor>("SortingDataExtractor");
 
     return new CommandFactory(
       loggingService,
-      notificationService,
-      iconComponent,
       blockUsersService,
       html2canvas,
       sortingDataExtractor

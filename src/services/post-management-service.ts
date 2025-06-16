@@ -9,9 +9,14 @@ import { pageUtils } from "./page-utils-service";
 import { ICommandFactory } from "../commands/interfaces/ICommandFactory";
 import { ICommandInvoker } from "../commands/interfaces/ICommandInvoker";
 import { delay } from "./utilities";
+import { IButtonComponent, ButtonProps, ButtonVariant, ButtonSize } from "../interfaces/components/IButtonComponent";
+import { LoadAllEntriesCallbacks, LoadAllEntriesProgress } from "../commands/entries/LoadAllEntriesCommand";
+import { LoadAllEntriesCommand } from "../commands/entries/LoadAllEntriesCommand";
 
 export class PostManagementService {
     private loadMoreButton: HTMLElement | null = null;
+    private loadAllButton: HTMLButtonElement | null = null;
+    private currentCommand: LoadAllEntriesCommand | null = null;
     private isProcessing: boolean = false;
     private abortProcessing: boolean = false;
     private observerId: string = '';
@@ -24,7 +29,8 @@ export class PostManagementService {
         private notificationService: INotificationService,
         private observerService: IObserverService,
         private commandFactory: ICommandFactory,
-        private commandInvoker: ICommandInvoker
+        private commandInvoker: ICommandInvoker,
+        private buttonComponent: IButtonComponent
     ) {}
 
     /**
@@ -45,6 +51,9 @@ export class PostManagementService {
                 selector: ".topic-item",
                 handler: () => {
                     this.addItemCounterStyles();
+                    // Update load more button reference and button state
+                    this.loadMoreButton = document.querySelector(".load-more-entries");
+                    this.updateButtonState();
                 },
                 processExisting: false,
             });
@@ -55,9 +64,33 @@ export class PostManagementService {
             // Apply entry counter styles.
             this.addItemCounterStyles();
 
+            // Update button state based on load more button availability
+            this.updateButtonState();
+
             this.loggingService.debug("Post management service initialized");
         } catch (error) {
             this.loggingService.error("Error initializing post management service:", error);
+        }
+    }
+
+    /**
+     * Update button state based on load more button availability
+     */
+    private updateButtonState(): void {
+        if (!this.loadAllButton) return;
+
+        // Don't override button state when processing
+        if (this.isProcessing) return;
+
+        const hasLoadMoreButton = !!this.loadMoreButton;
+        const isVisible = hasLoadMoreButton && !this.isProcessing;
+
+        this.buttonComponent.setDisabled(!isVisible);
+        
+        if (!hasLoadMoreButton) {
+            this.buttonComponent.updateText("Tüm Entry'ler Yüklendi");
+        } else if (!this.isProcessing) {
+            this.buttonComponent.updateText("Tüm Entry'leri Yükle");
         }
     }
 
@@ -66,26 +99,86 @@ export class PostManagementService {
      */
     private addMenuButtons(): void {
         try {
-            const dropdownMenuList = document.querySelector("#profile-dots ul");
-            if (!dropdownMenuList) {
-                this.loggingService.debug("Profile dropdown menu not found");
+            const profileDotsElement = document.querySelector("#profile-dots");
+            if (!profileDotsElement) {
+                this.loggingService.debug("Profile dots element not found");
                 return;
             }
 
-            // Create "Load All Entries" button.
-            const loadAllItem = document.createElement("li");
-            const loadAllLink = document.createElement("a");
-            loadAllLink.textContent = "Tüm Entry'leri Yükle";
-            loadAllLink.href = "javascript:void(0);";
-            loadAllLink.addEventListener("click", () => this.loadAllEntries());
-            loadAllItem.appendChild(loadAllLink);
-            dropdownMenuList.appendChild(loadAllItem);
+            // Create "Load All Entries" button using the ButtonComponent
+            const buttonProps: ButtonProps = {
+                text: "Tüm Entry'leri Yükle",
+                variant: ButtonVariant.DEFAULT,
+                size: ButtonSize.SMALL,
+                className: "eksi-arti-load-all-btn",
+                onClick: () => this.handleButtonClick(),
+                ariaLabel: "Tüm entry'leri yükle"
+            };
 
+            const loadAllButton = this.buttonComponent.create(buttonProps);
+            
+            // Add custom positioning styles for the button
+            const style = document.createElement("style");
+            style.textContent = `
+                .eksi-arti-load-all-btn {
+                    margin-left: 8px !important;
+                    white-space: nowrap !important;
+                }
+            `;
+            
+            // Add styles to document head if not already present
+            if (!document.querySelector('style[data-eksi-arti-load-all]')) {
+                style.setAttribute('data-eksi-arti-load-all', 'true');
+                document.head.appendChild(style);
+            }
+            
+            // Insert the button after the profile-dots element
+            profileDotsElement.parentNode?.insertBefore(loadAllButton, profileDotsElement.nextSibling);
+            
+            // Store button reference for state management
+            this.loadAllButton = loadAllButton;
 
-
-            this.loggingService.debug("Menu buttons added to profile dropdown");
+            this.loggingService.debug("Load all button added next to profile-dots element");
         } catch (error) {
             this.loggingService.error("Error adding menu buttons", error);
+        }
+    }
+
+    /**
+     * Handle button click - either start loading or stop the current operation
+     */
+    private handleButtonClick(): void {
+        if (this.isProcessing && this.currentCommand) {
+            // Stop the current operation
+            this.stopLoadingEntries();
+        } else {
+            // Start loading entries
+            this.loadAllEntries();
+        }
+    }
+
+    /**
+     * Stop the current loading operation
+     */
+    private stopLoadingEntries(): void {
+        if (this.currentCommand) {
+            this.currentCommand.abort();
+            this.currentCommand = null;
+        }
+        this.isProcessing = false;
+        
+        if (this.loadAllButton) {
+            this.buttonComponent.setLoading(false);
+            this.buttonComponent.updateText("❌ Durduruldu");
+            this.buttonComponent.setDisabled(true);
+            
+            // Reset to original text after 2 seconds
+            setTimeout(() => {
+                if (this.loadAllButton) {
+                    this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                    this.buttonComponent.setDisabled(false);
+                }
+            }, 2000);
         }
     }
 
@@ -95,6 +188,10 @@ export class PostManagementService {
      */
     public async loadAllEntries(): Promise<void> {
         if (!this.loadMoreButton || this.isProcessing) {
+            // Set button to disabled state if no load more button or already processing
+            if (this.loadAllButton) {
+                this.buttonComponent.setDisabled(true);
+            }
             return;
         }
 
@@ -102,29 +199,96 @@ export class PostManagementService {
             this.isProcessing = true;
             this.abortProcessing = false;
 
-            // Create the LoadAllEntriesCommand via the command factory.
-            const loadAllCommand = this.commandFactory.createLoadAllEntriesCommand(this.loadMoreButton);
+            // Update button to show stop functionality
+            if (this.loadAllButton) {
+                this.buttonComponent.updateText("⏹ Durdur");
+                this.buttonComponent.setDisabled(false);
+            }
 
-            // Execute the command using the command invoker.
+            // Create callbacks for progress updates
+            const callbacks: LoadAllEntriesCallbacks = {
+                onProgress: (progress: LoadAllEntriesProgress) => {
+                    if (this.loadAllButton) {
+                        this.buttonComponent.updateText(`⏹ Durdur (${progress.currentCount} entry)`);
+                        // Ensure button stays enabled during loading so user can stop
+                        this.buttonComponent.setDisabled(false);
+                    }
+                },
+                onComplete: (totalEntries: number) => {
+                    if (this.loadAllButton) {
+                        this.buttonComponent.updateText(`✓ Tamamlandı (${totalEntries} entry)`);
+                        this.buttonComponent.setDisabled(true);
+                        
+                        // Reset to original text after 3 seconds
+                        setTimeout(() => {
+                            if (this.loadAllButton) {
+                                this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                                this.updateButtonState();
+                            }
+                        }, 3000);
+                    }
+                },
+                onError: (error: string) => {
+                    if (this.loadAllButton) {
+                        this.buttonComponent.updateText("❌ Hata Oluştu");
+                        this.buttonComponent.setDisabled(true);
+                        
+                        // Reset to original text after 5 seconds
+                        setTimeout(() => {
+                            if (this.loadAllButton) {
+                                this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                                this.updateButtonState();
+                            }
+                        }, 5000);
+                    }
+                },
+                onAbort: () => {
+                    if (this.loadAllButton) {
+                        this.buttonComponent.updateText("❌ Durduruldu");
+                        this.buttonComponent.setDisabled(true);
+                        
+                        // Reset to original text after 2 seconds
+                        setTimeout(() => {
+                            if (this.loadAllButton) {
+                                this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                                this.updateButtonState();
+                            }
+                        }, 2000);
+                    }
+                }
+            };
+
+            // Create the LoadAllEntriesCommand via the command factory with callbacks
+            const loadAllCommand = this.commandFactory.createLoadAllEntriesCommand(this.loadMoreButton, callbacks) as LoadAllEntriesCommand;
+            this.currentCommand = loadAllCommand;
+
+            // Execute the command using the command invoker
             const success = await this.commandInvoker.execute(loadAllCommand);
+            
             if (!success) {
                 this.loggingService.warn("LoadAllEntriesCommand execution failed");
             }
         } catch (error) {
             this.loggingService.error("Error loading all entries", error);
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                  ${this.iconComponent.create({ name: "error", color: "#e53935", size: "medium" }).outerHTML}
-                  <span>Entry'ler yüklenirken hata oluştu.</span>
-                </div>`,
-                { theme: "error", timeout: 5 }
-            );
+            
+            // Handle unexpected errors
+            if (this.loadAllButton) {
+                this.buttonComponent.updateText("❌ Beklenmeyen Hata");
+                this.buttonComponent.setDisabled(true);
+                
+                // Reset to original text after 5 seconds
+                setTimeout(() => {
+                    if (this.loadAllButton) {
+                        this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                        this.updateButtonState();
+                    }
+                }, 5000);
+            }
         } finally {
             this.isProcessing = false;
+            this.currentCommand = null;
         }
     }
-
-
 
     private addItemCounterStyles(): void {
         try {
