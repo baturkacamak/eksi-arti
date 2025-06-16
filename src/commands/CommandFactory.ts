@@ -9,6 +9,7 @@ import { ISortingStrategy } from './sorting/ISortingStrategy';
 import { BlockType } from '../constants';
 import { ILoggingService } from '../interfaces/services/ILoggingService';
 import { IBlockUsersService } from '../interfaces/services/IBlockUsersService';
+import { IDocumentStateService } from '../interfaces/services/IDocumentStateService';
 import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 
 /**
@@ -19,7 +20,8 @@ export class CommandFactory implements ICommandFactory {
         private loggingService: ILoggingService,
         private blockUsersService: IBlockUsersService,
         private html2canvas: IHtml2Canvas,
-        private sortingDataExtractor: SortingDataExtractor
+        private sortingDataExtractor: SortingDataExtractor,
+        private documentState: IDocumentStateService
     ) {}
 
     /**
@@ -46,7 +48,8 @@ export class CommandFactory implements ICommandFactory {
             this.loggingService,
             this.html2canvas,
             entryElement,
-            action
+            action,
+            this.documentState
         );
     }
 
@@ -56,6 +59,7 @@ export class CommandFactory implements ICommandFactory {
     public createCopyTextCommand(text: string): ICommand {
         return new CopyTextCommand(
             this.loggingService,
+            this.documentState,
             text
         );
     }

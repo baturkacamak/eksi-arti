@@ -32,7 +32,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
     private preferencesService: IPreferencesService;
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -47,7 +47,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         entryId: string,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
         this.specificButtonComponent = buttonComponent;
         this.specificCommandFactory = commandFactory;
         this.specificCommandInvoker = commandInvoker;
@@ -347,14 +347,14 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
     protected setupUI(): void {
         // Create modal content (not the modal itself)
-        this.contentElement = this.domHandler.createElement('div');
+        this.contentElement = this.domService.createElement('div');
 
         // === HEADER SECTION ===
-        const modalTitle = this.domHandler.createElement('div');
-        this.domHandler.addClass(modalTitle, 'eksi-modal-title');
+        const modalTitle = this.domService.createElement('div');
+        this.domService.addClass(modalTitle, 'eksi-modal-title');
         
-        const titleContent = this.domHandler.createElement('div');
-        this.domHandler.addClass(titleContent, 'eksi-modal-title-content');
+        const titleContent = this.domService.createElement('div');
+        this.domService.addClass(titleContent, 'eksi-modal-title-content');
         titleContent.innerHTML = `
             <div class="title-left">
                 <button class="tooltip-trigger modal-info-icon" data-tooltip-content="modal-info-tooltip" data-tooltip-position="bottom" aria-label="Bu modal hakkında bilgi" type="button">
@@ -366,21 +366,21 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             </div>
         `;
         
-        const closeButton = this.domHandler.createElement('button');
-        this.domHandler.addClass(closeButton, 'eksi-modal-close');
+        const closeButton = this.domService.createElement('button');
+        this.domService.addClass(closeButton, 'eksi-modal-close');
         closeButton.innerHTML = '×';
         closeButton.setAttribute('aria-label', 'Close modal');
         closeButton.setAttribute('type', 'button');
-        this.domHandler.addEventListener(closeButton, 'click', () => {
+        this.domService.addEventListener(closeButton, 'click', () => {
             this.close();
         });
         
-        this.domHandler.appendChild(modalTitle, titleContent);
-        this.domHandler.appendChild(modalTitle, closeButton);
+        this.domService.appendChild(modalTitle, titleContent);
+        this.domService.appendChild(modalTitle, closeButton);
 
         // === ACTION BUTTONS SECTION ===
-        const actionsSection = this.domHandler.createElement('div');
-        this.domHandler.addClass(actionsSection, 'eksi-modal-actions');
+        const actionsSection = this.domService.createElement('div');
+        this.domService.addClass(actionsSection, 'eksi-modal-actions');
 
         const muteButton = this.specificButtonComponent.create({
             text: '🔇 Sessiz Al (Yazdıklarını Görebilirsin)',
@@ -396,15 +396,15 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             fullWidth: true
         });
 
-        this.domHandler.appendChild(actionsSection, muteButton);
-        this.domHandler.appendChild(actionsSection, blockButton);
+        this.domService.appendChild(actionsSection, muteButton);
+        this.domService.appendChild(actionsSection, blockButton);
 
         // === OPTIONS SECTION ===
-        const optionsSection = this.domHandler.createElement('div');
-        this.domHandler.addClass(optionsSection, 'eksi-modal-options-section');
+        const optionsSection = this.domService.createElement('div');
+        this.domService.addClass(optionsSection, 'eksi-modal-options-section');
 
-        const optionsTitle = this.domHandler.createElement('div');
-        this.domHandler.addClass(optionsTitle, 'eksi-modal-options-title');
+        const optionsTitle = this.domService.createElement('div');
+        this.domService.addClass(optionsTitle, 'eksi-modal-options-title');
         optionsTitle.innerHTML = `
             <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 15.5c-3.86 0-7 3.14-7 7h14c0-3.86-3.14-7-7-7zm0-10.5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
@@ -413,18 +413,18 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         `;
 
         // Thread blocking option
-        const threadOptionRow = this.domHandler.createElement('div');
-        this.domHandler.addClass(threadOptionRow, 'eksi-modal-option-row');
+        const threadOptionRow = this.domService.createElement('div');
+        this.domService.addClass(threadOptionRow, 'eksi-modal-option-row');
         
-        const threadOptionLabel = this.domHandler.createElement('div');
-        this.domHandler.addClass(threadOptionLabel, 'eksi-modal-option-label');
+        const threadOptionLabel = this.domService.createElement('div');
+        this.domService.addClass(threadOptionLabel, 'eksi-modal-option-label');
         threadOptionLabel.innerHTML = `
             <div class="eksi-modal-option-title">Başlık Engelleme</div>
             <div class="eksi-modal-option-description">Favorileyen kullanıcıların açtığı başlıkları da engelle</div>
         `;
 
-        const threadOptionControl = this.domHandler.createElement('div');
-        this.domHandler.addClass(threadOptionControl, 'eksi-modal-option-control');
+        const threadOptionControl = this.domService.createElement('div');
+        this.domService.addClass(threadOptionControl, 'eksi-modal-option-control');
         
         const threadToggle = this.toggleSwitchComponent.create({
             id: 'threadBlockingToggle',
@@ -438,33 +438,33 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             }
         });
 
-        const threadInfoIcon = this.domHandler.createElement('button');
-        this.domHandler.addClass(threadInfoIcon, 'tooltip-trigger');
-        this.domHandler.addClass(threadInfoIcon, 'icon-only');
+        const threadInfoIcon = this.domService.createElement('button');
+        this.domService.addClass(threadInfoIcon, 'tooltip-trigger');
+        this.domService.addClass(threadInfoIcon, 'icon-only');
         threadInfoIcon.setAttribute('data-tooltip-content', 'thread-blocking-tooltip');
         threadInfoIcon.setAttribute('data-tooltip-position', 'top');
         threadInfoIcon.innerHTML = '?';
         threadInfoIcon.setAttribute('aria-label', 'Başlık engelleme hakkında bilgi');
         threadInfoIcon.setAttribute('type', 'button');
 
-        this.domHandler.appendChild(threadOptionControl, threadToggle);
-        this.domHandler.appendChild(threadOptionControl, threadInfoIcon);
-        this.domHandler.appendChild(threadOptionRow, threadOptionLabel);
-        this.domHandler.appendChild(threadOptionRow, threadOptionControl);
+        this.domService.appendChild(threadOptionControl, threadToggle);
+        this.domService.appendChild(threadOptionControl, threadInfoIcon);
+        this.domService.appendChild(threadOptionRow, threadOptionLabel);
+        this.domService.appendChild(threadOptionRow, threadOptionControl);
 
         // Author blocking option
-        const authorOptionRow = this.domHandler.createElement('div');
-        this.domHandler.addClass(authorOptionRow, 'eksi-modal-option-row');
+        const authorOptionRow = this.domService.createElement('div');
+        this.domService.addClass(authorOptionRow, 'eksi-modal-option-row');
         
-        const authorOptionLabel = this.domHandler.createElement('div');
-        this.domHandler.addClass(authorOptionLabel, 'eksi-modal-option-label');
+        const authorOptionLabel = this.domService.createElement('div');
+        this.domService.addClass(authorOptionLabel, 'eksi-modal-option-label');
         authorOptionLabel.innerHTML = `
             <div class="eksi-modal-option-title">Yazar Engelleme</div>
             <div class="eksi-modal-option-description">Yazının orijinal yazarını da aynı şekilde engelle</div>
         `;
 
-        const authorOptionControl = this.domHandler.createElement('div');
-        this.domHandler.addClass(authorOptionControl, 'eksi-modal-option-control');
+        const authorOptionControl = this.domService.createElement('div');
+        this.domService.addClass(authorOptionControl, 'eksi-modal-option-control');
         
         const authorToggle = this.toggleSwitchComponent.create({
             id: 'authorBlockingToggle',
@@ -478,29 +478,29 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             }
         });
 
-        const authorInfoIcon = this.domHandler.createElement('button');
-        this.domHandler.addClass(authorInfoIcon, 'tooltip-trigger');
-        this.domHandler.addClass(authorInfoIcon, 'icon-only');
+        const authorInfoIcon = this.domService.createElement('button');
+        this.domService.addClass(authorInfoIcon, 'tooltip-trigger');
+        this.domService.addClass(authorInfoIcon, 'icon-only');
         authorInfoIcon.setAttribute('data-tooltip-content', 'author-blocking-tooltip');
         authorInfoIcon.setAttribute('data-tooltip-position', 'top');
         authorInfoIcon.innerHTML = '?';
         authorInfoIcon.setAttribute('aria-label', 'Yazar engelleme hakkında bilgi');
         authorInfoIcon.setAttribute('type', 'button');
 
-        this.domHandler.appendChild(authorOptionControl, authorToggle);
-        this.domHandler.appendChild(authorOptionControl, authorInfoIcon);
-        this.domHandler.appendChild(authorOptionRow, authorOptionLabel);
-        this.domHandler.appendChild(authorOptionRow, authorOptionControl);
+        this.domService.appendChild(authorOptionControl, authorToggle);
+        this.domService.appendChild(authorOptionControl, authorInfoIcon);
+        this.domService.appendChild(authorOptionRow, authorOptionLabel);
+        this.domService.appendChild(authorOptionRow, authorOptionControl);
 
-        this.domHandler.appendChild(optionsSection, optionsTitle);
-        this.domHandler.appendChild(optionsSection, threadOptionRow);
-        this.domHandler.appendChild(optionsSection, authorOptionRow);
+        this.domService.appendChild(optionsSection, optionsTitle);
+        this.domService.appendChild(optionsSection, threadOptionRow);
+        this.domService.appendChild(optionsSection, authorOptionRow);
 
         // === NOTES SECTION ===
-        const noteSection = this.domHandler.createElement('div');
-        this.domHandler.addClass(noteSection, 'eksi-modal-note-section');
+        const noteSection = this.domService.createElement('div');
+        this.domService.addClass(noteSection, 'eksi-modal-note-section');
         
-        const noteLabel = this.domHandler.createElement('label');
+        const noteLabel = this.domService.createElement('label');
         noteLabel.innerHTML = `
             <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
@@ -509,27 +509,27 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         `;
         noteLabel.setAttribute('for', 'customNote');
 
-        const noteTextarea = this.domHandler.createElement('textarea');
+        const noteTextarea = this.domService.createElement('textarea');
         noteTextarea.id = 'customNote';
         noteTextarea.placeholder = 'Engellenen kullanıcılara eklenecek özel not yazın...';
         noteTextarea.value = this.customNote;
-        this.domHandler.addEventListener(noteTextarea, 'input', (e) => {
+        this.domService.addEventListener(noteTextarea, 'input', (e) => {
             this.customNote = (e.target as HTMLTextAreaElement).value;
         });
 
-        const helpText = this.domHandler.createElement('div');
-        this.domHandler.addClass(helpText, 'help-text');
+        const helpText = this.domService.createElement('div');
+        this.domService.addClass(helpText, 'help-text');
         helpText.innerHTML = `
             💡 <strong>Değişkenler:</strong> {postTitle}, {actionType}, {entryLink}, {date}
         `;
 
-        this.domHandler.appendChild(noteSection, noteLabel);
-        this.domHandler.appendChild(noteSection, noteTextarea);
-        this.domHandler.appendChild(noteSection, helpText);
+        this.domService.appendChild(noteSection, noteLabel);
+        this.domService.appendChild(noteSection, noteTextarea);
+        this.domService.appendChild(noteSection, helpText);
 
         // === CANCEL BUTTON SECTION ===
-        const cancelSection = this.domHandler.createElement('div');
-        this.domHandler.addClass(cancelSection, 'eksi-modal-cancel-section');
+        const cancelSection = this.domService.createElement('div');
+        this.domService.addClass(cancelSection, 'eksi-modal-cancel-section');
 
         const cancelButton = this.specificButtonComponent.create({
             text: 'İptal',
@@ -539,17 +539,17 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             fullWidth: true
         });
 
-        this.domHandler.appendChild(cancelSection, cancelButton);
+        this.domService.appendChild(cancelSection, cancelButton);
 
         // === ASSEMBLE MODAL ===
-        this.domHandler.appendChild(this.contentElement, modalTitle);
-        this.domHandler.appendChild(this.contentElement, actionsSection);
-        this.domHandler.appendChild(this.contentElement, optionsSection);
-        this.domHandler.appendChild(this.contentElement, noteSection);
-        this.domHandler.appendChild(this.contentElement, cancelSection);
+        this.domService.appendChild(this.contentElement, modalTitle);
+        this.domService.appendChild(this.contentElement, actionsSection);
+        this.domService.appendChild(this.contentElement, optionsSection);
+        this.domService.appendChild(this.contentElement, noteSection);
+        this.domService.appendChild(this.contentElement, cancelSection);
 
         // === TOOLTIP CONTENT ===
-        const threadTooltipContent = this.domHandler.createElement('div');
+        const threadTooltipContent = this.domService.createElement('div');
         threadTooltipContent.id = 'thread-blocking-tooltip';
         threadTooltipContent.style.display = 'none';
         threadTooltipContent.innerHTML = `
@@ -559,7 +559,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             </div>
         `;
 
-        const authorTooltipContent = this.domHandler.createElement('div');
+        const authorTooltipContent = this.domService.createElement('div');
         authorTooltipContent.id = 'author-blocking-tooltip';
         authorTooltipContent.style.display = 'none';
         authorTooltipContent.innerHTML = `
@@ -569,7 +569,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             </div>
         `;
 
-        const modalInfoTooltipContent = this.domHandler.createElement('div');
+        const modalInfoTooltipContent = this.domService.createElement('div');
         modalInfoTooltipContent.id = 'modal-info-tooltip';
         modalInfoTooltipContent.style.display = 'none';
         modalInfoTooltipContent.innerHTML = `
@@ -587,9 +587,9 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             </div>
         `;
 
-        this.domHandler.appendChild(document.body, threadTooltipContent);
-        this.domHandler.appendChild(document.body, authorTooltipContent);
-        this.domHandler.appendChild(document.body, modalInfoTooltipContent);
+        this.domService.appendChild(document.body, threadTooltipContent);
+        this.domService.appendChild(document.body, authorTooltipContent);
+        this.domService.appendChild(document.body, modalInfoTooltipContent);
 
         // Setup tooltips
         this.tooltipComponent.setupTooltip(threadInfoIcon, {

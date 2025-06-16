@@ -53,7 +53,7 @@ export class UIService {
     private voteMonitoringService: VoteMonitoringService;
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent,
@@ -100,7 +100,7 @@ export class UIService {
                         dropdownMenus.forEach((dropdownMenu) => {
                             try {
                                 // Check if this menu already has our custom option
-                                const existingItem = this.domHandler.querySelector('li a[aria-label="favorileyenleri engelle"]', dropdownMenu);
+                                const existingItem = this.domService.querySelector('li a[aria-label="favorileyenleri engelle"]', dropdownMenu);
                                 if (existingItem) {
                                     return; // Skip this menu if our option already exists
                                 }
@@ -232,7 +232,7 @@ export class UIService {
      * Add event listener to menu item
      */
     private addMenuItemEventListener(entryId: string, menuItem: HTMLElement): void {
-        this.domHandler.addEventListener(menuItem, 'click', async (e) => {
+        this.domService.addEventListener(menuItem, 'click', async (e) => {
             // First, prevent default behavior to ensure the click isn't hijacked
             e.preventDefault();
             e.stopPropagation();
@@ -246,7 +246,7 @@ export class UIService {
                     try {
                         const resumeModalFactory = this.container.resolve<ResumeModalFactory>('ResumeModalFactory');
                         const resumeModal = resumeModalFactory.create(entryId, savedState);
-                        document.body.style.overflow = 'hidden';
+                        // Scroll management is now handled by the modal component itself
                         resumeModal.display();
                     } catch (err) {
                         this.loggingService.error('Error showing resume modal:', err);
@@ -255,7 +255,7 @@ export class UIService {
                     try {
                         const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockModalFactory');
                         const optionsModal = blockModalFactory.create(entryId);
-                        document.body.style.overflow = 'hidden';
+                        // Scroll management is now handled by the modal component itself
                         await optionsModal.display();
                     } catch (err) {
                         this.loggingService.error('Error showing options modal:', err);

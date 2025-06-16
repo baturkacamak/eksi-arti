@@ -36,7 +36,7 @@ export class TooltipComponent {
     };
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
     ) {
@@ -48,7 +48,7 @@ export class TooltipComponent {
      * Initialize all tooltips on the page
      */
     public initializeTooltips(): void {
-        const tooltipTriggers = this.domHandler.querySelectorAll<HTMLElement>('.tooltip-trigger');
+        const tooltipTriggers = this.domService.querySelectorAll<HTMLElement>('.tooltip-trigger');
         tooltipTriggers.forEach(trigger => {
             this.setupTooltip(trigger);
         });
@@ -147,17 +147,17 @@ export class TooltipComponent {
         options: Required<TooltipOptions>
     ): void {
         if (options.triggerEvent === 'hover' || options.triggerEvent === 'both') {
-            this.domHandler.addEventListener(triggerElement, 'mouseenter', () => {
+            this.domService.addEventListener(triggerElement, 'mouseenter', () => {
                 this.showTooltip(triggerElement, tooltipContent, options);
             });
 
-            this.domHandler.addEventListener(triggerElement, 'mouseleave', () => {
+            this.domService.addEventListener(triggerElement, 'mouseleave', () => {
                 this.hideTooltipWithDelay(triggerElement, options.hideDelay);
             });
         }
 
         if (options.triggerEvent === 'click' || options.triggerEvent === 'both') {
-            this.domHandler.addEventListener(triggerElement, 'click', (e) => {
+            this.domService.addEventListener(triggerElement, 'click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -198,7 +198,7 @@ export class TooltipComponent {
             tooltipElement.style.visibility = 'visible';
 
             // Add to DOM first so dimensions can be calculated
-            this.domHandler.appendChild(document.body, tooltipElement);
+            this.domService.appendChild(document.body, tooltipElement);
 
             // Force a layout calculation
             void tooltipElement.offsetWidth;
@@ -208,7 +208,7 @@ export class TooltipComponent {
 
             // Show with animation after positioning
             requestAnimationFrame(() => {
-                this.domHandler.addClass(tooltipElement, 'tooltip-visible');
+                this.domService.addClass(tooltipElement, 'tooltip-visible');
             });
 
             // Store reference
@@ -220,11 +220,11 @@ export class TooltipComponent {
             }
 
             // Setup tooltip event listeners (for hover on tooltip itself)
-            this.domHandler.addEventListener(tooltipElement, 'mouseenter', () => {
+            this.domService.addEventListener(tooltipElement, 'mouseenter', () => {
                 this.clearDelayTimeout(triggerElement);
             });
 
-            this.domHandler.addEventListener(tooltipElement, 'mouseleave', () => {
+            this.domService.addEventListener(tooltipElement, 'mouseleave', () => {
                 this.hideTooltipWithDelay(triggerElement, options.hideDelay);
             });
         }, options.showDelay);
@@ -239,10 +239,10 @@ export class TooltipComponent {
         contentElement: HTMLElement,
         options: Required<TooltipOptions>
     ): HTMLElement {
-        const tooltipElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(tooltipElement, 'eksi-tooltip');
-        this.domHandler.addClass(tooltipElement, `tooltip-theme-${options.theme}`);
-        this.domHandler.addClass(tooltipElement, `tooltip-position-${options.position}`);
+        const tooltipElement = this.domService.createElement('div');
+        this.domService.addClass(tooltipElement, 'eksi-tooltip');
+        this.domService.addClass(tooltipElement, `tooltip-theme-${options.theme}`);
+        this.domService.addClass(tooltipElement, `tooltip-position-${options.position}`);
 
         // Clone the content
         const contentClone = contentElement.cloneNode(true) as HTMLElement;
@@ -256,33 +256,33 @@ export class TooltipComponent {
         tooltipElement.style.maxWidth = options.maxWidth;
 
         // Create tooltip arrow
-        const tooltipArrow = this.domHandler.createElement('div');
-        this.domHandler.addClass(tooltipArrow, 'tooltip-arrow');
+        const tooltipArrow = this.domService.createElement('div');
+        this.domService.addClass(tooltipArrow, 'tooltip-arrow');
 
         // Create tooltip content wrapper
-        const tooltipContent = this.domHandler.createElement('div');
-        this.domHandler.addClass(tooltipContent, 'tooltip-content');
+        const tooltipContent = this.domService.createElement('div');
+        this.domService.addClass(tooltipContent, 'tooltip-content');
 
         // Add close button if needed
         if (options.closeButton) {
-            const closeButton = this.domHandler.createElement('button');
-            this.domHandler.addClass(closeButton, 'tooltip-close-button');
+            const closeButton = this.domService.createElement('button');
+            this.domService.addClass(closeButton, 'tooltip-close-button');
             closeButton.innerHTML = '×';
 
-            this.domHandler.addEventListener(closeButton, 'click', () => {
+            this.domService.addEventListener(closeButton, 'click', () => {
                 const activeTrigger = this.findTriggerByTooltip(tooltipElement);
                 if (activeTrigger) {
                     this.hideTooltip(activeTrigger);
                 }
             });
 
-            this.domHandler.appendChild(tooltipContent, closeButton);
+            this.domService.appendChild(tooltipContent, closeButton);
         }
 
         // Add content to tooltip
-        this.domHandler.appendChild(tooltipContent, contentClone);
-        this.domHandler.appendChild(tooltipElement, tooltipArrow);
-        this.domHandler.appendChild(tooltipElement, tooltipContent);
+        this.domService.appendChild(tooltipContent, contentClone);
+        this.domService.appendChild(tooltipElement, tooltipArrow);
+        this.domService.appendChild(tooltipElement, tooltipContent);
 
         return tooltipElement;
     }
@@ -420,7 +420,7 @@ export class TooltipComponent {
         if (!tooltipElement) return;
 
         // Remove with animation
-        this.domHandler.removeClass(tooltipElement, 'tooltip-visible');
+        this.domService.removeClass(tooltipElement, 'tooltip-visible');
 
         // Remove after animation completes
         const handleTransitionEnd = () => {
@@ -433,7 +433,7 @@ export class TooltipComponent {
             this.removeOutsideClickListener();
         };
 
-        this.domHandler.addEventListener(tooltipElement, 'transitionend', handleTransitionEnd, { once: true });
+        this.domService.addEventListener(tooltipElement, 'transitionend', handleTransitionEnd, { once: true });
 
         // Fallback in case transition doesn't trigger
         setTimeout(handleTransitionEnd, 300);

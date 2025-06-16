@@ -13,7 +13,7 @@ import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class AccessibilityService {
     private static instance: AccessibilityService;
-    private domHandler: IDOMService;
+    private domService: IDOMService;
     private initialized: boolean = false;
     private observerId: string = '';
 
@@ -24,7 +24,7 @@ export class AccessibilityService {
     private loggingService: ILoggingService;
 
     private constructor() {
-        this.domHandler = new DOMService();
+        this.domService = new DOMService();
         this.loggingService = new LoggingService();
     }
 

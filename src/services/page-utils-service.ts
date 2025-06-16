@@ -90,6 +90,7 @@ export class PageUtilsService {
     }
 
     /**
+     * @deprecated Use DocumentStateService.isDarkMode() instead
      * Check if the page has dark mode enabled
      * @returns true if dark mode is enabled
      */

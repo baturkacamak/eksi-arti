@@ -15,7 +15,7 @@ export class CopyButtonComponent implements ICopyButtonComponent {
     private observerId: string = '';
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent,
@@ -134,9 +134,9 @@ export class CopyButtonComponent implements ICopyButtonComponent {
      * Create a copy button element and set up a click handler that uses a copy command.
      */
     private createCopyButton(textToCopy: string): HTMLElement {
-        const buttonContainer = this.domHandler.createElement("span");
-        this.domHandler.addClass(buttonContainer, "eksi-copy-button");
-        this.domHandler.addClass(buttonContainer, "eksi-button"); // For theme compatibility
+        const buttonContainer = this.domService.createElement("span");
+        this.domService.addClass(buttonContainer, "eksi-copy-button");
+        this.domService.addClass(buttonContainer, "eksi-button"); // For theme compatibility
 
         buttonContainer.setAttribute("title", "İçeriği kopyala");
         buttonContainer.setAttribute("aria-label", "İçeriği kopyala");
@@ -148,14 +148,18 @@ export class CopyButtonComponent implements ICopyButtonComponent {
             className: "eksi-copy-icon", // For easier targeting in transitions
         });
 
-        this.domHandler.appendChild(buttonContainer, copyIcon);
+        this.domService.appendChild(buttonContainer, copyIcon);
 
         // Add click listener using the command pattern
-        this.domHandler.addEventListener(buttonContainer, "click", (e) => {
+        this.domService.addEventListener(buttonContainer, "click", (e) => {
             e.preventDefault();
             e.stopPropagation();
 
             if (!this.inTransition.has(buttonContainer)) {
+                // Mark button as in transition to prevent rapid clicks
+                this.inTransition.add(buttonContainer);
+                this.domService.addClass(buttonContainer, "in-transition");
+
                 // Create a copy command via the command factory and execute it using the invoker
                 const copyCommand = this.commandFactory.createCopyTextCommand(textToCopy);
                 this.commandInvoker.execute(copyCommand).then((success) => {
@@ -179,6 +183,10 @@ export class CopyButtonComponent implements ICopyButtonComponent {
                             this.resetButtonState(buttonContainer, "İçeriği kopyala");
                         }, 1500);
                     }
+                }).catch((error) => {
+                    // Handle any promise rejection
+                    this.loggingService.error("Copy command failed:", error);
+                    this.resetButtonState(buttonContainer, "İçeriği kopyala");
                 });
             }
         });
@@ -190,8 +198,8 @@ export class CopyButtonComponent implements ICopyButtonComponent {
      * Reset button to original state after transition completes
      */
     private resetButtonState(button: HTMLElement, originalTitle: string): void {
-        this.domHandler.removeClass(button, "in-transition");
-        this.domHandler.removeClass(button, "eksi-copy-success");
+        this.domService.removeClass(button, "in-transition");
+        this.domService.removeClass(button, "eksi-copy-success");
         button.setAttribute("title", originalTitle);
         this.inTransition.delete(button);
     }

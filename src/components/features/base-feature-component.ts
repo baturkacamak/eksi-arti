@@ -14,7 +14,7 @@ export abstract class BaseFeatureComponent implements IFeatureComponent {
     private static stylesAppliedMap: Map<string, boolean> = new Map();
 
     constructor(
-        protected domHandler: IDOMService,
+        protected domService: IDOMService,
         protected cssHandler: ICSSService,
         protected loggingService: ILoggingService,
         protected observerServiceInstance: IObserverService,

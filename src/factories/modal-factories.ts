@@ -25,7 +25,7 @@ import {IPreferencesService} from "../interfaces/services/IPreferencesService";
  */
 export class BlockOptionsModalFactory {
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private container: Container,
@@ -45,7 +45,7 @@ export class BlockOptionsModalFactory {
         const tooltipComponent = this.container.resolve<ITooltipComponent>('TooltipComponent');
         const modalComponent = this.container.resolve<IModalComponent>('ModalComponent');
         return new BlockOptionsModal(
-            this.domHandler,
+            this.domService,
             this.cssHandler,
             this.loggingService,
             iconComponent,
@@ -67,7 +67,7 @@ export class BlockOptionsModalFactory {
  */
 export class ResumeModalFactory {
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private blockUsersService: BlockUsersService,
@@ -83,7 +83,7 @@ export class ResumeModalFactory {
         const observerService = this.container.resolve<any>('ObserverService');
         const modalComponent = this.container.resolve<IModalComponent>('ModalComponent');
         return new ResumeModal(
-            this.domHandler,
+            this.domService,
             this.cssHandler,
             this.loggingService,
             iconComponent,

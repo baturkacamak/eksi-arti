@@ -64,7 +64,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     };
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -77,7 +77,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         sortingDataExtractor: SortingDataExtractor,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
         this.specificPageUtils = pageUtils;
         this.specificUserProfileService = userProfileService;
         this.specificSelectBoxComponent = selectBoxComponent;
@@ -149,20 +149,20 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
         
         if (!customControlsRow) {
-            customControlsRow = this.domHandler.createElement('div');
-            this.domHandler.addClass(customControlsRow, 'eksi-custom-controls-row');
+            customControlsRow = this.domService.createElement('div');
+            this.domService.addClass(customControlsRow, 'eksi-custom-controls-row');
             
             const entryList = contentArea.querySelector('#entry-item-list');
             const searchRow = contentArea.querySelector('.eksi-search-row');
             
             if (searchRow && searchRow.nextSibling) {
-                this.domHandler.insertBefore(contentArea, customControlsRow, searchRow.nextSibling);
+                this.domService.insertBefore(contentArea, customControlsRow, searchRow.nextSibling);
             } else if (searchRow) {
-                this.domHandler.appendChild(contentArea, customControlsRow);
+                this.domService.appendChild(contentArea, customControlsRow);
             } else if (entryList) {
-                this.domHandler.insertBefore(contentArea, customControlsRow, entryList);
+                this.domService.insertBefore(contentArea, customControlsRow, entryList);
             } else {
-                this.domHandler.appendChild(contentArea, customControlsRow);
+                this.domService.appendChild(contentArea, customControlsRow);
             }
             
             this.loggingService.debug('Created .eksi-custom-controls-row for sorter.');
@@ -368,9 +368,9 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
 
             const options = this.createSelectOptions();
 
-            const selectContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(selectContainer, 'eksi-sort-buttons'); 
-            this.domHandler.addClass(selectContainer, 'eksi-entry-sorter-select-container');
+            const selectContainer = this.domService.createElement('div');
+            this.domService.addClass(selectContainer, 'eksi-sort-buttons'); 
+            this.domService.addClass(selectContainer, 'eksi-entry-sorter-select-container');
             
             const selectElement = this.specificSelectBoxComponent.create({
                 options: options,
@@ -379,14 +379,14 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 width: '200px',
                 className: 'eksi-entry-sorter-select'
             });
-            this.domHandler.appendChild(selectContainer, selectElement);
+            this.domService.appendChild(selectContainer, selectElement);
 
             // Add direction toggle button
             const directionToggle = this.createDirectionToggle();
-            this.domHandler.appendChild(selectContainer, directionToggle);
+            this.domService.appendChild(selectContainer, directionToggle);
             
             // Prepend to ensure it is on the left of other controls in the row
-            this.domHandler.insertBefore(customControlsRow, selectContainer, customControlsRow.firstChild);
+            this.domService.insertBefore(customControlsRow, selectContainer, customControlsRow.firstChild);
             this.loggingService.debug('Entry sorter select box added/ensured in custom controls row.');
         } catch (error) {
             this.loggingService.error('Error in EntrySorterComponent.setupUI:', error);

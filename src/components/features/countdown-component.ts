@@ -22,7 +22,7 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
     private instanceOptions: Required<CountdownOptions>;
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -30,7 +30,7 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
         options: CountdownOptions = {},
         baseOptions?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, baseOptions);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, baseOptions);
         
         const defaultIconProps: IconProps = {
             name: 'schedule',
@@ -85,11 +85,11 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
             if (this.countdownInstanceElement && this.countdownInstanceElement.parentElement) {
                 this.countdownInstanceElement.parentElement.removeChild(this.countdownInstanceElement);
             }
-            this.countdownInstanceElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.countdownInstanceElement, 'eksi-countdown-container');
+            this.countdownInstanceElement = this.domService.createElement('div');
+            this.domService.addClass(this.countdownInstanceElement, 'eksi-countdown-container');
 
             if (this.instanceOptions.className) {
-                this.domHandler.addClass(this.countdownInstanceElement, this.instanceOptions.className);
+                this.domService.addClass(this.countdownInstanceElement, this.instanceOptions.className);
             }
 
             let contentHTML = '';
@@ -106,7 +106,7 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
             contentHTML += `<span class="eksi-countdown-time"><strong>${this.instanceOptions.textFormat(this.remainingSeconds)}</strong></span>`;
             this.countdownInstanceElement.innerHTML = contentHTML;
 
-            this.timeElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-time', this.countdownInstanceElement);
+            this.timeElement = this.domService.querySelector<HTMLElement>('.eksi-countdown-time', this.countdownInstanceElement);
 
             if (this.instanceOptions.autoStart) {
                 this.start();
@@ -114,7 +114,7 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
         } catch (error) {
             this.loggingService.error('Error creating countdown UI:', error);
             if (!this.countdownInstanceElement) {
-                this.countdownInstanceElement = this.domHandler.createElement('div');
+                this.countdownInstanceElement = this.domService.createElement('div');
             }
             this.countdownInstanceElement.textContent = `Countdown Error: ${this.remainingSeconds}s`;
         }
@@ -179,18 +179,18 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
 
     public setLabel(label: string): void {
         if (!this.countdownInstanceElement) return;
-        const labelElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-label', this.countdownInstanceElement);
+        const labelElement = this.domService.querySelector<HTMLElement>('.eksi-countdown-label', this.countdownInstanceElement);
         if (labelElement) {
             labelElement.textContent = label;
         } else if (this.instanceOptions.showLabel) {
-            const newLabelElement = this.domHandler.createElement('span');
-            this.domHandler.addClass(newLabelElement, 'eksi-countdown-label');
+            const newLabelElement = this.domService.createElement('span');
+            this.domService.addClass(newLabelElement, 'eksi-countdown-label');
             newLabelElement.textContent = label;
-            const iconEl = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
+            const iconEl = this.domService.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
             if (iconEl && iconEl.nextSibling) {
-                this.domHandler.insertBefore(this.countdownInstanceElement, newLabelElement, iconEl.nextSibling);
+                this.domService.insertBefore(this.countdownInstanceElement, newLabelElement, iconEl.nextSibling);
             } else {
-                this.domHandler.insertBefore(this.countdownInstanceElement, newLabelElement, this.countdownInstanceElement.firstChild);
+                this.domService.insertBefore(this.countdownInstanceElement, newLabelElement, this.countdownInstanceElement.firstChild);
             }
         }
         this.instanceOptions.label = label;
@@ -198,19 +198,19 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
 
     public setIcon(iconProps: IconProps): void {
         if (!this.countdownInstanceElement) return;
-        let iconElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
+        let iconElement = this.domService.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
         const newIconElement = this.iconComponent.create({ ...iconProps, className: 'eksi-countdown-icon' });
         if (iconElement) {
             iconElement.parentNode?.replaceChild(newIconElement, iconElement);
         } else if (this.instanceOptions.showIcon) {
-            this.domHandler.insertBefore(this.countdownInstanceElement, newIconElement, this.countdownInstanceElement.firstChild);
+            this.domService.insertBefore(this.countdownInstanceElement, newIconElement, this.countdownInstanceElement.firstChild);
         }
         this.instanceOptions.icon = iconProps;
     }
 
     public toggleIcon(show: boolean): void {
         if (!this.countdownInstanceElement) return;
-        const iconElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
+        const iconElement = this.domService.querySelector<HTMLElement>('.eksi-countdown-icon', this.countdownInstanceElement);
         if (show && !iconElement && this.instanceOptions.icon) this.setIcon(this.instanceOptions.icon);
         else if (!show && iconElement) iconElement.remove();
         this.instanceOptions.showIcon = show;
@@ -218,7 +218,7 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
 
     public toggleLabel(show: boolean): void {
         if (!this.countdownInstanceElement) return;
-        const labelElement = this.domHandler.querySelector<HTMLElement>('.eksi-countdown-label', this.countdownInstanceElement);
+        const labelElement = this.domService.querySelector<HTMLElement>('.eksi-countdown-label', this.countdownInstanceElement);
         if (show && !labelElement && this.instanceOptions.label) this.setLabel(this.instanceOptions.label);
         else if (!show && labelElement) labelElement.remove();
         this.instanceOptions.showLabel = show;
@@ -257,7 +257,7 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
         
         if (!this.countdownInstanceElement) {
             this.loggingService.error('Countdown element not created after setupUI in create');
-            this.countdownInstanceElement = this.domHandler.createElement('div');
+            this.countdownInstanceElement = this.domService.createElement('div');
             this.countdownInstanceElement.textContent = "Error creating countdown";
         }
         return this.countdownInstanceElement as HTMLElement;

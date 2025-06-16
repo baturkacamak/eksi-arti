@@ -26,7 +26,7 @@ export interface ToggleSwitchProps {
  * Reusable toggle switch component for creating consistent toggle switches across the extension
  */
 export class ToggleSwitchComponent implements IToggleSwitchComponent {
-    private domHandler: IDOMService;
+    private domService: IDOMService;
     private cssHandler: ICSSService;
     private containerElement: HTMLElement | null = null;
     private inputElement: HTMLInputElement | null = null;
@@ -38,11 +38,11 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
      * Constructor
      */
     constructor(
-        domHandler?: IDOMService,
+        domService?: IDOMService,
         cssHandler?: ICSSService,
         loggingService?: ILoggingService
     ) {
-        this.domHandler = domHandler || new DOMService();
+        this.domService = domService || new DOMService();
         this.cssHandler = cssHandler || new CSSService();
         this.loggingService = loggingService || new LoggingService();
         this.applyToggleSwitchStyles();
@@ -54,25 +54,25 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
     public create(props: ToggleSwitchProps): HTMLElement {
         try {
             // Create container element
-            this.containerElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.containerElement, 'eksi-toggle-container');
+            this.containerElement = this.domService.createElement('div');
+            this.domService.addClass(this.containerElement, 'eksi-toggle-container');
 
             // Add custom class if provided
             if (props.className) {
-                this.domHandler.addClass(this.containerElement, props.className);
+                this.domService.addClass(this.containerElement, props.className);
             }
 
             // Create toggle switch wrapper
-            const toggleWrapper = this.domHandler.createElement('div');
-            this.domHandler.addClass(toggleWrapper, 'eksi-toggle-switch');
+            const toggleWrapper = this.domService.createElement('div');
+            this.domService.addClass(toggleWrapper, 'eksi-toggle-switch');
 
             // Add size class if provided
             if (props.size) {
-                this.domHandler.addClass(toggleWrapper, `eksi-toggle-${props.size}`);
+                this.domService.addClass(toggleWrapper, `eksi-toggle-${props.size}`);
             }
 
             // Create input element
-            this.inputElement = this.domHandler.createElement('input');
+            this.inputElement = this.domService.createElement('input');
             this.inputElement.type = 'checkbox';
             this.inputElement.id = props.id;
 
@@ -84,7 +84,7 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
             // Set disabled state if provided
             if (props.disabled) {
                 this.inputElement.disabled = props.disabled;
-                this.domHandler.addClass(toggleWrapper, 'eksi-toggle-disabled');
+                this.domService.addClass(toggleWrapper, 'eksi-toggle-disabled');
             }
 
             // Set aria attributes
@@ -93,38 +93,38 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
             }
 
             // Create slider element
-            const sliderElement = this.domHandler.createElement('span');
-            this.domHandler.addClass(sliderElement, 'eksi-toggle-slider');
+            const sliderElement = this.domService.createElement('span');
+            this.domService.addClass(sliderElement, 'eksi-toggle-slider');
 
             // Add elements to toggle wrapper
-            this.domHandler.appendChild(toggleWrapper, this.inputElement);
-            this.domHandler.appendChild(toggleWrapper, sliderElement);
+            this.domService.appendChild(toggleWrapper, this.inputElement);
+            this.domService.appendChild(toggleWrapper, sliderElement);
 
             // Create label if provided
             if (props.label) {
-                this.labelElement = this.domHandler.createElement('label');
+                this.labelElement = this.domService.createElement('label');
                 this.labelElement.htmlFor = props.id;
                 this.labelElement.textContent = props.label;
-                this.domHandler.addClass(this.labelElement, 'eksi-toggle-label');
+                this.domService.addClass(this.labelElement, 'eksi-toggle-label');
             }
 
             // Arrange elements based on label position
             const labelPosition = props.labelPosition || 'right';
             if (labelPosition === 'left' && this.labelElement) {
-                this.domHandler.appendChild(this.containerElement, this.labelElement);
-                this.domHandler.appendChild(this.containerElement, toggleWrapper);
-                this.domHandler.addClass(this.containerElement, 'eksi-toggle-label-left');
+                this.domService.appendChild(this.containerElement, this.labelElement);
+                this.domService.appendChild(this.containerElement, toggleWrapper);
+                this.domService.addClass(this.containerElement, 'eksi-toggle-label-left');
             } else {
-                this.domHandler.appendChild(this.containerElement, toggleWrapper);
+                this.domService.appendChild(this.containerElement, toggleWrapper);
                 if (this.labelElement) {
-                    this.domHandler.appendChild(this.containerElement, this.labelElement);
+                    this.domService.appendChild(this.containerElement, this.labelElement);
                 }
-                this.domHandler.addClass(this.containerElement, 'eksi-toggle-label-right');
+                this.domService.addClass(this.containerElement, 'eksi-toggle-label-right');
             }
 
             // Add change event listener if provided
             if (props.onChange && this.inputElement) {
-                this.domHandler.addEventListener(this.inputElement, 'change', () => {
+                this.domService.addEventListener(this.inputElement, 'change', () => {
                     if (props.onChange && this.inputElement) {
                         props.onChange(this.inputElement.checked);
                     }
@@ -135,7 +135,7 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
         } catch (error) {
           this.loggingService.error('Error creating toggle switch:', error);
             // Return a fallback element in case of error
-            const fallbackElement = this.domHandler.createElement('div');
+            const fallbackElement = this.domService.createElement('div');
             fallbackElement.textContent = props.label || 'Toggle Switch';
             return fallbackElement;
         }
@@ -166,9 +166,9 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
         this.inputElement.disabled = disabled;
 
         if (disabled) {
-            this.domHandler.addClass(this.containerElement, 'eksi-toggle-disabled');
+            this.domService.addClass(this.containerElement, 'eksi-toggle-disabled');
         } else {
-            this.domHandler.removeClass(this.containerElement, 'eksi-toggle-disabled');
+            this.domService.removeClass(this.containerElement, 'eksi-toggle-disabled');
         }
     }
 

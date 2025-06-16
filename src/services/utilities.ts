@@ -166,6 +166,7 @@ export const safeJsonParse = <T>(jsonString: string, defaultValue: T): T => {
 };
 
 /**
+ * @deprecated Use DocumentStateService.isDarkMode() instead
  * Check if the browser is running in dark mode
  * @returns True if dark mode is enabled
  */
@@ -174,6 +175,7 @@ export const isDarkMode = (): boolean => {
 };
 
 /**
+ * @deprecated Use DocumentStateService.copyTextToClipboard() instead
  * Copy text to clipboard
  * @param text Text to copy
  * @returns Promise that resolves when text is copied

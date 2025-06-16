@@ -9,7 +9,7 @@ export class HtmlParserService implements IHtmlParserService {
     private useDOMParser: boolean;
 
     constructor(
-        private readonly domHandler: IDOMService,
+        private readonly domService: IDOMService,
         private loggingService: ILoggingService
     ) {
         this.useDOMParser = typeof DOMParser !== 'undefined';
@@ -18,23 +18,23 @@ export class HtmlParserService implements IHtmlParserService {
     /**
      * Parse HTML and process with provided handler function
      * @param html HTML string to parse
-     * @param domHandler Function to process the parsed DOM
+     * @param domService Function to process the parsed DOM
      * @param fallbackHandler Function to use if DOM parsing fails
-     * @returns Result of either the domHandler or fallbackHandler
+     * @returns Result of either the domService or fallbackHandler
      */
     parseHtml<T>(
         html: string,
-        domHandler: (doc: Document) => T | null,
+        domService: (doc: Document) => T | null,
         fallbackHandler: (html: string) => T | null
     ): T | null {
         if (this.useDOMParser) {
             try {
                 const doc = new DOMParser().parseFromString(html, 'text/html');
-                const result = domHandler(doc);
+                const result = domService(doc);
                 if (result !== null) {
                     return result;
                 }
-                // If domHandler returns null, fall back to regex
+                // If domService returns null, fall back to regex
             } catch (error) {
                 this.loggingService.debug('DOMParser failed, falling back to regex', error);
             }
@@ -164,7 +164,7 @@ export class HtmlParserService implements IHtmlParserService {
      */
     parsePostTitle(): string {
         try {
-            const titleElement = this.domHandler.querySelector<HTMLHeadingElement>('h1#title');
+            const titleElement = this.domService.querySelector<HTMLHeadingElement>('h1#title');
 
             if (titleElement) {
                 const title = titleElement.innerText.trim();

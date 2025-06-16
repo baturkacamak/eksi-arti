@@ -29,7 +29,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
     private static stylesApplied = false;
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -39,7 +39,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
         private specificBlockModalFactory: IBlockOptionsModalFactory,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
         this.applyStyles();
     }
 
@@ -174,9 +174,9 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
      * Create a block button element
      */
     private createBlockButtonElement(entryId: string): HTMLElement {
-        const buttonContainer = this.domHandler.createElement('span');
-        this.domHandler.addClass(buttonContainer, 'eksi-block-favorites-button');
-        this.domHandler.addClass(buttonContainer, 'eksi-button');
+        const buttonContainer = this.domService.createElement('span');
+        this.domService.addClass(buttonContainer, 'eksi-block-favorites-button');
+        this.domService.addClass(buttonContainer, 'eksi-button');
 
         const blockIcon = this.iconComponent.create({
             name: 'block',
@@ -184,9 +184,9 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
             color: '#ff7063',
             className: 'eksi-block-favorites-icon'
         });
-        this.domHandler.appendChild(buttonContainer, blockIcon);
+        this.domService.appendChild(buttonContainer, blockIcon);
 
-        this.domHandler.addEventListener(buttonContainer, 'click', async (e) => {
+        this.domService.addEventListener(buttonContainer, 'click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
             try {
@@ -201,7 +201,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
                     try {
                         const resumeModalFactory = this.specificContainer.resolve<IResumeModalFactory>('ResumeModalFactory');
                         const resumeModal = resumeModalFactory.create(entryId, savedState);
-                        document.body.style.overflow = 'hidden';
+                        // Scroll management is now handled by the modal component itself
                                                   if (typeof (resumeModal as ResumeModal).display === 'function') {
                              (resumeModal as ResumeModal).display();
                           } else {
@@ -213,7 +213,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
                 } else {
                     try {
                         const optionsModal = this.specificBlockModalFactory.create(entryId);
-                        document.body.style.overflow = 'hidden';
+                        // Scroll management is now handled by the modal component itself
                                                   if (typeof (optionsModal as BlockOptionsModal).display === 'function') {
                              await (optionsModal as BlockOptionsModal).display();
                           } else {

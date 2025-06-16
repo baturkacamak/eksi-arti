@@ -119,7 +119,7 @@ export class AuthorHighlighterService {
     private observerId: string = '';
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private storageService: IStorageService,
@@ -421,7 +421,7 @@ export class AuthorHighlighterService {
 
             if (authorConfig && authorConfig.enabled) {
                 // Add highlight class
-                this.domHandler.addClass(entry, 'eksi-highlighted-author');
+                this.domService.addClass(entry, 'eksi-highlighted-author');
 
                 // Update last seen time
                 this.updateAuthorLastSeen(author);
@@ -516,7 +516,7 @@ export class AuthorHighlighterService {
             // Remove highlights from DOM
             const entries = document.querySelectorAll(`li[data-id][data-author="${author}"]`);
             entries.forEach(entry => {
-                this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
+                this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
             });
 
           this.loggingService.info('Author removed from highlighting', { author });
@@ -562,7 +562,7 @@ export class AuthorHighlighterService {
                 // Remove highlights if disabled
                 const entries = document.querySelectorAll(`li[data-id][data-author="${author}"]`);
                 entries.forEach(entry => {
-                    this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
+                    this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
             } else {
                 // Reprocess to apply new settings
@@ -619,7 +619,7 @@ export class AuthorHighlighterService {
                 // Remove all highlights
                 const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
                 entries.forEach(entry => {
-                    this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
+                    this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
             }
 
@@ -705,7 +705,7 @@ export class AuthorHighlighterService {
             if (wasEnabled) {
                 const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
                 entries.forEach(entry => {
-                    this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
+                    this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
             }
 
@@ -803,16 +803,16 @@ export class AuthorHighlighterService {
             if (existingMenu) existingMenu.remove();
 
             // Create menu
-            const menu = this.domHandler.createElement('div');
-            this.domHandler.addClass(menu, 'eksi-author-menu');
+            const menu = this.domService.createElement('div');
+            this.domService.addClass(menu, 'eksi-author-menu');
 
             // Create header
-            const header = this.domHandler.createElement('div');
-            this.domHandler.addClass(header, 'eksi-author-menu-header');
+            const header = this.domService.createElement('div');
+            this.domService.addClass(header, 'eksi-author-menu-header');
             header.textContent = author;
 
             // Create menu items
-            const menuItems = this.domHandler.createElement('div');
+            const menuItems = this.domService.createElement('div');
 
             // Check if author is already configured
             const isConfigured = this.config.authors[author] !== undefined;
@@ -920,8 +920,8 @@ export class AuthorHighlighterService {
         text: string,
         onClick: () => void
     ): HTMLElement {
-        const item = this.domHandler.createElement('div');
-        this.domHandler.addClass(item, 'eksi-author-menu-item');
+        const item = this.domService.createElement('div');
+        this.domService.addClass(item, 'eksi-author-menu-item');
 
         // Create icon
         const iconElement = this.iconComponent.create({
@@ -937,7 +937,7 @@ export class AuthorHighlighterService {
         item.appendChild(textNode);
 
         // Add click handler
-        this.domHandler.addEventListener(item, 'click', (e) => {
+        this.domService.addEventListener(item, 'click', (e) => {
             e.stopPropagation();
             onClick();
         });
@@ -998,14 +998,14 @@ export class AuthorHighlighterService {
             const footerContainer = this.notificationService.getFooterContainer();
             if (footerContainer) {
                 // Create buttons container
-                const buttons = this.domHandler.createElement('div');
+                const buttons = this.domService.createElement('div');
                 buttons.style.display = 'flex';
                 buttons.style.justifyContent = 'flex-end';
                 buttons.style.gap = '10px';
                 buttons.style.marginTop = '10px';
 
                 // Create cancel button
-                const cancelButton = this.domHandler.createElement('button');
+                const cancelButton = this.domService.createElement('button');
                 cancelButton.textContent = 'İptal';
                 cancelButton.style.padding = '6px 12px';
                 cancelButton.style.border = 'none';
@@ -1013,7 +1013,7 @@ export class AuthorHighlighterService {
                 cancelButton.style.cursor = 'pointer';
 
                 // Create save button
-                const saveButton = this.domHandler.createElement('button');
+                const saveButton = this.domService.createElement('button');
                 saveButton.textContent = 'Kaydet';
                 saveButton.style.padding = '6px 12px';
                 saveButton.style.backgroundColor = '#81c14b';
@@ -1023,11 +1023,11 @@ export class AuthorHighlighterService {
                 saveButton.style.cursor = 'pointer';
 
                 // Add event listeners
-                this.domHandler.addEventListener(cancelButton, 'click', () => {
+                this.domService.addEventListener(cancelButton, 'click', () => {
                     this.notificationService.close();
                 });
 
-                this.domHandler.addEventListener(saveButton, 'click', () => {
+                this.domService.addEventListener(saveButton, 'click', () => {
                     const colorInput = document.getElementById('eksi-color-input') as HTMLInputElement;
                     if (colorInput) {
                         const color = colorInput.value;
@@ -1050,16 +1050,16 @@ export class AuthorHighlighterService {
                 const colorPresets = document.getElementById('eksi-color-presets');
 
                 if (colorInput && colorPreview) {
-                    this.domHandler.addEventListener(colorInput, 'input', () => {
+                    this.domService.addEventListener(colorInput, 'input', () => {
                         const color = (colorInput as HTMLInputElement).value;
                         colorPreview.style.backgroundColor = color;
                     });
                 }
 
                 if (colorPresets) {
-                    const presetElements = this.domHandler.querySelectorAll('.eksi-color-preset', colorPresets);
+                    const presetElements = this.domService.querySelectorAll('.eksi-color-preset', colorPresets);
                     presetElements.forEach(preset => {
-                        this.domHandler.addEventListener(preset as HTMLElement, 'click', () => {
+                        this.domService.addEventListener(preset as HTMLElement, 'click', () => {
                             const color = preset.getAttribute('data-color');
                             if (color && colorInput && colorPreview) {
                                 (colorInput as HTMLInputElement).value = color;
@@ -1115,14 +1115,14 @@ export class AuthorHighlighterService {
             const footerContainer = this.notificationService.getFooterContainer();
             if (footerContainer) {
                 // Create buttons container
-                const buttons = this.domHandler.createElement('div');
+                const buttons = this.domService.createElement('div');
                 buttons.style.display = 'flex';
                 buttons.style.justifyContent = 'flex-end';
                 buttons.style.gap = '10px';
                 buttons.style.marginTop = '10px';
 
                 // Create cancel button
-                const cancelButton = this.domHandler.createElement('button');
+                const cancelButton = this.domService.createElement('button');
                 cancelButton.textContent = 'İptal';
                 cancelButton.style.padding = '6px 12px';
                 cancelButton.style.border = 'none';
@@ -1130,7 +1130,7 @@ export class AuthorHighlighterService {
                 cancelButton.style.cursor = 'pointer';
 
                 // Create save button
-                const saveButton = this.domHandler.createElement('button');
+                const saveButton = this.domService.createElement('button');
                 saveButton.textContent = 'Kaydet';
                 saveButton.style.padding = '6px 12px';
                 saveButton.style.backgroundColor = '#81c14b';
@@ -1140,11 +1140,11 @@ export class AuthorHighlighterService {
                 saveButton.style.cursor = 'pointer';
 
                 // Add event listeners
-                this.domHandler.addEventListener(cancelButton, 'click', () => {
+                this.domService.addEventListener(cancelButton, 'click', () => {
                     this.notificationService.close();
                 });
 
-                this.domHandler.addEventListener(saveButton, 'click', () => {
+                this.domService.addEventListener(saveButton, 'click', () => {
                     const noteEditor = document.getElementById('eksi-note-editor') as HTMLTextAreaElement;
                     if (noteEditor) {
                         const notes = noteEditor.value.trim();
@@ -1321,7 +1321,7 @@ export class AuthorHighlighterService {
         // Remove highlights
         const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
         entries.forEach(entry => {
-            this.domHandler.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
+            this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
         });
 
         this.isInitialized = false;

@@ -32,10 +32,12 @@ import {ContainerService} from "../services/container-service";
 import {BlockFavoritesButtonComponent} from "../components/features/block-favorites-button-component";
 import {containerThemeService} from "../services/container-theme-service";
 import {SearchFilterComponent} from "../components/features/search-filter-component";
+import {DocumentStateService} from "../services/document-state-service";
 import {IStorageService} from "../interfaces/services/IStorageService";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {IDocumentStateService} from "../interfaces/services/IDocumentStateService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {INotificationComponent} from "../interfaces/components/INotificationComponent";
@@ -111,6 +113,12 @@ export function initializeDI(): Container {
         return new PreferencesService(storageService, loggingService);
     });
 
+    container.register('DocumentStateService', () => {
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const domService = container.resolve<IDOMService>('DOMService');
+        return new DocumentStateService(loggingService, domService);
+    });
+
     // Register UI components
     container.register('IconComponent', () => {
         const domService = container.resolve<IDOMService>('DOMService');
@@ -152,7 +160,8 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
-        return new ModalComponent(domService, cssService, loggingService, buttonComponent);
+        const documentState = container.resolve<IDocumentStateService>('DocumentStateService');
+        return new ModalComponent(domService, cssService, loggingService, buttonComponent, documentState);
     });
 
     container.register('CountdownComponent', () => {
@@ -173,7 +182,7 @@ export function initializeDI(): Container {
     });
 
     container.register('BlockFavoritesButtonComponent', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -182,7 +191,7 @@ export function initializeDI(): Container {
         const blockModalFactory = container.resolve<IBlockOptionsModalFactory>('BlockOptionsModalFactory');
 
         return new BlockFavoritesButtonComponent(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
@@ -272,7 +281,7 @@ export function initializeDI(): Container {
     });
 
     container.register('BlockOptionsModalFactory', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
@@ -281,7 +290,7 @@ export function initializeDI(): Container {
         const preferencesService = container.resolve<IPreferencesService>('PreferencesService');
 
         return new BlockOptionsModalFactory(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             container,
@@ -293,14 +302,14 @@ export function initializeDI(): Container {
     });
 
     container.register('ResumeModalFactory', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
         const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
 
         return new ResumeModalFactory(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             blockUsersService,
@@ -310,7 +319,7 @@ export function initializeDI(): Container {
     });
 
     container.register('CopyButtonComponent', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -320,7 +329,7 @@ export function initializeDI(): Container {
         const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
 
         return new CopyButtonComponent(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
@@ -332,25 +341,27 @@ export function initializeDI(): Container {
     });
 
     container.register('ScreenshotButtonComponent', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const containerService = container.resolve<ContainerService>('ContainerService');
+        const documentStateService = container.resolve<IDocumentStateService>('DocumentStateService');
 
         return new ScreenshotButtonComponent(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
             observerService,
-            containerService
+            containerService,
+            documentStateService
         );
     });
 
     container.register('AuthorHighlightButtonComponent', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -360,7 +371,7 @@ export function initializeDI(): Container {
         const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
 
         return new AuthorHighlightButtonComponent(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
@@ -420,7 +431,7 @@ export function initializeDI(): Container {
     });
 
     container.register('EntrySorterComponent', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -433,7 +444,7 @@ export function initializeDI(): Container {
         const sortingDataExtractor = container.resolve<SortingDataExtractor>('SortingDataExtractor');
 
         return new EntrySorterComponent(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
@@ -448,7 +459,7 @@ export function initializeDI(): Container {
     });
 
     container.register('PostManagementService', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -459,7 +470,7 @@ export function initializeDI(): Container {
         const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
 
         return new PostManagementService(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
@@ -472,7 +483,7 @@ export function initializeDI(): Container {
     });
 
     container.register('SearchFilterComponent', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const cssHandler = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -481,7 +492,7 @@ export function initializeDI(): Container {
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
 
         return new SearchFilterComponent(
-            domHandler,
+            domService,
             cssHandler,
             loggingService,
             iconComponent,
@@ -505,9 +516,9 @@ export function initializeDI(): Container {
     });
 
     container.register('ContainerService', () => {
-        const domHandler = container.resolve<IDOMService>('DOMService');
+        const domService = container.resolve<IDOMService>('DOMService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        return new ContainerService(domHandler, loggingService);
+        return new ContainerService(domService, loggingService);
     });
 
     container.register('EventBus', () => {

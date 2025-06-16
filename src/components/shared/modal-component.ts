@@ -2,9 +2,11 @@ import {DOMService} from '../../services/dom-service';
 import {CSSService} from '../../services/css-service';
 import {ButtonComponent} from './button-component';
 import {LoggingService} from "../../services/logging-service";
+import {DocumentStateService} from "../../services/document-state-service";
 import {ICSSService} from "../../interfaces/services/ICSSService";
 import {ILoggingService} from "../../interfaces/services/ILoggingService";
 import {IDOMService} from "../../interfaces/services/IDOMService";
+import {IDocumentStateService} from "../../interfaces/services/IDocumentStateService";
 import {ButtonSize, ButtonVariant} from "../../interfaces/components/IButtonComponent";
 import {IModalComponent, ModalOptions} from "../../interfaces/components/IModalComponent";
 
@@ -17,10 +19,11 @@ export class ModalComponent implements IModalComponent {
     };
 
     constructor(
-        protected domHandler: IDOMService,
+        protected domService: IDOMService,
         protected cssHandler: ICSSService,
         protected loggingService: ILoggingService,
         protected buttonComponent: ButtonComponent,
+        protected documentState: IDocumentStateService,
     ) {
         this.applyModalStyles();
     }
@@ -35,6 +38,9 @@ export class ModalComponent implements IModalComponent {
             }
             this.createElement();
             this.appendModalToDOM();
+
+            // Disable page scrolling while modal is open
+            this.documentState.setScrollEnabled(false);
 
             // Add keydown listener for Escape key to close modal (if enabled)
             if (this.options.allowEscapeClose !== false) {
@@ -73,32 +79,32 @@ export class ModalComponent implements IModalComponent {
         if (this.modalElement) return;
 
         // Create the modal container
-        this.modalElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.modalElement, 'eksi-modal');
+        this.modalElement = this.domService.createElement('div');
+        this.domService.addClass(this.modalElement, 'eksi-modal');
 
         // Create the modal content container
-        const modalContent = this.domHandler.createElement('div');
-        this.domHandler.addClass(modalContent, 'eksi-modal-content');
+        const modalContent = this.domService.createElement('div');
+        this.domService.addClass(modalContent, 'eksi-modal-content');
 
         // Add close button if enabled
         if (this.options.showCloseButton !== false) {
             const closeButton = this.createCloseButton();
-            this.domHandler.appendChild(modalContent, closeButton);
+            this.domService.appendChild(modalContent, closeButton);
         }
 
         // Add title if provided
         if (this.options.title) {
-            const titleElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(titleElement, 'eksi-modal-title');
+            const titleElement = this.domService.createElement('div');
+            this.domService.addClass(titleElement, 'eksi-modal-title');
             titleElement.textContent = this.options.title;
-            this.domHandler.appendChild(modalContent, titleElement);
+            this.domService.appendChild(modalContent, titleElement);
         }
 
-        this.domHandler.appendChild(this.modalElement, modalContent);
+        this.domService.appendChild(this.modalElement, modalContent);
 
         // Add backdrop click to close (if enabled)
         if (this.options.allowBackdropClose !== false) {
-            this.domHandler.addEventListener(this.modalElement, 'click', (e) => {
+            this.domService.addEventListener(this.modalElement, 'click', (e) => {
                 if (e.target === this.modalElement) {
                     this.close();
                 }
@@ -110,13 +116,13 @@ export class ModalComponent implements IModalComponent {
      * Create close button element
      */
     private createCloseButton(): HTMLElement {
-        const closeButton = this.domHandler.createElement('button');
-        this.domHandler.addClass(closeButton, 'eksi-modal-close');
+        const closeButton = this.domService.createElement('button');
+        this.domService.addClass(closeButton, 'eksi-modal-close');
         closeButton.innerHTML = '×';
         closeButton.setAttribute('aria-label', 'Close modal');
         closeButton.setAttribute('type', 'button');
         
-        this.domHandler.addEventListener(closeButton, 'click', () => {
+        this.domService.addEventListener(closeButton, 'click', () => {
             this.close();
         });
 
@@ -162,7 +168,7 @@ export class ModalComponent implements IModalComponent {
      */
     protected appendModalToDOM(): void {
         if (this.modalElement) {
-            this.domHandler.appendChild(document.body, this.modalElement);
+            this.domService.appendChild(document.body, this.modalElement);
         }
     }
 
@@ -175,16 +181,17 @@ export class ModalComponent implements IModalComponent {
         document.removeEventListener('keydown', this.handleEscapeKey);
 
         // Add closing animation classes
-        this.domHandler.addClass(this.modalElement, 'eksi-modal-closing');
+        this.domService.addClass(this.modalElement, 'eksi-modal-closing');
         const modalContent = this.modalElement.querySelector('.eksi-modal-content');
         if (modalContent) {
-            this.domHandler.addClass(modalContent as HTMLElement, 'eksi-modal-content-closing');
+            this.domService.addClass(modalContent as HTMLElement, 'eksi-modal-content-closing');
         }
 
         // Wait for animation to complete before removing from DOM
         setTimeout(() => {
             if (this.modalElement && this.modalElement.parentNode) {
-                document.body.style.overflow = ''; // Restore scrolling
+                // Restore page scrolling
+                this.documentState.setScrollEnabled(true);
                 this.modalElement.parentNode.removeChild(this.modalElement);
                 this.modalElement = null;
             }
@@ -206,11 +213,14 @@ export class ModalComponent implements IModalComponent {
         background-color: rgba(0, 0, 0, 0.65);
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         z-index: 100001;
         animation: eksiModalFadeIn 0.3s ease;
         backdrop-filter: blur(3px);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-y: auto;
       }
 
       @keyframes eksiModalFadeIn {
@@ -234,6 +244,10 @@ export class ModalComponent implements IModalComponent {
         animation: eksiModalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         transform: translateY(0);
         position: relative;
+        margin: auto;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        box-sizing: border-box;
       }
 
       @keyframes eksiModalSlideIn {

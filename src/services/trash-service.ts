@@ -24,7 +24,7 @@ export class TrashService {
 
     constructor(
         private httpService: IHttpService,
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private loggingService: ILoggingService,
         private notificationService: INotificationService,
         private iconComponent:IIconComponent,
@@ -74,12 +74,12 @@ export class TrashService {
     private detectPagination(): void {
         try {
             // Find the last page number from pagination controls
-            const lastPageElement = this.domHandler.querySelector<HTMLAnchorElement>('.pager a.last');
+            const lastPageElement = this.domService.querySelector<HTMLAnchorElement>('.pager a.last');
             if (lastPageElement) {
                 this.lastPage = parseInt(lastPageElement.innerText, 10);
             } else {
                 // If no "last" link, check other pagination links
-                const paginationLinks = this.domHandler.querySelectorAll<HTMLAnchorElement>('.pager a');
+                const paginationLinks = this.domService.querySelectorAll<HTMLAnchorElement>('.pager a');
                 if (paginationLinks.length > 0) {
                     const pageNumbers = Array.from(paginationLinks)
                         .map(link => {
@@ -95,7 +95,7 @@ export class TrashService {
             }
 
             // Determine current page
-            const currentPageElement = this.domHandler.querySelector<HTMLAnchorElement>('.pager a.current');
+            const currentPageElement = this.domService.querySelector<HTMLAnchorElement>('.pager a.current');
             if (currentPageElement) {
                 this.currentPage = parseInt(currentPageElement.innerText, 10);
             } else {
@@ -120,19 +120,19 @@ export class TrashService {
         }
 
         try {
-            const trashItems = this.domHandler.querySelector('#trash-items');
+            const trashItems = this.domService.querySelector('#trash-items');
             if (!trashItems) {
                 this.loggingService.error('Trash items container not found');
                 return;
             }
 
-            const loadMoreContainer = this.domHandler.createElement('div');
+            const loadMoreContainer = this.domService.createElement('div');
             loadMoreContainer.className = 'eksi-load-more-container';
             loadMoreContainer.style.textAlign = 'center';
             loadMoreContainer.style.margin = '20px 0';
             loadMoreContainer.style.padding = '10px';
 
-            const loadMoreButton = this.domHandler.createElement('button');
+            const loadMoreButton = this.domService.createElement('button');
             loadMoreButton.className = 'eksi-load-more-button';
             loadMoreButton.style.padding = '8px 16px';
             loadMoreButton.style.backgroundColor = '#81c14b';
@@ -144,7 +144,7 @@ export class TrashService {
             loadMoreButton.style.fontWeight = '500';
             loadMoreButton.textContent = 'Daha Fazla Yükle';
 
-            const loadAllButton = this.domHandler.createElement('button');
+            const loadAllButton = this.domService.createElement('button');
             loadAllButton.className = 'eksi-load-all-button';
             loadAllButton.style.padding = '8px 16px';
             loadAllButton.style.backgroundColor = '#f0f0f0';
@@ -157,11 +157,11 @@ export class TrashService {
             loadAllButton.style.marginLeft = '10px';
             loadAllButton.textContent = 'Tümünü Yükle';
 
-            this.domHandler.addEventListener(loadMoreButton, 'click', () => {
+            this.domService.addEventListener(loadMoreButton, 'click', () => {
                 this.loadNextPage();
             });
 
-            this.domHandler.addEventListener(loadAllButton, 'click', () => {
+            this.domService.addEventListener(loadAllButton, 'click', () => {
                 this.loadAllPages();
             });
 
@@ -203,7 +203,7 @@ export class TrashService {
             }
 
             // Add a page separator
-            const pageSeparator = this.domHandler.createElement('div');
+            const pageSeparator = this.domService.createElement('div');
             pageSeparator.className = 'eksi-page-separator';
             pageSeparator.style.margin = '20px 0';
             pageSeparator.style.padding = '5px 10px';
@@ -298,7 +298,7 @@ export class TrashService {
             const signal = this.abortController.signal;
 
             // Change button to cancel
-            this.domHandler.addEventListener(loadAllButton, 'click', cancelClickHandler);
+            this.domService.addEventListener(loadAllButton, 'click', cancelClickHandler);
 
             let nextPage = this.currentPage + 1;
             while (nextPage <= this.lastPage && !signal.aborted) {
@@ -359,7 +359,7 @@ export class TrashService {
         const reviveLink = item.querySelector('a[href^="/cop/canlandir"]') as HTMLAnchorElement;
         if (!reviveLink) return;
 
-        this.domHandler.addEventListener(reviveLink, 'click', async (event) => {
+        this.domService.addEventListener(reviveLink, 'click', async (event) => {
             event.preventDefault();
 
             const url = reviveLink.getAttribute('href');
@@ -442,7 +442,7 @@ export class TrashService {
             const trashItems = document.querySelector('#trash-items');
             if (!trashItems) return;
 
-            const controlsContainer = this.domHandler.createElement('div');
+            const controlsContainer = this.domService.createElement('div');
             controlsContainer.className = 'eksi-bulk-revive-controls';
             controlsContainer.style.marginBottom = '20px';
             controlsContainer.style.padding = '10px';
@@ -453,9 +453,9 @@ export class TrashService {
             controlsContainer.style.justifyContent = 'space-between';
 
             // Selection controls
-            const selectionControls = this.domHandler.createElement('div');
+            const selectionControls = this.domService.createElement('div');
 
-            const selectAllButton = this.domHandler.createElement('button');
+            const selectAllButton = this.domService.createElement('button');
             selectAllButton.className = 'eksi-select-all-button';
             selectAllButton.style.padding = '6px 12px';
             selectAllButton.style.marginRight = '10px';
@@ -465,7 +465,7 @@ export class TrashService {
             selectAllButton.style.cursor = 'pointer';
             selectAllButton.textContent = 'Tümünü Seç';
 
-            const deselectAllButton = this.domHandler.createElement('button');
+            const deselectAllButton = this.domService.createElement('button');
             deselectAllButton.className = 'eksi-deselect-all-button';
             deselectAllButton.style.padding = '6px 12px';
             deselectAllButton.style.backgroundColor = '#f0f0f0';
@@ -478,9 +478,9 @@ export class TrashService {
             selectionControls.appendChild(deselectAllButton);
 
             // Action controls
-            const actionControls = this.domHandler.createElement('div');
+            const actionControls = this.domService.createElement('div');
 
-            const reviveSelectedButton = this.domHandler.createElement('button');
+            const reviveSelectedButton = this.domService.createElement('button');
             reviveSelectedButton.className = 'eksi-revive-selected-button';
             reviveSelectedButton.style.padding = '6px 12px';
             reviveSelectedButton.style.backgroundColor = '#81c14b';
@@ -491,7 +491,7 @@ export class TrashService {
             reviveSelectedButton.textContent = 'Seçilenleri Canlandır';
             reviveSelectedButton.disabled = true;
 
-            const selectionCountSpan = this.domHandler.createElement('span');
+            const selectionCountSpan = this.domService.createElement('span');
             selectionCountSpan.className = 'eksi-selection-count';
             selectionCountSpan.style.marginRight = '10px';
             selectionCountSpan.style.fontSize = '14px';
@@ -507,23 +507,23 @@ export class TrashService {
             this.addCheckboxesToTrashItems();
 
             // Add event listeners
-            this.domHandler.addEventListener(selectAllButton, 'click', () => {
+            this.domService.addEventListener(selectAllButton, 'click', () => {
                 this.toggleAllCheckboxes(true);
                 this.updateSelectionCount();
             });
 
-            this.domHandler.addEventListener(deselectAllButton, 'click', () => {
+            this.domService.addEventListener(deselectAllButton, 'click', () => {
                 this.toggleAllCheckboxes(false);
                 this.updateSelectionCount();
             });
 
-            this.domHandler.addEventListener(reviveSelectedButton, 'click', () => {
+            this.domService.addEventListener(reviveSelectedButton, 'click', () => {
                 this.bulkReviveSelected();
             });
 
             // Insert controls at the top
             if (trashItems.parentNode) {
-                this.domHandler.insertBefore(trashItems.parentNode, controlsContainer, trashItems);
+                this.domService.insertBefore(trashItems.parentNode, controlsContainer, trashItems);
             }
 
         } catch (error) {
@@ -554,7 +554,7 @@ export class TrashService {
     private addCheckboxToTrashItem(item: HTMLElement): void {
         try {
             // Create checkbox container
-            const checkboxContainer = this.domHandler.createElement('div');
+            const checkboxContainer = this.domService.createElement('div');
             checkboxContainer.className = 'eksi-trash-checkbox-container';
             checkboxContainer.style.position = 'absolute';
             checkboxContainer.style.left = '0';
@@ -565,7 +565,7 @@ export class TrashService {
             checkboxContainer.style.padding = '0 10px';
 
             // Create checkbox
-            const checkbox = this.domHandler.createElement('input');
+            const checkbox = this.domService.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'eksi-trash-checkbox';
             checkbox.style.transform = 'scale(1.2)';
@@ -579,7 +579,7 @@ export class TrashService {
             }
 
             // Add event listener to update selection count
-            this.domHandler.addEventListener(checkbox, 'change', () => {
+            this.domService.addEventListener(checkbox, 'change', () => {
                 this.updateSelectionCount();
             });
 
@@ -590,7 +590,7 @@ export class TrashService {
             item.style.paddingLeft = '40px';
 
             // Insert checkbox container at the beginning of the item
-            this.domHandler.insertBefore(item, checkboxContainer, item.firstChild);
+            this.domService.insertBefore(item, checkboxContainer, item.firstChild);
         } catch (error) {
             this.loggingService.error('Error adding checkbox to trash item:', error);
         }

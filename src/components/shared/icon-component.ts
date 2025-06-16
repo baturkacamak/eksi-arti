@@ -14,7 +14,7 @@ export class IconComponent implements IIconComponent {
     private static pendingIcons: Set<HTMLElement> = new Set();
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService
     ) {
@@ -78,8 +78,8 @@ export class IconComponent implements IIconComponent {
         // Reveal all pending icons with a fade-in effect
         IconComponent.pendingIcons.forEach(icon => {
             // Remove the loading class and add the loaded class
-            this.domHandler.removeClass(icon, 'eksi-icon-loading');
-            this.domHandler.addClass(icon, 'eksi-icon-loaded');
+            this.domService.removeClass(icon, 'eksi-icon-loading');
+            this.domService.addClass(icon, 'eksi-icon-loaded');
         });
 
         // Clear the set of pending icons
@@ -99,29 +99,29 @@ export class IconComponent implements IIconComponent {
             const {name, color, size, className, ariaHidden = true} = props;
 
             // Create icon element
-            const iconElement = this.domHandler.createElement('span');
-            this.domHandler.addClass(iconElement, 'material-icons');
-            this.domHandler.addClass(iconElement, 'eksi-icon');
+            const iconElement = this.domService.createElement('span');
+            this.domService.addClass(iconElement, 'material-icons');
+            this.domService.addClass(iconElement, 'eksi-icon');
 
             // Add the loading class if the font isn't loaded yet
             if (!IconComponent.fontLoaded) {
-                this.domHandler.addClass(iconElement, 'eksi-icon-loading');
+                this.domService.addClass(iconElement, 'eksi-icon-loading');
                 IconComponent.pendingIcons.add(iconElement);
             } else {
                 // If the font is already loaded, add the loaded class for transitions
-                this.domHandler.addClass(iconElement, 'eksi-icon-loaded');
+                this.domService.addClass(iconElement, 'eksi-icon-loaded');
             }
 
             // Add size class
             if (typeof size === 'string') {
-                this.domHandler.addClass(iconElement, `eksi-icon-${size}`);
+                this.domService.addClass(iconElement, `eksi-icon-${size}`);
             } else if (typeof size === 'number') {
                 iconElement.style.fontSize = `${size}px`;
             }
 
             // Add custom class if provided
             if (className) {
-                this.domHandler.addClass(iconElement, className);
+                this.domService.addClass(iconElement, className);
             }
 
             // Set color if provided
@@ -141,7 +141,7 @@ export class IconComponent implements IIconComponent {
         } catch (error) {
           this.loggingService.error('Error creating icon:', error);
             // Return fallback element
-            const fallbackElement = this.domHandler.createElement('span');
+            const fallbackElement = this.domService.createElement('span');
             fallbackElement.textContent = props.name;
             return fallbackElement;
         }
@@ -170,11 +170,11 @@ export class IconComponent implements IIconComponent {
             const originalColor = iconElement.style.color;
 
             // Add the transition class to trigger CSS animations
-            this.domHandler.addClass(iconElement, 'eksi-icon-transitioning');
+            this.domService.addClass(iconElement, 'eksi-icon-transitioning');
 
             // Apply specific animation class
             if (animation !== 'none') {
-                this.domHandler.addClass(iconElement, `eksi-icon-animation-${animation}`);
+                this.domService.addClass(iconElement, `eksi-icon-animation-${animation}`);
             }
 
             // Handle different animation types
@@ -209,11 +209,11 @@ export class IconComponent implements IIconComponent {
             const cleanupTimer = setTimeout(() => {
                 // Remove animation classes
                 if (animation !== 'none') {
-                    this.domHandler.removeClass(iconElement, `eksi-icon-animation-${animation}`);
+                    this.domService.removeClass(iconElement, `eksi-icon-animation-${animation}`);
                 }
 
                 // Remove the transitioning class
-                this.domHandler.removeClass(iconElement, 'eksi-icon-transitioning');
+                this.domService.removeClass(iconElement, 'eksi-icon-transitioning');
 
                 // Reset opacity explicitly in case it was modified
                 iconElement.style.opacity = '1';

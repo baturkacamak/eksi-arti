@@ -12,7 +12,7 @@ export class NotificationComponent implements INotificationComponent {
     private footerContainer: HTMLElement | null = null;
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
     ) {
@@ -129,16 +129,16 @@ export class NotificationComponent implements INotificationComponent {
             this.removeExistingNotification();
         }
 
-        this.notificationElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.notificationElement, 'eksi-notification-container');
+        this.notificationElement = this.domService.createElement('div');
+        this.domService.addClass(this.notificationElement, 'eksi-notification-container');
 
         // Add theme class
         const theme = options.theme || 'default';
-        this.domHandler.addClass(this.notificationElement, `eksi-notification-theme-${theme}`);
+        this.domService.addClass(this.notificationElement, `eksi-notification-theme-${theme}`);
 
         // Add position class - default or from options
         const position = options.position || 'top-right';
-        this.domHandler.addClass(this.notificationElement, `position-${position}`);
+        this.domService.addClass(this.notificationElement, `position-${position}`);
 
         // Set custom width if provided
         if (options.width) {
@@ -146,8 +146,8 @@ export class NotificationComponent implements INotificationComponent {
         }
 
         // Create a header with title
-        const headerElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(headerElement, 'eksi-notification-header');
+        const headerElement = this.domService.createElement('div');
+        this.domService.addClass(headerElement, 'eksi-notification-header');
         headerElement.innerHTML = `
       <div class="eksi-notification-icon">
         <span class="material-icons" aria-hidden="true">info</span>
@@ -157,31 +157,31 @@ export class NotificationComponent implements INotificationComponent {
 
         // Add close button if closable
         if (options.closable !== false) {
-            const closeButton = this.domHandler.createElement('button');
-            this.domHandler.addClass(closeButton, 'eksi-notification-close');
+            const closeButton = this.domService.createElement('button');
+            this.domService.addClass(closeButton, 'eksi-notification-close');
             closeButton.innerHTML = '×';
             closeButton.setAttribute('aria-label', 'Kapat');
 
-            this.domHandler.addEventListener(closeButton, 'click', () => {
+            this.domService.addEventListener(closeButton, 'click', () => {
                 this.removeWithTransition(options.onClose);
             });
 
-            this.domHandler.appendChild(headerElement, closeButton);
+            this.domService.appendChild(headerElement, closeButton);
         }
 
         // Create content container
-        this.contentContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.contentContainer, 'eksi-notification-content');
+        this.contentContainer = this.domService.createElement('div');
+        this.domService.addClass(this.contentContainer, 'eksi-notification-content');
         this.contentContainer.innerHTML = content;
 
         // Create footer container for additional controls
-        this.footerContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.footerContainer, 'eksi-notification-footer');
+        this.footerContainer = this.domService.createElement('div');
+        this.domService.addClass(this.footerContainer, 'eksi-notification-footer');
 
         // Assemble notification
-        this.domHandler.appendChild(this.notificationElement, headerElement);
-        this.domHandler.appendChild(this.notificationElement, this.contentContainer);
-        this.domHandler.appendChild(this.notificationElement, this.footerContainer);
+        this.domService.appendChild(this.notificationElement, headerElement);
+        this.domService.appendChild(this.notificationElement, this.contentContainer);
+        this.domService.appendChild(this.notificationElement, this.footerContainer);
     }
 
     /**
@@ -217,7 +217,7 @@ export class NotificationComponent implements INotificationComponent {
      */
     private appendNotificationToDOM(): void {
         if (this.notificationElement) {
-            this.domHandler.appendChild(document.body, this.notificationElement);
+            this.domService.appendChild(document.body, this.notificationElement);
         }
     }
 
@@ -249,8 +249,8 @@ export class NotificationComponent implements INotificationComponent {
             this.timeoutId = null;
         }
 
-        this.domHandler.removeClass(this.notificationElement, 'show');
-        this.domHandler.addClass(this.notificationElement, 'hidden');
+        this.domService.removeClass(this.notificationElement, 'show');
+        this.domService.addClass(this.notificationElement, 'hidden');
 
         const handleTransitionEnd = () => {
             if (this.notificationElement && this.notificationElement.parentNode) {
@@ -266,7 +266,7 @@ export class NotificationComponent implements INotificationComponent {
             }
         };
 
-        this.domHandler.addEventListener(this.notificationElement, 'transitionend', handleTransitionEnd, { once: true });
+        this.domService.addEventListener(this.notificationElement, 'transitionend', handleTransitionEnd, { once: true });
 
         // Fallback in case transition doesn't trigger
         setTimeout(handleTransitionEnd, 500);
@@ -278,11 +278,11 @@ export class NotificationComponent implements INotificationComponent {
     private showWithTransition(): void {
         if (!this.notificationElement) return;
 
-        this.domHandler.addClass(this.notificationElement, 'hidden');
+        this.domService.addClass(this.notificationElement, 'hidden');
         requestAnimationFrame(() => {
             if (this.notificationElement) { // Check again inside the callback
-                this.domHandler.removeClass(this.notificationElement, 'hidden');
-                this.domHandler.addClass(this.notificationElement, 'show');
+                this.domService.removeClass(this.notificationElement, 'hidden');
+                this.domService.addClass(this.notificationElement, 'show');
             }
         });
     }

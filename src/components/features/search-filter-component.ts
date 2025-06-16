@@ -48,7 +48,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     };
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -57,7 +57,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         private specificPageUtils: PageUtilsService,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
     }
 
     protected getStyles(): string | null {
@@ -275,7 +275,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
 
         this.loggingService.debug('Setting up search input listeners');
 
-        this.domHandler.addEventListener(this.searchInput, 'input', debounce((e) => {
+        this.domService.addEventListener(this.searchInput, 'input', debounce((e) => {
             const value = this.searchInput?.value || '';
             this.loggingService.debug(`Search input changed: "${value}"`);
             if (this.clearButton) {
@@ -284,7 +284,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.performSearch();
         }, 300));
 
-        this.domHandler.addEventListener(this.searchInput, 'keydown', (e) => {
+        this.domService.addEventListener(this.searchInput, 'keydown', (e) => {
             this.loggingService.debug(`Search keydown event: key="${(e as KeyboardEvent).key}", filterMode=${this.filterMode}, highlightedElements.length=${this.highlightedElements.length}`);
             this.handleSearchKeydown(e as KeyboardEvent);
         });
@@ -350,23 +350,23 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             }
 
             this.loggingService.debug('injectSearchRowDOM: Creating search row elements');
-            this.searchRow = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.searchRow, 'eksi-search-row');
+            this.searchRow = this.domService.createElement('div');
+            this.domService.addClass(this.searchRow, 'eksi-search-row');
             this.searchRow.style.width = '100%';
             this.searchRow.style.marginTop = '5px';
             this.searchRow.style.marginBottom = '15px';
             this.loggingService.debug(`injectSearchRowDOM: searchRow created: ${!!this.searchRow}`);
 
-            this.searchContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.searchContainer, 'eksi-search-container');
+            this.searchContainer = this.domService.createElement('div');
+            this.domService.addClass(this.searchContainer, 'eksi-search-container');
             this.searchContainer.style.width = '100%';
             this.loggingService.debug(`injectSearchRowDOM: searchContainer created: ${!!this.searchContainer}`);
 
-            this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
+            this.searchInput = this.domService.createElement('input') as HTMLInputElement;
             this.searchInput.type = 'text';
             this.searchInput.placeholder = 'Yazı içeriklerinde ara (hem vurgular hem filtreler)...';
             this.searchInput.autocomplete = 'off';
-            this.domHandler.addClass(this.searchInput, 'eksi-search-input');
+            this.domService.addClass(this.searchInput, 'eksi-search-input');
             this.loggingService.debug(`injectSearchRowDOM: searchInput created: ${!!this.searchInput}, type: ${this.searchInput.type}`);
 
             const searchIcon = this.iconComponent.create({
@@ -377,8 +377,8 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             });
             this.loggingService.debug(`injectSearchRowDOM: searchIcon created: ${!!searchIcon}`);
 
-            this.controlsContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.controlsContainer, 'eksi-search-controls');
+            this.controlsContainer = this.domService.createElement('div');
+            this.domService.addClass(this.controlsContainer, 'eksi-search-controls');
             this.loggingService.debug(`injectSearchRowDOM: controlsContainer created: ${!!this.controlsContainer}`);
 
             this.loggingService.debug('injectSearchRowDOM: Creating toggle buttons');
@@ -403,8 +403,8 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             const helpButton = this.createHelpButton();
 
             this.loggingService.debug('injectSearchRowDOM: Creating clear button');
-            this.clearButton = this.domHandler.createElement('span');
-            this.domHandler.addClass(this.clearButton, 'eksi-search-clear');
+            this.clearButton = this.domService.createElement('span');
+            this.domService.addClass(this.clearButton, 'eksi-search-clear');
             this.clearButton.style.display = 'none';
 
             const clearIcon = this.iconComponent.create({
@@ -413,9 +413,9 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                 color: '#999',
                 className: 'eksi-search-clear-icon'
             });
-            this.domHandler.appendChild(this.clearButton, clearIcon);
+            this.domService.appendChild(this.clearButton, clearIcon);
 
-            this.domHandler.addEventListener(this.clearButton, 'click', () => {
+            this.domService.addEventListener(this.clearButton, 'click', () => {
                 if (this.searchInput) {
                     this.searchInput.value = '';
                     this.clearButton!.style.display = 'none';
@@ -424,43 +424,43 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                 }
             });
 
-            this.resultCounter = this.domHandler.createElement('span');
-            this.domHandler.addClass(this.resultCounter, 'eksi-search-counter');
+            this.resultCounter = this.domService.createElement('span');
+            this.domService.addClass(this.resultCounter, 'eksi-search-counter');
             this.resultCounter.style.display = 'none';
             this.loggingService.debug(`injectSearchRowDOM: resultCounter created: ${!!this.resultCounter}`);
 
             this.loggingService.debug('injectSearchRowDOM: Appending elements to containers');
-            this.domHandler.appendChild(this.searchContainer, searchIcon);
-            this.domHandler.appendChild(this.searchContainer, this.searchInput);
-            this.domHandler.appendChild(this.searchContainer, this.clearButton);
-            this.domHandler.appendChild(this.searchContainer, this.resultCounter);
+            this.domService.appendChild(this.searchContainer, searchIcon);
+            this.domService.appendChild(this.searchContainer, this.searchInput);
+            this.domService.appendChild(this.searchContainer, this.clearButton);
+            this.domService.appendChild(this.searchContainer, this.resultCounter);
             this.loggingService.debug('injectSearchRowDOM: searchContainer elements appended');
 
-            this.domHandler.appendChild(this.controlsContainer, caseButton);
-            this.domHandler.appendChild(this.controlsContainer, regexButton);
-            this.domHandler.appendChild(this.controlsContainer, normalizeButton);
-            this.domHandler.appendChild(this.controlsContainer, helpButton);
-            this.domHandler.appendChild(this.controlsContainer, prevButton);
-            this.domHandler.appendChild(this.controlsContainer, nextButton);
+            this.domService.appendChild(this.controlsContainer, caseButton);
+            this.domService.appendChild(this.controlsContainer, regexButton);
+            this.domService.appendChild(this.controlsContainer, normalizeButton);
+            this.domService.appendChild(this.controlsContainer, helpButton);
+            this.domService.appendChild(this.controlsContainer, prevButton);
+            this.domService.appendChild(this.controlsContainer, nextButton);
             this.loggingService.debug('injectSearchRowDOM: controlsContainer elements appended');
 
-            this.domHandler.appendChild(this.searchRow, this.searchContainer);
-            this.domHandler.appendChild(this.searchRow, this.controlsContainer);
+            this.domService.appendChild(this.searchRow, this.searchContainer);
+            this.domService.appendChild(this.searchRow, this.controlsContainer);
             this.loggingService.debug('injectSearchRowDOM: searchRow containers appended');
 
             this.loggingService.debug('injectSearchRowDOM: Inserting searchRow into DOM');
             if (customControlsRow && customControlsRow.parentNode) {
                 this.loggingService.debug('injectSearchRowDOM: Inserting after customControlsRow');
-                this.domHandler.insertBefore(customControlsRow.parentNode, this.searchRow, customControlsRow.nextSibling);
+                this.domService.insertBefore(customControlsRow.parentNode, this.searchRow, customControlsRow.nextSibling);
             } else {
                 const entryList = topicElement.querySelector('#entry-item-list');
                 this.loggingService.debug(`injectSearchRowDOM: entryList found: ${!!entryList}`);
                 if (entryList) {
                     this.loggingService.debug('injectSearchRowDOM: Inserting before entryList');
-                    this.domHandler.insertBefore(topicElement, this.searchRow, entryList);
+                    this.domService.insertBefore(topicElement, this.searchRow, entryList);
                 } else {
                     this.loggingService.debug('injectSearchRowDOM: Appending to topicElement');
-                    this.domHandler.appendChild(topicElement, this.searchRow);
+                    this.domService.appendChild(topicElement, this.searchRow);
                 }
             }
             
@@ -512,11 +512,11 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     private createToggleButton(iconName: string, tooltip: string, initialState: boolean, changeHandler: (active: boolean) => void): HTMLElement {
-        const button = this.domHandler.createElement('button');
-        this.domHandler.addClass(button, 'eksi-search-button');
-        this.domHandler.addClass(button, 'eksi-search-toggle');
+        const button = this.domService.createElement('button');
+        this.domService.addClass(button, 'eksi-search-button');
+        this.domService.addClass(button, 'eksi-search-toggle');
         if (initialState) {
-            this.domHandler.addClass(button, 'active');
+            this.domService.addClass(button, 'active');
         }
         button.setAttribute('title', tooltip);
         const icon = this.iconComponent.create({
@@ -524,16 +524,16 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             size: 'small',
             className: 'eksi-search-button-icon'
         });
-        this.domHandler.appendChild(button, icon);
-        this.domHandler.addEventListener(button, 'click', () => {
-            const isActive = this.domHandler.hasClass(button, 'active');
+        this.domService.appendChild(button, icon);
+        this.domService.addEventListener(button, 'click', () => {
+            const isActive = this.domService.hasClass(button, 'active');
             if (isActive) {
                 if (iconName === 'filter_list' || iconName === 'format_color_text') {
                     return;
                 }
-                this.domHandler.removeClass(button, 'active');
+                this.domService.removeClass(button, 'active');
             } else {
-                this.domHandler.addClass(button, 'active');
+                this.domService.addClass(button, 'active');
             }
             changeHandler(!isActive);
         });
@@ -541,36 +541,36 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     private createActionButton(iconName: string, tooltip: string, clickHandler: () => void): HTMLElement {
-        const button = this.domHandler.createElement('button');
-        this.domHandler.addClass(button, 'eksi-search-button');
+        const button = this.domService.createElement('button');
+        this.domService.addClass(button, 'eksi-search-button');
         button.setAttribute('title', tooltip);
         const icon = this.iconComponent.create({
             name: iconName,
             size: 'small',
             className: 'eksi-search-button-icon'
         });
-        this.domHandler.appendChild(button, icon);
-        this.domHandler.addEventListener(button, 'click', clickHandler);
+        this.domService.appendChild(button, icon);
+        this.domService.addEventListener(button, 'click', clickHandler);
         return button;
     }
 
     private createHelpButton(): HTMLElement {
-        const button = this.domHandler.createElement('button');
-        this.domHandler.addClass(button, 'eksi-search-button');
+        const button = this.domService.createElement('button');
+        this.domService.addClass(button, 'eksi-search-button');
         button.setAttribute('title', 'Yardım');
         button.setAttribute('data-tooltip-content', this.searchTooltipId);
-        this.domHandler.addClass(button, 'tooltip-trigger');
+        this.domService.addClass(button, 'tooltip-trigger');
         const icon = this.iconComponent.create({
             name: 'help_outline',
             size: 'small',
             className: 'eksi-search-button-icon'
         });
-        this.domHandler.appendChild(button, icon);
+        this.domService.appendChild(button, icon);
         return button;
     }
 
     private createSearchHelpTooltip(): void {
-        const tooltipContent = this.domHandler.createElement('div');
+        const tooltipContent = this.domService.createElement('div');
         tooltipContent.id = this.searchTooltipId;
         tooltipContent.style.display = 'none';
         tooltipContent.innerHTML = `
@@ -781,7 +781,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     private navigateHighlights(direction: 'next' | 'prev'): void {
         if (this.highlightedElements.length === 0) return;
         if (this.currentIndex >= 0 && this.currentIndex < this.highlightedElements.length) {
-            this.domHandler.removeClass(this.highlightedElements[this.currentIndex], 'active');
+            this.domService.removeClass(this.highlightedElements[this.currentIndex], 'active');
         }
         if (direction === 'next') {
             this.currentIndex = (this.currentIndex + 1) % this.highlightedElements.length;
@@ -789,7 +789,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.currentIndex = (this.currentIndex - 1 + this.highlightedElements.length) % this.highlightedElements.length;
         }
         const currentHighlight = this.highlightedElements[this.currentIndex];
-        this.domHandler.addClass(currentHighlight, 'active');
+        this.domService.addClass(currentHighlight, 'active');
         currentHighlight.scrollIntoView({
             behavior: 'smooth',
             block: 'center'

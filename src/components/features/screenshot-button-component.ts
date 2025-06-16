@@ -9,6 +9,7 @@ import { IDOMService } from "../../interfaces/services/IDOMService";
 import { IObserverService } from "../../interfaces/services/IObserverService";
 import { IScreenshotButtonComponent } from "../../interfaces/components/IScreenshotButtonComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
+import { IDocumentStateService } from "../../interfaces/services/IDocumentStateService";
 
 /**
  * ScreenshotButtonComponent
@@ -20,15 +21,16 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
         private specificContainerService: ContainerService,
+        private documentStateService: IDocumentStateService,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
     }
 
     protected getStyles(): string | null {
@@ -230,9 +232,9 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
      * Create a screenshot button element
      */
     private createScreenshotButtonElement(entry: HTMLElement): HTMLElement {
-        const buttonContainer = this.domHandler.createElement('span');
-        this.domHandler.addClass(buttonContainer, 'eksi-screenshot-button');
-        this.domHandler.addClass(buttonContainer, 'eksi-button');
+        const buttonContainer = this.domService.createElement('span');
+        this.domService.addClass(buttonContainer, 'eksi-screenshot-button');
+        this.domService.addClass(buttonContainer, 'eksi-button');
 
         const cameraIcon = this.iconComponent.create({
             name: 'photo_camera',
@@ -242,18 +244,18 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         });
 
         const optionsMenu = this.createOptionsMenu(entry);
-        this.domHandler.appendChild(buttonContainer, cameraIcon);
-        this.domHandler.appendChild(buttonContainer, optionsMenu);
+        this.domService.appendChild(buttonContainer, cameraIcon);
+        this.domService.appendChild(buttonContainer, optionsMenu);
 
-        this.domHandler.addEventListener(buttonContainer, 'click', (e) => {
+        this.domService.addEventListener(buttonContainer, 'click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.toggleOptionsMenu(optionsMenu);
         });
 
         document.addEventListener('click', (e) => {
-            if (!buttonContainer.contains(e.target as Node) && this.domHandler.hasClass(optionsMenu, 'visible')) {
-                this.domHandler.removeClass(optionsMenu, 'visible');
+            if (!buttonContainer.contains(e.target as Node) && this.domService.hasClass(optionsMenu, 'visible')) {
+                this.domService.removeClass(optionsMenu, 'visible');
             }
         });
 
@@ -261,17 +263,17 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
     }
 
     private createOptionsMenu(entry: HTMLElement): HTMLElement {
-        const optionsMenu = this.domHandler.createElement('div');
-        this.domHandler.addClass(optionsMenu, 'eksi-screenshot-options');
+        const optionsMenu = this.domService.createElement('div');
+        this.domService.addClass(optionsMenu, 'eksi-screenshot-options');
 
-        const downloadOption = this.domHandler.createElement('div');
-        this.domHandler.addClass(downloadOption, 'eksi-screenshot-option');
+        const downloadOption = this.domService.createElement('div');
+        this.domService.addClass(downloadOption, 'eksi-screenshot-option');
         const downloadIcon = this.iconComponent.create({ name: 'download', size: 'small', color: '#8e9ed9' });
         downloadOption.appendChild(downloadIcon);
         downloadOption.appendChild(document.createTextNode('İndir'));
 
-        const clipboardOption = this.domHandler.createElement('div');
-        this.domHandler.addClass(clipboardOption, 'eksi-screenshot-option');
+        const clipboardOption = this.domService.createElement('div');
+        this.domService.addClass(clipboardOption, 'eksi-screenshot-option');
         const clipboardIcon = this.iconComponent.create({ name: 'content_copy', size: 'small', color: '#8e9ed9' });
         clipboardOption.appendChild(clipboardIcon);
         clipboardOption.appendChild(document.createTextNode('Panoya Kopyala'));
@@ -279,26 +281,26 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         const handleOptionClick = (action: 'download' | 'clipboard') => (e: Event) => {
             e.preventDefault();
             e.stopPropagation();
-            this.domHandler.removeClass(optionsMenu, 'visible');
+            this.domService.removeClass(optionsMenu, 'visible');
             const parentElement = optionsMenu.parentElement;
             if (parentElement) {
                 this.captureEntryScreenshot(entry, parentElement, action);
             }
         };
 
-        this.domHandler.addEventListener(downloadOption, 'click', handleOptionClick('download'));
-        this.domHandler.addEventListener(clipboardOption, 'click', handleOptionClick('clipboard'));
+        this.domService.addEventListener(downloadOption, 'click', handleOptionClick('download'));
+        this.domService.addEventListener(clipboardOption, 'click', handleOptionClick('clipboard'));
 
-        this.domHandler.appendChild(optionsMenu, downloadOption);
-        this.domHandler.appendChild(optionsMenu, clipboardOption);
+        this.domService.appendChild(optionsMenu, downloadOption);
+        this.domService.appendChild(optionsMenu, clipboardOption);
         return optionsMenu;
     }
 
     private toggleOptionsMenu(menu: HTMLElement): void {
-        if (this.domHandler.hasClass(menu, 'visible')) {
-            this.domHandler.removeClass(menu, 'visible');
+        if (this.domService.hasClass(menu, 'visible')) {
+            this.domService.removeClass(menu, 'visible');
         } else {
-            this.domHandler.addClass(menu, 'visible');
+            this.domService.addClass(menu, 'visible');
         }
     }
 
@@ -396,40 +398,21 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
 
     private async copyToClipboard(canvas: HTMLCanvasElement): Promise<void> {
         try {
-            if (navigator.clipboard && navigator.clipboard.write) {
-                return new Promise<void>((resolve, reject) => {
-                    canvas.toBlob(async (blob) => {
-                        if (!blob) {
-                            reject(new Error('Could not create blob from canvas'));
-                            return;
-                        }
-                        try {
-                            const item = new ClipboardItem({ 'image/png': blob });
-                            await navigator.clipboard.write([item]);
-                            this.loggingService.debug('Image copied to clipboard using Clipboard API');
-                            resolve();
-                        } catch (error) { reject(error); }
-                    }, 'image/png');
-                });
-            } else {
-                const img = document.createElement('img');
-                img.src = canvas.toDataURL('image/png');
-                const container = document.createElement('div');
-                container.appendChild(img);
-                container.style.position = 'fixed';
-                container.style.left = '-9999px';
-                document.body.appendChild(container);
-                const range = document.createRange();
-                range.selectNode(img);
-                const selection = window.getSelection();
-                if (!selection) throw new Error('Could not get window selection object');
-                selection.removeAllRanges();
-                selection.addRange(range);
-                if (!document.execCommand('copy')) throw new Error('Failed to copy image using execCommand');
-                selection.removeAllRanges();
-                document.body.removeChild(container);
-                this.loggingService.debug('Image copied to clipboard using execCommand');
+            // Store current focus and ensure document has focus for clipboard operations
+            const storedFocus = this.documentStateService.storeFocus();
+            this.documentStateService.focusElement(document.body);
+            
+            // Use DocumentStateService for clipboard operations
+            const success = await this.documentStateService.copyImageToClipboard(canvas);
+            
+            // Restore focus
+            this.documentStateService.restoreFocus(storedFocus || undefined);
+            
+            if (!success) {
+                throw new Error('Failed to copy image to clipboard');
             }
+            
+            this.loggingService.debug('Image copied to clipboard successfully');
         } catch (error) {
             this.loggingService.error('Clipboard copy failed:', error);
             throw error;
@@ -442,7 +425,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             if (!iconElement) return;
             iconElement.textContent = 'hourglass_empty';
             iconElement.style.color = '#8e9ed9';
-            this.domHandler.addClass(iconElement, 'eksi-screenshot-processing');
+            this.domService.addClass(iconElement, 'eksi-screenshot-processing');
         } catch (error) {
             this.loggingService.error('Error showing processing state:', error);
         }
@@ -452,12 +435,12 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         try {
             const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
             if (!iconElement) return;
-            this.domHandler.removeClass(iconElement, 'eksi-screenshot-processing');
+            this.domService.removeClass(iconElement, 'eksi-screenshot-processing');
             iconElement.textContent = action === 'download' ? 'check_circle' : 'assignment_turned_in';
             iconElement.style.color = '#43a047';
-            this.domHandler.addClass(iconElement, 'eksi-screenshot-success');
+            this.domService.addClass(iconElement, 'eksi-screenshot-success');
             setTimeout(() => {
-                this.domHandler.removeClass(iconElement, 'eksi-screenshot-success');
+                this.domService.removeClass(iconElement, 'eksi-screenshot-success');
                 setTimeout(() => {
                     iconElement.textContent = 'photo_camera';
                     iconElement.style.color = '#8e9ed9';
@@ -472,7 +455,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         try {
             const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
             if (!iconElement) return;
-            this.domHandler.removeClass(iconElement, 'eksi-screenshot-processing');
+            this.domService.removeClass(iconElement, 'eksi-screenshot-processing');
             iconElement.textContent = 'error_outline';
             iconElement.style.color = '#d9534f';
 

@@ -8,6 +8,7 @@ import { DateSortingStrategy } from "../commands/sorting/strategies/DateSortingS
 import { FavoriteCountSortingStrategy } from "../commands/sorting/strategies/FavoriteCountSortingStrategy";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
+import {IDocumentStateService} from "../interfaces/services/IDocumentStateService";
 import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
 import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
 
@@ -45,12 +46,14 @@ export function initializeCommandDI(container: Container): void {
     const blockUsersService = container.resolve<IBlockUsersService>("BlockUsersService");
     const html2canvas = container.resolve<IHtml2Canvas>("Html2Canvas");
     const sortingDataExtractor = container.resolve<SortingDataExtractor>("SortingDataExtractor");
+    const documentState = container.resolve<IDocumentStateService>("DocumentStateService");
 
     return new CommandFactory(
       loggingService,
       blockUsersService,
       html2canvas,
-      sortingDataExtractor
+      sortingDataExtractor,
+      documentState
     );
   });
 }

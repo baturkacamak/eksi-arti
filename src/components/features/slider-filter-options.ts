@@ -43,7 +43,7 @@ export class SliderFilterComponent extends BaseFeatureComponent {
     private instanceOptions: Required<SliderFilterOptions>;
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -51,7 +51,7 @@ export class SliderFilterComponent extends BaseFeatureComponent {
         options: SliderFilterOptions,
         baseOptions?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, baseOptions);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, baseOptions);
         
         // Set default options and merge with provided options
         this.instanceOptions = {
@@ -182,55 +182,55 @@ export class SliderFilterComponent extends BaseFeatureComponent {
 
     protected setupUI(): void {
         try {
-            this.containerElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.containerElement, 'eksi-slider-container');
+            this.containerElement = this.domService.createElement('div');
+            this.domService.addClass(this.containerElement, 'eksi-slider-container');
 
             if (this.instanceOptions.className) {
-                this.domHandler.addClass(this.containerElement, this.instanceOptions.className);
+                this.domService.addClass(this.containerElement, this.instanceOptions.className);
             }
-            this.domHandler.addClass(this.containerElement, `eksi-slider-theme-${this.instanceOptions.theme}`);
-            this.domHandler.addClass(this.containerElement, `eksi-slider-${this.instanceOptions.orientation}`);
+            this.domService.addClass(this.containerElement, `eksi-slider-theme-${this.instanceOptions.theme}`);
+            this.domService.addClass(this.containerElement, `eksi-slider-${this.instanceOptions.orientation}`);
             if (this.instanceOptions.disabled) {
-                this.domHandler.addClass(this.containerElement, 'eksi-slider-disabled');
+                this.domService.addClass(this.containerElement, 'eksi-slider-disabled');
             }
 
             if (this.instanceOptions.label) {
-                const labelElement = this.domHandler.createElement('div');
-                this.domHandler.addClass(labelElement, 'eksi-slider-label');
+                const labelElement = this.domService.createElement('div');
+                this.domService.addClass(labelElement, 'eksi-slider-label');
                 labelElement.textContent = this.instanceOptions.label;
-                this.domHandler.appendChild(this.containerElement, labelElement);
+                this.domService.appendChild(this.containerElement, labelElement);
             }
 
-            const trackContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(trackContainer, 'eksi-slider-track-container');
+            const trackContainer = this.domService.createElement('div');
+            this.domService.addClass(trackContainer, 'eksi-slider-track-container');
 
-            this.trackElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.trackElement, 'eksi-slider-track');
+            this.trackElement = this.domService.createElement('div');
+            this.domService.addClass(this.trackElement, 'eksi-slider-track');
 
-            this.progressElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.progressElement, 'eksi-slider-progress');
-            this.domHandler.appendChild(this.trackElement, this.progressElement);
-            this.domHandler.appendChild(trackContainer, this.trackElement);
+            this.progressElement = this.domService.createElement('div');
+            this.domService.addClass(this.progressElement, 'eksi-slider-progress');
+            this.domService.appendChild(this.trackElement, this.progressElement);
+            this.domService.appendChild(trackContainer, this.trackElement);
 
             if (this.instanceOptions.dualValue) {
                 this.sliderElement = this.createSliderInput('min');
-                this.domHandler.appendChild(trackContainer, this.sliderElement);
+                this.domService.appendChild(trackContainer, this.sliderElement);
                 this.secondSliderElement = this.createSliderInput('max');
-                this.domHandler.appendChild(trackContainer, this.secondSliderElement);
+                this.domService.appendChild(trackContainer, this.secondSliderElement);
                 if (this.sliderElement) this.sliderElement.value = String(this.instanceOptions.valueMin);
                 if (this.secondSliderElement) this.secondSliderElement.value = String(this.instanceOptions.valueMax);
             } else {
                 this.sliderElement = this.createSliderInput('single');
-                this.domHandler.appendChild(trackContainer, this.sliderElement);
+                this.domService.appendChild(trackContainer, this.sliderElement);
                 if (this.sliderElement) this.sliderElement.value = String(this.instanceOptions.value);
             }
 
-            this.domHandler.appendChild(this.containerElement, trackContainer);
+            this.domService.appendChild(this.containerElement, trackContainer);
 
             if (this.instanceOptions.showValueLabel) {
-                this.valueLabelElement = this.domHandler.createElement('div');
-                this.domHandler.addClass(this.valueLabelElement, 'eksi-slider-value-label');
-                this.domHandler.appendChild(this.containerElement, this.valueLabelElement);
+                this.valueLabelElement = this.domService.createElement('div');
+                this.domService.addClass(this.valueLabelElement, 'eksi-slider-value-label');
+                this.domService.appendChild(this.containerElement, this.valueLabelElement);
                 this.updateValueLabel(); // Initial update
             }
             
@@ -240,25 +240,25 @@ export class SliderFilterComponent extends BaseFeatureComponent {
         } catch (error) {
             this.loggingService.error('Error setting up slider UI:', error);
             // Create a fallback element if UI setup fails
-            this.containerElement = this.domHandler.createElement('div');
+            this.containerElement = this.domService.createElement('div');
             this.containerElement.textContent = 'Slider UI Error';
         }
     }
 
     private createSliderInput(type: 'single' | 'min' | 'max'): HTMLInputElement {
-        const slider = this.domHandler.createElement('input') as HTMLInputElement;
+        const slider = this.domService.createElement('input') as HTMLInputElement;
         slider.type = 'range';
         slider.min = String(this.instanceOptions.min);
         slider.max = String(this.instanceOptions.max);
         slider.step = String(this.instanceOptions.step);
         slider.disabled = this.instanceOptions.disabled || false;
-        this.domHandler.addClass(slider, 'eksi-slider-input');
+        this.domService.addClass(slider, 'eksi-slider-input');
 
         if (type === 'min') {
-            this.domHandler.addClass(slider, 'eksi-slider-min');
+            this.domService.addClass(slider, 'eksi-slider-min');
             slider.value = String(this.instanceOptions.valueMin);
         } else if (type === 'max') {
-            this.domHandler.addClass(slider, 'eksi-slider-max');
+            this.domService.addClass(slider, 'eksi-slider-max');
             slider.value = String(this.instanceOptions.valueMax);
         } else {
             slider.value = String(this.instanceOptions.value);
@@ -273,12 +273,12 @@ export class SliderFilterComponent extends BaseFeatureComponent {
 
     private addEventListeners(): void {
         if (!this.sliderElement) return;
-        this.domHandler.addEventListener(this.sliderElement, 'input', () => this.handleSliderInput());
-        this.domHandler.addEventListener(this.sliderElement, 'change', () => this.handleSliderChange());
+        this.domService.addEventListener(this.sliderElement, 'input', () => this.handleSliderInput());
+        this.domService.addEventListener(this.sliderElement, 'change', () => this.handleSliderChange());
 
         if (this.instanceOptions.dualValue && this.secondSliderElement) {
-            this.domHandler.addEventListener(this.secondSliderElement, 'input', () => this.handleSliderInput());
-            this.domHandler.addEventListener(this.secondSliderElement, 'change', () => this.handleSliderChange());
+            this.domService.addEventListener(this.secondSliderElement, 'input', () => this.handleSliderInput());
+            this.domService.addEventListener(this.secondSliderElement, 'change', () => this.handleSliderChange());
         }
     }
 
@@ -422,9 +422,9 @@ export class SliderFilterComponent extends BaseFeatureComponent {
         if (!this.containerElement) return;
         this.instanceOptions.disabled = disabled;
         if (disabled) {
-            this.domHandler.addClass(this.containerElement, 'eksi-slider-disabled');
+            this.domService.addClass(this.containerElement, 'eksi-slider-disabled');
         } else {
-            this.domHandler.removeClass(this.containerElement, 'eksi-slider-disabled');
+            this.domService.removeClass(this.containerElement, 'eksi-slider-disabled');
         }
         if (this.sliderElement) this.sliderElement.disabled = disabled;
         if (this.secondSliderElement) this.secondSliderElement.disabled = disabled;

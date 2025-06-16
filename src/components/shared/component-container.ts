@@ -17,7 +17,7 @@ import {IComponentContainerConfig, IContainer} from "../../interfaces/IContainer
  * A reusable container for organizing and managing UI components
  */
 export class ComponentContainer {
-    private domHandler: IDOMService;
+    private domService: IDOMService;
     private cssHandler: ICSSService;
     private containerElement: HTMLElement | null = null;
     private components: HTMLElement[] = [];
@@ -26,7 +26,7 @@ export class ComponentContainer {
     private loggingService: ILoggingService;
 
     constructor(config: IComponentContainerConfig = {}) {
-        this.domHandler = new DOMService();
+        this.domService = new DOMService();
         this.cssHandler = new CSSService();
         this.loggingService = new LoggingService();
 
@@ -53,10 +53,10 @@ export class ComponentContainer {
      */
     private createContainer(): void {
         try {
-            this.containerElement = this.domHandler.createElement('div');
+            this.containerElement = this.domService.createElement('div');
 
             // Add base class
-            this.domHandler.addClass(this.containerElement, 'eksi-component-container');
+            this.domService.addClass(this.containerElement, 'eksi-component-container');
 
             // Set ID if provided
             if (this.config.id) {
@@ -64,14 +64,14 @@ export class ComponentContainer {
             }
 
             // Add position class
-            this.domHandler.addClass(this.containerElement, `eksi-container-${this.config.position}`);
+            this.domService.addClass(this.containerElement, `eksi-container-${this.config.position}`);
 
             // Add direction class
-            this.domHandler.addClass(this.containerElement, `eksi-container-${this.config.direction}`);
+            this.domService.addClass(this.containerElement, `eksi-container-${this.config.direction}`);
 
             // Add custom class if provided
             if (this.config.className) {
-                this.domHandler.addClass(this.containerElement, this.config.className);
+                this.domService.addClass(this.containerElement, this.config.className);
             }
 
             // Apply theme
@@ -133,12 +133,12 @@ export class ComponentContainer {
         try {
             if (position === 'start') {
                 // Add to the beginning
-                this.domHandler.insertBefore(this.containerElement, component, this.containerElement.firstChild);
+                this.domService.insertBefore(this.containerElement, component, this.containerElement.firstChild);
                 this.components.unshift(component);
             } else if (typeof position === 'number' && position >= 0 && position < this.components.length) {
                 // Add at specific position
                 const referenceNode = this.components[position];
-                this.domHandler.insertBefore(this.containerElement, component, referenceNode);
+                this.domService.insertBefore(this.containerElement, component, referenceNode);
                 this.components.splice(position, 0, component);
             } else {
                 // Add to the end (default)
@@ -283,16 +283,16 @@ export class ComponentContainer {
         if (this.containerElement) {
             // Update classes if position or direction changed
             if (config.position) {
-                this.domHandler.removeClass(this.containerElement, 'eksi-container-inline');
-                this.domHandler.removeClass(this.containerElement, 'eksi-container-floating');
-                this.domHandler.removeClass(this.containerElement, 'eksi-container-fixed');
-                this.domHandler.addClass(this.containerElement, `eksi-container-${config.position}`);
+                this.domService.removeClass(this.containerElement, 'eksi-container-inline');
+                this.domService.removeClass(this.containerElement, 'eksi-container-floating');
+                this.domService.removeClass(this.containerElement, 'eksi-container-fixed');
+                this.domService.addClass(this.containerElement, `eksi-container-${config.position}`);
             }
 
             if (config.direction) {
-                this.domHandler.removeClass(this.containerElement, 'eksi-container-horizontal');
-                this.domHandler.removeClass(this.containerElement, 'eksi-container-vertical');
-                this.domHandler.addClass(this.containerElement, `eksi-container-${config.direction}`);
+                this.domService.removeClass(this.containerElement, 'eksi-container-horizontal');
+                this.domService.removeClass(this.containerElement, 'eksi-container-vertical');
+                this.domService.addClass(this.containerElement, `eksi-container-${config.direction}`);
             }
 
             // Update other styles
@@ -344,7 +344,7 @@ export class ComponentContainer {
     public insertBefore(referenceElement: HTMLElement): ComponentContainer {
         if (this.containerElement && referenceElement && referenceElement.parentNode) {
             try {
-                this.domHandler.insertBefore(referenceElement.parentNode, this.containerElement, referenceElement);
+                this.domService.insertBefore(referenceElement.parentNode, this.containerElement, referenceElement);
                 this.loggingService.debug('Container inserted before reference element', { containerId: this.config.id });
             } catch (error) {
               this.loggingService.error('Error inserting container before reference element:', error);

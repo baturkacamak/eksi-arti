@@ -31,7 +31,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
     private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent
@@ -57,11 +57,11 @@ export class SelectBoxComponent implements ISelectBoxComponent {
             }
 
             // Create container
-            this.container = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.container, 'eksi-select-box');
+            this.container = this.domService.createElement('div');
+            this.domService.addClass(this.container, 'eksi-select-box');
 
             if (props.className) {
-                this.domHandler.addClass(this.container, props.className);
+                this.domService.addClass(this.container, props.className);
             }
 
             if (props.width) {
@@ -70,11 +70,11 @@ export class SelectBoxComponent implements ISelectBoxComponent {
 
             // Create button
             this.button = this.createButton();
-            this.domHandler.appendChild(this.container, this.button);
+            this.domService.appendChild(this.container, this.button);
 
             // Create dropdown menu
             this.dropdownMenu = this.createDropdownMenu();
-            this.domHandler.appendChild(this.container, this.dropdownMenu);
+            this.domService.appendChild(this.container, this.dropdownMenu);
 
             // Add event listeners
             this.setupEventListeners();
@@ -82,13 +82,13 @@ export class SelectBoxComponent implements ISelectBoxComponent {
             return this.container;
         } catch (error) {
             this.loggingService.error('Error creating select box:', error);
-            return this.domHandler.createElement('div');
+            return this.domService.createElement('div');
         }
     }
 
     private createButton(): HTMLElement {
-        const button = this.domHandler.createElement('button');
-        this.domHandler.addClass(button, 'eksi-select-button');
+        const button = this.domService.createElement('button');
+        this.domService.addClass(button, 'eksi-select-button');
         button.setAttribute('type', 'button');
         button.setAttribute('aria-haspopup', 'listbox');
         button.setAttribute('aria-expanded', 'false');
@@ -98,8 +98,8 @@ export class SelectBoxComponent implements ISelectBoxComponent {
         }
 
         // Create content span
-        const contentSpan = this.domHandler.createElement('span');
-        this.domHandler.addClass(contentSpan, 'eksi-select-content');
+        const contentSpan = this.domService.createElement('span');
+        this.domService.addClass(contentSpan, 'eksi-select-content');
 
         // Add icon if present
         if (this.selectedOption?.icon) {
@@ -107,14 +107,14 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 name: this.selectedOption.icon,
                 size: 'small'
             });
-            this.domHandler.appendChild(contentSpan, icon);
+            this.domService.appendChild(contentSpan, icon);
         }
 
         // Add label
-        const labelSpan = this.domHandler.createElement('span');
-        this.domHandler.addClass(labelSpan, 'eksi-select-label');
+        const labelSpan = this.domService.createElement('span');
+        this.domService.addClass(labelSpan, 'eksi-select-label');
         labelSpan.textContent = this.selectedOption?.label || this.props.placeholder || '';
-        this.domHandler.appendChild(contentSpan, labelSpan);
+        this.domService.appendChild(contentSpan, labelSpan);
 
         // Add arrow icon
         const arrowIcon = this.iconComponent.create({
@@ -123,27 +123,27 @@ export class SelectBoxComponent implements ISelectBoxComponent {
             className: 'eksi-select-arrow'
         });
 
-        this.domHandler.appendChild(button, contentSpan);
-        this.domHandler.appendChild(button, arrowIcon);
+        this.domService.appendChild(button, contentSpan);
+        this.domService.appendChild(button, arrowIcon);
 
         return button;
     }
 
     private createDropdownMenu(): HTMLElement {
-        const menu = this.domHandler.createElement('div');
-        this.domHandler.addClass(menu, 'eksi-select-menu');
+        const menu = this.domService.createElement('div');
+        this.domService.addClass(menu, 'eksi-select-menu');
         menu.setAttribute('role', 'listbox');
         menu.setAttribute('tabindex', '-1');
 
         // Create search input if searchable
         if (this.props.searchable) {
-            const searchContainer = this.domHandler.createElement('div');
-            this.domHandler.addClass(searchContainer, 'eksi-select-search');
+            const searchContainer = this.domService.createElement('div');
+            this.domService.addClass(searchContainer, 'eksi-select-search');
 
-            this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
+            this.searchInput = this.domService.createElement('input') as HTMLInputElement;
             this.searchInput.setAttribute('type', 'text');
             this.searchInput.setAttribute('placeholder', 'Ara...');
-            this.domHandler.addClass(this.searchInput, 'eksi-select-search-input');
+            this.domService.addClass(this.searchInput, 'eksi-select-search-input');
 
             const searchIcon = this.iconComponent.create({
                 name: 'search',
@@ -151,16 +151,16 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 className: 'eksi-select-search-icon'
             });
 
-            this.domHandler.appendChild(searchContainer, searchIcon);
-            this.domHandler.appendChild(searchContainer, this.searchInput);
-            this.domHandler.appendChild(menu, searchContainer);
+            this.domService.appendChild(searchContainer, searchIcon);
+            this.domService.appendChild(searchContainer, this.searchInput);
+            this.domService.appendChild(menu, searchContainer);
         }
 
         // Create options list
-        this.optionsList = this.domHandler.createElement('div');
-        this.domHandler.addClass(this.optionsList, 'eksi-select-options');
+        this.optionsList = this.domService.createElement('div');
+        this.domService.addClass(this.optionsList, 'eksi-select-options');
         this.renderOptions();
-        this.domHandler.appendChild(menu, this.optionsList);
+        this.domService.appendChild(menu, this.optionsList);
 
         return menu;
     }
@@ -171,26 +171,26 @@ export class SelectBoxComponent implements ISelectBoxComponent {
         this.optionsList.innerHTML = '';
 
         if (this.filteredOptions.length === 0) {
-            const noResults = this.domHandler.createElement('div');
-            this.domHandler.addClass(noResults, 'eksi-select-no-results');
+            const noResults = this.domService.createElement('div');
+            this.domService.addClass(noResults, 'eksi-select-no-results');
             noResults.textContent = 'Sonuç bulunamadı';
-            this.domHandler.appendChild(this.optionsList, noResults);
+            this.domService.appendChild(this.optionsList, noResults);
             return;
         }
 
         this.filteredOptions.forEach((option, index) => {
-            const optionElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(optionElement, 'eksi-select-option');
+            const optionElement = this.domService.createElement('div');
+            this.domService.addClass(optionElement, 'eksi-select-option');
             optionElement.setAttribute('role', 'option');
             optionElement.setAttribute('data-value', option.value);
 
             if (this.selectedOption?.value === option.value) {
-                this.domHandler.addClass(optionElement, 'selected');
+                this.domService.addClass(optionElement, 'selected');
                 optionElement.setAttribute('aria-selected', 'true');
             }
 
             if (index === this.highlightedIndex) {
-                this.domHandler.addClass(optionElement, 'highlighted');
+                this.domService.addClass(optionElement, 'highlighted');
             }
 
             // Add icon if present
@@ -199,21 +199,21 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                     name: option.icon,
                     size: 'small'
                 });
-                this.domHandler.appendChild(optionElement, icon);
+                this.domService.appendChild(optionElement, icon);
             }
 
             // Add label
-            const label = this.domHandler.createElement('span');
+            const label = this.domService.createElement('span');
             label.textContent = option.label;
-            this.domHandler.appendChild(optionElement, label);
+            this.domService.appendChild(optionElement, label);
 
             // Add click handler
-            this.domHandler.addEventListener(optionElement, 'click', () => {
+            this.domService.addEventListener(optionElement, 'click', () => {
                 this.selectOption(option);
             });
 
             if (this.optionsList) {
-                this.domHandler.appendChild(this.optionsList, optionElement);
+                this.domService.appendChild(this.optionsList, optionElement);
             }
         });
     }
@@ -228,7 +228,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 this.toggle();
             }
         };
-        this.domHandler.addEventListener(this.button, 'click', this.buttonClickHandler);
+        this.domService.addEventListener(this.button, 'click', this.buttonClickHandler);
 
         // Document click handler (for closing)
         this.documentClickHandler = (e: MouseEvent) => {
@@ -236,7 +236,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 this.close();
             }
         };
-        this.domHandler.addEventListener(document as unknown as HTMLElement, 'click', this.documentClickHandler);
+        this.domService.addEventListener(document as unknown as HTMLElement, 'click', this.documentClickHandler);
 
         // Search input handler
         if (this.searchInput) {
@@ -244,7 +244,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 const target = e.target as HTMLInputElement;
                 this.filterOptions(target.value);
             };
-            this.domHandler.addEventListener(this.searchInput, 'input', this.searchInputHandler);
+            this.domService.addEventListener(this.searchInput, 'input', this.searchInputHandler);
         }
 
         // Keyboard navigation
@@ -281,7 +281,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                     break;
             }
         };
-        this.domHandler.addEventListener(this.container, 'keydown', this.keydownHandler);
+        this.domService.addEventListener(this.container, 'keydown', this.keydownHandler);
     }
 
     private toggle(): void {
@@ -296,7 +296,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
         if (this.isOpen || !this.dropdownMenu || !this.button || !this.container) return;
 
         this.isOpen = true;
-        this.domHandler.addClass(this.dropdownMenu, 'open');
+        this.domService.addClass(this.dropdownMenu, 'open');
         this.button.setAttribute('aria-expanded', 'true');
 
         // Position the dropdown
@@ -326,7 +326,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
         if (!this.isOpen || !this.dropdownMenu || !this.button) return;
 
         this.isOpen = false;
-        this.domHandler.removeClass(this.dropdownMenu, 'open');
+        this.domService.removeClass(this.dropdownMenu, 'open');
         this.button.setAttribute('aria-expanded', 'false');
 
         // Reset search
@@ -354,11 +354,11 @@ export class SelectBoxComponent implements ISelectBoxComponent {
         }
 
         if (position === 'top') {
-            this.domHandler.addClass(this.dropdownMenu, 'position-top');
+            this.domService.addClass(this.dropdownMenu, 'position-top');
             this.dropdownMenu.style.bottom = '100%';
             this.dropdownMenu.style.top = 'auto';
         } else {
-            this.domHandler.removeClass(this.dropdownMenu, 'position-top');
+            this.domService.removeClass(this.dropdownMenu, 'position-top');
             this.dropdownMenu.style.top = '100%';
             this.dropdownMenu.style.bottom = 'auto';
         }
@@ -388,14 +388,14 @@ export class SelectBoxComponent implements ISelectBoxComponent {
                 name: this.selectedOption.icon,
                 size: 'small'
             });
-            this.domHandler.appendChild(contentSpan, icon);
+            this.domService.appendChild(contentSpan, icon);
         }
 
         // Add label
-        const labelSpan = this.domHandler.createElement('span');
-        this.domHandler.addClass(labelSpan, 'eksi-select-label');
+        const labelSpan = this.domService.createElement('span');
+        this.domService.addClass(labelSpan, 'eksi-select-label');
         labelSpan.textContent = this.selectedOption?.label || this.props.placeholder || '';
-        this.domHandler.appendChild(contentSpan, labelSpan);
+        this.domService.appendChild(contentSpan, labelSpan);
     }
 
     private filterOptions(searchTerm: string): void {
@@ -443,9 +443,9 @@ export class SelectBoxComponent implements ISelectBoxComponent {
         const options = this.optionsList.querySelectorAll('.eksi-select-option');
         options.forEach((option, index) => {
             if (index === this.highlightedIndex) {
-                this.domHandler.addClass(option as HTMLElement, 'highlighted');
+                this.domService.addClass(option as HTMLElement, 'highlighted');
             } else {
-                this.domHandler.removeClass(option as HTMLElement, 'highlighted');
+                this.domService.removeClass(option as HTMLElement, 'highlighted');
             }
         });
     }

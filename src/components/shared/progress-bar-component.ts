@@ -16,7 +16,7 @@ export class ProgressBarComponent implements IProgressBarComponent {
     private static stylesApplied = false;
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
     ) {
@@ -29,12 +29,12 @@ export class ProgressBarComponent implements IProgressBarComponent {
     create(options: ProgressBarOptions = {}): HTMLElement {
         try {
             // Create container element
-            this.progressBarElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.progressBarElement, 'eksi-progress-container');
+            this.progressBarElement = this.domService.createElement('div');
+            this.domService.addClass(this.progressBarElement, 'eksi-progress-container');
 
             // Apply custom class if provided
             if (options.className) {
-                this.domHandler.addClass(this.progressBarElement, options.className);
+                this.domService.addClass(this.progressBarElement, options.className);
             }
 
             // Set custom height if provided
@@ -48,16 +48,16 @@ export class ProgressBarComponent implements IProgressBarComponent {
             }
 
             // Create progress fill element
-            this.progressFillElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.progressFillElement, 'eksi-progress-bar');
+            this.progressFillElement = this.domService.createElement('div');
+            this.domService.addClass(this.progressFillElement, 'eksi-progress-bar');
 
             // Apply animation and striped classes if requested
             if (options.animated) {
-                this.domHandler.addClass(this.progressFillElement, 'eksi-progress-bar-animated');
+                this.domService.addClass(this.progressFillElement, 'eksi-progress-bar-animated');
             }
 
             if (options.striped) {
-                this.domHandler.addClass(this.progressFillElement, 'eksi-progress-bar-striped');
+                this.domService.addClass(this.progressFillElement, 'eksi-progress-bar-striped');
             }
 
             // Set custom progress color if provided
@@ -67,22 +67,22 @@ export class ProgressBarComponent implements IProgressBarComponent {
 
             // Add label if provided
             if (options.label) {
-                this.labelElement = this.domHandler.createElement('div');
-                this.domHandler.addClass(this.labelElement, 'eksi-progress-label');
+                this.labelElement = this.domService.createElement('div');
+                this.domService.addClass(this.labelElement, 'eksi-progress-label');
                 this.labelElement.textContent = options.label;
-                this.domHandler.appendChild(this.progressBarElement, this.labelElement);
+                this.domService.appendChild(this.progressBarElement, this.labelElement);
             }
 
             // Add percentage text element if requested
             if (options.showPercentage) {
-                this.percentageElement = this.domHandler.createElement('div');
-                this.domHandler.addClass(this.percentageElement, 'eksi-progress-percentage');
+                this.percentageElement = this.domService.createElement('div');
+                this.domService.addClass(this.percentageElement, 'eksi-progress-percentage');
                 this.percentageElement.textContent = '0%';
-                this.domHandler.appendChild(this.progressBarElement, this.percentageElement);
+                this.domService.appendChild(this.progressBarElement, this.percentageElement);
             }
 
             // Add progress fill to container
-            this.domHandler.appendChild(this.progressBarElement, this.progressFillElement);
+            this.domService.appendChild(this.progressBarElement, this.progressFillElement);
 
             // Initialize with 0%
             this.updateProgress(0);
@@ -92,7 +92,7 @@ export class ProgressBarComponent implements IProgressBarComponent {
           this.loggingService.error('Error creating progress bar:', error);
 
             // Return a fallback element in case of error
-            const fallbackElement = this.domHandler.createElement('div');
+            const fallbackElement = this.domService.createElement('div');
             fallbackElement.textContent = 'Progress bar unavailable';
             return fallbackElement;
         }
@@ -130,11 +130,11 @@ export class ProgressBarComponent implements IProgressBarComponent {
      */
     setLabel(label: string): void {
         if (!this.labelElement) {
-            this.labelElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.labelElement, 'eksi-progress-label');
+            this.labelElement = this.domService.createElement('div');
+            this.domService.addClass(this.labelElement, 'eksi-progress-label');
 
             if (this.progressBarElement) {
-                this.domHandler.appendChild(this.progressBarElement, this.labelElement);
+                this.domService.appendChild(this.progressBarElement, this.labelElement);
             }
         }
 

@@ -26,7 +26,7 @@ export class ResumeModal extends BaseFeatureComponent {
     private modalComponent: IModalComponent;
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent, 
@@ -39,7 +39,7 @@ export class ResumeModal extends BaseFeatureComponent {
         savedState: BlockerState,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
         this.specificButtonComponent = buttonComponent;
         this.specificBlockUsersService = blockUsersService;
         this.specificContainer = container;
@@ -90,10 +90,10 @@ export class ResumeModal extends BaseFeatureComponent {
 
     protected setupUI(): void {
         // Create modal content (not the modal itself)
-        this.contentElement = this.domHandler.createElement('div');
+        this.contentElement = this.domService.createElement('div');
 
-        const modalTitle = this.domHandler.createElement('div');
-        this.domHandler.addClass(modalTitle, 'eksi-modal-title');
+        const modalTitle = this.domService.createElement('div');
+        this.domService.addClass(modalTitle, 'eksi-modal-title');
         modalTitle.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13 3C8.03 3 4 7.03 4 12H1L4.89 15.89L4.96 16.03L9 12H6C6 8.13 9.13 5 13 5C16.87 5 20 8.13 20 12C20 15.87 16.87 19 13 19C11.07 19 9.32 18.21 8.06 16.94L6.64 18.36C8.27 19.99 10.51 21 13 21C17.97 21 22 16.97 22 12C22 7.03 17.97 3 13 3ZM12 8V13L16.28 15.54L17 14.33L13.5 12.25V8H12Z" fill="#333"/>
@@ -106,8 +106,8 @@ export class ResumeModal extends BaseFeatureComponent {
         const progressPercentage = totalCount > 0 ? Math.round((processedCount / totalCount) * 100) : 0;
         const remainingCount = totalCount - processedCount;
 
-        const message = this.domHandler.createElement('div');
-        this.domHandler.addClass(message, 'eksi-modal-message');
+        const message = this.domService.createElement('div');
+        this.domService.addClass(message, 'eksi-modal-message');
         message.innerHTML = `
             <p>Entry <strong>${this.savedState.entryId}</strong> için devam eden bir işlem var.</p>
             <div class="eksi-modal-stats">
@@ -121,8 +121,8 @@ export class ResumeModal extends BaseFeatureComponent {
             <div class="eksi-modal-progress-text">İşlem %${progressPercentage} tamamlandı</div>
         `;
 
-        const buttonsContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(buttonsContainer, 'eksi-modal-buttons');
+        const buttonsContainer = this.domService.createElement('div');
+        this.domService.addClass(buttonsContainer, 'eksi-modal-buttons');
 
         const resumeButton = this.specificButtonComponent.create({
             text: 'Devam Et',
@@ -145,13 +145,13 @@ export class ResumeModal extends BaseFeatureComponent {
             onClick: () => this.close()
         });
 
-        this.domHandler.appendChild(buttonsContainer, resumeButton);
-        this.domHandler.appendChild(buttonsContainer, newButton);
-        this.domHandler.appendChild(buttonsContainer, cancelButton);
+        this.domService.appendChild(buttonsContainer, resumeButton);
+        this.domService.appendChild(buttonsContainer, newButton);
+        this.domService.appendChild(buttonsContainer, cancelButton);
 
-        this.domHandler.appendChild(this.contentElement, modalTitle);
-        this.domHandler.appendChild(this.contentElement, message);
-        this.domHandler.appendChild(this.contentElement, buttonsContainer);
+        this.domService.appendChild(this.contentElement, modalTitle);
+        this.domService.appendChild(this.contentElement, message);
+        this.domService.appendChild(this.contentElement, buttonsContainer);
     }
 
     protected registerObservers(): void { /* No observers for this modal */ }

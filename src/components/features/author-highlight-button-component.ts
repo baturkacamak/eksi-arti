@@ -16,7 +16,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
     private highlightButtons: Map<string, HTMLElement> = new Map();
 
     constructor(
-        domHandler: IDOMService,
+        domService: IDOMService,
         cssHandler: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
@@ -26,7 +26,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         private tooltipComponent: ITooltipComponent,
         options?: FeatureComponentOptions
     ) {
-        super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
     }
 
     protected getStyles(): string | null {
@@ -144,9 +144,9 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
      * Create a highlight button element
      */
     private createHighlightButtonElement(entry: HTMLElement): HTMLElement {
-        const buttonContainer = this.domHandler.createElement('span');
-        this.domHandler.addClass(buttonContainer, 'eksi-highlight-button');
-        this.domHandler.addClass(buttonContainer, 'eksi-button');
+        const buttonContainer = this.domService.createElement('span');
+        this.domService.addClass(buttonContainer, 'eksi-highlight-button');
+        this.domService.addClass(buttonContainer, 'eksi-button');
 
         const author = entry.getAttribute('data-author') || '';
         const config = this.authorHighlighterService.getConfig();
@@ -159,7 +159,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
             className: 'eksi-highlight-icon'
         });
 
-        this.domHandler.appendChild(buttonContainer, highlightIcon);
+        this.domService.appendChild(buttonContainer, highlightIcon);
 
         // Add tooltip
         this.tooltipComponent.setupTooltip(buttonContainer, {
@@ -167,7 +167,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
             position: 'top'
         });
 
-        this.domHandler.addEventListener(buttonContainer, 'click', (e) => {
+        this.domService.addEventListener(buttonContainer, 'click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.handleHighlightClick(entry, buttonContainer);
@@ -226,7 +226,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
             if (!iconElement) return;
             iconElement.textContent = 'hourglass_empty';
             iconElement.style.color = '#ffc107';
-            this.domHandler.addClass(iconElement, 'eksi-highlight-processing');
+            this.domService.addClass(iconElement, 'eksi-highlight-processing');
         } catch (error) {
             this.loggingService.error('Error showing processing state:', error);
         }
@@ -236,12 +236,12 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         try {
             const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
             if (!iconElement) return;
-            this.domHandler.removeClass(iconElement, 'eksi-highlight-processing');
+            this.domService.removeClass(iconElement, 'eksi-highlight-processing');
             iconElement.textContent = action === 'add' ? 'check_circle' : 'remove_circle';
             iconElement.style.color = action === 'add' ? '#43a047' : '#f44336';
-            this.domHandler.addClass(iconElement, 'eksi-highlight-success');
+            this.domService.addClass(iconElement, 'eksi-highlight-success');
             setTimeout(() => {
-                this.domHandler.removeClass(iconElement, 'eksi-highlight-success');
+                this.domService.removeClass(iconElement, 'eksi-highlight-success');
                 setTimeout(() => {
                     iconElement.textContent = action === 'add' ? 'highlight_off' : 'highlight';
                     iconElement.style.color = action === 'add' ? '#f44336' : '#ffc107';
@@ -256,7 +256,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         try {
             const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
             if (!iconElement) return;
-            this.domHandler.removeClass(iconElement, 'eksi-highlight-processing');
+            this.domService.removeClass(iconElement, 'eksi-highlight-processing');
             iconElement.textContent = 'error';
             iconElement.style.color = '#f44336';
             setTimeout(() => {

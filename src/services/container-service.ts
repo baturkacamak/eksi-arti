@@ -17,7 +17,7 @@ export class ContainerService {
     private notificationContainers: Map<string, ComponentContainer> = new Map();
 
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private loggingService: ILoggingService
     ) {}
 
@@ -134,21 +134,21 @@ export class ContainerService {
             const containerElement = container.getElement();
             if (containerElement) {
                 if (firstContent) {
-                    this.domHandler.insertBefore(targetElement, containerElement, firstContent);
+                    this.domService.insertBefore(targetElement, containerElement, firstContent);
                 } else {
-                    this.domHandler.appendChild(targetElement, containerElement);
+                    this.domService.appendChild(targetElement, containerElement);
                 }
             }
 
             // Add left and right sections for sort buttons and search
-            const leftSection = this.domHandler.createElement('div');
-            this.domHandler.addClass(leftSection, 'eksi-custom-controls-left');
+            const leftSection = this.domService.createElement('div');
+            this.domService.addClass(leftSection, 'eksi-custom-controls-left');
             leftSection.style.display = 'flex';
             leftSection.style.alignItems = 'center';
             leftSection.style.flexGrow = '1';
 
-            const rightSection = this.domHandler.createElement('div');
-            this.domHandler.addClass(rightSection, 'eksi-custom-controls-right');
+            const rightSection = this.domService.createElement('div');
+            this.domService.addClass(rightSection, 'eksi-custom-controls-right');
             rightSection.style.display = 'flex';
             rightSection.style.alignItems = 'center';
             rightSection.id = 'eksi-search-container';

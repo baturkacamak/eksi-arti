@@ -4,10 +4,10 @@ import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class CSSService implements ICSSService {
   private styleTagId = 'eksi-arti-style';
-  private domHandler: IDOMService;
+  private domService: IDOMService;
 
   constructor() {
-    this.domHandler = new DOMService();
+    this.domService = new DOMService();
   }
 
   /**
@@ -21,10 +21,10 @@ export class CSSService implements ICSSService {
    * Create a new style tag and append it to document head
    */
   createStyleTag(): HTMLStyleElement {
-    const style = this.domHandler.createElement('style');
+    const style = this.domService.createElement('style');
     style.id = this.styleTagId;
     style.type = 'text/css';
-    this.domHandler.appendChild(document.head, style);
+    this.domService.appendChild(document.head, style);
     return style;
   }
 
@@ -45,7 +45,7 @@ export class CSSService implements ICSSService {
       style = this.createStyleTag();
     }
     if (!this.hasCSSAdded(css)) {
-      this.domHandler.appendChild(style, document.createTextNode(css));
+      this.domService.appendChild(style, document.createTextNode(css));
     }
   }
 }

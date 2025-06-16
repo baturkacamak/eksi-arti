@@ -1,5 +1,6 @@
 import { ICommand } from "../interfaces/ICommand";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IDocumentStateService } from "../../interfaces/services/IDocumentStateService";
 
 /**
  * Interface for html2canvas library
@@ -16,7 +17,8 @@ export class CaptureScreenshotCommand implements ICommand {
     private loggingService: ILoggingService,
     private html2canvas: IHtml2Canvas,
     private entryElement: HTMLElement,
-    private action: "download" | "clipboard"
+    private action: "download" | "clipboard",
+    private documentState: IDocumentStateService
   ) {}
 
   public async execute(): Promise<boolean> {
@@ -33,7 +35,7 @@ export class CaptureScreenshotCommand implements ICommand {
         timestamp = timeElement.textContent || "";
       }
       const container = this.createScreenshotContainer(author, timestamp, contentElement, entryId);
-      document.body.appendChild(container);
+      this.documentState.appendTemporaryElement(container);
       const canvas = await this.html2canvas(container, {
         backgroundColor: "#242424",
         scale: 2,
@@ -44,9 +46,9 @@ export class CaptureScreenshotCommand implements ICommand {
       if (this.action === "download") {
         this.downloadScreenshot(canvas, author, entryId);
       } else if (this.action === "clipboard") {
-        await this.copyToClipboard(canvas);
+        await this.documentState.copyImageToClipboard(canvas);
       }
-      document.body.removeChild(container);
+      this.documentState.removeTemporaryElement(container);
       return true;
     } catch (error) {
       this.loggingService.error("Error executing CaptureScreenshotCommand:", error);
@@ -111,54 +113,7 @@ export class CaptureScreenshotCommand implements ICommand {
     }
   }
 
-  private async copyToClipboard(canvas: HTMLCanvasElement): Promise<void> {
-    try {
-      if (navigator.clipboard && navigator.clipboard.write) {
-        return new Promise<void>((resolve, reject) => {
-          canvas.toBlob(async (blob) => {
-            if (!blob) {
-              reject(new Error("Could not create blob from canvas"));
-              return;
-            }
-            try {
-              const item = new ClipboardItem({ "image/png": blob });
-              await navigator.clipboard.write([item]);
-              this.loggingService.debug("Image copied to clipboard using Clipboard API");
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          }, "image/png");
-        });
-      } else {
-        const img = document.createElement("img");
-        img.src = canvas.toDataURL("image/png");
-        const container = document.createElement("div");
-        container.appendChild(img);
-        container.style.position = "fixed";
-        container.style.left = "-9999px";
-        document.body.appendChild(container);
-        const range = document.createRange();
-        range.selectNode(img);
-        const selection = window.getSelection();
-        if (!selection) {
-          throw new Error("Could not get window selection object");
-        }
-        selection.removeAllRanges();
-        selection.addRange(range);
-        const successful = document.execCommand("copy");
-        if (!successful) {
-          throw new Error("Failed to copy image using execCommand");
-        }
-        selection.removeAllRanges();
-        document.body.removeChild(container);
-        this.loggingService.debug("Image copied to clipboard using execCommand");
-      }
-    } catch (error) {
-      this.loggingService.error("Clipboard copy failed:", error);
-      throw error;
-    }
-  }
+
 
   public getDescription(): string {
     const actionType = this.action === "download" ? "indir" : "panoya kopyala";

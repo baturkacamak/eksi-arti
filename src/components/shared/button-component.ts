@@ -17,7 +17,7 @@ export class ButtonComponent implements IButtonComponent {
      * Constructor
      */
     constructor(
-        private domHandler: IDOMService,
+        private domService: IDOMService,
         private cssHandler: ICSSService,
         private loggingService: ILoggingService,
     ) {
@@ -30,39 +30,39 @@ export class ButtonComponent implements IButtonComponent {
     public create(props: ButtonProps): HTMLButtonElement {
         try {
             // Create button element
-            this.buttonElement = this.domHandler.createElement('button');
+            this.buttonElement = this.domService.createElement('button');
 
             // Add base class
-            this.domHandler.addClass(this.buttonElement, 'eksi-button');
+            this.domService.addClass(this.buttonElement, 'eksi-button');
 
             // Add variant class
             const variant = props.variant || ButtonVariant.DEFAULT;
-            this.domHandler.addClass(this.buttonElement, `eksi-button-${variant}`);
+            this.domService.addClass(this.buttonElement, `eksi-button-${variant}`);
 
             // Add size class
             const size = props.size || ButtonSize.MEDIUM;
-            this.domHandler.addClass(this.buttonElement, `eksi-button-${size}`);
+            this.domService.addClass(this.buttonElement, `eksi-button-${size}`);
 
             // Add full width class if needed
             if (props.fullWidth) {
-                this.domHandler.addClass(this.buttonElement, 'eksi-button-full-width');
+                this.domService.addClass(this.buttonElement, 'eksi-button-full-width');
             }
 
             // Add custom class if provided
             if (props.className) {
-                this.domHandler.addClass(this.buttonElement, props.className);
+                this.domService.addClass(this.buttonElement, props.className);
             }
 
             // Handle animations
             if (props.animation && props.animation !== ButtonAnimation.NONE) {
                 this.currentAnimation = props.animation;
                 this.currentAnimationState = props.animationState || '';
-                this.domHandler.addClass(this.buttonElement, `eksi-button-${props.animation}`);
+                this.domService.addClass(this.buttonElement, `eksi-button-${props.animation}`);
                 
                 // Apply initial animation state
                 if (props.animation === ButtonAnimation.DIRECTION_TOGGLE) {
                     const direction = props.animationState || 'desc';
-                    this.domHandler.addClass(this.buttonElement, `direction-${direction}`);
+                    this.domService.addClass(this.buttonElement, `direction-${direction}`);
                 }
             }
 
@@ -74,7 +74,7 @@ export class ButtonComponent implements IButtonComponent {
             // Set disabled state if needed
             if (props.disabled) {
                 this.buttonElement.disabled = true;
-                this.domHandler.addClass(this.buttonElement, 'eksi-button-disabled');
+                this.domService.addClass(this.buttonElement, 'eksi-button-disabled');
             }
 
             // Create button content
@@ -82,14 +82,14 @@ export class ButtonComponent implements IButtonComponent {
 
             // Add click event listener if provided
             if (props.onClick && !props.disabled) {
-                this.domHandler.addEventListener(this.buttonElement, 'click', props.onClick);
+                this.domService.addEventListener(this.buttonElement, 'click', props.onClick);
             }
 
             return this.buttonElement;
         } catch (error) {
           this.loggingService.error('Error creating button:', error);
             // Return a fallback button in case of error
-            const fallbackButton = this.domHandler.createElement('button');
+            const fallbackButton = this.domService.createElement('button');
             fallbackButton.textContent = props.text;
             return fallbackButton;
         }
@@ -111,15 +111,15 @@ export class ButtonComponent implements IButtonComponent {
             const iconElement = this.createIconElement(props.icon);
 
             if (iconPosition === 'left') {
-                this.domHandler.appendChild(this.buttonElement!, iconElement);
+                this.domService.appendChild(this.buttonElement!, iconElement);
                 this.addTextContent(props.text);
             } else {
                 this.addTextContent(props.text);
-                this.domHandler.appendChild(this.buttonElement!, iconElement);
+                this.domService.appendChild(this.buttonElement!, iconElement);
             }
 
             // Add class for icon position
-            this.domHandler.addClass(this.buttonElement!, `eksi-button-icon-${iconPosition}`);
+            this.domService.addClass(this.buttonElement!, `eksi-button-icon-${iconPosition}`);
         } else {
             // Just add text content
             this.addTextContent(props.text);
@@ -130,8 +130,8 @@ export class ButtonComponent implements IButtonComponent {
      * Create icon element for material icons
      */
     private createIconElement(iconName: string): HTMLSpanElement {
-        const iconElement = this.domHandler.createElement('span');
-        this.domHandler.addClass(iconElement, 'material-icons');
+        const iconElement = this.domService.createElement('span');
+        this.domService.addClass(iconElement, 'material-icons');
         iconElement.setAttribute('aria-hidden', 'true');
         iconElement.textContent = iconName;
         return iconElement;
@@ -142,7 +142,7 @@ export class ButtonComponent implements IButtonComponent {
      */
     private addTextContent(text: string): void {
         const textNode = document.createTextNode(text);
-        this.domHandler.appendChild(this.buttonElement!, textNode);
+        this.domService.appendChild(this.buttonElement!, textNode);
     }
 
     /**
@@ -173,9 +173,9 @@ export class ButtonComponent implements IButtonComponent {
         this.buttonElement.disabled = disabled;
 
         if (disabled) {
-            this.domHandler.addClass(this.buttonElement, 'eksi-button-disabled');
+            this.domService.addClass(this.buttonElement, 'eksi-button-disabled');
         } else {
-            this.domHandler.removeClass(this.buttonElement, 'eksi-button-disabled');
+            this.domService.removeClass(this.buttonElement, 'eksi-button-disabled');
         }
     }
 
@@ -230,12 +230,12 @@ export class ButtonComponent implements IButtonComponent {
         if (!this.buttonElement) return;
 
         // Add pulse animation class
-        this.domHandler.addClass(this.buttonElement, 'direction-changing');
+        this.domService.addClass(this.buttonElement, 'direction-changing');
 
         // Update direction classes
-        this.domHandler.removeClass(this.buttonElement, 'direction-asc');
-        this.domHandler.removeClass(this.buttonElement, 'direction-desc');
-        this.domHandler.addClass(this.buttonElement, `direction-${direction}`);
+        this.domService.removeClass(this.buttonElement, 'direction-asc');
+        this.domService.removeClass(this.buttonElement, 'direction-desc');
+        this.domService.addClass(this.buttonElement, `direction-${direction}`);
 
         // Update text based on direction
         const text = direction === 'desc' ? 'Azalan' : 'Artan';
@@ -248,7 +248,7 @@ export class ButtonComponent implements IButtonComponent {
         // Remove pulse animation class after animation completes
         setTimeout(() => {
             if (this.buttonElement) {
-                this.domHandler.removeClass(this.buttonElement, 'direction-changing');
+                this.domService.removeClass(this.buttonElement, 'direction-changing');
             }
         }, 400);
     }
@@ -271,10 +271,10 @@ export class ButtonComponent implements IButtonComponent {
     private triggerPulse(): void {
         if (!this.buttonElement) return;
         
-        this.domHandler.addClass(this.buttonElement, 'eksi-button-pulse-active');
+        this.domService.addClass(this.buttonElement, 'eksi-button-pulse-active');
         setTimeout(() => {
             if (this.buttonElement) {
-                this.domHandler.removeClass(this.buttonElement, 'eksi-button-pulse-active');
+                this.domService.removeClass(this.buttonElement, 'eksi-button-pulse-active');
             }
         }, 600);
     }
@@ -285,10 +285,10 @@ export class ButtonComponent implements IButtonComponent {
     private triggerBounce(): void {
         if (!this.buttonElement) return;
         
-        this.domHandler.addClass(this.buttonElement, 'eksi-button-bounce-active');
+        this.domService.addClass(this.buttonElement, 'eksi-button-bounce-active');
         setTimeout(() => {
             if (this.buttonElement) {
-                this.domHandler.removeClass(this.buttonElement, 'eksi-button-bounce-active');
+                this.domService.removeClass(this.buttonElement, 'eksi-button-bounce-active');
             }
         }, 600);
     }
@@ -299,10 +299,10 @@ export class ButtonComponent implements IButtonComponent {
     private triggerShake(): void {
         if (!this.buttonElement) return;
         
-        this.domHandler.addClass(this.buttonElement, 'eksi-button-shake-active');
+        this.domService.addClass(this.buttonElement, 'eksi-button-shake-active');
         setTimeout(() => {
             if (this.buttonElement) {
-                this.domHandler.removeClass(this.buttonElement, 'eksi-button-shake-active');
+                this.domService.removeClass(this.buttonElement, 'eksi-button-shake-active');
             }
         }, 600);
     }
@@ -318,7 +318,7 @@ export class ButtonComponent implements IButtonComponent {
             this.setDisabled(true);
 
             // Add loading class
-            this.domHandler.addClass(this.buttonElement, 'eksi-button-loading');
+            this.domService.addClass(this.buttonElement, 'eksi-button-loading');
 
             // Store original text as data attribute
             const originalText = this.buttonElement.textContent || '';
@@ -330,17 +330,17 @@ export class ButtonComponent implements IButtonComponent {
             }
 
             // Add loading spinner
-            const spinnerElement = this.domHandler.createElement('span');
-            this.domHandler.addClass(spinnerElement, 'eksi-button-spinner');
+            const spinnerElement = this.domService.createElement('span');
+            this.domService.addClass(spinnerElement, 'eksi-button-spinner');
             this.buttonElement.prepend(spinnerElement);
         } else {
             // Remove loading class
-            this.domHandler.removeClass(this.buttonElement, 'eksi-button-loading');
+            this.domService.removeClass(this.buttonElement, 'eksi-button-loading');
 
             // Remove spinner
             const spinner = this.buttonElement.querySelector('.eksi-button-spinner');
             if (spinner) {
-                this.domHandler.removeChild(this.buttonElement, spinner);
+                this.domService.removeChild(this.buttonElement, spinner);
             }
 
             // Restore original text

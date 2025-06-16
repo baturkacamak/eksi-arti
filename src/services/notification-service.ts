@@ -229,7 +229,7 @@ export class NotificationService implements INotificationService {
 
                     // Create the modal using the factory
                     const resumeModal = resumeModalFactory.create(entryId, result.data);
-                    document.body.style.overflow = 'hidden';
+                    // Scroll management is now handled by the modal component itself
                     resumeModal.display();
                 } else {
                     this.loggingService.error('No saved operation state found');

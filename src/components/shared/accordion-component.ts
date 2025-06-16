@@ -25,7 +25,7 @@ export interface AccordionOptions {
 }
 
 export class AccordionComponent {
-    private domHandler: IDOMService;
+    private domService: IDOMService;
     private cssHandler: ICSSService;
     private accordionElement: HTMLElement | null = null;
     private items: AccordionItem[] = [];
@@ -34,7 +34,7 @@ export class AccordionComponent {
     private loggingService: ILoggingService;
 
     constructor() {
-        this.domHandler = new DOMService();
+        this.domService = new DOMService();
         this.cssHandler = new CSSService();
         this.loggingService = new LoggingService();
         this.applyAccordionStyles();
@@ -54,12 +54,12 @@ export class AccordionComponent {
             };
 
             // Create container element
-            this.accordionElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(this.accordionElement, 'eksi-accordion');
+            this.accordionElement = this.domService.createElement('div');
+            this.domService.addClass(this.accordionElement, 'eksi-accordion');
 
             // Add custom class if provided
             if (this.options.className) {
-                this.domHandler.addClass(this.accordionElement, this.options.className);
+                this.domService.addClass(this.accordionElement, this.options.className);
             }
 
             // Add items to accordion
@@ -70,7 +70,7 @@ export class AccordionComponent {
           this.loggingService.error('Error creating accordion:', error);
 
             // Return a fallback element in case of error
-            const fallbackElement = this.domHandler.createElement('div');
+            const fallbackElement = this.domService.createElement('div');
             fallbackElement.textContent = 'Accordion unavailable';
             return fallbackElement;
         }
@@ -88,8 +88,8 @@ export class AccordionComponent {
         // Add each item
         this.items.forEach((item, index) => {
             // Create item container
-            const itemElement = this.domHandler.createElement('div');
-            this.domHandler.addClass(itemElement, 'eksi-accordion-item');
+            const itemElement = this.domService.createElement('div');
+            this.domService.addClass(itemElement, 'eksi-accordion-item');
             itemElement.setAttribute('data-id', item.id);
 
             // Set initial state based on options
@@ -103,11 +103,11 @@ export class AccordionComponent {
             const contentElement = this.createContentElement(item, isInitiallyOpen);
 
             // Add to item container
-            this.domHandler.appendChild(itemElement, headerElement);
-            this.domHandler.appendChild(itemElement, contentElement);
+            this.domService.appendChild(itemElement, headerElement);
+            this.domService.appendChild(itemElement, contentElement);
 
             // Add to accordion
-            this.domHandler.appendChild(this.accordionElement!, itemElement);
+            this.domService.appendChild(this.accordionElement!, itemElement);
         });
     }
 
@@ -115,11 +115,11 @@ export class AccordionComponent {
      * Create header element for an accordion item
      */
     private createHeaderElement(item: AccordionItem, isOpen: boolean): HTMLElement {
-        const headerElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(headerElement, 'eksi-accordion-header');
+        const headerElement = this.domService.createElement('div');
+        this.domService.addClass(headerElement, 'eksi-accordion-header');
 
         if (this.options.headerClassName) {
-            this.domHandler.addClass(headerElement, this.options.headerClassName);
+            this.domService.addClass(headerElement, this.options.headerClassName);
         }
 
         let headerContent = '';
@@ -144,7 +144,7 @@ export class AccordionComponent {
         headerElement.innerHTML = headerContent;
 
         // Add click handler
-        this.domHandler.addEventListener(headerElement, 'click', () => {
+        this.domService.addEventListener(headerElement, 'click', () => {
             this.toggleItem(item.id);
         });
 
@@ -155,24 +155,24 @@ export class AccordionComponent {
      * Create content element for an accordion item
      */
     private createContentElement(item: AccordionItem, isOpen: boolean): HTMLElement {
-        const contentWrapper = this.domHandler.createElement('div');
-        this.domHandler.addClass(contentWrapper, 'eksi-accordion-content-wrapper');
+        const contentWrapper = this.domService.createElement('div');
+        this.domService.addClass(contentWrapper, 'eksi-accordion-content-wrapper');
 
         if (!isOpen) {
             contentWrapper.style.display = 'none';
         }
 
-        const contentElement = this.domHandler.createElement('div');
-        this.domHandler.addClass(contentElement, 'eksi-accordion-content');
+        const contentElement = this.domService.createElement('div');
+        this.domService.addClass(contentElement, 'eksi-accordion-content');
 
         if (this.options.contentClassName) {
-            this.domHandler.addClass(contentElement, this.options.contentClassName);
+            this.domService.addClass(contentElement, this.options.contentClassName);
         }
 
         // Add content (HTML is allowed)
         contentElement.innerHTML = item.content;
 
-        this.domHandler.appendChild(contentWrapper, contentElement);
+        this.domService.appendChild(contentWrapper, contentElement);
         return contentWrapper;
     }
 
@@ -183,7 +183,7 @@ export class AccordionComponent {
         if (!this.accordionElement) return;
 
         // Find the item element
-        const itemElement = this.domHandler.querySelector<HTMLElement>(
+        const itemElement = this.domService.querySelector<HTMLElement>(
             `.eksi-accordion-item[data-id="${itemId}"]`,
             this.accordionElement
         );
@@ -194,13 +194,13 @@ export class AccordionComponent {
         }
 
         // Find content wrapper
-        const contentWrapper = this.domHandler.querySelector<HTMLElement>(
+        const contentWrapper = this.domService.querySelector<HTMLElement>(
             '.eksi-accordion-content-wrapper',
             itemElement
         );
 
         // Find toggle icon
-        const toggleIcon = this.domHandler.querySelector<HTMLElement>(
+        const toggleIcon = this.domService.querySelector<HTMLElement>(
             '.eksi-accordion-toggle-icon',
             itemElement
         );
@@ -231,7 +231,7 @@ export class AccordionComponent {
             // Animate if enabled
             if (this.options.animated) {
                 // Get content height for animation
-                const content = this.domHandler.querySelector<HTMLElement>(
+                const content = this.domService.querySelector<HTMLElement>(
                     '.eksi-accordion-content',
                     contentWrapper
                 );
@@ -292,18 +292,18 @@ export class AccordionComponent {
     private closeAllExcept(itemId: string): void {
         if (!this.accordionElement) return;
 
-        const items = this.domHandler.querySelectorAll<HTMLElement>(
+        const items = this.domService.querySelectorAll<HTMLElement>(
             '.eksi-accordion-item:not([data-id="' + itemId + '"])',
             this.accordionElement
         );
 
         items.forEach(itemElement => {
-            const contentWrapper = this.domHandler.querySelector<HTMLElement>(
+            const contentWrapper = this.domService.querySelector<HTMLElement>(
                 '.eksi-accordion-content-wrapper',
                 itemElement
             );
 
-            const toggleIcon = this.domHandler.querySelector<HTMLElement>(
+            const toggleIcon = this.domService.querySelector<HTMLElement>(
                 '.eksi-accordion-toggle-icon',
                 itemElement
             );
@@ -375,7 +375,7 @@ export class AccordionComponent {
         if (!this.accordionElement) return;
 
         // Find the item element
-        const itemElement = this.domHandler.querySelector<HTMLElement>(
+        const itemElement = this.domService.querySelector<HTMLElement>(
             `.eksi-accordion-item[data-id="${itemId}"]`,
             this.accordionElement
         );
@@ -386,7 +386,7 @@ export class AccordionComponent {
         }
 
         // Find content element
-        const contentElement = this.domHandler.querySelector<HTMLElement>(
+        const contentElement = this.domService.querySelector<HTMLElement>(
             '.eksi-accordion-content',
             itemElement
         );
@@ -410,7 +410,7 @@ export class AccordionComponent {
         if (!this.accordionElement) return;
 
         // Find the item element
-        const itemElement = this.domHandler.querySelector<HTMLElement>(
+        const itemElement = this.domService.querySelector<HTMLElement>(
             `.eksi-accordion-item[data-id="${itemId}"]`,
             this.accordionElement
         );
@@ -421,7 +421,7 @@ export class AccordionComponent {
         }
 
         // Find title element
-        const titleElement = this.domHandler.querySelector<HTMLElement>(
+        const titleElement = this.domService.querySelector<HTMLElement>(
             '.eksi-accordion-title',
             itemElement
         );
