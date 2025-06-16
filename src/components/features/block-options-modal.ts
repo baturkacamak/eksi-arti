@@ -289,6 +289,12 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 opacity: 0.7;
             }
 
+            /* Custom toggle styles for this modal */
+            .thread-blocking-toggle,
+            .author-blocking-toggle {
+                margin-bottom: 0 !important;
+            }
+
             /* Dark mode support */
             @media (prefers-color-scheme: dark) {
                 .eksi-modal-title {
@@ -425,6 +431,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             label: '',
             checked: false,
             size: 'medium',
+            className: 'thread-blocking-toggle',
             ariaLabel: 'Kullanıcının açtığı başlıkları da engelle',
             onChange: (checked: boolean) => {
                 this.threadBlockingEnabled = checked;
@@ -464,6 +471,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             label: '',
             checked: false,
             size: 'medium',
+            className: 'author-blocking-toggle',
             ariaLabel: 'Yazının orjinal yazarını da engelle veya sessize al',
             onChange: (checked: boolean) => {
                 this.blockAuthorEnabled = checked;
