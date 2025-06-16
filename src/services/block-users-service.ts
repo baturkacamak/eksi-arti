@@ -20,6 +20,7 @@ import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {IEventBus} from "../interfaces/services/IEventBus";
+import {IProgressWidgetComponent} from "../interfaces/components/IProgressWidgetComponent";
 
 export class BlockUsersService {
     private totalUserCount: number = 0;
@@ -46,7 +47,8 @@ export class BlockUsersService {
         private notificationService: INotificationService,
         private preferencesService: IPreferencesService,
         private iconComponent: IIconComponent,
-        private eventBus: IEventBus
+        private eventBus: IEventBus,
+        private progressWidget: IProgressWidgetComponent
     ) {
         this.loadOperationParams();
     }
@@ -200,15 +202,12 @@ export class BlockUsersService {
      */
     async fetchFavorites(entryId: string): Promise<string[]> {
         try {
-            await this.notificationService.show('Favori listesi yükleniyor...', {
-                theme: 'info',
-                timeout: 60
-            });
-
+            // Progress widget will show the loading status, no need for separate notification
             const html = await this.httpService.get(`${Endpoints.FAVORITES}?entryId=${entryId}`);
             return this.htmlParser.parseFavoritesHtml(html);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
+            // Keep error notifications as they're important for troubleshooting
             await this.notificationService.show(`Favori listesi yüklenemedi: ${message}`, {
                 theme: 'error',
                 timeout: 10
@@ -224,6 +223,22 @@ export class BlockUsersService {
         try {
             this.entryId = entryId;
             this.eventBus.publish('blockUsers:started', {entryId});
+
+            // Show progress widget early to replace the loading notification
+            this.progressWidget.show({
+                title: 'Kullanıcı Engelleme',
+                position: 'bottom-right',
+                onStop: async () => {
+                    this.abortProcessing = true;
+                    this.progressWidget.hide();
+                }
+            });
+
+            this.progressWidget.updateProgress({
+                current: 0,
+                total: 1,
+                message: 'Favori listesi yükleniyor...'
+            });
 
             // Load updated settings from preferences
             await this.loadOperationParams();
@@ -246,7 +261,7 @@ export class BlockUsersService {
             });
 
             if (this.pendingUsers.length === 0) {
-                // Show success notification with no progress bar
+                // Brief notification for "already processed" case - still useful
                 await this.notificationService.show(
                     `<div style="display: flex; align-items: center">
                         ${this.iconComponent.create({name: 'check_circle', color: '#81c14b', size: 'medium'}).outerHTML}
@@ -260,56 +275,34 @@ export class BlockUsersService {
                 return;
             }
 
-            // Show initial notification with progress bar
-            await this.notificationService.show(
-                `${this.pendingUsers.length} kullanıcı işlenecek...`,
-                {
-                    progress: {
-                        current: 0,
-                        total: this.pendingUsers.length,
-                        options: {
-                            height: '8px',
-                            animated: true,
-                            striped: true
-                        }
-                    }
-                }
-            );
+            // Update progress widget with actual user count and start processing
+            this.progressWidget.updateProgress({
+                current: 0,
+                total: this.pendingUsers.length,
+                message: `${this.pendingUsers.length} kullanıcı hazırlanıyor...`
+            });
 
             this.isProcessing = true;
             this.abortProcessing = false;
             this.errorCount = 0;
-
-            // Add stop button
-            this.notificationService.addStopButton(async () => {
-                this.abortProcessing = true;
-                await this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({name: 'warning', color: '#ff9800', size: 'medium'}).outerHTML}
-                        <span>İşlem durduruldu.</span>
-                    </div>`,
-                    {
-                        theme: 'warning',
-                        timeout: 5
-                    }
-                );
-            });
 
             // Start processing after a short delay
             await delay(2);
             await this.processBatch(postTitle);
 
             if (!this.abortProcessing) {
-                await this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({name: 'check_circle', color: '#81c14b', size: 'medium'}).outerHTML}
-                        <span>İşlem tamamlandı. <strong>${this.processedUsers.size}</strong> kullanıcı ${this.getBlockTypeText()}.</span>
-                    </div>`,
-                    {
-                        theme: 'success',
-                        timeout: 5
-                    }
-                );
+                // Show completion status in widget before hiding
+                this.progressWidget.updateProgress({
+                    current: this.processedUsers.size,
+                    total: this.totalUserCount,
+                    message: `✅ İşlem tamamlandı! ${this.processedUsers.size} kullanıcı ${this.getBlockTypeText()}.`
+                });
+                
+                // Auto-hide widget after showing completion for 3 seconds
+                setTimeout(() => {
+                    this.progressWidget.hide();
+                }, 3000);
+                
                 await this.clearState();
             } else {
                 await this.saveState();
@@ -318,16 +311,17 @@ export class BlockUsersService {
             this.loggingService.error('Error in blockUsers:', error);
             const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
 
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                    ${this.iconComponent.create({name: 'error', color: '#e53935', size: 'medium'}).outerHTML}
-                    <span>Hata oluştu: ${errorMessage}</span>
-                </div>`,
-                {
-                    theme: 'error',
-                    timeout: 10
-                }
-            );
+            // Show error in widget before hiding
+            this.progressWidget.updateProgress({
+                current: this.processedUsers.size,
+                total: this.totalUserCount,
+                message: `❌ Hata oluştu: ${errorMessage}`
+            });
+            
+            // Auto-hide widget after showing error for 5 seconds
+            setTimeout(() => {
+                this.progressWidget.hide();
+            }, 5000);
 
             await this.saveState(); // Save progress on error
             throw error;
@@ -361,7 +355,7 @@ export class BlockUsersService {
                     current: this.processedUsers.size,
                     total: this.totalUserCount
                 });
-                this.updateProgress();
+                this.updateProgress(username);
                 await this.saveState();
 
             } catch (error) {
@@ -369,20 +363,13 @@ export class BlockUsersService {
                 this.loggingService.error(`Error processing user ${username}:`, error);
 
                 if (this.errorCount >= this.maxErrors) {
-                    await this.notificationService.show(
-                        `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({
-                            name: 'error_outline',
-                            color: '#e53935',
-                            size: 'medium'
-                        }).outerHTML}
-                            <span>Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.</span>
-                        </div>`,
-                        {
-                            theme: 'error',
-                            timeout: 10
-                        }
-                    );
+                    // Show error count in widget
+                    this.progressWidget.updateProgress({
+                        current: this.processedUsers.size,
+                        total: this.totalUserCount,
+                        message: `❌ Çok fazla hata oluştu (${this.errorCount}). İşlem durduruluyor.`
+                    });
+                    
                     this.abortProcessing = true;
                     break;
                 }
@@ -393,46 +380,17 @@ export class BlockUsersService {
             userIndex++;
 
             if (userIndex < this.pendingUsers.length && !this.abortProcessing) {
-                if (!notificationShown) {
-                    // Only create a new notification if we don't have one
-                    this.notificationService.show(
-                        `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({name: 'person', color: '#81c14b', size: 'medium'}).outerHTML}
-                            <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
-                        </div>`,
-                        {
-                            progress: {
-                                current: this.processedUsers.size,
-                                total: this.totalUserCount,
-                                options: {
-                                    height: '8px',
-                                    animated: true,
-                                    striped: true
-                                }
-                            },
-                            countdown: {
-                                seconds: this.requestDelay,
-                                options: {
-                                    label: 'Sonraki işlem için bekleniyor:',
-                                    onComplete: () => {
-                                        this.loggingService.debug('Countdown completed');
-                                    }
-                                }
-                            }
-                        }
-                    );
-                    notificationShown = true;
-                } else {
-                    // Just update the existing notification
-                    this.notificationService.updateContent(
-                        `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({name: 'person', color: '#81c14b', size: 'medium'}).outerHTML}
-                            <span>${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi</span>
-                        </div>`
-                    );
-                    this.notificationService.updateProgress(this.processedUsers.size, this.totalUserCount);
-                    this.notificationService.updateCountdown(this.requestDelay);
-                }
+                // Get the next user to be processed for display
+                const nextUserUrl = this.pendingUsers[userIndex];
+                const nextUsername = this.getUsernameFromUrl(nextUserUrl);
+                
+                // Update progress widget with current user context
+                this.progressWidget.updateProgress({
+                    current: this.processedUsers.size,
+                    total: this.totalUserCount,
+                    message: `${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi • Sıradaki: ${nextUsername}`,
+                    countdownSeconds: this.requestDelay
+                });
 
                 await delay(this.requestDelay);
             }
@@ -570,26 +528,29 @@ export class BlockUsersService {
 
     /**
      * Update progress display
+     * @param currentUser Optional username being currently processed
      */
-    private updateProgress(): void {
+    private updateProgress(currentUser?: string): void {
         const processed = this.processedUsers.size;
         const total = this.totalUserCount;
 
         const actionType = this.getBlockTypeText();
         const remaining = this.pendingUsers.length - (this.currentBlocked - 1 - processed);
 
-        // Update notification content with progress
-        this.notificationService.updateContent(
-            `<div style="display: flex; align-items: center">
-                ${this.iconComponent.create({name: 'person', color: '#81c14b', size: 'medium'}).outerHTML}
-                <span>${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: 
-                <strong>${processed}</strong> / <strong>${total}</strong> 
-                (Kalan: ${remaining})</span>
-            </div>`
-        );
+        let message = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: ${processed} / ${total}`;
+        
+        if (currentUser) {
+            message += ` • İşleniyor: ${currentUser}`;
+        } else if (remaining > 0) {
+            message += ` (Kalan: ${remaining})`;
+        }
 
-        // Update progress bar
-        this.notificationService.updateProgress(processed, total);
+        // Update progress widget
+        this.progressWidget.updateProgress({
+            current: processed,
+            total: total,
+            message: message
+        });
 
         this.currentBlocked = processed + 1;
     }

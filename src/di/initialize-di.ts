@@ -43,6 +43,8 @@ import {IObserverService} from "../interfaces/services/IObserverService";
 import {INotificationComponent} from "../interfaces/components/INotificationComponent";
 import {IProgressBarComponent} from "../interfaces/components/IProgressBarComponent";
 import {ICountdownComponent} from "../interfaces/components/ICountdownComponent";
+import {IProgressWidgetComponent} from "../interfaces/components/IProgressWidgetComponent";
+import {ProgressWidgetComponent} from "../components/shared/progress-widget-component";
 import {EventBus} from "../services/event-bus";
 import {IEventBus} from "../interfaces/services/IEventBus";
 import {initializeCommandDI} from "./initialize-di-commands";
@@ -184,6 +186,13 @@ export function initializeDI(): Container {
         return new NotificationComponent(domService, cssService, loggingService);
     });
 
+    container.register('ProgressWidgetComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new ProgressWidgetComponent(domService, cssService, loggingService);
+    });
+
     container.register('BlockFavoritesButtonComponent', () => {
         const domService = container.resolve<IDOMService>('DOMService');
         const cssService = container.resolve<ICSSService>('CSSService');
@@ -224,6 +233,7 @@ export function initializeDI(): Container {
         const preferencesService = container.resolve<PreferencesService>('PreferencesService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const eventBus = container.resolve<IEventBus>('EventBus');
+        const progressWidget = container.resolve<IProgressWidgetComponent>('ProgressWidgetComponent');
         return new BlockUsersService(
             httpService,
             htmlParser,
@@ -232,7 +242,8 @@ export function initializeDI(): Container {
             notificationService,
             preferencesService,
             iconComponent,
-            eventBus
+            eventBus,
+            progressWidget
         );
     });
 
