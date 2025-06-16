@@ -190,7 +190,8 @@ export function initializeDI(): Container {
         const domService = container.resolve<IDOMService>('DOMService');
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        return new ProgressWidgetComponent(domService, cssService, loggingService);
+        const progressBarComponent = container.resolve<IProgressBarComponent>('ProgressBarComponent');
+        return new ProgressWidgetComponent(domService, cssService, loggingService, progressBarComponent);
     });
 
     container.register('BlockFavoritesButtonComponent', () => {

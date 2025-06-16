@@ -34,6 +34,7 @@ export class BlockUsersService {
     private entryId: string | null = null;
     private processedUsers: Set<string> = new Set();
     private pendingUsers: string[] = [];
+    private skippedUsers: string[] = []; // Track users that were skipped (deleted accounts)
     private isProcessing: boolean = false;
     private abortProcessing: boolean = false;
     private errorCount: number = 0;
@@ -131,6 +132,7 @@ export class BlockUsersService {
                 }, 'BlockUsersService');
 
                 this.processedUsers = new Set(result.data.processedUsers || []);
+                this.skippedUsers = [];
                 this.currentBlocked = (result.data.processedUsers || []).length + 1;
                 this.blockType = result.data.blockType;
                 return true;
@@ -247,6 +249,7 @@ export class BlockUsersService {
             const hasState = await this.loadState();
             if (!hasState) {
                 this.processedUsers = new Set();
+                this.skippedUsers = [];
                 this.currentBlocked = 1;
             }
 
@@ -291,11 +294,17 @@ export class BlockUsersService {
             await this.processBatch(postTitle);
 
             if (!this.abortProcessing) {
+                let completionMessage = `✅ İşlem tamamlandı! ${this.processedUsers.size} kullanıcı ${this.getBlockTypeText()}.`;
+                
+                if (this.skippedUsers.length > 0) {
+                    completionMessage = `✅ ${this.processedUsers.size} / ${this.totalUserCount} kullanıcı ${this.getBlockTypeText()}. ${this.skippedUsers.length} kullanıcı artık mevcut değil.`;
+                }
+                
                 // Show completion status in widget before hiding
                 this.progressWidget.updateProgress({
                     current: this.processedUsers.size,
                     total: this.totalUserCount,
-                    message: `✅ İşlem tamamlandı! ${this.processedUsers.size} kullanıcı ${this.getBlockTypeText()}.`
+                    message: completionMessage
                 });
                 
                 // Auto-hide widget after showing completion for 3 seconds
@@ -362,6 +371,33 @@ export class BlockUsersService {
                 this.errorCount++;
                 this.loggingService.error(`Error processing user ${username}:`, error);
 
+                // Check if this is a "user not found" error (deleted user)
+                const errorMessage = error instanceof Error ? error.message : '';
+                if (errorMessage.includes('User ID not found') || 
+                    errorMessage.includes('Failed to fetch user profile') ||
+                    errorMessage.includes('404') ||
+                    errorMessage.includes('user not found') ||
+                    errorMessage.includes('profile not found')) {
+                    
+                    // Add to skipped users list but keep original total count
+                    this.skippedUsers.push(username);
+                    this.loggingService.debug(`User ${username} appears to be deleted, skipping`);
+                    
+                    // Update progress display showing the skip
+                    this.progressWidget.updateProgress({
+                        current: this.processedUsers.size,
+                        total: this.totalUserCount,
+                        message: `${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi • ${username} atlandı (silinmiş)`
+                    });
+                    
+                    // Reset error count for deleted users since this isn't really an "error"
+                    this.errorCount--;
+                    
+                    // Continue to next user
+                    userIndex++;
+                    continue;
+                }
+
                 if (this.errorCount >= this.maxErrors) {
                     // Show error count in widget
                     this.progressWidget.updateProgress({
@@ -384,11 +420,12 @@ export class BlockUsersService {
                 const nextUserUrl = this.pendingUsers[userIndex];
                 const nextUsername = this.getUsernameFromUrl(nextUserUrl);
                 
-                // Update progress widget with current user context
+                // Update progress widget with current user context (including skipped users in progress)
+                const totalProcessed = this.processedUsers.size + this.skippedUsers.length;
                 this.progressWidget.updateProgress({
-                    current: this.processedUsers.size,
+                    current: totalProcessed,
                     total: this.totalUserCount,
-                    message: `${this.processedUsers.size} / ${this.totalUserCount} kullanıcı işlendi • Sıradaki: ${nextUsername}`,
+                    message: `${totalProcessed} / ${this.totalUserCount} kullanıcı işlendi • Sıradaki: ${nextUsername}`,
                     countdownSeconds: this.requestDelay
                 });
 
@@ -532,12 +569,14 @@ export class BlockUsersService {
      */
     private updateProgress(currentUser?: string): void {
         const processed = this.processedUsers.size;
+        const skipped = this.skippedUsers.length;
+        const totalProcessed = processed + skipped;
         const total = this.totalUserCount;
 
         const actionType = this.getBlockTypeText();
         const remaining = this.pendingUsers.length - (this.currentBlocked - 1 - processed);
 
-        let message = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: ${processed} / ${total}`;
+        let message = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} kullanıcılar: ${totalProcessed} / ${total}`;
         
         if (currentUser) {
             message += ` • İşleniyor: ${currentUser}`;
@@ -545,14 +584,14 @@ export class BlockUsersService {
             message += ` (Kalan: ${remaining})`;
         }
 
-        // Update progress widget
+        // Update progress widget (include skipped users in progress count)
         this.progressWidget.updateProgress({
-            current: processed,
+            current: totalProcessed,
             total: total,
             message: message
         });
 
-        this.currentBlocked = processed + 1;
+        this.currentBlocked = totalProcessed + 1;
     }
 
     /**

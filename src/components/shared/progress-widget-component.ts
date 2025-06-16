@@ -2,10 +2,12 @@ import { ICSSService } from "../../interfaces/services/ICSSService";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IDOMService } from "../../interfaces/services/IDOMService";
 import { IProgressWidgetComponent, ProgressWidgetOptions, ProgressWidgetData } from "../../interfaces/components/IProgressWidgetComponent";
+import { IProgressBarComponent } from "../../interfaces/components/IProgressBarComponent";
 
 export class ProgressWidgetComponent implements IProgressWidgetComponent {
     private widgetElement: HTMLElement | null = null;
-    private progressBar: HTMLElement | null = null;
+    private progressBarComponent: IProgressBarComponent | null = null;
+    private progressBarElement: HTMLElement | null = null;
     private progressText: HTMLElement | null = null;
     private messageElement: HTMLElement | null = null;
     private countdownElement: HTMLElement | null = null;
@@ -18,7 +20,8 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
     constructor(
         private domService: IDOMService,
         private cssService: ICSSService,
-        private loggingService: ILoggingService
+        private loggingService: ILoggingService,
+        private progressBar: IProgressBarComponent
     ) {
         this.initStyles();
     }
@@ -131,38 +134,6 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 line-height: 1.3;
             }
 
-            .eksi-progress-widget-bar-container {
-                background: #f0f0f0;
-                border-radius: 6px;
-                height: 6px;
-                overflow: hidden;
-                position: relative;
-            }
-
-            .eksi-progress-widget-bar {
-                background: linear-gradient(90deg, #81c14b, #6ea542);
-                height: 100%;
-                border-radius: 6px;
-                transition: width 0.3s ease;
-                position: relative;
-            }
-
-            .eksi-progress-widget-bar::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-                animation: eksi-progress-shimmer 1.5s infinite;
-            }
-
-            @keyframes eksi-progress-shimmer {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-            }
-
             .eksi-progress-widget-countdown {
                 color: #999;
                 font-size: 10px;
@@ -213,10 +184,6 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                     color: #b0b0b0;
                 }
 
-                .eksi-progress-widget-bar-container {
-                    background: #333;
-                }
-
                 .eksi-progress-widget-btn:hover {
                     background: #555;
                     color: #f0f0f0;
@@ -253,6 +220,37 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                     transform: translateY(-20px) scale(0.9);
                 }
             }
+
+            /* Override progress bar styles for widget context */
+            .eksi-progress-widget .eksi-progress-container {
+                margin: 8px 0 4px 0;
+                height: 6px;
+                background-color: #f0f0f0;
+                border-radius: 6px;
+            }
+
+            .eksi-progress-widget .eksi-progress-bar {
+                height: 100%;
+                border-radius: 6px;
+                background: linear-gradient(90deg, #81c14b, #6ea542);
+                position: relative;
+            }
+
+            .eksi-progress-widget .eksi-progress-bar::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                animation: eksi-progress-shimmer 1.5s infinite;
+            }
+
+            @keyframes eksi-progress-shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+            }
         `;
         this.cssService.addCSS(css);
     }
@@ -283,19 +281,24 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
             this.progressText.textContent = `${data.current} / ${data.total} (${percentage}%)`;
         }
 
-        if (this.progressBar) {
-            this.progressBar.style.width = `${percentage}%`;
+        if (this.progressBarComponent) {
+            this.progressBarComponent.updateProgress(data.current, data.total);
             
             // Change progress bar color based on message content
-            if (data.message?.includes('✅') || data.message?.includes('tamamlandı')) {
-                // Success - green
-                this.progressBar.style.background = 'linear-gradient(90deg, #81c14b, #6ea542)';
-            } else if (data.message?.includes('❌') || data.message?.includes('Hata')) {
-                // Error - red
-                this.progressBar.style.background = 'linear-gradient(90deg, #e53935, #c62828)';
-            } else {
-                // Default - green
-                this.progressBar.style.background = 'linear-gradient(90deg, #81c14b, #6ea542)';
+            if (this.progressBarElement) {
+                const progressBar = this.progressBarElement.querySelector('.eksi-progress-bar') as HTMLElement;
+                if (progressBar) {
+                    if (data.message?.includes('✅') || data.message?.includes('tamamlandı')) {
+                        // Success - green
+                        progressBar.style.background = 'linear-gradient(90deg, #81c14b, #6ea542)';
+                    } else if (data.message?.includes('❌') || data.message?.includes('Hata')) {
+                        // Error - red
+                        progressBar.style.background = 'linear-gradient(90deg, #e53935, #c62828)';
+                    } else {
+                        // Default - green
+                        progressBar.style.background = 'linear-gradient(90deg, #81c14b, #6ea542)';
+                    }
+                }
             }
         }
 
@@ -379,20 +382,22 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         this.messageElement = this.domService.createElement('div');
         this.domService.addClass(this.messageElement, 'eksi-progress-widget-message');
 
-        const progressContainer = this.domService.createElement('div');
-        this.domService.addClass(progressContainer, 'eksi-progress-widget-bar-container');
-
-        this.progressBar = this.domService.createElement('div');
-        this.domService.addClass(this.progressBar, 'eksi-progress-widget-bar');
-        this.progressBar.style.width = '0%';
+        // Create progress bar using the existing component
+        this.progressBarComponent = this.progressBar;
+        this.progressBarElement = this.progressBarComponent.create({
+            height: '6px',
+            animated: true,
+            striped: true,
+            backgroundColor: '#f0f0f0',
+            progressColor: '#81c14b'
+        });
 
         this.countdownElement = this.domService.createElement('div');
         this.domService.addClass(this.countdownElement, 'eksi-progress-widget-countdown');
 
-        this.domService.appendChild(progressContainer, this.progressBar);
         this.domService.appendChild(content, this.progressText);
         this.domService.appendChild(content, this.messageElement);
-        this.domService.appendChild(content, progressContainer);
+        this.domService.appendChild(content, this.progressBarElement);
         this.domService.appendChild(content, this.countdownElement);
 
         this.domService.appendChild(this.widgetElement, header);
@@ -506,7 +511,8 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         }
         
         this.widgetElement = null;
-        this.progressBar = null;
+        this.progressBarComponent = null;
+        this.progressBarElement = null;
         this.progressText = null;
         this.messageElement = null;
         this.countdownElement = null;
