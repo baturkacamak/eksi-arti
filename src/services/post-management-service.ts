@@ -219,13 +219,8 @@ export class PostManagementService {
                         this.buttonComponent.updateText(`✓ Tamamlandı (${totalEntries} entry)`);
                         this.buttonComponent.setDisabled(true);
                         
-                        // Reset to original text after 3 seconds
-                        setTimeout(() => {
-                            if (this.loadAllButton) {
-                                this.buttonComponent.updateText("Tüm Entry'leri Yükle");
-                                this.updateButtonState();
-                            }
-                        }, 3000);
+                        // Don't reset to initial state after successful completion
+                        // The button should stay in completed state since there are no more entries to load
                     }
                 },
                 onError: (error: string) => {
