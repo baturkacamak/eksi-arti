@@ -1,25 +1,28 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
 import { BlockType } from '../../constants';
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { IIconComponent } from '../../interfaces/components/IIconComponent';
-import { IObserverService } from '../../interfaces/services/IObserverService';
-import { IButtonComponent, ButtonVariant } from "../../interfaces/components/IButtonComponent";
+import { Container } from "../../di/container";
 import { ICommandFactory } from "../../commands/interfaces/ICommandFactory";
 import { ICommandInvoker } from "../../commands/interfaces/ICommandInvoker";
+import { ICSSService } from "../../interfaces/services/ICSSService";
+import { IDOMService } from "../../interfaces/services/IDOMService";
+import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IIconComponent } from '../../interfaces/components/IIconComponent';
+import { IObserverService } from '../../interfaces/services/IObserverService';
+import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IButtonComponent";
 import { IToggleSwitchComponent } from "../../interfaces/components/IToggleSwitchComponent";
 import { ITooltipComponent } from "../../interfaces/components/ITooltipComponent";
 import { IModalComponent } from "../../interfaces/components/IModalComponent";
 
 export class BlockOptionsModal extends BaseFeatureComponent {
     private entryId: string;
+    private threadBlockingEnabled: boolean = false;
     private contentElement?: HTMLElement;
 
     // Specific dependencies
-    private buttonComponent: IButtonComponent;
-    private commandFactory: ICommandFactory;
-    private commandInvoker: ICommandInvoker;
+    private specificContainer: Container;
+    private specificButtonComponent: IButtonComponent;
+    private specificCommandFactory: ICommandFactory;
+    private specificCommandInvoker: ICommandInvoker;
     private toggleSwitchComponent: IToggleSwitchComponent;
     private tooltipComponent: ITooltipComponent;
     private modalComponent: IModalComponent;
@@ -40,13 +43,15 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         options?: FeatureComponentOptions
     ) {
         super(domHandler, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
-        this.buttonComponent = buttonComponent;
-        this.commandFactory = commandFactory;
-        this.commandInvoker = commandInvoker;
+        this.specificButtonComponent = buttonComponent;
+        this.specificCommandFactory = commandFactory;
+        this.specificCommandInvoker = commandInvoker;
         this.toggleSwitchComponent = toggleSwitchComponent;
         this.tooltipComponent = tooltipComponent;
         this.modalComponent = modalComponent;
         this.entryId = entryId;
+        // Initialize specificContainer - we'll get it from the global container later if needed
+        this.specificContainer = {} as Container;
     }
 
     public display(): void {
@@ -55,7 +60,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         }
         // Show the modal first to create the DOM structure with options
         this.modalComponent.show({
-            showCloseButton: true,
+            showCloseButton: false, // We create our own close button in the title
             allowBackdropClose: true,
             allowEscapeClose: true
         });
@@ -71,62 +76,80 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         return `
             .eksi-modal-content {
                 max-width: 500px;
-                text-align: left;
             }
-            .eksi-modal-options {
-                margin: 20px 0;
+            .eksi-modal-title {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                color: #222;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 12px;
             }
-            .eksi-modal-option-row {
+            .eksi-modal-title-content {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                padding: 12px 0;
-                border-bottom: 1px solid #e0e0e0;
+                gap: 8px;
+                flex: 1;
             }
-            .eksi-modal-option-row:last-child {
-                border-bottom: none;
+
+            .eksi-modal-thread-blocking { 
+                padding: 12px 0; 
+                margin: 16px 0;
+                text-align: center;
+                border-top: 1px solid rgba(0,0,0,0.08);
+                border-bottom: 1px solid rgba(0,0,0,0.08);
             }
-            .eksi-modal-option-label {
+            .toggle-with-tooltip {
                 display: flex;
-                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
             }
-            .eksi-modal-option-title {
+            .eksi-modal-thread-blocking .eksi-toggle-container {
+                justify-content: center;
+                margin-bottom: 0;
+            }
+            .eksi-modal-thread-blocking .eksi-toggle-label {
+                font-size: 14px;
                 font-weight: 500;
-                margin-bottom: 4px;
+                color: #333;
+                margin-left: 10px;
             }
-            .eksi-modal-option-description {
-                font-size: 0.9em;
-                color: #666;
-            }
-            .eksi-modal-note-section {
-                margin: 20px 0;
-            }
-            .eksi-modal-note-section label {
-                display: block;
-                margin-bottom: 8px;
-                font-weight: 500;
-            }
-            .eksi-modal-note-section textarea {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                box-sizing: border-box;
-                min-height: 80px;
-                resize: vertical;
-            }
-            .eksi-modal-buttons {
+            .eksi-modal-thread-blocking .tooltip-trigger.icon-only {
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+                background-color: rgba(108, 117, 125, 0.15);
+                color: #6c757d;
+                border-radius: 50%;
                 display: flex;
-                gap: 10px;
-                justify-content: flex-end;
-                margin-top: 20px;
+                align-items: center;
+                justify-content: center;
+                margin-left: 8px;
+                cursor: help;
+                font-weight: bold;
+                transition: all 0.2s ease;
+                opacity: 0.7;
+            }
+            .eksi-modal-thread-blocking .tooltip-trigger.icon-only:hover {
+                background-color: rgba(108, 117, 125, 0.25);
+                color: #495057;
+                opacity: 1;
+            }
+            /* Dark mode support for title */
+            @media (prefers-color-scheme: dark) {
+                .eksi-modal-title {
+                    color: #f0f0f0;
+                    border-bottom-color: #444;
+                }
             }
         `;
     }
 
-    protected shouldInitialize(): boolean {
-        return true;
-    }
+    protected shouldInitialize(): boolean { return true; }
 
     protected setupUI(): void {
         // Create modal content (not the modal itself)
@@ -134,108 +157,119 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
         const modalTitle = this.domHandler.createElement('div');
         this.domHandler.addClass(modalTitle, 'eksi-modal-title');
-        modalTitle.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 8px;">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#333"/>
+        
+        // Create title content container
+        const titleContent = this.domHandler.createElement('div');
+        this.domHandler.addClass(titleContent, 'eksi-modal-title-content');
+        titleContent.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM13 12L13 7L11 7L11 12L16 12L16 14L11 14L11 17L13 17L13 14.5L17 14.5L17 12H13Z" fill="#333"/>
             </svg>
-            Engelleme Seçenekleri
+            İşlem Seçin
         `;
+        
+        // Create close button
+        const closeButton = this.domHandler.createElement('button');
+        this.domHandler.addClass(closeButton, 'eksi-modal-close');
+        closeButton.innerHTML = '×';
+        closeButton.setAttribute('aria-label', 'Close modal');
+        closeButton.setAttribute('type', 'button');
+        this.domHandler.addEventListener(closeButton, 'click', () => {
+            this.close();
+        });
+        
+        // Append title content and close button to title
+        this.domHandler.appendChild(modalTitle, titleContent);
+        this.domHandler.appendChild(modalTitle, closeButton);
 
         const optionsContainer = this.domHandler.createElement('div');
         this.domHandler.addClass(optionsContainer, 'eksi-modal-options');
 
-        // Block type option
-        const blockTypeRow = this.domHandler.createElement('div');
-        this.domHandler.addClass(blockTypeRow, 'eksi-modal-option-row');
-        
-        const blockTypeLabel = this.domHandler.createElement('div');
-        this.domHandler.addClass(blockTypeLabel, 'eksi-modal-option-label');
-        blockTypeLabel.innerHTML = `
-            <div class="eksi-modal-option-title">Engelleme Türü</div>
-            <div class="eksi-modal-option-description">Kullanıcıları tamamen engelle veya sadece sustur</div>
-        `;
-
-        const blockTypeSwitch = this.toggleSwitchComponent.create({
-            id: 'blockTypeSwitch',
-            checked: true,
-            label: 'Engelleme Türü',
-            onChange: (checked: boolean) => {
-                this.loggingService.debug('Block type changed:', checked ? 'Block' : 'Mute');
-            }
-        });
-
-        this.domHandler.appendChild(blockTypeRow, blockTypeLabel);
-        this.domHandler.appendChild(blockTypeRow, blockTypeSwitch);
-
-        // Add favorites option
-        const favoritesRow = this.domHandler.createElement('div');
-        this.domHandler.addClass(favoritesRow, 'eksi-modal-option-row');
-        
-        const favoritesLabel = this.domHandler.createElement('div');
-        this.domHandler.addClass(favoritesLabel, 'eksi-modal-option-label');
-        favoritesLabel.innerHTML = `
-            <div class="eksi-modal-option-title">Favoriye Alanları Dahil Et</div>
-            <div class="eksi-modal-option-description">Yazıyı favoriye alan kullanıcıları da engelle</div>
-        `;
-
-        const favoritesSwitch = this.toggleSwitchComponent.create({
-            id: 'favoritesSwitch',
-            checked: false,
-            label: 'Favoriye Alanları Dahil Et',
-            onChange: (checked: boolean) => {
-                this.loggingService.debug('Include favorites changed:', checked);
-            }
-        });
-
-        this.domHandler.appendChild(favoritesRow, favoritesLabel);
-        this.domHandler.appendChild(favoritesRow, favoritesSwitch);
-
-        // Note section
-        const noteSection = this.domHandler.createElement('div');
-        this.domHandler.addClass(noteSection, 'eksi-modal-note-section');
-        
-        const noteLabel = this.domHandler.createElement('label');
-        noteLabel.textContent = 'Not (İsteğe Bağlı):';
-        noteLabel.setAttribute('for', 'blockNote');
-
-        const noteTextarea = this.domHandler.createElement('textarea');
-        noteTextarea.id = 'blockNote';
-        noteTextarea.placeholder = 'Bu engelleme hakkında not ekleyebilirsiniz...';
-
-        this.domHandler.appendChild(noteSection, noteLabel);
-        this.domHandler.appendChild(noteSection, noteTextarea);
-
-        // Buttons container
-        const buttonsContainer = this.domHandler.createElement('div');
-        this.domHandler.addClass(buttonsContainer, 'eksi-modal-buttons');
-
-        const startButton = this.buttonComponent.create({
-            text: 'Engellemeyi Başlat',
+        const muteButton = this.specificButtonComponent.create({
+            text: 'Sessiz Al (Yazdıklarını Görebilirsin)',
             variant: ButtonVariant.PRIMARY,
-            onClick: () => this.handleStartBlocking()
+            icon: 'volume_off',
+            onClick: () => this.handleOptionSelected(BlockType.MUTE),
+            fullWidth: true
         });
 
-        const cancelButton = this.buttonComponent.create({
+        const blockButton = this.specificButtonComponent.create({
+            text: 'Engelle (Tamamen Engelleme)',
+            variant: ButtonVariant.SECONDARY,
+            icon: 'block',
+            onClick: () => this.handleOptionSelected(BlockType.BLOCK),
+            fullWidth: true
+        });
+
+        const cancelButton = this.specificButtonComponent.create({
             text: 'İptal',
             variant: ButtonVariant.DEFAULT,
-            onClick: () => this.close()
+            icon: 'close',
+            onClick: () => this.close(),
+            fullWidth: true
         });
 
-        this.domHandler.appendChild(buttonsContainer, startButton);
-        this.domHandler.appendChild(buttonsContainer, cancelButton);
+        // Create thread blocking toggle switch - placed after buttons
+        const threadBlockingContainer = this.domHandler.createElement('div');
+        this.domHandler.addClass(threadBlockingContainer, 'eksi-modal-thread-blocking');
+        
+        // Create toggle with tooltip info icon
+        const toggleWrapper = this.domHandler.createElement('div');
+        this.domHandler.addClass(toggleWrapper, 'toggle-with-tooltip');
+        
+        const threadToggle = this.toggleSwitchComponent.create({
+            id: 'threadBlockingToggle',
+            label: 'Başlıkları da engelle',
+            checked: false,
+            size: 'medium',
+            ariaLabel: 'Kullanıcının açtığı başlıkları da engelle',
+            onChange: (checked: boolean) => {
+                this.threadBlockingEnabled = checked;
+            }
+        });
+
+        // Create info icon for tooltip
+        const infoIcon = this.domHandler.createElement('span');
+        this.domHandler.addClass(infoIcon, 'tooltip-trigger');
+        this.domHandler.addClass(infoIcon, 'icon-only');
+        infoIcon.setAttribute('data-tooltip-content', 'thread-blocking-tooltip');
+        infoIcon.setAttribute('data-tooltip-position', 'top');
+        infoIcon.innerHTML = '?';
+        infoIcon.setAttribute('aria-label', 'Başlık engelleme hakkında bilgi');
+        infoIcon.setAttribute('tabindex', '0');
+
+        // Create hidden tooltip content
+        const tooltipContent = this.domHandler.createElement('div');
+        tooltipContent.id = 'thread-blocking-tooltip';
+        tooltipContent.style.display = 'none';
+        tooltipContent.innerHTML = `
+            <div>
+                <p>Kullanıcının açtığı başlıkları da engeller</p>
+            </div>
+        `;
+
+        this.domHandler.appendChild(toggleWrapper, threadToggle);
+        this.domHandler.appendChild(toggleWrapper, infoIcon);
+        this.domHandler.appendChild(threadBlockingContainer, toggleWrapper);
+        this.domHandler.appendChild(document.body, tooltipContent);
+
+        // Setup tooltip
+        this.tooltipComponent.setupTooltip(infoIcon, {
+            position: 'top',
+            theme: 'dark',
+            triggerEvent: 'hover'
+        });
+
+        this.domHandler.appendChild(optionsContainer, muteButton);
+        this.domHandler.appendChild(optionsContainer, blockButton);
+        this.domHandler.appendChild(optionsContainer, threadBlockingContainer);
+        this.domHandler.appendChild(optionsContainer, cancelButton);
 
         this.domHandler.appendChild(this.contentElement, modalTitle);
         this.domHandler.appendChild(this.contentElement, optionsContainer);
-        this.domHandler.appendChild(this.contentElement, noteSection);
-        this.domHandler.appendChild(this.contentElement, buttonsContainer);
-
-        this.domHandler.appendChild(optionsContainer, blockTypeRow);
-        this.domHandler.appendChild(optionsContainer, favoritesRow);
     }
 
-    protected registerObservers(): void {
-        // No observers needed for this modal as it's user-triggered
-    }
+    protected registerObservers(): void { /* No observers */ }
 
     protected cleanup(): void {
         this.contentElement = undefined;
@@ -249,42 +283,46 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         // For now, we'll use a simple approach and inject via DOM
         const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
         if (modalElement && this.contentElement) {
-            modalElement.innerHTML = '';
+            // Don't clear innerHTML as it removes the close button
+            // Instead, find existing content and replace it, or append if no content exists
+            const existingContent = modalElement.querySelector('.eksi-modal-title, .eksi-modal-options');
+            if (existingContent) {
+                // Remove only our content, not the close button
+                const elementsToRemove = modalElement.querySelectorAll('.eksi-modal-title, .eksi-modal-options');
+                elementsToRemove.forEach(el => el.remove());
+            }
             modalElement.appendChild(this.contentElement);
         }
     }
 
-    private handleStartBlocking(): void {
+    private async handleOptionSelected(blockType: BlockType): Promise<void> {
+        // Find the button that was clicked for loading state
         const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
-        if (!modalElement) return;
-
-        const blockTypeSwitch = modalElement.querySelector('#blockTypeSwitch') as HTMLInputElement;
-        const favoritesSwitch = modalElement.querySelector('#favoritesSwitch') as HTMLInputElement;
-        const noteTextarea = modalElement.querySelector('#blockNote') as HTMLTextAreaElement;
-
-        const blockType = blockTypeSwitch?.checked ? BlockType.BLOCK : BlockType.MUTE;
-        const includeFavorites = favoritesSwitch?.checked || false;
-        const note = noteTextarea?.value || '';
-
-        this.loggingService.debug('Starting blocking operation:', {
-            entryId: this.entryId,
-            blockType,
-            includeFavorites,
-            note
-        });
-
-        // Create and execute blocking command
-        try {
-            const blockCommand = this.commandFactory.createBlockUsersCommand(
-                this.entryId,
-                blockType,
-                includeFavorites
-            );
-            
-            this.commandInvoker.execute(blockCommand);
-            this.close();
-        } catch (error) {
-            this.loggingService.error('Error starting blocking operation:', error);
+        let buttonToLoad: HTMLButtonElement | undefined;
+        
+        if (modalElement) { 
+            if (blockType === BlockType.MUTE) {
+                buttonToLoad = modalElement.querySelector('.eksi-button-primary') as HTMLButtonElement || undefined;
+            } else {
+                buttonToLoad = modalElement.querySelector('.eksi-button-secondary') as HTMLButtonElement || undefined;
+            }
         }
+        
+        if (buttonToLoad) {
+            this.specificButtonComponent.setLoading(true, 'İşleniyor...'); 
+        }
+
+        setTimeout(async () => {
+            try {
+                const blockUsersCommand = this.specificCommandFactory.createBlockUsersCommand(this.entryId, blockType, this.threadBlockingEnabled);
+                await this.specificCommandInvoker.execute(blockUsersCommand);
+                this.close(); 
+            } catch (error) {
+                this.loggingService.error('Error executing block users command:', error);
+                if (buttonToLoad) {
+                    this.specificButtonComponent.setLoading(false);
+                }
+            }
+        }, 300);
     }
 } 
