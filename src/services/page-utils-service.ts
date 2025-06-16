@@ -99,6 +99,28 @@ export class PageUtilsService {
             // Or check system preference as fallback
             window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
+
+    /**
+     * Check if entry-related features (search, sorting) should be initialized
+     * Features should only appear on thread pages (not profile pages) with sufficient entries
+     * @param minEntryCount Minimum number of entries required (default: 5)
+     * @returns true if features should be initialized
+     */
+    public shouldInitializeEntryFeatures(minEntryCount: number = 5): boolean {
+        // Only initialize on entry list pages (thread pages), but not on profile pages
+        const isEntryListPage = this.isEntryListPage();
+        const isProfilePage = this.isUserProfilePage();
+        
+        if (!isEntryListPage || isProfilePage) {
+            return false;
+        }
+        
+        // Check if there are enough entries to make features worthwhile
+        const entries = document.querySelectorAll('#entry-item-list li[data-id], #topic li[data-id]');
+        const entryCount = entries.length;
+        
+        return entryCount >= minEntryCount;
+    }
 }
 
 // Export factory function for DI container

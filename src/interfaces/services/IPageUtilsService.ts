@@ -5,4 +5,5 @@ export interface IPageUtilsService {
     getCurrentEntryId(): string | null;
     getCurrentAuthor(): string | null;
     isDarkMode(): boolean;
+    shouldInitializeEntryFeatures(minEntryCount?: number): boolean;
 }

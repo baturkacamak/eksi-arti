@@ -348,8 +348,9 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     }
 
     protected shouldInitialize(): boolean {
+        // Basic check - detailed logic handled at UI service level
         const shouldInit = this.specificPageUtils.isEntryListPage();
-        this.loggingService.debug(`EntrySorterComponent.shouldInitialize: ${shouldInit}`);
+        this.loggingService.debug(`EntrySorterComponent shouldInitialize: ${shouldInit}`);
         return shouldInit;
     }
 

@@ -253,6 +253,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     protected shouldInitialize(): boolean {
+        // Basic check - detailed logic handled at UI service level
         const shouldInit = this.specificPageUtils.isEntryListPage();
         this.loggingService.debug(`SearchFilterComponent shouldInitialize: ${shouldInit}`);
         return shouldInit;

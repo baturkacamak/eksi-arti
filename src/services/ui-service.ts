@@ -32,6 +32,7 @@ import {IStorageService, StorageArea} from "../interfaces/services/IStorageServi
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import { UserProfileService } from './user-profile-service';
 import {VoteMonitoringService} from './vote-monitoring-service';
+import { pageUtils } from './page-utils-service';
 
 export class UIService {
     private initialized: boolean = false;
@@ -129,9 +130,11 @@ export class UIService {
                 await this.checkForSavedState();
 
 
-                // Check if we're on an entries page and initialize the sorter
-                if (this.isEntriesPage()) {
+                // Initialize entry-related features (search and sorting) together
+                // Only on thread pages (not profile pages) with sufficient entries
+                if (pageUtils.shouldInitializeEntryFeatures(5)) {
                     this.entrySorterComponent.initialize();
+                    this.searchFilterComponent.initialize();
                 }
 
                 // Initialize post management service for user profiles
@@ -139,8 +142,6 @@ export class UIService {
 
                 // Initialize trash service - it will only activate on the trash page
                 this.trashService.initialize();
-
-                this.searchFilterComponent.initialize();
 
                 await this.authorHighlighterService.initialize();
 
@@ -309,6 +310,8 @@ export class UIService {
     private isEntriesPage(): boolean {
         return !!document.querySelector('#entry-item-list');
     }
+
+
 
     /**
      * Cleanup resources
