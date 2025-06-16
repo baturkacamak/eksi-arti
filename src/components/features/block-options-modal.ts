@@ -175,7 +175,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         this.domHandler.addClass(favoritesLabel, 'eksi-modal-option-label');
         favoritesLabel.innerHTML = `
             <div class="eksi-modal-option-title">Favoriye Alanları Dahil Et</div>
-            <div class="eksi-modal-option-description">Entry'yi favoriye alan kullanıcıları da engelle</div>
+            <div class="eksi-modal-option-description">Yazıyı favoriye alan kullanıcıları da engelle</div>
         `;
 
         const favoritesSwitch = this.toggleSwitchComponent.create({

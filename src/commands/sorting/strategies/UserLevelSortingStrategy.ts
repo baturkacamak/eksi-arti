@@ -6,7 +6,7 @@ export class UserLevelSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'user-level';
     public readonly displayName: string = 'Kullanıcı Seviyesi';
     public readonly icon: string = 'star';
-    public readonly tooltip: string = 'Entry\'leri yazarın seviye puanına göre sırala';
+    public readonly tooltip: string = 'Yazıları yazarın seviye puanına göre sırala';
 
     // Define level order (higher index = higher level)
     private readonly levelOrder = [

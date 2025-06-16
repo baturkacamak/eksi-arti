@@ -91,6 +91,6 @@ export class SortEntriesCommand implements ICommand {
 
   public getDescription(): string {
     const directionText = this.direction === 'asc' ? 'artan' : 'azalan';
-    return `Entry\'leri ${this.strategy.tooltip.toLowerCase()} ${directionText} sırala`;
+            return `Yazıları ${this.strategy.tooltip.toLowerCase()} ${directionText} sırala`;
   }
 } 

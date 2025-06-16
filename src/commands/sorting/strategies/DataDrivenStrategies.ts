@@ -39,9 +39,9 @@ export class LengthDataStrategy extends DataDrivenSortingStrategy implements ISo
 
 export class TotalEntriesDataStrategy extends DataDrivenSortingStrategy implements ISortingStrategy {
     readonly name = 'total-entries';
-    readonly displayName = 'Entry Sayısı';
+            readonly displayName = 'Yazı Sayısı';
     readonly icon = 'format_list_numbered';
-    readonly tooltip = 'Entry\'leri yazarın toplam entry sayısına göre sırala';
+            readonly tooltip = 'Yazıları yazarın toplam yazı sayısına göre sırala';
 
     protected compare(a: SortingData, b: SortingData): number {
         const entriesA = a.profile?.entryCount || 0;
@@ -54,7 +54,7 @@ export class UserLevelDataStrategy extends DataDrivenSortingStrategy implements 
     readonly name = 'user-level';
     readonly displayName = 'Kullanıcı Seviyesi';
     readonly icon = 'star';
-    readonly tooltip = 'Entry\'leri yazarın seviye puanına göre sırala';
+            readonly tooltip = 'Yazıları yazarın seviye puanına göre sırala';
 
     protected compare(a: SortingData, b: SortingData): number {
         const levelA = a.profile?.levelIndex || 0;
@@ -77,7 +77,7 @@ export class AccountAgeDataStrategy extends DataDrivenSortingStrategy implements
     readonly name = 'account-age';
     readonly displayName = 'Hesap Yaşı';
     readonly icon = 'account_circle';
-    readonly tooltip = 'Entry\'leri yazar hesap yaşına göre sırala';
+            readonly tooltip = 'Yazıları yazar hesap yaşına göre sırala';
 
     protected compare(a: SortingData, b: SortingData): number {
         const ageA = a.profile?.ageInYears || 0;
@@ -104,7 +104,7 @@ export class FollowerDataStrategy extends DataDrivenSortingStrategy implements I
     readonly name = 'followers';
     readonly displayName = 'Takipçi';
     readonly icon = 'people';
-    readonly tooltip = 'Entry\'leri yazarın takipçi sayısına göre sırala';
+            readonly tooltip = 'Yazıları yazarın takipçi sayısına göre sırala';
 
     protected compare(a: SortingData, b: SortingData): number {
         const followersA = a.profile?.followerCount || 0;
@@ -117,7 +117,7 @@ export class ActivityRatioDataStrategy extends DataDrivenSortingStrategy impleme
     readonly name = 'activity-ratio';
     readonly displayName = 'Aktivite Oranı';
     readonly icon = 'speed';
-    readonly tooltip = 'Entry\'leri yazarın günlük entry oranına göre sırala';
+            readonly tooltip = 'Yazıları yazarın günlük yazı oranına göre sırala';
 
     protected compare(a: SortingData, b: SortingData): number {
         const ratioA = a.profile?.activityRatio || 0;
@@ -130,7 +130,7 @@ export class FollowingRatioDataStrategy extends DataDrivenSortingStrategy implem
     readonly name = 'following-ratio';
     readonly displayName = 'Takip Oranı';
     readonly icon = 'group_add';
-    readonly tooltip = 'Entry\'leri yazarın takip oranına göre sırala (takip edilen/takipçi)';
+            readonly tooltip = 'Yazıları yazarın takip oranına göre sırala (takip edilen/takipçi)';
 
     protected compare(a: SortingData, b: SortingData): number {
         const ratioA = a.profile?.followingRatio || 0;
@@ -143,7 +143,7 @@ export class EngagementRatioDataStrategy extends DataDrivenSortingStrategy imple
     readonly name = 'engagement-ratio';
     readonly displayName = 'Etkileşim Oranı';
     readonly icon = 'trending_up';
-    readonly tooltip = 'Entry\'leri yazar etkileşim oranına göre sırala (takipçi/takip edilen)';
+            readonly tooltip = 'Yazıları yazar etkileşim oranına göre sırala (takipçi/takip edilen)';
 
     protected compare(a: SortingData, b: SortingData): number {
         const ratioA = a.profile?.engagementRatio || 0;

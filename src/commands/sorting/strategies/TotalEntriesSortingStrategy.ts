@@ -4,9 +4,9 @@ import { IUsernameExtractorService } from "../../../interfaces/services/IUsernam
 
 export class TotalEntriesSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'total-entries';
-    public readonly displayName: string = 'Entry Sayısı';
+    public readonly displayName: string = 'Yazı Sayısı';
     public readonly icon: string = 'format_list_numbered';
-    public readonly tooltip: string = 'Entry\'leri yazarın toplam entry sayısına göre sırala';
+    public readonly tooltip: string = 'Yazıları yazarın toplam yazı sayısına göre sırala';
 
     constructor(
         userProfileService: IUserProfileService,

@@ -53,7 +53,7 @@ export class FollowerCountDataStrategy extends DataDrivenSortingStrategy {
     readonly name = "followers";
     readonly displayName = "Takipçi";
     readonly icon = "people";
-    readonly tooltip = "Entry'leri yazarın takipçi sayısına göre sırala";
+    readonly tooltip = "Yazıları yazarın takipçi sayısına göre sırala";
 
     protected compare(a: SortingData, b: SortingData): number {
         const followersA = a.profile?.followerCount || 0;

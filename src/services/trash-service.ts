@@ -366,7 +366,7 @@ export class TrashService {
             if (!url) return;
 
             const entryId = url.split('=')[1];
-            const confirmMessage = reviveLink.getAttribute('data-confirm-message') || 'Bu entry\'i canlandırmak istediğinize emin misiniz?';
+            const confirmMessage = reviveLink.getAttribute('data-confirm-message') || 'Bu yazıyı canlandırmak istediğinize emin misiniz?';
 
             if (confirm(confirmMessage)) {
                 try {
@@ -379,7 +379,7 @@ export class TrashService {
                         await this.notificationService.show(
                             `<div style="display: flex; align-items: center">
                                 ${this.iconComponent.create({ name: 'check_circle', color: '#43a047', size: 'medium' }).outerHTML}
-                                <span>Entry başarıyla canlandırıldı.</span>
+                                <span>Yazı başarıyla canlandırıldı.</span>
                             </div>`,
                             { theme: 'success', timeout: 3 }
                         );
@@ -399,7 +399,7 @@ export class TrashService {
                         await this.notificationService.show(
                             `<div style="display: flex; align-items: center">
                                 ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
-                                <span>Entry canlandırılamadı.</span>
+                                <span>Yazı canlandırılamadı.</span>
                             </div>`,
                             { theme: 'error', timeout: 5 }
                         );
@@ -411,7 +411,7 @@ export class TrashService {
                     await this.notificationService.show(
                         `<div style="display: flex; align-items: center">
                             ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
-                            <span>Entry canlandırılırken hata oluştu.</span>
+                            <span>Yazı canlandırılırken hata oluştu.</span>
                         </div>`,
                         { theme: 'error', timeout: 5 }
                     );
@@ -495,7 +495,7 @@ export class TrashService {
             selectionCountSpan.className = 'eksi-selection-count';
             selectionCountSpan.style.marginRight = '10px';
             selectionCountSpan.style.fontSize = '14px';
-            selectionCountSpan.textContent = '0 entry seçildi';
+            selectionCountSpan.textContent = '0 yazı seçildi';
 
             actionControls.appendChild(selectionCountSpan);
             actionControls.appendChild(reviveSelectedButton);
@@ -661,7 +661,7 @@ export class TrashService {
                 const entryId = entryIds[i];
 
                 // Update notification
-                this.notificationService.updateContent(`${i + 1}/${entryIds.length} - Entry ${entryId} canlandırılıyor...`);
+                this.notificationService.updateContent(`${i + 1}/${entryIds.length} - Yazı ${entryId} canlandırılıyor...`);
 
                 try {
                     const success = await this.reviveEntry(entryId);

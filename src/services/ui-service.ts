@@ -286,7 +286,7 @@ export class UIService {
                         color: '#42a5f5',
                         size: 'medium'
                     }).outerHTML}
-                        Entry <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
+                        Yazı <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
                         <div>
                             <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
                         </div>

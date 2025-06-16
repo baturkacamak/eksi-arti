@@ -363,7 +363,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
 
             this.searchInput = this.domHandler.createElement('input') as HTMLInputElement;
             this.searchInput.type = 'text';
-            this.searchInput.placeholder = 'Entry içeriklerinde ara (hem vurgular hem filtreler)...';
+            this.searchInput.placeholder = 'Yazı içeriklerinde ara (hem vurgular hem filtreler)...';
             this.searchInput.autocomplete = 'off';
             this.domHandler.addClass(this.searchInput, 'eksi-search-input');
             this.loggingService.debug(`injectSearchRowDOM: searchInput created: ${!!this.searchInput}, type: ${this.searchInput.type}`);

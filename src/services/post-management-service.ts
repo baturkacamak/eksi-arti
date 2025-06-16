@@ -101,14 +101,14 @@ export class PostManagementService {
         this.buttonComponent.setDisabled(!isVisible);
         
         if (!hasLoadMoreButton) {
-            this.buttonComponent.updateText("Tüm Entry'ler Yüklendi");
+            this.buttonComponent.updateText("Tüm Yazılar Yüklendi");
         } else if (!this.isProcessing) {
-            this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+            this.buttonComponent.updateText("Tüm Yazıları Yükle");
         }
     }
 
     /**
-     * Add menu buttons (e.g. "Load All Entries") to the profile dropdown.
+     * Add menu buttons (e.g. "Load All Yazı") to the profile dropdown.
      */
     private addMenuButtons(): void {
         try {
@@ -118,14 +118,14 @@ export class PostManagementService {
                 return;
             }
 
-            // Create "Load All Entries" button using the ButtonComponent
+            // Create "Load All Yazı" button using the ButtonComponent
             const buttonProps: ButtonProps = {
-                text: "Tüm Entry'leri Yükle",
+                text: "Tüm Yazıları Yükle",
                 variant: ButtonVariant.DEFAULT,
                 size: ButtonSize.SMALL,
                 className: "eksi-arti-load-all-btn",
                 onClick: () => this.handleButtonClick(),
-                ariaLabel: "Tüm entry'leri yükle"
+                ariaLabel: "Tüm yazıları yükle"
             };
 
             const loadAllButton = this.buttonComponent.create(buttonProps);
@@ -188,7 +188,7 @@ export class PostManagementService {
             // Reset to original text after 2 seconds
             setTimeout(() => {
                 if (this.loadAllButton) {
-                    this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                    this.buttonComponent.updateText("Tüm Yazıları Yükle");
                     this.buttonComponent.setDisabled(false);
                 }
             }, 2000);
@@ -222,14 +222,14 @@ export class PostManagementService {
             const callbacks: LoadAllEntriesCallbacks = {
                 onProgress: (progress: LoadAllEntriesProgress) => {
                     if (this.loadAllButton) {
-                        this.buttonComponent.updateText(`⏹ Durdur (${progress.currentCount} entry)`);
+                        this.buttonComponent.updateText(`⏹ Durdur (${progress.currentCount} yazı)`);
                         // Ensure button stays enabled during loading so user can stop
                         this.buttonComponent.setDisabled(false);
                     }
                 },
                 onComplete: (totalEntries: number) => {
                     if (this.loadAllButton) {
-                        this.buttonComponent.updateText(`✓ Tamamlandı (${totalEntries} entry)`);
+                        this.buttonComponent.updateText(`✓ Tamamlandı (${totalEntries} yazı)`);
                         this.buttonComponent.setDisabled(true);
                         
                         // Don't reset to initial state after successful completion
@@ -244,7 +244,7 @@ export class PostManagementService {
                         // Reset to original text after 5 seconds
                         setTimeout(() => {
                             if (this.loadAllButton) {
-                                this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                                this.buttonComponent.updateText("Tüm Yazıları Yükle");
                                 this.updateButtonState();
                             }
                         }, 5000);
@@ -258,7 +258,7 @@ export class PostManagementService {
                         // Reset to original text after 2 seconds
                         setTimeout(() => {
                             if (this.loadAllButton) {
-                                this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                                this.buttonComponent.updateText("Tüm Yazıları Yükle");
                                 this.updateButtonState();
                             }
                         }, 2000);
@@ -287,7 +287,7 @@ export class PostManagementService {
                 // Reset to original text after 5 seconds
                 setTimeout(() => {
                     if (this.loadAllButton) {
-                        this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+                        this.buttonComponent.updateText("Tüm Yazıları Yükle");
                         this.updateButtonState();
                     }
                 }, 5000);
@@ -303,7 +303,7 @@ export class PostManagementService {
             const cssHandler = new (this.cssService.constructor as { new (): ICSSService })();
             const counterStyles = `
             .topic-item::before {
-                content: "Entry " counter(my-sec-counter);
+                content: "Yazı " counter(my-sec-counter);
                 counter-increment: my-sec-counter -1;
                 display: inline-block;
                 position: absolute;
@@ -322,7 +322,7 @@ export class PostManagementService {
             }
         `;
             cssHandler.addCSS(counterStyles);
-            this.loggingService.debug("Entry counter styles added");
+            this.loggingService.debug("Yazı counter styles added");
         } catch (error) {
             this.loggingService.error("Error adding item counter styles", error);
         }
@@ -362,12 +362,12 @@ export class PostManagementService {
      */
     private handleEntryListChange(): void {
         try {
-            const currentEntryCount = document.querySelectorAll(".topic-item").length;
+            const currentYaziCount = document.querySelectorAll(".topic-item").length;
             const currentLoadMoreButton = document.querySelector(".load-more-entries") as HTMLElement | null;
             const currentLoadMoreButtonText = currentLoadMoreButton?.textContent || '';
 
             // Detect if this is a significant change indicating a tab switch
-            const isSignificantChange = this.detectTabSwitch(currentEntryCount, currentLoadMoreButtonText);
+            const isSignificantChange = this.detectTabSwitch(currentYaziCount, currentLoadMoreButtonText);
 
             if (isSignificantChange) {
                 this.loggingService.debug("Detected entry list change (tab switch) - resetting button state");
@@ -390,7 +390,7 @@ export class PostManagementService {
             }
 
             // Update tracking variables
-            this.lastEntryCount = currentEntryCount;
+            this.lastEntryCount = currentYaziCount;
             this.lastLoadMoreButtonText = currentLoadMoreButtonText;
             
         } catch (error) {
@@ -425,7 +425,7 @@ export class PostManagementService {
     private resetButtonToInitialState(): void {
         if (!this.loadAllButton) return;
         
-        this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+        this.buttonComponent.updateText("Tüm Yazıları Yükle");
         this.buttonComponent.setDisabled(false);
         this.buttonComponent.setLoading(false);
     }

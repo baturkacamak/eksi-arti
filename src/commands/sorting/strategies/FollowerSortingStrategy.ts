@@ -6,7 +6,7 @@ export class FollowerSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'followers';
     public readonly displayName: string = 'Takipçi';
     public readonly icon: string = 'people';
-    public readonly tooltip: string = 'Entry\'leri yazarın takipçi sayısına göre sırala';
+    public readonly tooltip: string = 'Yazıları yazarın takipçi sayısına göre sırala';
 
     constructor(
         userProfileService: IUserProfileService,

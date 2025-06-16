@@ -17,7 +17,7 @@ export interface LoadAllEntriesCallbacks {
 }
 
 /**
- * Command for loading all entries by clicking the "show more" button repeatedly
+ * Command for loading all yazı by clicking the "show more" button repeatedly
  */
 export class LoadAllEntriesCommand implements ICommand {
   private abortController: AbortController;
@@ -88,7 +88,7 @@ export class LoadAllEntriesCommand implements ICommand {
       this.loggingService.error("Error executing LoadAllEntriesCommand:", error);
       // Call error callback instead of showing notification
       if (this.callbacks.onError) {
-        this.callbacks.onError("Entry'ler yüklenirken hata oluştu.");
+        this.callbacks.onError("Yazılar yüklenirken hata oluştu.");
       }
       return false;
     }
@@ -148,6 +148,6 @@ export class LoadAllEntriesCommand implements ICommand {
   }
 
   public getDescription(): string {
-    return "Tüm entry'leri yükle";
+    return "Tüm yazıları yükle";
   }
 } 

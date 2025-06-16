@@ -43,6 +43,6 @@ export class BlockUsersCommand implements ICommand {
 
   public getDescription(): string {
     const actionType = this.blockType === BlockType.MUTE ? "sessiz al" : "engelle";
-    return `Entry #${this.entryId} için favorileyenleri ${actionType}`;
+            return `Yazı #${this.entryId} için favorileyenleri ${actionType}`;
   }
 } 

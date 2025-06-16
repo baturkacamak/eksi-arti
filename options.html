@@ -113,7 +113,7 @@
                                   aria-label="Not şablonu hakkında daha fazla bilgi">?</span>
                         </label>
                         <textarea id="defaultNoteTemplate" rows="4"
-                                  placeholder="{postTitle} için {actionType}. Entry: {entryLink}"
+                                                                      placeholder="{postTitle} için {actionType}. Yazı: {entryLink}"
                                   aria-describedby="template-help-text tooltip-note-template"></textarea>
                         <div class="help-text" id="template-help-text">
                             <span class="material-icons" style="font-size: 14px; vertical-align: middle;"
@@ -215,7 +215,7 @@
                         </div>
                         <div class="help-text">
                             <span class="material-icons">info</span>
-                            Entrylerinize gelen oylar için bildirim alın
+                            Yazılarınıza gelen oylar için bildirim alın
                         </div>
                     </div>
                     <div class="option">
@@ -341,7 +341,7 @@
                         </h4>
                         <ul aria-labelledby="features-heading">
                             <li><span class="material-icons" aria-hidden="true">person_off</span> Toplu Kullanıcı
-                                Engelleme: Belirli bir entry'yi favorileyen çoklu kullanıcıları tek seferde engelleyin
+                                Engelleme: Belirli bir yazıyı favorileyen çoklu kullanıcıları tek seferde engelleyin
                             </li>
                             <li><span class="material-icons" aria-hidden="true">note_add</span> Özel Notlar: Engellenmiş
                                 kullanıcılara özelleştirilebilir şablonlarla otomatik not ekleyin
@@ -417,8 +417,8 @@
     <h4>Varsayılan Engelleme Türü</h4>
     <p>Engelleme işlemlerinde kullanılacak varsayılan engelleme tipi:</p>
     <ul>
-        <li><strong>Sessiz Al</strong>: Kullanıcının entryleri görünür kalır ancak bildirimlerde görünmez</li>
-        <li><strong>Engelle</strong>: Kullanıcının entryleri tamamen gizlenir</li>
+                                  <li><strong>Sessiz Al</strong>: Kullanıcının yazıları görünür kalır ancak bildirimlerde görünmez</li>
+                  <li><strong>Engelle</strong>: Kullanıcının yazıları tamamen gizlenir</li>
     </ul>
 </div>
 
@@ -429,9 +429,9 @@
     <p>Engellenen kullanıcılara otomatik olarak eklenecek notun şablonu.</p>
     <p>Şu değişkenleri kullanabilirsiniz:</p>
     <ul>
-        <li><code>{postTitle}</code> - Engellenen entry'nin başlığı</li>
+                      <li><code>{postTitle}</code> - Engellenen yazının başlığı</li>
         <li><code>{actionType}</code> - Engelleme türü ("sessiz alındı" veya "engellendi")</li>
-        <li><code>{entryLink}</code> - Engellenen entry'nin bağlantısı</li>
+                  <li><code>{entryLink}</code> - Engellenen yazının bağlantısı</li>
         <li><code>{date}</code> - İşlem tarihi</li>
     </ul>
 </div>

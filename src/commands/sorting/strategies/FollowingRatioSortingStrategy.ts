@@ -6,7 +6,7 @@ export class FollowingRatioSortingStrategy extends BaseUserProfileSortingStrateg
     public readonly name: string = 'following-ratio';
     public readonly displayName: string = 'Takip Oranı';
     public readonly icon: string = 'group_add';
-    public readonly tooltip: string = 'Entry\'leri yazarın takip oranına göre sırala (takip edilen/takipçi)';
+    public readonly tooltip: string = 'Yazıları yazarın takip oranına göre sırala (takip edilen/takipçi)';
 
     constructor(
         userProfileService: IUserProfileService,

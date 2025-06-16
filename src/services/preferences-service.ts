@@ -9,7 +9,7 @@ import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 export class PreferencesService implements IPreferencesService {
     private defaultPreferences: BlockerPreferences = {
         defaultBlockType: BlockType.MUTE,
-        defaultNoteTemplate: '{postTitle} için {actionType}. Entry: {entryLink}',
+        defaultNoteTemplate: '{postTitle} için {actionType}. Yazı: {entryLink}',
         preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
         notificationPosition: 'top-right'
     };

@@ -6,7 +6,7 @@ export class EngagementRatioSortingStrategy extends BaseUserProfileSortingStrate
     public readonly name: string = 'engagement-ratio';
     public readonly displayName: string = 'Etkileşim Oranı';
     public readonly icon: string = 'trending_up';
-    public readonly tooltip: string = 'Entry\'leri yazar etkileşim oranına göre sırala (takipçi/takip edilen)';
+    public readonly tooltip: string = 'Yazıları yazar etkileşim oranına göre sırala (takipçi/takip edilen)';
 
     constructor(
         userProfileService: IUserProfileService,

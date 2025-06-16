@@ -349,7 +349,7 @@ async function checkForNewVote() {
                     type: 'basic',
                     iconUrl: 'icons/icon128.png',
                     title: '🗳️ Yeni Oy Aldınız!',
-                    message: `"${currentTitle}" başlıklı entrinize oy verildi.\n\nTıklayarak entrye gidin.`,
+                    message: `"${currentTitle}" başlıklı yazınıza oy verildi.\n\nTıklayarak yazıya gidin.`,
                     priority: 2
                 });
                 

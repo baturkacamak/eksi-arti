@@ -5,7 +5,7 @@
 ## 🌟 Özellikler
 
 ### Toplu Kullanıcı Engelleme
-- Bir entry'i favorileyen kullanıcıları kolayca toplu olarak engelleyebilir veya sessize alabilirsiniz
+- Bir yazıyı favorileyen kullanıcıları kolayca toplu olarak engelleyebilir veya sessize alabilirsiniz
 - Sessiz alma (yazılarını görürsünüz) veya tamamen engelleme seçenekleri
 - Özel not ekleme imkanı
 
@@ -17,10 +17,10 @@
 ### Ek Özellikler
 - Giriş sayfası için özel arama
 - Yazarları renklendirme ve not alma
-- Entry'leri ekran görüntüsü olarak kaydetme
+- Yazıları ekran görüntüsü olarak kaydetme
 - Hızlı kopyalama ve ekran görüntüsü alma düğmeleri
 - Çöp kutusu yönetimi
-- Entry sıralama araçları
+- Yazı sıralama araçları
 
 ## 📥 Kurulum
 
@@ -47,11 +47,11 @@
 
 ## 🚀 Kullanım
 
-1. Herhangi bir Ekşi Sözlük entry sayfasına gidin
-2. Entry'nin "..." menüsüne tıklayın
+1. Herhangi bir Ekşi Sözlük yazı sayfasına gidin
+2. Yazının "..." menüsüne tıklayın
 3. "favorileyenleri engelle" seçeneğini seçin
 4. Şunları yapabilirsiniz:
-   - "Sessiz Al" - Kullanıcının entry'lerini görmeye devam edin, bildirimlere dahil olmaz
+   - "Sessiz Al" - Kullanıcının yazılarını görmeye devam edin, bildirimlere dahil olmaz
    - "Engelle" - Kullanıcıyı tamamen engelleyin
 
 ## 🛠 Geliştirme

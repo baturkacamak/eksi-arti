@@ -6,7 +6,7 @@ export class AccountAgeSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'account-age';
     public readonly displayName: string = 'Hesap Yaşı';
     public readonly icon: string = 'account_circle';
-    public readonly tooltip: string = 'Entry\'leri yazar hesap yaşına göre sırala';
+    public readonly tooltip: string = 'Yazıları yazar hesap yaşına göre sırala';
 
     constructor(
         userProfileService: IUserProfileService,

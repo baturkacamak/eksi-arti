@@ -6,7 +6,7 @@ export class ActivityRatioSortingStrategy extends BaseUserProfileSortingStrategy
     public readonly name: string = 'activity-ratio';
     public readonly displayName: string = 'Aktivite Oranı';
     public readonly icon: string = 'speed';
-    public readonly tooltip: string = 'Entry\'leri yazarın günlük entry oranına göre sırala';
+    public readonly tooltip: string = 'Yazıları yazarın günlük yazı oranına göre sırala';
 
     constructor(
         userProfileService: IUserProfileService,
