@@ -256,7 +256,7 @@ export class UIService {
                         const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockModalFactory');
                         const optionsModal = blockModalFactory.create(entryId);
                         document.body.style.overflow = 'hidden';
-                        optionsModal.display();
+                        await optionsModal.display();
                     } catch (err) {
                         this.loggingService.error('Error showing options modal:', err);
                     }

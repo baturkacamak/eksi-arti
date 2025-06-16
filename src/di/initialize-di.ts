@@ -50,6 +50,7 @@ import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
 import {IUserProfile, UserProfileService} from '../services/user-profile-service';
+import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 import { AsyncQueueService } from '../services/async-queue-service';
 import { IAsyncQueueService } from '../interfaces/services/IAsyncQueueService';
 import {IHttpService} from "../interfaces/services/IHttpService";
@@ -277,6 +278,7 @@ export function initializeDI(): Container {
         const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
         const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
         const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
+        const preferencesService = container.resolve<IPreferencesService>('PreferencesService');
 
         return new BlockOptionsModalFactory(
             domHandler,
@@ -286,6 +288,7 @@ export function initializeDI(): Container {
             buttonComponent,
             commandFactory,
             commandInvoker,
+            preferencesService,
         );
     });
 

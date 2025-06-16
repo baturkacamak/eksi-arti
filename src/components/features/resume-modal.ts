@@ -205,9 +205,9 @@ export class ResumeModal extends BaseFeatureComponent {
             const blockOptionsModalFactory = this.specificContainer.resolve<BlockOptionsModalFactory>('BlockOptionsModalFactory');
             const optionsModal = blockOptionsModalFactory.create(this.entryId);
             if (typeof (optionsModal as any).display === 'function') { // Check if the modal from factory has display method
-                (optionsModal as any).display();
+                await (optionsModal as any).display();
             } else {
-                (optionsModal as any).display(); // Fallback to display if display not found (original method)
+                await (optionsModal as any).display(); // Fallback to display if display not found (original method)
             }
         }, 500);
     }

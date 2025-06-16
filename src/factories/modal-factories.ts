@@ -18,6 +18,7 @@ import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IToggleSwitchComponent} from "../interfaces/components/IToggleSwitchComponent";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IModalComponent} from "../interfaces/components/IModalComponent";
+import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 
 /**
  * Factory for creating BlockOptionsModal instances
@@ -31,6 +32,7 @@ export class BlockOptionsModalFactory {
         private buttonComponent: IButtonComponent,
         private commandFactory: ICommandFactory,
         private commandInvoker: ICommandInvoker,
+        private preferencesService: IPreferencesService,
     ) {}
 
     /**
@@ -54,6 +56,7 @@ export class BlockOptionsModalFactory {
             toggleSwitchComponent,
             tooltipComponent,
             modalComponent,
+            this.preferencesService,
             entryId
         );
     }

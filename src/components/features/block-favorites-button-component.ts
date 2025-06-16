@@ -215,9 +215,9 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
                         const optionsModal = this.specificBlockModalFactory.create(entryId);
                         document.body.style.overflow = 'hidden';
                                                   if (typeof (optionsModal as BlockOptionsModal).display === 'function') {
-                             (optionsModal as BlockOptionsModal).display();
+                             await (optionsModal as BlockOptionsModal).display();
                           } else {
-                              (optionsModal as any).display();
+                              await (optionsModal as any).display();
                           }
                     } catch (err) {
                         this.loggingService.error('Error showing options modal:', err);
