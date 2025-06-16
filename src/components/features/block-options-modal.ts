@@ -419,7 +419,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         const threadOptionLabel = this.domService.createElement('div');
         this.domService.addClass(threadOptionLabel, 'eksi-modal-option-label');
         threadOptionLabel.innerHTML = `
-            <div class="eksi-modal-option-title">Başlık Engelleme</div>
+            <div class="eksi-modal-option-title">Başlıkları da Engelle</div>
             <div class="eksi-modal-option-description">Favorileyen kullanıcıların açtığı başlıkları da engelle</div>
         `;
 
@@ -444,7 +444,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         threadInfoIcon.setAttribute('data-tooltip-content', 'thread-blocking-tooltip');
         threadInfoIcon.setAttribute('data-tooltip-position', 'top');
         threadInfoIcon.innerHTML = '?';
-        threadInfoIcon.setAttribute('aria-label', 'Başlık engelleme hakkında bilgi');
+        threadInfoIcon.setAttribute('aria-label', 'Başlıkları da engelleme hakkında bilgi');
         threadInfoIcon.setAttribute('type', 'button');
 
         this.domService.appendChild(threadOptionControl, threadToggle);
@@ -459,7 +459,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         const authorOptionLabel = this.domService.createElement('div');
         this.domService.addClass(authorOptionLabel, 'eksi-modal-option-label');
         authorOptionLabel.innerHTML = `
-            <div class="eksi-modal-option-title">Yazar Engelleme</div>
+            <div class="eksi-modal-option-title">Yazarı da Engelle</div>
             <div class="eksi-modal-option-description">Yazının orijinal yazarını da aynı şekilde engelle</div>
         `;
 
@@ -484,7 +484,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         authorInfoIcon.setAttribute('data-tooltip-content', 'author-blocking-tooltip');
         authorInfoIcon.setAttribute('data-tooltip-position', 'top');
         authorInfoIcon.innerHTML = '?';
-        authorInfoIcon.setAttribute('aria-label', 'Yazar engelleme hakkında bilgi');
+        authorInfoIcon.setAttribute('aria-label', 'Yazarı da engelleme hakkında bilgi');
         authorInfoIcon.setAttribute('type', 'button');
 
         this.domService.appendChild(authorOptionControl, authorToggle);
@@ -554,7 +554,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         threadTooltipContent.style.display = 'none';
         threadTooltipContent.innerHTML = `
             <div>
-                <p><strong>Başlık Engelleme</strong></p>
+                <p><strong>Başlıkları da Engelle</strong></p>
                 <p>Favorileyen tüm kullanıcıların açtığı başlıkları da engeller. Her kullanıcının hem profili hem de açtığı başlıklar engellenmiş olur.</p>
             </div>
         `;
@@ -564,7 +564,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         authorTooltipContent.style.display = 'none';
         authorTooltipContent.innerHTML = `
             <div>
-                <p><strong>Yazar Engelleme</strong></p>
+                <p><strong>Yazarı da Engelle</strong></p>
                 <p>Bu yazının orijinal yazarını da aynı şekilde engeller veya sessize alır. Favorileyen kullanıcılarla birlikte yazarı da işleme dahil eder.</p>
             </div>
         `;
