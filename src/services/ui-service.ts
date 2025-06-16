@@ -1,7 +1,7 @@
 import {DOMService} from './dom-service';
 import {CSSService} from './css-service';
 import {BlockOptionsModal} from '../components/features/block-options-modal';
-import {ResumeModal} from '../components/features/resume-modal';
+
 import { StorageService, storageService} from './storage-service';
 import {STORAGE_KEYS, SELECTORS} from '../constants';
 import {BlockerState} from '../types';
@@ -20,7 +20,7 @@ import {ObserverService, observerService} from "./observer-service";
 import {BlockUsersService} from "./block-users-service";
 import {Container} from "../di/container";
 import {PreferencesManager} from "./preferences-manager";
-import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
+import {BlockOptionsModalFactory} from "../factories/modal-factories";
 import {BlockFavoritesButtonComponent} from "../components/features/block-favorites-button-component";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
@@ -242,24 +242,14 @@ export class UIService {
                 const result = await this.storageService.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
                 const savedState = result.success && result.data ? result.data : null;
 
-                if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
-                    try {
-                        const resumeModalFactory = this.container.resolve<ResumeModalFactory>('ResumeModalFactory');
-                        const resumeModal = resumeModalFactory.create(entryId, savedState);
-                        // Scroll management is now handled by the modal component itself
-                        resumeModal.display();
-                    } catch (err) {
-                        this.loggingService.error('Error showing resume modal:', err);
-                    }
-                } else {
-                    try {
-                        const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockModalFactory');
-                        const optionsModal = blockModalFactory.create(entryId);
-                        // Scroll management is now handled by the modal component itself
-                        await optionsModal.display();
-                    } catch (err) {
-                        this.loggingService.error('Error showing options modal:', err);
-                    }
+                // Always show the normal block options modal now
+                try {
+                    const blockModalFactory = this.container.resolve<BlockOptionsModalFactory>('BlockModalFactory');
+                    const optionsModal = blockModalFactory.create(entryId);
+                    // Scroll management is now handled by the modal component itself
+                    await optionsModal.display();
+                } catch (err) {
+                    this.loggingService.error('Error showing options modal:', err);
                 }
             } catch (error) {
                 this.loggingService.error('Error in menu item click handler:', error);
@@ -298,8 +288,7 @@ export class UIService {
                     }
                 );
 
-                // Add a continue button to the notification
-                this.notificationService.addContinueButton(savedState.entryId);
+
             }
         } catch (error) {
             this.loggingService.error('Error checking for saved state:', error);

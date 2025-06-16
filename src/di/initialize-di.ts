@@ -26,7 +26,7 @@ import {PostManagementService} from "../services/post-management-service";
 import {EntrySorterComponent} from "../components/features/entry-sorter-component";
 import {ScreenshotButtonComponent} from "../components/features/screenshot-button-component";
 import {CopyButtonComponent} from "../components/shared/copy-button-component";
-import {BlockOptionsModalFactory, ResumeModalFactory} from "../factories/modal-factories";
+import {BlockOptionsModalFactory} from "../factories/modal-factories";
 import {NotificationComponent} from "../components/shared/notification-component";
 import {ContainerService} from "../services/container-service";
 import {BlockFavoritesButtonComponent} from "../components/features/block-favorites-button-component";
@@ -318,22 +318,7 @@ export function initializeDI(): Container {
         );
     });
 
-    container.register('ResumeModalFactory', () => {
-        const domService = container.resolve<IDOMService>('DOMService');
-        const cssService = container.resolve<ICSSService>('CSSService');
-        const loggingService = container.resolve<ILoggingService>('LoggingService');
-        const blockUsersService = container.resolve<BlockUsersService>('BlockUsersService');
-        const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
 
-        return new ResumeModalFactory(
-            domService,
-            cssService,
-            loggingService,
-            blockUsersService,
-            buttonComponent,
-            container
-        );
-    });
 
     container.register('CopyButtonComponent', () => {
         const domService = container.resolve<IDOMService>('DOMService');

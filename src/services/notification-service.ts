@@ -1,7 +1,7 @@
 import {storageService} from './storage-service';
 import {STORAGE_KEYS} from '../constants';
 import {BlockerState} from '../types';
-import {ResumeModalFactory} from "../factories/modal-factories";
+
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";
 import {INotificationService, INotificationServiceOptions} from "../interfaces/services/INotificationService";
@@ -201,57 +201,7 @@ export class NotificationService implements INotificationService {
         this.addButtons(footerContainer, [buttonProps]);
     }
 
-    /**
-     * Add a continue button to the notification for resuming operations
-     */
-    addContinueButton(entryId: string, clickHandler?: () => void): void {
-        if (!this.notificationComponent) return;
 
-        const footerContainer = this.notificationComponent.getFooterContainer();
-        if (!footerContainer) return;
-
-        // Create default click handler if none provided
-        const defaultClickHandler = async () => {
-            // Close the notification
-            this.close();
-
-            try {
-                // Get the saved state
-                const result = await storageService.getItem<BlockerState>(
-                    STORAGE_KEYS.CURRENT_OPERATION,
-                    undefined,
-                    StorageArea.LOCAL
-                );
-
-                if (result.success && result.data) {
-                    // Get the factory from the container
-                    const resumeModalFactory = this.container.resolve<ResumeModalFactory>('ResumeModalFactory');
-
-                    // Create the modal using the factory
-                    const resumeModal = resumeModalFactory.create(entryId, result.data);
-                    // Scroll management is now handled by the modal component itself
-                    resumeModal.display();
-                } else {
-                    this.loggingService.error('No saved operation state found');
-                }
-            } catch (error) {
-                this.loggingService.error('Error loading resume modal:', error);
-            }
-        };
-
-        const buttonProps: ButtonProps = {
-            text: 'Devam Et',
-            icon: 'play_arrow',
-            variant: ButtonVariant.PRIMARY,
-            size: ButtonSize.MEDIUM,
-            onClick: clickHandler || defaultClickHandler,
-            className: 'eksi-notification-continue-button',
-            fullWidth: true // Make button full width for better visibility
-        };
-
-        // Pass an array containing the ButtonProps object
-        this.addButtons(footerContainer, [buttonProps]);
-    }
 
     /**
      * Get the footer container element

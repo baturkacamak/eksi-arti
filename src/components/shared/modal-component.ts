@@ -354,54 +354,7 @@ export class ModalComponent implements IModalComponent {
         margin-top: 20px;
       }
 
-      /* Resume Modal Specific Styles */
-      .eksi-modal-message {
-        margin-bottom: 20px;
-        line-height: 1.5;
-      }
-      
-      .eksi-modal-stats {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin: 15px 0;
-        padding: 12px;
-        background-color: #f9f9f9;
-        border-radius: 6px;
-      }
-      
-      .eksi-stat {
-        flex: 1;
-        min-width: 120px;
-      }
-      
-      .eksi-stat-label {
-        font-size: 12px;
-        color: #777;
-        display: block;
-        margin-bottom: 5px;
-      }
-      
-      .eksi-stat-value {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-      }
-      
-      .eksi-modal-progress-container {
-        width: 100%;
-        height: 8px;
-        background-color: #eee;
-        border-radius: 4px;
-        overflow: hidden;
-        margin: 15px 0 5px 0;
-      }
-      
-      .eksi-modal-progress-bar {
-        height: 100%;
-        background-color: #81c14b;
-        border-radius: 4px;
-      }
+
       
       /* Modal button specific styling */
       .eksi-modal-button {
@@ -441,17 +394,7 @@ export class ModalComponent implements IModalComponent {
           border-color: #444;
         }
         
-        .eksi-modal-stats {
-          background-color: #333;
-        }
-        
-        .eksi-stat-label {
-          color: #999;
-        }
-        
-        .eksi-stat-value {
-          color: #e0e0e0;
-        }
+
       }
     `;
 

@@ -23,7 +23,6 @@ export interface INotificationService {
     updateProgress(current: number, total: number): void;
     updateCountdown(seconds: number): void;
     addStopButton(clickHandler: () => void): void;
-    addContinueButton(entryId: string, clickHandler?: () => void): void;
     getFooterContainer(): HTMLElement | null;
     close(): void;
 }

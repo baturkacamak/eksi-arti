@@ -1,23 +1,15 @@
 // src/components/block-favorites-button-component.ts
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
-import { IconComponent } from '../shared/icon-component';
 import { ContainerService } from "../../services/container-service";
-import { ObserverService, observerService as globalObserverService } from "../../services/observer-service";
 import { BlockOptionsModalFactory } from "../../factories/modal-factories";
-import { ResumeModalFactory } from "../../factories/modal-factories";
-import { STORAGE_KEYS } from "../../constants";
-import { BlockerState } from "../../types";
-import { storageService } from "../../services/storage-service";
 import { Container } from "../../di/container";
 import { ICSSService } from "../../interfaces/services/ICSSService";
 import { IDOMService } from "../../interfaces/services/IDOMService";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IObserverService } from "../../interfaces/services/IObserverService";
-import { StorageArea } from "../../interfaces/services/IStorageService";
 import { IBlockFavoritesButtonComponent } from "../../interfaces/components/IBlockFavoritesButtonComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
-import { IBlockOptionsModalFactory, IResumeModalFactory } from "../../interfaces/factories";
-import { ResumeModal } from './resume-modal';
+import { IBlockOptionsModalFactory } from "../../interfaces/factories";
 import { BlockOptionsModal } from './block-options-modal';
 
 /**
@@ -149,7 +141,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
             }
         `;
 
-                    this.cssService.addCSS(styles);
+        this.cssService.addCSS(styles);
         BlockFavoritesButtonComponent.stylesApplied = true;
     }
 
@@ -190,38 +182,18 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
             e.preventDefault();
             e.stopPropagation();
             try {
-                const result = await storageService.getItem<BlockerState>(
-                    STORAGE_KEYS.CURRENT_OPERATION,
-                    undefined,
-                    StorageArea.LOCAL
-                );
-                const savedState = result.success && result.data ? result.data : null;
-
-                if (savedState && Date.now() - savedState.timestamp < 3600000) {
-                    try {
-                        const resumeModalFactory = this.specificContainer.resolve<IResumeModalFactory>('ResumeModalFactory');
-                        const resumeModal = resumeModalFactory.create(entryId, savedState);
-                        // Scroll management is now handled by the modal component itself
-                                                  if (typeof (resumeModal as ResumeModal).display === 'function') {
-                             (resumeModal as ResumeModal).display();
-                          } else {
-                              (resumeModal as any).display();
-                          }
-                    } catch (err) {
-                        this.loggingService.error('Error showing resume modal:', err);
+                // Always show the normal block options modal
+                this.loggingService.debug(`Showing block options modal for entry ${entryId}`);
+                
+                try {
+                    const optionsModal = this.specificBlockModalFactory.create(entryId);
+                    if (typeof (optionsModal as BlockOptionsModal).display === 'function') {
+                        await (optionsModal as BlockOptionsModal).display();
+                    } else {
+                        await (optionsModal as any).display();
                     }
-                } else {
-                    try {
-                        const optionsModal = this.specificBlockModalFactory.create(entryId);
-                        // Scroll management is now handled by the modal component itself
-                                                  if (typeof (optionsModal as BlockOptionsModal).display === 'function') {
-                             await (optionsModal as BlockOptionsModal).display();
-                          } else {
-                              await (optionsModal as any).display();
-                          }
-                    } catch (err) {
-                        this.loggingService.error('Error showing options modal:', err);
-                    }
+                } catch (err) {
+                    this.loggingService.error('Error showing options modal:', err);
                 }
             } catch (error) {
                 this.loggingService.error('Error in block button click handler:', error);

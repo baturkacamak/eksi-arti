@@ -2,7 +2,7 @@
  * BlockUsersService
  * Service to manage blocking users who favorited a specific entry
  */
-import {HttpService} from './http-service';
+import {HttpService, HttpError} from './http-service';
 import {HtmlParserService} from './html-parser-service';
 import {StorageService, storageService} from './storage-service';
 import {preferencesManager} from './preferences-manager';
@@ -389,7 +389,8 @@ export class BlockUsersService {
 
                 // Check if this is a "user not found" error (deleted user)
                 const errorMessage = error instanceof Error ? error.message : '';
-                if (errorMessage.includes('User ID not found') || 
+                if (errorMessage.includes('USER_DELETED') ||
+                    errorMessage.includes('User ID not found') || 
                     errorMessage.includes('Failed to fetch user profile') ||
                     errorMessage.includes('404') ||
                     errorMessage.includes('user not found') ||
@@ -495,6 +496,13 @@ export class BlockUsersService {
         try {
             return await this.httpService.get(url);
         } catch (error) {
+            // Check if this is a 404 error indicating the user has been deleted
+            if (error instanceof HttpError && error.statusCode === 404) {
+                const username = this.getUsernameFromUrl(url);
+                this.loggingService.debug(`User ${username} profile returned 404 - user has been deleted from the site`);
+                throw new Error('USER_DELETED'); // Special error type for deleted users
+            }
+            
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new Error(`Failed to fetch user profile: ${errorMessage}`);
         }
@@ -689,8 +697,20 @@ export class BlockUsersService {
             });
 
             // Update pending users and total count
-            this.pendingUsers = Array.from(allUsers);
-            this.totalUserCount = this.pendingUsers.length + this.processedUsers.size;
+            // Get only the new users that weren't in the original pending list
+            const currentPendingSet = new Set(this.pendingUsers);
+            const newUsers = Array.from(allUsers).filter(userUrl => !currentPendingSet.has(userUrl));
+            
+            // Append new users to the existing pending list so the processing loop picks them up
+            this.pendingUsers.push(...newUsers);
+            this.totalUserCount = this.pendingUsers.length;
+            
+            this.loggingService.debug(`Added ${newUsers.length} new users to pending list`, {
+                originalPendingCount: currentPendingSet.size,
+                newUsersCount: newUsers.length,
+                totalPendingCount: this.pendingUsers.length,
+                newUsers: newUsers.map(url => this.getUsernameFromUrl(url))
+            });
 
             // Update progress widget to show the expanded operation
             const entriesText = this.currentOperationEntries.length > 1 
@@ -700,14 +720,14 @@ export class BlockUsersService {
             this.progressWidget.updateProgress({
                 current: this.processedUsers.size + this.skippedUsers.length,
                 total: this.totalUserCount,
-                message: `${entriesText} için ${this.totalUserCount} kullanıcı işleniyor • +${favorites.length} yeni kullanıcı eklendi`
+                message: `${entriesText} için ${this.totalUserCount} kullanıcı işleniyor • +${newUsers.length} yeni kullanıcı eklendi`
             });
 
             // Show notification about adding to current operation
             await this.notificationService.show(
                 `<div style="display: flex; align-items: center">
                     ${this.iconComponent.create({name: 'add_circle', color: '#059669', size: 'medium'}).outerHTML}
-                    <span>Mevcut işleme eklendi (+${favorites.length} kullanıcı)</span>
+                    <span>Mevcut işleme eklendi (+${newUsers.length} kullanıcı)</span>
                 </div>`,
                 {
                     theme: 'success',

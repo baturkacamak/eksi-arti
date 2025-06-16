@@ -4,7 +4,6 @@ import { CSSService } from '../services/css-service';
 import { LoggingService } from '../services/logging-service';
 import { BlockUsersService } from '../services/block-users-service';
 import { BlockOptionsModal } from '../components/features/block-options-modal';
-import { ResumeModal } from '../components/features/resume-modal';
 import { BlockerState } from '../types';
 import {ButtonComponent} from "../components/shared/button-component";
 import {Container} from "../di/container";
@@ -58,42 +57,6 @@ export class BlockOptionsModalFactory {
             modalComponent,
             this.preferencesService,
             entryId
-        );
-    }
-}
-
-/**
- * Factory for creating ResumeModal instances
- */
-export class ResumeModalFactory {
-    constructor(
-        private domService: IDOMService,
-        private cssService: ICSSService,
-        private loggingService: ILoggingService,
-        private blockUsersService: BlockUsersService,
-        private buttonComponent: ButtonComponent,
-        private container: Container,
-    ) {}
-
-    /**
-     * Create a new ResumeModal instance
-     */
-    create(entryId: string, savedState: BlockerState): ResumeModal {
-        const iconComponent = this.container.resolve<any>('IconComponent');
-        const observerService = this.container.resolve<any>('ObserverService');
-        const modalComponent = this.container.resolve<IModalComponent>('ModalComponent');
-        return new ResumeModal(
-            this.domService,
-            this.cssService,
-            this.loggingService,
-            iconComponent,
-            observerService,
-            this.buttonComponent,
-            this.blockUsersService,
-            this.container,
-            modalComponent,
-            entryId,
-            savedState
         );
     }
 }

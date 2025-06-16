@@ -18,8 +18,23 @@ export class HttpService implements IHttpService {
     constructor(private loggingService: ILoggingService) {}
 
     /**
+     * Check if an error indicates a definitive HTTP response that shouldn't trigger fallbacks
+     * Returns true for status codes like 404, 403, 401, etc. that are definitive responses
+     */
+    private isDefinitiveHttpError(error: any): boolean {
+        if (error instanceof HttpError) {
+            const statusCode = error.statusCode;
+            // These status codes are definitive responses from the server
+            // and shouldn't trigger fallback methods
+            return statusCode >= 400 && statusCode < 500; // Client errors (4xx)
+        }
+        return false;
+    }
+
+    /**
      * Make an HTTP request with progressive fallbacks
      * First tries fetch API, then XMLHttpRequest, then fallbacks for older browsers
+     * Skips fallbacks for definitive HTTP errors like 404, 403, etc.
      */
     async makeRequest(
         method: string,
@@ -28,14 +43,24 @@ export class HttpService implements IHttpService {
         headers: RequestHeaders = {}
     ): Promise<string> {
         const browserHeaders = this.getRandomizedBrowserHeaders(headers);
+        let lastError: any = null;
+        
         // Try using the modern Fetch API first
         if (typeof fetch === 'function') {
             try {
                this.loggingService.debug('Using Fetch API for request', {method, url});
                 return await this.makeFetchRequest(method, url, data, browserHeaders);
             } catch (error) {
-              this.loggingService.error('Fetch request failed, falling back to XMLHttpRequest', error);
-                // If fetch fails for any reason, fall back to XMLHttpRequest
+                lastError = error;
+                // If this is a definitive HTTP error (like 404), don't attempt fallbacks
+                if (this.isDefinitiveHttpError(error)) {
+                    this.loggingService.debug('Definitive HTTP error received, skipping fallbacks', {
+                        statusCode: error instanceof HttpError ? error.statusCode : 'unknown',
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    });
+                    throw error;
+                }
+                this.loggingService.error('Fetch request failed, falling back to XMLHttpRequest', error);
             }
         }
 
@@ -45,8 +70,16 @@ export class HttpService implements IHttpService {
                this.loggingService.debug('Using XMLHttpRequest for request', {method, url});
                 return await this.makeXHRRequest(method, url, data, browserHeaders);
             } catch (error) {
-              this.loggingService.error('XMLHttpRequest failed, falling back to legacy methods', error);
-                // If XMLHttpRequest fails, fall back to even older methods
+                lastError = error;
+                // If this is a definitive HTTP error (like 404), don't attempt fallbacks
+                if (this.isDefinitiveHttpError(error)) {
+                    this.loggingService.debug('Definitive HTTP error received, skipping fallbacks', {
+                        statusCode: error instanceof HttpError ? error.statusCode : 'unknown',
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    });
+                    throw error;
+                }
+                this.loggingService.error('XMLHttpRequest failed, falling back to legacy methods', error);
             }
         }
 
@@ -72,6 +105,11 @@ export class HttpService implements IHttpService {
             }
         }
 
+        // If we've exhausted all methods, throw the last error we received
+        if (lastError) {
+            throw lastError;
+        }
+        
         throw new HttpError('No suitable request method available', 0);
     }
 
