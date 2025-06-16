@@ -66,7 +66,7 @@ export class ContainerService {
     public getCustomControlsRow(): ComponentContainer {
         try {
             // Check if we already have a container in the DOM
-            const existingElement = document.querySelector('.eksi-custom-controls-row');
+            const existingElement = this.domService.querySelector('.eksi-custom-controls-row');
 
             // If it exists, find a target element to attach to
             if (existingElement) {
@@ -124,8 +124,8 @@ export class ContainerService {
             };
 
             // Find the target element to attach to
-            const targetElement = document.querySelector('#topic') || document.body;
-            const firstContent = targetElement.querySelector('#entry-item-list');
+            const targetElement = this.domService.querySelector('#topic') || document.body;
+            const firstContent = targetElement ? this.domService.querySelector('#entry-item-list', targetElement) : null;
 
             // Create the container
             const container = new ComponentContainer(config);
@@ -155,8 +155,8 @@ export class ContainerService {
 
             // Add sections to container
             if (containerElement) {
-                containerElement.appendChild(leftSection);
-                containerElement.appendChild(rightSection);
+                this.domService.appendChild(containerElement, leftSection);
+                this.domService.appendChild(containerElement, rightSection);
             }
 
             return container;

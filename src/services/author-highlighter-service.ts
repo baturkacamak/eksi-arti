@@ -402,7 +402,7 @@ export class AuthorHighlighterService {
      * Process all entries on the page
      */
     private processEntries(): void {
-        const entries = document.querySelectorAll('li[data-id][data-author]');
+        const entries = this.domService.querySelectorAll('li[data-id][data-author]');
         entries.forEach(entry => this.processEntry(entry as HTMLElement));
     }
 
@@ -514,7 +514,7 @@ export class AuthorHighlighterService {
             await this.saveConfig();
 
             // Remove highlights from DOM
-            const entries = document.querySelectorAll(`li[data-id][data-author="${author}"]`);
+            const entries = this.domService.querySelectorAll(`li[data-id][data-author="${author}"]`);
             entries.forEach(entry => {
                 this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
             });
@@ -560,7 +560,7 @@ export class AuthorHighlighterService {
             // Update DOM
             if (settings.enabled === false) {
                 // Remove highlights if disabled
-                const entries = document.querySelectorAll(`li[data-id][data-author="${author}"]`);
+                const entries = this.domService.querySelectorAll(`li[data-id][data-author="${author}"]`);
                 entries.forEach(entry => {
                     this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
@@ -617,7 +617,7 @@ export class AuthorHighlighterService {
                 this.processEntries();
             } else {
                 // Remove all highlights
-                const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
+                const entries = this.domService.querySelectorAll('li[data-id].eksi-highlighted-author');
                 entries.forEach(entry => {
                     this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
@@ -660,7 +660,7 @@ export class AuthorHighlighterService {
                 // Update animation duration in CSS if changed
                 if (settings.animationDuration !== undefined &&
                     settings.animationDuration !== oldAnimationDuration) {
-                    document.querySelectorAll('li[data-id].eksi-highlighted-author').forEach(entry => {
+                    this.domService.querySelectorAll('li[data-id].eksi-highlighted-author').forEach(entry => {
                         (entry as HTMLElement).style.transition =
                             `background-color ${settings.animationDuration}ms ease-out`;
                     });
@@ -703,7 +703,7 @@ export class AuthorHighlighterService {
 
             // Remove all highlights
             if (wasEnabled) {
-                const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
+                const entries = this.domService.querySelectorAll('li[data-id].eksi-highlighted-author');
                 entries.forEach(entry => {
                     this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
                 });
@@ -771,7 +771,7 @@ export class AuthorHighlighterService {
     private setupContextMenu(): void {
         try {
             // Create event listener for right click on entries
-            document.addEventListener('contextmenu', async (e) => {
+            this.domService.addEventListener(document as unknown as HTMLElement, 'contextmenu', async (e) => {
                 // Find if click was on an entry
                 const target = e.target as HTMLElement;
                 const entry = target.closest('li[data-id][data-author]');
@@ -799,7 +799,7 @@ export class AuthorHighlighterService {
     private showAuthorContextMenu(author: string, entry: HTMLElement, position: { x: number, y: number }): void {
         try {
             // Remove any existing menu
-            const existingMenu = document.querySelector('.eksi-author-menu');
+            const existingMenu = this.domService.querySelector('.eksi-author-menu');
             if (existingMenu) existingMenu.remove();
 
             // Create menu
@@ -886,15 +886,15 @@ export class AuthorHighlighterService {
             }
 
             // Assemble menu
-            menu.appendChild(header);
-            menu.appendChild(menuItems);
+            this.domService.appendChild(menu, header);
+            this.domService.appendChild(menu, menuItems);
 
             // Position menu
             menu.style.left = `${position.x}px`;
             menu.style.top = `${position.y}px`;
 
             // Add to document
-            document.body.appendChild(menu);
+            this.domService.appendChild(document.body, menu);
 
             // Close when clicking outside
             const closeListener = (e: MouseEvent) => {
@@ -905,7 +905,7 @@ export class AuthorHighlighterService {
             };
 
             setTimeout(() => {
-                document.addEventListener('click', closeListener);
+                this.domService.addEventListener(document as unknown as HTMLElement, 'click', closeListener);
             }, 100);
         } catch (error) {
           this.loggingService.error('Error showing author context menu:', error);
@@ -930,11 +930,11 @@ export class AuthorHighlighterService {
         });
 
         // Add text
-        const textNode = document.createTextNode(text);
+        const textNode = this.domService.createTextNode(text);
 
         // Assemble
-        item.appendChild(iconElement);
-        item.appendChild(textNode);
+        this.domService.appendChild(item, iconElement);
+        this.domService.appendChild(item, textNode);
 
         // Add click handler
         this.domService.addEventListener(item, 'click', (e) => {
@@ -1038,9 +1038,9 @@ export class AuthorHighlighterService {
                 });
 
                 // Add buttons to container
-                buttons.appendChild(cancelButton);
-                buttons.appendChild(saveButton);
-                footerContainer.appendChild(buttons);
+                this.domService.appendChild(buttons, cancelButton);
+                this.domService.appendChild(buttons, saveButton);
+                this.domService.appendChild(footerContainer, buttons);
             }
 
             // Add event listener for color input

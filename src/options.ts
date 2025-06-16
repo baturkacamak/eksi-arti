@@ -8,6 +8,7 @@ import {LoggingService} from "./services/logging-service";
 import {CSSService} from "./services/css-service";
 import {DOMService} from "./services/dom-service";
 import {ILoggingService} from "./interfaces/services/ILoggingService";
+import {IDOMService} from "./interfaces/services/IDOMService";
 
 /**
  * Options Manager Class
@@ -19,10 +20,12 @@ class OptionsPage {
     private saveDebounceTimer: number | null = null;
     private savePending: boolean = false;
     private loggingService: ILoggingService = new LoggingService();
+    private domService: IDOMService = new DOMService();
 
 
     constructor() {
         this.loggingService = new LoggingService();
+        this.domService = new DOMService();
     }
 
     /**
@@ -195,7 +198,7 @@ class OptionsPage {
 
             const exportFileDefaultName = `eksi-arti-settings-${new Date().toISOString().slice(0, 10)}.json`;
 
-            const linkElement = document.createElement('a');
+            const linkElement = this.domService.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
             linkElement.click();
@@ -404,79 +407,79 @@ class OptionsPage {
     setupEventListeners() {
         try {
             // Auto-save functionality for input, select, and textarea elements
-            const inputElements = document.querySelectorAll('input[type="text"], input[type="number"], select, textarea');
+            const inputElements = this.domService.querySelectorAll('input[type="text"], input[type="number"], select, textarea');
             inputElements.forEach(element => {
-                element.addEventListener('change', () => {
+                this.domService.addEventListener(element as HTMLElement, 'change', () => {
                     this.savePreferences();
                 });
             });
 
             // Auto-save functionality for checkboxes
-            const checkboxElements = document.querySelectorAll('input[type="checkbox"]');
+            const checkboxElements = this.domService.querySelectorAll('input[type="checkbox"]');
             checkboxElements.forEach(element => {
-                element.addEventListener('change', () => {
+                this.domService.addEventListener(element as HTMLElement, 'change', () => {
                     this.savePreferences();
                 });
             });
 
             // Save button (for backward compatibility)
-            const saveButton = document.getElementById('saveOptions');
+            const saveButton = this.domService.querySelector('#saveOptions') as HTMLElement;
             if (saveButton) {
-                saveButton.addEventListener('click', () => {
+                this.domService.addEventListener(saveButton, 'click', () => {
                     this.savePreferences();
                 });
             }
 
             // Reset button
-            const resetButton = document.getElementById('resetSettings');
+            const resetButton = this.domService.querySelector('#resetSettings') as HTMLElement;
             if (resetButton) {
-                resetButton.addEventListener('click', () => {
+                this.domService.addEventListener(resetButton, 'click', () => {
                     this.resetPreferences();
                 });
             }
 
             // Export settings
-            const exportButton = document.getElementById('exportSettings');
+            const exportButton = this.domService.querySelector('#exportSettings') as HTMLElement;
             if (exportButton) {
-                exportButton.addEventListener('click', () => {
+                this.domService.addEventListener(exportButton, 'click', () => {
                     this.exportSettings();
                 });
             }
 
             // Import settings
-            const importButton = document.getElementById('importSettings');
+            const importButton = this.domService.querySelector('#importSettings') as HTMLElement;
             if (importButton) {
-                importButton.addEventListener('click', () => {
+                this.domService.addEventListener(importButton, 'click', () => {
                     this.importSettings();
                 });
             }
 
             // Tab navigation
-            const tabs = document.querySelectorAll('.nav-items li');
+            const tabs = this.domService.querySelectorAll('.nav-items li');
             tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
+                this.domService.addEventListener(tab as HTMLElement, 'click', () => {
                     const tabId = tab.getAttribute('data-tab');
                     if (tabId) this.switchTab(tabId);
                 });
             });
 
             // Username management buttons
-            const refreshUsernameButton = document.getElementById('refreshUsername');
+            const refreshUsernameButton = this.domService.querySelector('#refreshUsername') as HTMLElement;
             if (refreshUsernameButton) {
-                refreshUsernameButton.addEventListener('click', () => {
+                this.domService.addEventListener(refreshUsernameButton, 'click', () => {
                     this.refreshUsername();
                 });
             }
 
-            const clearUsernameButton = document.getElementById('clearUsername');
+            const clearUsernameButton = this.domService.querySelector('#clearUsername') as HTMLElement;
             if (clearUsernameButton) {
-                clearUsernameButton.addEventListener('click', () => {
+                this.domService.addEventListener(clearUsernameButton, 'click', () => {
                     this.clearUsername();
                 });
             }
 
             // Enter key to save
-            document.addEventListener('keydown', (e) => {
+            this.domService.addEventListener(document as unknown as HTMLElement, 'keydown', (e) => {
                 if (e.key === 'Enter' && e.ctrlKey) {
                     this.savePreferences();
                 }
@@ -494,39 +497,41 @@ class OptionsPage {
     switchTab(tabId: string) {
         try {
             // Update active tab in navigation
-            document.querySelectorAll('.nav-items li').forEach(item => {
-                item.classList.remove('active');
+            this.domService.querySelectorAll('.nav-items li').forEach(item => {
+                this.domService.removeClass(item, 'active');
                 // Remove Tailwind active styles when we implement Tailwind
-                item.classList.remove('bg-primary-medium', 'border-primary');
+                this.domService.removeClass(item, 'bg-primary-medium');
+                this.domService.removeClass(item, 'border-primary');
                 // Add hover style
-                item.classList.add('hover:bg-primary-light');
+                this.domService.addClass(item, 'hover:bg-primary-light');
             });
 
-            const activeTab = document.querySelector(`.nav-items li[data-tab="${tabId}"]`);
+            const activeTab = this.domService.querySelector(`.nav-items li[data-tab="${tabId}"]`);
             if (activeTab) {
-                activeTab.classList.add('active');
+                this.domService.addClass(activeTab, 'active');
                 // Add Tailwind active styles when we implement Tailwind
-                activeTab.classList.add('bg-primary-medium', 'border-l-primary');
+                this.domService.addClass(activeTab, 'bg-primary-medium');
+                this.domService.addClass(activeTab, 'border-l-primary');
                 // Remove hover to prevent style conflicts
-                activeTab.classList.remove('hover:bg-primary-light');
+                this.domService.removeClass(activeTab, 'hover:bg-primary-light');
             }
 
             // Show the selected tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
+            this.domService.querySelectorAll('.tab-content').forEach(content => {
                 // For current CSS
-                content.classList.remove('active');
+                this.domService.removeClass(content, 'active');
                 // For Tailwind (when implemented)
-                content.classList.add('hidden');
-                content.classList.remove('block');
+                this.domService.addClass(content, 'hidden');
+                this.domService.removeClass(content, 'block');
             });
 
-            const tabContent = document.getElementById(tabId);
+            const tabContent = this.domService.querySelector(`#${tabId}`);
             if (tabContent) {
                 // For current CSS
-                tabContent.classList.add('active');
+                this.domService.addClass(tabContent, 'active');
                 // For Tailwind (when implemented)
-                tabContent.classList.remove('hidden');
-                tabContent.classList.add('block');
+                this.domService.removeClass(tabContent, 'hidden');
+                this.domService.addClass(tabContent, 'block');
             }
 
             this.loggingService.debug(`Switched to tab: ${tabId}`);
@@ -541,10 +546,9 @@ class OptionsPage {
     initializeTooltips() {
         try {
             // Create necessary dependencies for TooltipComponent
-            const domService = new DOMService();
             const cssService = new CSSService();
             // Create and initialize the TooltipComponent
-                          const tooltipComponent = new TooltipComponent(domService, cssService, this.loggingService);
+            const tooltipComponent = new TooltipComponent(this.domService, cssService, this.loggingService);
             tooltipComponent.initializeTooltips();
 
           this.loggingService.info('[Ekşi Artı] Tooltips initialized using TooltipComponent');
@@ -561,32 +565,34 @@ class OptionsPage {
             const rootElement = document.documentElement;
 
             // Remove existing theme classes
-            rootElement.classList.remove('system-theme', 'light-theme', 'dark-theme');
+            this.domService.removeClass(rootElement, 'system-theme');
+            this.domService.removeClass(rootElement, 'light-theme');
+            this.domService.removeClass(rootElement, 'dark-theme');
 
             // For Tailwind dark mode support
-            rootElement.classList.remove('dark');
+            this.domService.removeClass(rootElement, 'dark');
 
             // Apply selected theme
             switch (this.preferences.theme) {
                 case 'system':
-                    rootElement.classList.add('system-theme');
+                    this.domService.addClass(rootElement, 'system-theme');
                     // Check system preference for Tailwind dark mode
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        rootElement.classList.add('dark');
+                        this.domService.addClass(rootElement, 'dark');
                     }
                     break;
                 case 'light':
-                    rootElement.classList.add('light-theme');
+                    this.domService.addClass(rootElement, 'light-theme');
                     break;
                 case 'dark':
-                    rootElement.classList.add('dark-theme');
-                    rootElement.classList.add('dark'); // For Tailwind
+                    this.domService.addClass(rootElement, 'dark-theme');
+                    this.domService.addClass(rootElement, 'dark'); // For Tailwind
                     break;
                 default:
-                    rootElement.classList.add('system-theme');
+                    this.domService.addClass(rootElement, 'system-theme');
                     // Check system preference
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        rootElement.classList.add('dark');
+                        this.domService.addClass(rootElement, 'dark');
                     }
             }
 
@@ -594,9 +600,9 @@ class OptionsPage {
             if (this.preferences.theme === 'system') {
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                     if (e.matches) {
-                        rootElement.classList.add('dark');
+                        this.domService.addClass(rootElement, 'dark');
                     } else {
-                        rootElement.classList.remove('dark');
+                        this.domService.removeClass(rootElement, 'dark');
                     }
                 });
             }

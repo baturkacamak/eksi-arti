@@ -47,7 +47,7 @@ export class PostManagementService {
 
         try {
             // Find the "load more entries" button.
-            this.loadMoreButton = document.querySelector(".load-more-entries");
+            this.loadMoreButton = this.domService.querySelector(".load-more-entries");
 
             // Set up observer for new entries (e.g. to update counter styles).
             this.observerId = this.observerService.observe({
@@ -55,7 +55,7 @@ export class PostManagementService {
                 handler: () => {
                     this.addItemCounterStyles();
                     // Update load more button reference and button state
-                    this.loadMoreButton = document.querySelector(".load-more-entries");
+                    this.loadMoreButton = this.domService.querySelector(".load-more-entries");
                     this.updateButtonState();
                 },
                 processExisting: false,
@@ -112,7 +112,7 @@ export class PostManagementService {
      */
     private addMenuButtons(): void {
         try {
-            const profileDotsElement = document.querySelector("#profile-dots");
+            const profileDotsElement = this.domService.querySelector("#profile-dots");
             if (!profileDotsElement) {
                 this.loggingService.debug("Profile dots element not found");
                 return;
@@ -131,7 +131,7 @@ export class PostManagementService {
             const loadAllButton = this.buttonComponent.create(buttonProps);
             
             // Add custom positioning styles for the button
-            const style = document.createElement("style");
+            const style = this.domService.createElement("style");
             style.textContent = `
                 .eksi-arti-load-all-btn {
                     margin-left: 8px !important;
@@ -140,13 +140,15 @@ export class PostManagementService {
             `;
             
             // Add styles to document head if not already present
-            if (!document.querySelector('style[data-eksi-arti-load-all]')) {
+            if (!this.domService.querySelector('style[data-eksi-arti-load-all]')) {
                 style.setAttribute('data-eksi-arti-load-all', 'true');
-                document.head.appendChild(style);
+                this.domService.appendChild(document.head, style);
             }
             
             // Insert the button after the profile-dots element
-            profileDotsElement.parentNode?.insertBefore(loadAllButton, profileDotsElement.nextSibling);
+            if (profileDotsElement.parentNode) {
+                this.domService.insertBefore(profileDotsElement.parentNode, loadAllButton, profileDotsElement.nextSibling);
+            }
             
             // Store button reference for state management
             this.loadAllButton = loadAllButton;
@@ -318,7 +320,7 @@ export class PostManagementService {
             }
             
             #profile-stats-section-content {
-                counter-increment: my-sec-counter ${document.querySelectorAll(".topic-item").length + 1};
+                counter-increment: my-sec-counter ${this.domService.querySelectorAll(".topic-item").length + 1};
             }
         `;
             cssService.addCSS(counterStyles);
@@ -362,8 +364,8 @@ export class PostManagementService {
      */
     private handleEntryListChange(): void {
         try {
-            const currentYaziCount = document.querySelectorAll(".topic-item").length;
-            const currentLoadMoreButton = document.querySelector(".load-more-entries") as HTMLElement | null;
+            const currentYaziCount = this.domService.querySelectorAll(".topic-item").length;
+            const currentLoadMoreButton = this.domService.querySelector(".load-more-entries") as HTMLElement | null;
             const currentLoadMoreButtonText = currentLoadMoreButton?.textContent || '';
 
             // Detect if this is a significant change indicating a tab switch
