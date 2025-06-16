@@ -9,7 +9,7 @@ import {IPreferencesService} from "../interfaces/services/IPreferencesService";
 export class PreferencesService implements IPreferencesService {
     private defaultPreferences: BlockerPreferences = {
         defaultBlockType: BlockType.MUTE,
-        defaultNoteTemplate: '{postTitle} için {actionType}. Yazı: {entryLink}',
+        defaultNoteTemplate: '{baslikAdi} için {islemTuru}. Yazı: {yaziLinki}',
         preferenceStorageKey: STORAGE_KEYS.PREFERENCES,
         notificationPosition: 'top-right'
     };
@@ -98,9 +98,9 @@ export class PreferencesService implements IPreferencesService {
             }
 
             let noteText = preferences.defaultNoteTemplate
-                .replace('{postTitle}', postTitle)
-                .replace('{actionType}', actionType)
-                .replace('{entryLink}', Endpoints.ENTRY_URL(entryId));
+                .replace('{baslikAdi}', postTitle)
+                .replace('{islemTuru}', actionType)
+                .replace('{yaziLinki}', Endpoints.ENTRY_URL(entryId));
 
             // Add thread blocking info if enabled
             if (includeThreadBlocking && blockType !== BlockType.BLOCK_THREADS) {
@@ -128,9 +128,9 @@ export class PreferencesService implements IPreferencesService {
             }
 
             let noteText = this.defaultPreferences.defaultNoteTemplate
-                .replace('{postTitle}', postTitle)
-                .replace('{actionType}', actionType)
-                .replace('{entryLink}', Endpoints.ENTRY_URL(entryId));
+                .replace('{baslikAdi}', postTitle)
+                .replace('{islemTuru}', actionType)
+                .replace('{yaziLinki}', Endpoints.ENTRY_URL(entryId));
 
             // Add thread blocking info if enabled
             if (includeThreadBlocking && blockType !== BlockType.BLOCK_THREADS) {

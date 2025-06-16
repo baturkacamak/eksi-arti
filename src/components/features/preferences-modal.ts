@@ -140,7 +140,7 @@ export class PreferencesModal extends BaseFeatureComponent {
                 <textarea id="noteTemplate" rows="3">${this.preferences.defaultNoteTemplate}</textarea>
             </div>
             <div>
-                <small>Not: {postTitle}, {actionType}, ve {entryLink} değişkenleri kullanılabilir.</small>
+                                    <small>Not: {baslikAdi}, {islemTuru}, ve {yaziLinki} değişkenleri kullanılabilir.</small>
             </div>
         `;
 

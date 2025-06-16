@@ -67,7 +67,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             this.customNote = preferences.defaultNoteTemplate;
         } catch (error) {
             this.loggingService.error('Error loading preferences for note template:', error);
-            this.customNote = '{postTitle} için {actionType}. Yazı: {entryLink}';
+            this.customNote = '{baslikAdi} için {islemTuru}. Yazı: {yaziLinki}';
         }
         
         if (!this.contentElement) {
@@ -520,7 +520,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         const helpText = this.domService.createElement('div');
         this.domService.addClass(helpText, 'help-text');
         helpText.innerHTML = `
-            💡 <strong>Değişkenler:</strong> {postTitle}, {actionType}, {entryLink}, {date}
+                                💡 <strong>Değişkenler:</strong> {baslikAdi}, {islemTuru}, {yaziLinki}, {date}
         `;
 
         this.domService.appendChild(noteSection, noteLabel);

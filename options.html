@@ -113,12 +113,12 @@
                                   aria-label="Not şablonu hakkında daha fazla bilgi">?</span>
                         </label>
                         <textarea id="defaultNoteTemplate" rows="4"
-                                                                      placeholder="{postTitle} için {actionType}. Yazı: {entryLink}"
+                                                                      placeholder="{baslikAdi} için {islemTuru}. Yazı: {yaziLinki}"
                                   aria-describedby="template-help-text tooltip-note-template"></textarea>
                         <div class="help-text" id="template-help-text">
                             <span class="material-icons" style="font-size: 14px; vertical-align: middle;"
                                   aria-hidden="true">help_outline</span>
-                            Kullanılabilir Değişkenler: {postTitle}, {actionType}, {entryLink}, {date}
+                            Kullanılabilir Değişkenler: {baslikAdi}, {islemTuru}, {yaziLinki}, {date}
                         </div>
                     </div>
                 </div>
@@ -429,9 +429,9 @@
     <p>Engellenen kullanıcılara otomatik olarak eklenecek notun şablonu.</p>
     <p>Şu değişkenleri kullanabilirsiniz:</p>
     <ul>
-                      <li><code>{postTitle}</code> - Engellenen yazının başlığı</li>
-        <li><code>{actionType}</code> - Engelleme türü ("sessiz alındı" veya "engellendi")</li>
-                  <li><code>{entryLink}</code> - Engellenen yazının bağlantısı</li>
+                                                  <li><code>{baslikAdi}</code> - Engellenen yazının başlığı</li>
+                            <li><code>{islemTuru}</code> - Engelleme türü ("sessiz alındı" veya "engellendi")</li>
+                            <li><code>{yaziLinki}</code> - Engellenen yazının bağlantısı</li>
         <li><code>{date}</code> - İşlem tarihi</li>
     </ul>
 </div>

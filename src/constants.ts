@@ -24,7 +24,7 @@ export const DEFAULT_PREFERENCES = {
 
     // Blocking settings
     defaultBlockType: BlockType.MUTE,
-    defaultNoteTemplate: '{postTitle} için {actionType}. Yazı: {entryLink}',
+    defaultNoteTemplate: '{baslikAdi} için {islemTuru}. Yazı: {yaziLinki}',
     requestDelay: 7,
     retryDelay: 5,
     maxRetries: 3,
