@@ -119,8 +119,9 @@ export class CopyButtonComponent implements ICopyButtonComponent {
 
             const container = this.containerService.getEntryControlsContainer(entry);
             // Instead of directly handling the copy, use the command pattern:
+            const contentElement = entry.querySelector(".content") as HTMLElement;
             const copyButton = this.createCopyButton(
-                entry.querySelector(".content")?.textContent || ""
+                contentElement?.innerText || ""
             );
 
             container.add(copyButton);
