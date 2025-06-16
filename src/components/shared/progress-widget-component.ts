@@ -37,8 +37,7 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 border-radius: 8px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
                 padding: 12px;
-                min-width: 280px;
-                max-width: 320px;
+                width: 320px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 font-size: 13px;
                 transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -69,6 +68,9 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 color: #333;
                 font-size: 12px;
                 flex: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .eksi-progress-widget-controls {
@@ -126,12 +128,18 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 font-weight: 500;
                 color: #555;
                 font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .eksi-progress-widget-message {
                 color: #777;
                 font-size: 11px;
                 line-height: 1.3;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
             }
 
             .eksi-progress-widget-countdown {
