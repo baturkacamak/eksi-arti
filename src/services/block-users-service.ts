@@ -21,6 +21,7 @@ import {IStorageService, StorageArea} from "../interfaces/services/IStorageServi
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {IEventBus} from "../interfaces/services/IEventBus";
 import {IProgressWidgetComponent} from "../interfaces/components/IProgressWidgetComponent";
+import {BlockOperationRequest} from "../interfaces/services/IBlockUsersService";
 
 export class BlockUsersService {
     private totalUserCount: number = 0;
@@ -39,6 +40,10 @@ export class BlockUsersService {
     private abortProcessing: boolean = false;
     private errorCount: number = 0;
     private maxErrors: number = 10; // Maximum errors before aborting
+    
+    // Updated for merging operations
+    private currentOperationEntries: string[] = []; // Track all entries being processed
+    private allFavoritesMap: Map<string, string[]> = new Map(); // Track favorites per entry
 
     constructor(
         private httpService: IHttpService,
@@ -226,6 +231,12 @@ export class BlockUsersService {
             this.entryId = entryId;
             this.eventBus.publish('blockUsers:started', {entryId});
 
+            // Initialize operation tracking if this is the first entry
+            if (!this.isProcessing) {
+                this.currentOperationEntries = [entryId];
+                this.allFavoritesMap.clear();
+            }
+
             // Show progress widget early to replace the loading notification
             this.progressWidget.show({
                 title: 'Kullanıcı Engelleme',
@@ -254,6 +265,7 @@ export class BlockUsersService {
             }
 
             const userUrls = await this.fetchFavorites(entryId);
+            this.allFavoritesMap.set(entryId, userUrls);
             this.totalUserCount = userUrls.length;
             const postTitle = this.htmlParser.parsePostTitle();
 
@@ -338,6 +350,8 @@ export class BlockUsersService {
             throw error;
         } finally {
             this.isProcessing = false;
+            this.currentOperationEntries = [];
+            this.allFavoritesMap.clear();
         }
     }
 
@@ -613,5 +627,127 @@ export class BlockUsersService {
             this.abortProcessing = true;
             this.loggingService.info('User requested to cancel the blocking operation');
         }
+    }
+
+    /**
+     * Add an entry to the current blocking operation
+     */
+    async addEntryToCurrentOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean): Promise<boolean> {
+        if (!this.isProcessing) {
+            this.loggingService.warn(`Cannot add entry ${entryId} to operation - no operation in progress`);
+            return false;
+        }
+
+        // Check if this entry is already being processed
+        if (this.currentOperationEntries.includes(entryId)) {
+            this.loggingService.info(`Entry ${entryId} already being processed, skipping duplicate`);
+            return false;
+        }
+
+        // Validate that block types are compatible
+        if (blockType !== this.blockType) {
+            this.loggingService.warn(`Cannot add entry ${entryId} - incompatible block type`, {
+                currentBlockType: this.blockType,
+                requestedBlockType: blockType,
+                solution: 'All entries in the same operation must use the same block type'
+            });
+            return false;
+        }
+
+        // Validate that thread blocking settings are compatible
+        if (includeThreadBlocking !== this.includeThreadBlocking) {
+            this.loggingService.warn(`Cannot add entry ${entryId} - incompatible thread blocking setting`, {
+                currentThreadBlocking: this.includeThreadBlocking,
+                requestedThreadBlocking: includeThreadBlocking,
+                solution: 'All entries in the same operation must use the same thread blocking setting'
+            });
+            return false;
+        }
+
+        try {
+            this.loggingService.info(`Adding entry ${entryId} to current blocking operation`, {
+                entryId,
+                currentEntries: this.currentOperationEntries.length,
+                blockType,
+                includeThreadBlocking
+            });
+
+            // Fetch favorites for the new entry
+            const favorites = await this.fetchFavorites(entryId);
+            this.allFavoritesMap.set(entryId, favorites);
+            this.currentOperationEntries.push(entryId);
+
+            // Get all unique users from all entries
+            const allUsers = new Set<string>();
+            this.allFavoritesMap.forEach(favs => {
+                favs.forEach(userUrl => {
+                    const username = this.getUsernameFromUrl(userUrl);
+                    if (!this.processedUsers.has(username)) {
+                        allUsers.add(userUrl);
+                    }
+                });
+            });
+
+            // Update pending users and total count
+            this.pendingUsers = Array.from(allUsers);
+            this.totalUserCount = this.pendingUsers.length + this.processedUsers.size;
+
+            // Update progress widget to show the expanded operation
+            const entriesText = this.currentOperationEntries.length > 1 
+                ? `${this.currentOperationEntries.length} yazı` 
+                : 'yazı';
+            
+            this.progressWidget.updateProgress({
+                current: this.processedUsers.size + this.skippedUsers.length,
+                total: this.totalUserCount,
+                message: `${entriesText} için ${this.totalUserCount} kullanıcı işleniyor • +${favorites.length} yeni kullanıcı eklendi`
+            });
+
+            // Show notification about adding to current operation
+            await this.notificationService.show(
+                `<div style="display: flex; align-items: center">
+                    ${this.iconComponent.create({name: 'add_circle', color: '#059669', size: 'medium'}).outerHTML}
+                    <span>Mevcut işleme eklendi (+${favorites.length} kullanıcı)</span>
+                </div>`,
+                {
+                    theme: 'success',
+                    timeout: 3
+                }
+            );
+
+            this.loggingService.info(`Successfully added entry ${entryId} to current operation`, {
+                entryId,
+                addedUsers: favorites.length,
+                totalEntries: this.currentOperationEntries.length,
+                totalUsers: this.totalUserCount
+            });
+
+            return true;
+        } catch (error) {
+            this.loggingService.error(`Failed to add entry ${entryId} to current operation:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Get entries currently being processed
+     */
+    getCurrentOperationEntries(): string[] {
+        return [...this.currentOperationEntries];
+    }
+
+    /**
+     * Get current operation details
+     */
+    getCurrentOperationDetails(): { entryIds: string[], blockType: BlockType, includeThreadBlocking: boolean } | null {
+        if (!this.isProcessing || this.currentOperationEntries.length === 0) {
+            return null;
+        }
+
+        return {
+            entryIds: [...this.currentOperationEntries],
+            blockType: this.blockType,
+            includeThreadBlocking: this.includeThreadBlocking
+        };
     }
 }

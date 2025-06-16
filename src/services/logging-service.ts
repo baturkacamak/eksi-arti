@@ -169,6 +169,7 @@ export class LoggingService implements ILoggingService {
             styles.push(sourceStyle, resetStyle);
         }
 
+        // Enhanced output for different log levels
         switch (entry.level) {
             case LogLevel.DEBUG:
                 if (entry.data) {
@@ -186,18 +187,177 @@ export class LoggingService implements ILoggingService {
                 break;
             case LogLevel.WARN:
                 if (entry.data) {
-                    console.warn(styledMessage, ...styles, entry.data);
+                    console.warn(styledMessage, ...styles);
+                    this.outputDetailedData(entry.data, 'WARN');
                 } else {
                     console.warn(styledMessage, ...styles);
                 }
                 break;
             case LogLevel.ERROR:
                 if (entry.data) {
-                    console.error(styledMessage, ...styles, entry.data);
+                    console.error(styledMessage, ...styles);
+                    this.outputDetailedData(entry.data, 'ERROR');
                 } else {
                     console.error(styledMessage, ...styles);
                 }
                 break;
         }
+    }
+
+    /**
+     * Output detailed data for warnings and errors with better formatting
+     */
+    private outputDetailedData(data: any, level: 'WARN' | 'ERROR'): void {
+        const isError = level === 'ERROR';
+        const prefix = isError ? '🔴' : '⚠️';
+        const bgColor = isError ? '#fee2e2' : '#fef3c7';
+        const textColor = isError ? '#dc2626' : '#d97706';
+        
+        console.group(`%c${prefix} Detailed ${level} Information`, 
+            `color: ${textColor}; font-weight: bold; background: ${bgColor}; padding: 4px 8px; border-radius: 4px; margin: 2px 0;`
+        );
+
+        // Enhanced formatting for command execution errors
+        if (data.errorType && (data.errorType.includes('EXECUTION') || data.errorType.includes('COMMAND'))) {
+            this.outputCommandErrorDetails(data, level);
+        } else {
+            // Standard data output
+            if (typeof data === 'object' && data !== null) {
+                Object.entries(data).forEach(([key, value]) => {
+                    if (key === 'errorStack' && value) {
+                        console.group('📋 Stack Trace:');
+                        console.log(value);
+                        console.groupEnd();
+                    } else if (key === 'callStack' && Array.isArray(value)) {
+                        console.group('📍 Call Stack:');
+                        value.forEach((line, index) => {
+                            console.log(`  ${index + 1}. ${line}`);
+                        });
+                        console.groupEnd();
+                    } else if (key === 'possibleReasons' && Array.isArray(value)) {
+                        console.group('💡 Possible Reasons:');
+                        value.forEach((reason: string, index: number) => {
+                            console.log(`  ${index + 1}. ${reason}`);
+                        });
+                        console.groupEnd();
+                    } else {
+                        const formattedValue = this.formatLogValue(value);
+                        console.log(`%c${key}:%c ${formattedValue}`, 
+                            'color: #6b7280; font-weight: bold;', 
+                            'color: inherit; font-weight: normal;'
+                        );
+                    }
+                });
+            } else {
+                console.log(data);
+            }
+        }
+
+        console.groupEnd();
+    }
+
+    /**
+     * Output command-specific error details with enhanced formatting
+     */
+    private outputCommandErrorDetails(data: any, level: 'WARN' | 'ERROR'): void {
+        const isError = level === 'ERROR';
+        const emoji = isError ? '💥' : '⚠️';
+        
+        // Command Information Section
+        if (data.command || data.description) {
+            console.group(`${emoji} Command Information`);
+            if (data.command) {
+                console.log(`%cCommand:%c ${data.command}`, 'color: #6b7280; font-weight: bold;', 'color: #dc2626; font-weight: bold;');
+            }
+            if (data.description) {
+                console.log(`%cDescription:%c ${data.description}`, 'color: #6b7280; font-weight: bold;', 'color: inherit;');
+            }
+            if (data.errorType) {
+                console.log(`%cError Type:%c ${data.errorType}`, 'color: #6b7280; font-weight: bold;', 'color: #d97706; font-weight: bold;');
+            }
+            console.groupEnd();
+        }
+
+        // Performance Information
+        if (data.executionTime || data.timestamp) {
+            console.group('⏱️ Performance & Timing');
+            if (data.executionTime) {
+                console.log(`%cExecution Time:%c ${data.executionTime}`, 'color: #6b7280; font-weight: bold;', 'color: inherit;');
+            }
+            if (data.timestamp) {
+                console.log(`%cTimestamp:%c ${data.timestamp}`, 'color: #6b7280; font-weight: bold;', 'color: inherit;');
+            }
+            console.groupEnd();
+        }
+
+        // Error Details Section
+        if (data.errorName || data.errorMessage || data.errorStack) {
+            console.group('🔍 Error Details');
+            if (data.errorName) {
+                console.log(`%cError Name:%c ${data.errorName}`, 'color: #6b7280; font-weight: bold;', 'color: #dc2626; font-weight: bold;');
+            }
+            if (data.errorMessage) {
+                console.log(`%cError Message:%c ${data.errorMessage}`, 'color: #6b7280; font-weight: bold;', 'color: inherit;');
+            }
+            if (data.errorStack) {
+                console.group('📋 Full Stack Trace:');
+                console.log(data.errorStack);
+                console.groupEnd();
+            }
+            console.groupEnd();
+        }
+
+        // Solutions & Recommendations
+        if (data.solution || data.possibleReasons) {
+            console.group('💡 Solutions & Recommendations');
+            if (data.solution) {
+                console.log(`%c🔧 Solution:%c ${data.solution}`, 'color: #059669; font-weight: bold;', 'color: inherit;');
+            }
+            if (data.possibleReasons && Array.isArray(data.possibleReasons)) {
+                console.log('%c🤔 Possible Reasons:', 'color: #d97706; font-weight: bold;');
+                data.possibleReasons.forEach((reason: string, index: number) => {
+                    console.log(`   ${index + 1}. ${reason}`);
+                });
+            }
+            console.groupEnd();
+        }
+
+        // Call Stack Information
+        if (data.callStack && Array.isArray(data.callStack)) {
+            console.group('📍 Call Stack Trace');
+            data.callStack.forEach((line: string, index: number) => {
+                console.log(`%c${index + 1}.%c ${line}`, 'color: #6b7280; font-weight: bold;', 'color: inherit;');
+            });
+            console.groupEnd();
+        }
+
+        // Additional Context
+        const additionalFields = Object.keys(data).filter(key => 
+            !['command', 'description', 'errorType', 'executionTime', 'timestamp', 
+              'errorName', 'errorMessage', 'errorStack', 'solution', 'possibleReasons', 'callStack'].includes(key)
+        );
+        
+        if (additionalFields.length > 0) {
+            console.group('📊 Additional Context');
+            additionalFields.forEach(key => {
+                const value = this.formatLogValue(data[key]);
+                console.log(`%c${key}:%c ${value}`, 'color: #6b7280; font-weight: bold;', 'color: inherit;');
+            });
+            console.groupEnd();
+        }
+    }
+
+    /**
+     * Format log values for better display
+     */
+    private formatLogValue(value: any): string {
+        if (value === null) return 'null';
+        if (value === undefined) return 'undefined';
+        if (typeof value === 'boolean') return value.toString();
+        if (typeof value === 'number') return value.toString();
+        if (typeof value === 'string') return value;
+        if (Array.isArray(value)) return `[${value.length} items]`;
+        if (typeof value === 'object') return `{${Object.keys(value).length} properties}`;
+        return String(value);
     }
 }
