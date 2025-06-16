@@ -20,6 +20,9 @@ export class PostManagementService {
     private isProcessing: boolean = false;
     private abortProcessing: boolean = false;
     private observerId: string = '';
+    private entryListObserverId: string = '';
+    private lastEntryCount: number = 0;
+    private lastLoadMoreButtonText: string = '';
 
     constructor(
         private domService: IDOMService,
@@ -56,6 +59,16 @@ export class PostManagementService {
                     this.updateButtonState();
                 },
                 processExisting: false,
+            });
+
+            // Set up observer for entry list changes (tab switches)
+            this.entryListObserverId = this.observerService.observe({
+                selector: "#entry-item-list",
+                handler: () => {
+                    this.handleEntryListChange();
+                },
+                processExisting: false,
+                subtree: true,
             });
 
             // Add menu buttons to the profile dropdown.
@@ -319,8 +332,17 @@ export class PostManagementService {
         if (this.observerId) {
             this.observerService.unobserve(this.observerId);
         }
+        if (this.entryListObserverId) {
+            this.observerService.unobserve(this.entryListObserverId);
+        }
         this.isProcessing = false;
         this.abortProcessing = true;
+        
+        // Clean up any running command
+        if (this.currentCommand) {
+            this.currentCommand.abort();
+            this.currentCommand = null;
+        }
     }
 
     /**
@@ -333,5 +355,78 @@ export class PostManagementService {
         } else {
             this.loggingService.warn("No command to undo or undo failed");
         }
+    }
+
+    /**
+     * Handle entry list changes (detected when switching between tabs like entry'ler, son oylananları, etc.)
+     */
+    private handleEntryListChange(): void {
+        try {
+            const currentEntryCount = document.querySelectorAll(".topic-item").length;
+            const currentLoadMoreButton = document.querySelector(".load-more-entries") as HTMLElement | null;
+            const currentLoadMoreButtonText = currentLoadMoreButton?.textContent || '';
+
+            // Detect if this is a significant change indicating a tab switch
+            const isSignificantChange = this.detectTabSwitch(currentEntryCount, currentLoadMoreButtonText);
+
+            if (isSignificantChange) {
+                this.loggingService.debug("Detected entry list change (tab switch) - resetting button state");
+                
+                // Stop any current loading operation
+                if (this.isProcessing && this.currentCommand) {
+                    this.currentCommand.abort();
+                    this.currentCommand = null;
+                    this.isProcessing = false;
+                }
+
+                // Update load more button reference
+                this.loadMoreButton = currentLoadMoreButton;
+                
+                // Reset button to initial state
+                this.resetButtonToInitialState();
+                
+                // Update button state based on new context
+                this.updateButtonState();
+            }
+
+            // Update tracking variables
+            this.lastEntryCount = currentEntryCount;
+            this.lastLoadMoreButtonText = currentLoadMoreButtonText;
+            
+        } catch (error) {
+            this.loggingService.error("Error handling entry list change:", error);
+        }
+    }
+
+    /**
+     * Detect if a tab switch occurred based on entry count and load more button changes
+     */
+    private detectTabSwitch(currentEntryCount: number, currentLoadMoreButtonText: string): boolean {
+        // First time initialization
+        if (this.lastEntryCount === 0 && this.lastLoadMoreButtonText === '') {
+            return false;
+        }
+
+        // Significant decrease in entry count (likely new tab with fewer entries)
+        const significantDecrease = currentEntryCount < this.lastEntryCount * 0.5;
+        
+        // Different load more button text (indicating different context)
+        const loadMoreButtonChanged = currentLoadMoreButtonText !== this.lastLoadMoreButtonText;
+        
+        // Entry count reset to a small number (typical for new tab loading)
+        const entryCountReset = currentEntryCount <= 20 && this.lastEntryCount > 20;
+
+        return significantDecrease || loadMoreButtonChanged || entryCountReset;
+    }
+
+    /**
+     * Reset button to initial state when switching tabs
+     */
+    private resetButtonToInitialState(): void {
+        if (!this.loadAllButton) return;
+        
+        this.buttonComponent.updateText("Tüm Entry'leri Yükle");
+        this.buttonComponent.setDisabled(false);
+        this.buttonComponent.setLoading(false);
     }
 }
