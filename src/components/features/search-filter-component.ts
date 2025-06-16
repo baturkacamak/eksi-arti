@@ -49,7 +49,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -57,7 +57,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         private specificPageUtils: PageUtilsService,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
     }
 
     protected getStyles(): string | null {

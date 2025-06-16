@@ -23,14 +23,14 @@ export class CountdownComponent extends BaseFeatureComponent implements ICountdo
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
         options: CountdownOptions = {},
         baseOptions?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, baseOptions);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, baseOptions);
         
         const defaultIconProps: IconProps = {
             name: 'schedule',

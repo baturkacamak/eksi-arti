@@ -15,7 +15,7 @@ export abstract class BaseFeatureComponent implements IFeatureComponent {
 
     constructor(
         protected domService: IDOMService,
-        protected cssHandler: ICSSService,
+        protected cssService: ICSSService,
         protected loggingService: ILoggingService,
         protected observerServiceInstance: IObserverService,
         protected iconComponent: IIconComponent,
@@ -63,7 +63,7 @@ export abstract class BaseFeatureComponent implements IFeatureComponent {
         }
         const styles = this.getStyles();
         if (styles) {
-            this.cssHandler.addCSS(styles);
+            this.cssService.addCSS(styles);
             BaseFeatureComponent.stylesAppliedMap.set(componentName, true);
         }
     }

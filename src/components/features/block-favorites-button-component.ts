@@ -30,7 +30,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -39,7 +39,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
         private specificBlockModalFactory: IBlockOptionsModalFactory,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
         this.applyStyles();
     }
 
@@ -149,7 +149,7 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
             }
         `;
 
-        this.cssHandler.addCSS(styles);
+                    this.cssService.addCSS(styles);
         BlockFavoritesButtonComponent.stylesApplied = true;
     }
 

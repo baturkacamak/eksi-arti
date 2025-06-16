@@ -27,7 +27,7 @@ export class ResumeModal extends BaseFeatureComponent {
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent, 
         observerServiceInstance: IObserverService,
@@ -39,7 +39,7 @@ export class ResumeModal extends BaseFeatureComponent {
         savedState: BlockerState,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
         this.specificButtonComponent = buttonComponent;
         this.specificBlockUsersService = blockUsersService;
         this.specificContainer = container;

@@ -22,7 +22,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -30,7 +30,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         private documentStateService: IDocumentStateService,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
     }
 
     protected getStyles(): string | null {

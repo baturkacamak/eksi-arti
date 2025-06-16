@@ -15,7 +15,7 @@ export class IconComponent implements IIconComponent {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService
     ) {
         this.applyIconStyles();
@@ -434,7 +434,7 @@ export class IconComponent implements IIconComponent {
             }
         `;
 
-        this.cssHandler.addCSS(iconStyles);
+        this.cssService.addCSS(iconStyles);
         IconComponent.stylesApplied = true;
     }
 }

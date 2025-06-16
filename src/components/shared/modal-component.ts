@@ -20,7 +20,7 @@ export class ModalComponent implements IModalComponent {
 
     constructor(
         protected domService: IDOMService,
-        protected cssHandler: ICSSService,
+        protected cssService: ICSSService,
         protected loggingService: ILoggingService,
         protected buttonComponent: ButtonComponent,
         protected documentState: IDocumentStateService,
@@ -455,6 +455,6 @@ export class ModalComponent implements IModalComponent {
       }
     `;
 
-        this.cssHandler.addCSS(css);
+        this.cssService.addCSS(css);
     }
 }

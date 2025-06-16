@@ -120,7 +120,7 @@ export class AuthorHighlighterService {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
         private storageService: IStorageService,
         private iconComponent: IIconComponent,
@@ -339,7 +339,7 @@ export class AuthorHighlighterService {
             }
         `;
 
-        this.cssHandler.addCSS(styles);
+        this.cssService.addCSS(styles);
     }
 
     /**

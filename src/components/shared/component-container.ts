@@ -18,7 +18,7 @@ import {IComponentContainerConfig, IContainer} from "../../interfaces/IContainer
  */
 export class ComponentContainer {
     private domService: IDOMService;
-    private cssHandler: ICSSService;
+    private cssService: ICSSService;
     private containerElement: HTMLElement | null = null;
     private components: HTMLElement[] = [];
     private config: IComponentContainerConfig;
@@ -27,7 +27,7 @@ export class ComponentContainer {
 
     constructor(config: IComponentContainerConfig = {}) {
         this.domService = new DOMService();
-        this.cssHandler = new CSSService();
+        this.cssService = new CSSService();
         this.loggingService = new LoggingService();
 
         // Default configuration
@@ -418,7 +418,7 @@ export class ComponentContainer {
             }
         `;
 
-        this.cssHandler.addCSS(containerStyles);
+        this.cssService.addCSS(containerStyles);
         ComponentContainer.stylesApplied = true;
     }
 

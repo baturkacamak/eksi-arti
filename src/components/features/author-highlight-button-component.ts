@@ -17,7 +17,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -26,7 +26,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         private tooltipComponent: ITooltipComponent,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
     }
 
     protected getStyles(): string | null {

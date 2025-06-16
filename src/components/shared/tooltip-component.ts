@@ -37,7 +37,7 @@ export class TooltipComponent {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
     ) {
         this.applyTooltipStyles();
@@ -798,7 +798,7 @@ export class TooltipComponent {
             }
         `;
 
-        this.cssHandler.addCSS(css);
+        this.cssService.addCSS(css);
     }
 
     /**

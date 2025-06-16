@@ -17,7 +17,7 @@ export class ProgressBarComponent implements IProgressBarComponent {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
     ) {
         this.applyProgressBarStyles();
@@ -218,7 +218,7 @@ export class ProgressBarComponent implements IProgressBarComponent {
       }
     `;
 
-        this.cssHandler.addCSS(progressBarStyles);
+        this.cssService.addCSS(progressBarStyles);
         ProgressBarComponent.stylesApplied = true;
     }
 }

@@ -44,14 +44,14 @@ export class SliderFilterComponent extends BaseFeatureComponent {
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
         options: SliderFilterOptions,
         baseOptions?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, baseOptions);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, baseOptions);
         
         // Set default options and merge with provided options
         this.instanceOptions = {

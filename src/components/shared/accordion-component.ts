@@ -26,7 +26,7 @@ export interface AccordionOptions {
 
 export class AccordionComponent {
     private domService: IDOMService;
-    private cssHandler: ICSSService;
+    private cssService: ICSSService;
     private accordionElement: HTMLElement | null = null;
     private items: AccordionItem[] = [];
     private options: AccordionOptions = {};
@@ -35,7 +35,7 @@ export class AccordionComponent {
 
     constructor() {
         this.domService = new DOMService();
-        this.cssHandler = new CSSService();
+        this.cssService = new CSSService();
         this.loggingService = new LoggingService();
         this.applyAccordionStyles();
     }
@@ -599,7 +599,7 @@ export class AccordionComponent {
             }
         `;
 
-        this.cssHandler.addCSS(accordionStyles);
+        this.cssService.addCSS(accordionStyles);
         AccordionComponent.stylesApplied = true;
     }
 

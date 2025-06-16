@@ -65,7 +65,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -77,7 +77,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         sortingDataExtractor: SortingDataExtractor,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
         this.specificPageUtils = pageUtils;
         this.specificUserProfileService = userProfileService;
         this.specificSelectBoxComponent = selectBoxComponent;

@@ -16,7 +16,7 @@ export class CopyButtonComponent implements ICopyButtonComponent {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent,
         private containerService: ContainerService,
@@ -105,7 +105,7 @@ export class CopyButtonComponent implements ICopyButtonComponent {
       }
     `;
 
-        this.cssHandler.addCSS(styles);
+        this.cssService.addCSS(styles);
         CopyButtonComponent.stylesApplied = true;
     }
 

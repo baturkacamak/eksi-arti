@@ -18,7 +18,7 @@ export class ButtonComponent implements IButtonComponent {
      */
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
     ) {
         this.applyButtonStyles();
@@ -640,7 +640,7 @@ export class ButtonComponent implements IButtonComponent {
       }
     `;
 
-        this.cssHandler.addCSS(buttonStyles);
+        this.cssService.addCSS(buttonStyles);
         ButtonComponent.stylesApplied = true;
     }
 }

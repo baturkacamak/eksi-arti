@@ -13,7 +13,7 @@ export class NotificationComponent implements INotificationComponent {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
     ) {
         this.initAnimations();
@@ -524,6 +524,6 @@ export class NotificationComponent implements INotificationComponent {
       }
     `;
 
-        this.cssHandler.addCSS(notificationStyles);
+        this.cssService.addCSS(notificationStyles);
     }
 }

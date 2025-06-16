@@ -29,7 +29,7 @@ export class PreferencesModal extends BaseFeatureComponent {
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -39,7 +39,7 @@ export class PreferencesModal extends BaseFeatureComponent {
         modalComponent: IModalComponent,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
         this.specificPreferencesService = preferencesService;
         this.specificNotificationComponent = notificationComponent;
         this.specificButtonComponent = buttonComponent;

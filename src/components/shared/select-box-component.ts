@@ -32,7 +32,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent
     ) {
@@ -683,7 +683,7 @@ export class SelectBoxComponent implements ISelectBoxComponent {
             }
         `;
 
-        this.cssHandler.addCSS(styles);
+        this.cssService.addCSS(styles);
         SelectBoxComponent.stylesApplied = true;
     }
 

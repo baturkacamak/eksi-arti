@@ -33,7 +33,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
     constructor(
         domService: IDOMService,
-        cssHandler: ICSSService,
+        cssService: ICSSService,
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
@@ -47,7 +47,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         entryId: string,
         options?: FeatureComponentOptions
     ) {
-        super(domService, cssHandler, loggingService, observerServiceInstance, iconComponent, options);
+        super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
         this.specificButtonComponent = buttonComponent;
         this.specificCommandFactory = commandFactory;
         this.specificCommandInvoker = commandInvoker;

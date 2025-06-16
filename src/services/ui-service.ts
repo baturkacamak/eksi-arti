@@ -54,7 +54,7 @@ export class UIService {
 
     constructor(
         private domService: IDOMService,
-        private cssHandler: ICSSService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent,
         private blockUsersService: BlockUsersService,
@@ -211,7 +211,7 @@ export class UIService {
      * Add styles for menu items
      */
     private addMenuItemStyles(): void {
-        this.cssHandler.addCSS(`
+        this.cssService.addCSS(`
       .eksi-block-users-link {
         display: flex;
         align-items: center;

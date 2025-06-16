@@ -300,7 +300,7 @@ export class PostManagementService {
 
     private addItemCounterStyles(): void {
         try {
-            const cssHandler = new (this.cssService.constructor as { new (): ICSSService })();
+                            const cssService = new (this.cssService.constructor as { new (): ICSSService })();
             const counterStyles = `
             .topic-item::before {
                 content: "Yazı " counter(my-sec-counter);
@@ -321,7 +321,7 @@ export class PostManagementService {
                 counter-increment: my-sec-counter ${document.querySelectorAll(".topic-item").length + 1};
             }
         `;
-            cssHandler.addCSS(counterStyles);
+            cssService.addCSS(counterStyles);
             this.loggingService.debug("Yazı counter styles added");
         } catch (error) {
             this.loggingService.error("Error adding item counter styles", error);

@@ -27,7 +27,7 @@ export interface ToggleSwitchProps {
  */
 export class ToggleSwitchComponent implements IToggleSwitchComponent {
     private domService: IDOMService;
-    private cssHandler: ICSSService;
+    private cssService: ICSSService;
     private containerElement: HTMLElement | null = null;
     private inputElement: HTMLInputElement | null = null;
     private labelElement: HTMLLabelElement | null = null;
@@ -39,11 +39,11 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
      */
     constructor(
         domService?: IDOMService,
-        cssHandler?: ICSSService,
+        cssService?: ICSSService,
         loggingService?: ILoggingService
     ) {
         this.domService = domService || new DOMService();
-        this.cssHandler = cssHandler || new CSSService();
+        this.cssService = cssService || new CSSService();
         this.loggingService = loggingService || new LoggingService();
         this.applyToggleSwitchStyles();
     }
@@ -337,7 +337,7 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
       }
     `;
 
-        this.cssHandler.addCSS(toggleSwitchStyles);
+        this.cssService.addCSS(toggleSwitchStyles);
         ToggleSwitchComponent.stylesApplied = true;
     }
 }
