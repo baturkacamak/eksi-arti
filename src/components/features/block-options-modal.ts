@@ -658,6 +658,9 @@ export class BlockOptionsModal extends BaseFeatureComponent {
             this.specificButtonComponent.setLoading(true, 'İşleniyor...'); 
         }
 
+        // Close the modal immediately for better UX
+        this.close();
+
         setTimeout(async () => {
             try {
                 const blockUsersCommand = this.specificCommandFactory.createBlockUsersCommand(this.entryId, blockType, this.threadBlockingEnabled);
@@ -672,13 +675,9 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 if (this.customNote.trim() !== '') {
                     this.loggingService.debug('Custom note provided:', this.customNote);
                 }
-                
-                this.close(); 
             } catch (error) {
                 this.loggingService.error('Error executing block users command:', error);
-                if (buttonToLoad) {
-                    this.specificButtonComponent.setLoading(false);
-                }
+                // Note: Since modal is already closed, we don't need to handle button loading state here
             }
         }, 300);
     }
