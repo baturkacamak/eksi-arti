@@ -62,7 +62,7 @@ export class PostManagementService {
     }
 
     /**
-     * Add menu buttons (e.g. "Load All Entries" and "Delete All Entries") to the profile dropdown.
+     * Add menu buttons (e.g. "Load All Entries") to the profile dropdown.
      */
     private addMenuButtons(): void {
         try {
@@ -81,15 +81,7 @@ export class PostManagementService {
             loadAllItem.appendChild(loadAllLink);
             dropdownMenuList.appendChild(loadAllItem);
 
-            // Create "Delete All Entries" button.
-            const deleteAllItem = document.createElement("li");
-            const deleteAllLink = document.createElement("a");
-            deleteAllLink.textContent = "Tüm Entry'leri Sil";
-            deleteAllLink.href = "javascript:void(0);";
-            deleteAllLink.style.color = "#e53935"; // Use red for danger.
-            deleteAllLink.addEventListener("click", () => this.deleteAllEntries());
-            deleteAllItem.appendChild(deleteAllLink);
-            dropdownMenuList.appendChild(deleteAllItem);
+
 
             this.loggingService.debug("Menu buttons added to profile dropdown");
         } catch (error) {
@@ -132,141 +124,7 @@ export class PostManagementService {
         }
     }
 
-    /**
-     * Delete all entries.
-     * (This method remains mostly unchanged; you could similarly refactor it into a command.)
-     */
-    public async deleteAllEntries(): Promise<void> {
-        if (this.isProcessing) {
-            return;
-        }
 
-        try {
-            if (!confirm("Tüm entry'lerinizi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!")) {
-                return;
-            }
-
-            this.isProcessing = true;
-            this.abortProcessing = false;
-
-            const topicItems = document.querySelectorAll(".topic-item");
-            if (topicItems.length === 0) {
-                await this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                      ${this.iconComponent.create({ name: "info", color: "#1e88e5", size: "medium" }).outerHTML}
-                      <span>Silinecek entry bulunamadı.</span>
-                    </div>`,
-                    { theme: "info", timeout: 5 }
-                );
-                this.isProcessing = false;
-                return;
-            }
-
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                  ${this.iconComponent.create({ name: "delete", color: "#e53935", size: "medium" }).outerHTML}
-                  <span>Entry'ler siliniyor...</span>
-                </div>`,
-                { theme: "error", progress: { current: 0, total: topicItems.length }, timeout: 0 }
-            );
-
-            this.notificationService.addStopButton(() => {
-                this.abortProcessing = true;
-                this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                      ${this.iconComponent.create({ name: "warning", color: "#ff9800", size: "medium" }).outerHTML}
-                      <span>Silme işlemi durduruldu.</span>
-                    </div>`,
-                    { theme: "warning", timeout: 5 }
-                );
-            });
-
-            for (let i = 0; i < topicItems.length; i++) {
-                if (this.abortProcessing) {
-                    break;
-                }
-                const item = topicItems[i] as HTMLElement;
-                this.notificationService.updateContent(
-                    `<div style="display: flex; align-items: center">
-                      ${this.iconComponent.create({ name: "delete", color: "#e53935", size: "medium" }).outerHTML}
-                      <span>Entry siliniyor... (${i + 1}/${topicItems.length})</span>
-                    </div>`
-                );
-                this.notificationService.updateProgress(i + 1, topicItems.length);
-                await this.deleteEntry(item);
-                await delay(2);
-            }
-
-            const totalEntries = document.querySelectorAll(".topic-item").length;
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                  ${this.iconComponent.create({ name: "check_circle", color: "#43a047", size: "medium" }).outerHTML}
-                  <span>Tüm entry'ler silindi. (Toplam: ${totalEntries})</span>
-                </div>`,
-                { theme: "success", timeout: 5 }
-            );
-        } catch (error) {
-            this.loggingService.error("Error deleting entries", error);
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                  ${this.iconComponent.create({ name: "error", color: "#e53935", size: "medium" }).outerHTML}
-                  <span>Entry'ler silinirken hata oluştu.</span>
-                </div>`,
-                { theme: "error", timeout: 5 }
-            );
-        } finally {
-            this.isProcessing = false;
-        }
-    }
-
-    /**
-     * Delete a single entry.
-     */
-    private async deleteEntry(topicItem: HTMLElement): Promise<void> {
-        try {
-            const deleteLink = Array.from(topicItem.querySelectorAll("a")).find(
-                a => a.textContent?.trim() === "sil"
-            );
-            if (deleteLink) {
-                deleteLink.click();
-                await delay(1);
-                await this.confirmDeletion();
-            }
-        } catch (error) {
-            this.loggingService.error("Error deleting entry", error);
-            throw error;
-        }
-    }
-
-    /**
-     * Confirm the deletion in the modal dialog.
-     */
-    private async confirmDeletion(): Promise<void> {
-        return new Promise<void>((resolve) => {
-            const checkInterval = setInterval(() => {
-                const deleteForm = document.querySelector("#delete-self-form");
-                if (!deleteForm) {
-                    clearInterval(checkInterval);
-                    resolve();
-                    return;
-                }
-                const confirmButton = Array.from(document.querySelectorAll("button")).find(
-                    button => button.textContent?.trim() === "kesin"
-                );
-                if (confirmButton) {
-                    confirmButton.click();
-                }
-                if (deleteForm instanceof HTMLElement && deleteForm.style.display === "none") {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 500);
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                resolve();
-            }, 5000);
-        });
-    }
 
     private addItemCounterStyles(): void {
         try {
