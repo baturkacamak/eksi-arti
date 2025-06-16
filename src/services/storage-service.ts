@@ -18,9 +18,33 @@ function isServiceWorkerContext(): boolean {
 }
 
 /**
- * Check if chrome storage is available
+ * Check if chrome runtime is still valid (not invalidated)
+ */
+function isChromeRuntimeValid(): boolean {
+    try {
+        if (typeof chrome === 'undefined' || !chrome.runtime) {
+            return false;
+        }
+        
+        // Try to access chrome.runtime.id to test if context is valid
+        // This will throw an error if the extension context is invalidated
+        const runtimeId = chrome.runtime.id;
+        return !!runtimeId;
+    } catch (error) {
+        // Extension context invalidated or runtime not available
+        return false;
+    }
+}
+
+/**
+ * Check if chrome storage is available and context is valid
  */
 function isChromeStorageAvailable(area: StorageArea = StorageArea.SYNC): boolean {
+    // First check if chrome runtime is valid
+    if (!isChromeRuntimeValid()) {
+        return false;
+    }
+    
     if (typeof chrome === 'undefined' || !chrome.storage) {
         return false;
     }
@@ -159,38 +183,78 @@ export class StorageService {
             if (isChromeStorageAvailable(area)) {
                 return new Promise<StorageResult<T>>((resolve) => {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
-                        chrome.storage.sync.set(data, () => {
-                            if (chrome.runtime.lastError) {
-                                this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
+                        try {
+                            chrome.storage.sync.set(data, () => {
+                                if (chrome.runtime.lastError) {
+                                    const errorMessage = chrome.runtime.lastError.message || '';
+                                    
+                                    // Check for extension context invalidated error
+                                    if (errorMessage.includes('Extension context invalidated')) {
+                                        this.loggingService.warn(`Chrome sync storage context invalidated, falling back to localStorage: ${key}`);
+                                        this.fallbackToLocalStorage(key, value, resolve);
+                                        return;
+                                    }
+                                    
+                                    this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
 
-                                // If sync fails, try local storage
-                                if (isChromeStorageAvailable(StorageArea.LOCAL)) {
-                                    chrome.storage.local.set(data, () => {
-                                        if (chrome.runtime.lastError) {
-                                            this.fallbackToLocalStorage(key, value, resolve);
-                                        } else {
-                                            this.loggingService.debug(`Saved to Chrome local storage after sync failed: ${key}`);
-                                            resolve({success: true, source: StorageArea.LOCAL, data: value});
-                                        }
-                                    });
+                                    // If sync fails, try local storage
+                                    if (isChromeStorageAvailable(StorageArea.LOCAL)) {
+                                        chrome.storage.local.set(data, () => {
+                                            if (chrome.runtime.lastError) {
+                                                this.fallbackToLocalStorage(key, value, resolve);
+                                            } else {
+                                                this.loggingService.debug(`Saved to Chrome local storage after sync failed: ${key}`);
+                                                resolve({success: true, source: StorageArea.LOCAL, data: value});
+                                            }
+                                        });
+                                    } else {
+                                        this.fallbackToLocalStorage(key, value, resolve);
+                                    }
                                 } else {
-                                    this.fallbackToLocalStorage(key, value, resolve);
+                                    this.loggingService.debug(`Saved to Chrome sync storage: ${key}`);
+                                    resolve({success: true, source: StorageArea.SYNC, data: value});
                                 }
-                            } else {
-                                this.loggingService.debug(`Saved to Chrome sync storage: ${key}`);
-                                resolve({success: true, source: StorageArea.SYNC, data: value});
-                            }
-                        });
-                    } else if (area === StorageArea.LOCAL && chrome.storage.local) {
-                        chrome.storage.local.set(data, () => {
-                            if (chrome.runtime.lastError) {
-                                this.loggingService.error(`Chrome local storage error:`, chrome.runtime.lastError);
+                            });
+                        } catch (error) {
+                            // Catch extension context invalidated errors at the call level
+                            const errorMessage = error instanceof Error ? error.message : String(error);
+                            if (errorMessage.includes('Extension context invalidated')) {
+                                this.loggingService.warn(`Chrome sync storage context invalidated at call level, falling back to localStorage: ${key}`);
                                 this.fallbackToLocalStorage(key, value, resolve);
-                            } else {
-                                this.loggingService.debug(`Saved to Chrome local storage: ${key}`);
-                                resolve({success: true, source: StorageArea.LOCAL, data: value});
+                                return;
                             }
-                        });
+                            throw error; // Re-throw other errors
+                        }
+                    } else if (area === StorageArea.LOCAL && chrome.storage.local) {
+                        try {
+                            chrome.storage.local.set(data, () => {
+                                if (chrome.runtime.lastError) {
+                                    const errorMessage = chrome.runtime.lastError.message || '';
+                                    
+                                    // Check for extension context invalidated error
+                                    if (errorMessage.includes('Extension context invalidated')) {
+                                        this.loggingService.warn(`Chrome local storage context invalidated, falling back to localStorage: ${key}`);
+                                        this.fallbackToLocalStorage(key, value, resolve);
+                                        return;
+                                    }
+                                    
+                                    this.loggingService.error(`Chrome local storage error:`, chrome.runtime.lastError);
+                                    this.fallbackToLocalStorage(key, value, resolve);
+                                } else {
+                                    this.loggingService.debug(`Saved to Chrome local storage: ${key}`);
+                                    resolve({success: true, source: StorageArea.LOCAL, data: value});
+                                }
+                            });
+                        } catch (error) {
+                            // Catch extension context invalidated errors at the call level
+                            const errorMessage = error instanceof Error ? error.message : String(error);
+                            if (errorMessage.includes('Extension context invalidated')) {
+                                this.loggingService.warn(`Chrome local storage context invalidated at call level, falling back to localStorage: ${key}`);
+                                this.fallbackToLocalStorage(key, value, resolve);
+                                return;
+                            }
+                            throw error; // Re-throw other errors
+                        }
                     } else {
                         this.fallbackToLocalStorage(key, value, resolve);
                     }
@@ -281,39 +345,81 @@ export class StorageService {
             if (isChromeStorageAvailable(area)) {
                 return new Promise<StorageResult<T>>((resolve) => {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
-                        chrome.storage.sync.get(key, (result) => {
-                            if (chrome.runtime.lastError) {
-                                this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
+                        try {
+                            chrome.storage.sync.get(key, (result) => {
+                                if (chrome.runtime.lastError) {
+                                    const errorMessage = chrome.runtime.lastError.message || '';
+                                    
+                                    // Check for extension context invalidated error
+                                    if (errorMessage.includes('Extension context invalidated')) {
+                                        this.loggingService.warn(`Chrome sync storage context invalidated during get, falling back to localStorage: ${key}`);
+                                        this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                        return;
+                                    }
+                                    
+                                    this.loggingService.error(`Chrome sync storage error:`, chrome.runtime.lastError);
 
-                                // If sync fails, try local storage
-                                if (isChromeStorageAvailable(StorageArea.LOCAL)) {
-                                    chrome.storage.local.get(key, (localResult) => {
-                                        if (chrome.runtime.lastError || !localResult || localResult[key] === undefined) {
-                                            this.fallbackToLocalStorageGet(key, defaultValue, resolve);
-                                        } else {
-                                            this.loggingService.debug(`Retrieved from Chrome local storage after sync failed: ${key}`);
-                                            resolve({success: true, source: StorageArea.LOCAL, data: localResult[key]});
-                                        }
-                                    });
-                                } else {
+                                    // If sync fails, try local storage
+                                    if (isChromeStorageAvailable(StorageArea.LOCAL)) {
+                                        chrome.storage.local.get(key, (localResult) => {
+                                            if (chrome.runtime.lastError || !localResult || localResult[key] === undefined) {
+                                                this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                            } else {
+                                                this.loggingService.debug(`Retrieved from Chrome local storage after sync failed: ${key}`);
+                                                resolve({success: true, source: StorageArea.LOCAL, data: localResult[key]});
+                                            }
+                                        });
+                                    } else {
+                                        this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                    }
+                                } else if (!result || result[key] === undefined) {
                                     this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                } else {
+                                    this.loggingService.debug(`Retrieved from Chrome sync storage: ${key}`);
+                                    resolve({success: true, source: StorageArea.SYNC, data: result[key]});
                                 }
-                            } else if (!result || result[key] === undefined) {
+                            });
+                        } catch (error) {
+                            // Catch extension context invalidated errors at the call level
+                            const errorMessage = error instanceof Error ? error.message : String(error);
+                            if (errorMessage.includes('Extension context invalidated')) {
+                                this.loggingService.warn(`Chrome sync storage context invalidated at call level during get, falling back to localStorage: ${key}`);
                                 this.fallbackToLocalStorageGet(key, defaultValue, resolve);
-                            } else {
-                                this.loggingService.debug(`Retrieved from Chrome sync storage: ${key}`);
-                                resolve({success: true, source: StorageArea.SYNC, data: result[key]});
+                                return;
                             }
-                        });
+                            throw error; // Re-throw other errors
+                        }
                     } else if (area === StorageArea.LOCAL && chrome.storage.local) {
-                        chrome.storage.local.get(key, (result) => {
-                            if (chrome.runtime.lastError || !result || result[key] === undefined) {
+                        try {
+                            chrome.storage.local.get(key, (result) => {
+                                if (chrome.runtime.lastError) {
+                                    const errorMessage = chrome.runtime.lastError.message || '';
+                                    
+                                    // Check for extension context invalidated error
+                                    if (errorMessage.includes('Extension context invalidated')) {
+                                        this.loggingService.warn(`Chrome local storage context invalidated during get, falling back to localStorage: ${key}`);
+                                        this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                        return;
+                                    }
+                                    
+                                    this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                } else if (!result || result[key] === undefined) {
+                                    this.fallbackToLocalStorageGet(key, defaultValue, resolve);
+                                } else {
+                                    this.loggingService.debug(`Retrieved from Chrome local storage: ${key}`);
+                                    resolve({success: true, source: StorageArea.LOCAL, data: result[key]});
+                                }
+                            });
+                        } catch (error) {
+                            // Catch extension context invalidated errors at the call level
+                            const errorMessage = error instanceof Error ? error.message : String(error);
+                            if (errorMessage.includes('Extension context invalidated')) {
+                                this.loggingService.warn(`Chrome local storage context invalidated at call level during get, falling back to localStorage: ${key}`);
                                 this.fallbackToLocalStorageGet(key, defaultValue, resolve);
-                            } else {
-                                this.loggingService.debug(`Retrieved from Chrome local storage: ${key}`);
-                                resolve({success: true, source: StorageArea.LOCAL, data: result[key]});
+                                return;
                             }
-                        });
+                            throw error; // Re-throw other errors
+                        }
                     } else {
                         this.fallbackToLocalStorageGet(key, defaultValue, resolve);
                     }
@@ -458,38 +564,78 @@ export class StorageService {
             if (isChromeStorageAvailable(area)) {
                 return new Promise<StorageResult<void>>((resolve) => {
                     if (area === StorageArea.SYNC && chrome.storage.sync) {
-                        chrome.storage.sync.remove(key, () => {
-                            if (chrome.runtime.lastError) {
-                                this.loggingService.error(`Chrome sync storage remove error:`, chrome.runtime.lastError);
+                        try {
+                            chrome.storage.sync.remove(key, () => {
+                                if (chrome.runtime.lastError) {
+                                    const errorMessage = chrome.runtime.lastError.message || '';
+                                    
+                                    // Check for extension context invalidated error
+                                    if (errorMessage.includes('Extension context invalidated')) {
+                                        this.loggingService.warn(`Chrome sync storage context invalidated during remove, falling back to localStorage: ${key}`);
+                                        this.fallbackToLocalStorageRemove(key, resolve);
+                                        return;
+                                    }
+                                    
+                                    this.loggingService.error(`Chrome sync storage remove error:`, chrome.runtime.lastError);
 
-                                // If sync fails, try local storage
-                                if (isChromeStorageAvailable(StorageArea.LOCAL)) {
-                                    chrome.storage.local.remove(key, () => {
-                                        if (chrome.runtime.lastError) {
-                                            this.fallbackToLocalStorageRemove(key, resolve);
-                                        } else {
-                                            this.loggingService.debug(`Removed from Chrome local storage after sync failed: ${key}`);
-                                            resolve({success: true, source: StorageArea.LOCAL});
-                                        }
-                                    });
+                                    // If sync fails, try local storage
+                                    if (isChromeStorageAvailable(StorageArea.LOCAL)) {
+                                        chrome.storage.local.remove(key, () => {
+                                            if (chrome.runtime.lastError) {
+                                                this.fallbackToLocalStorageRemove(key, resolve);
+                                            } else {
+                                                this.loggingService.debug(`Removed from Chrome local storage after sync failed: ${key}`);
+                                                resolve({success: true, source: StorageArea.LOCAL});
+                                            }
+                                        });
+                                    } else {
+                                        this.fallbackToLocalStorageRemove(key, resolve);
+                                    }
                                 } else {
-                                    this.fallbackToLocalStorageRemove(key, resolve);
+                                    this.loggingService.debug(`Removed from Chrome sync storage: ${key}`);
+                                    resolve({success: true, source: StorageArea.SYNC});
                                 }
-                            } else {
-                                this.loggingService.debug(`Removed from Chrome sync storage: ${key}`);
-                                resolve({success: true, source: StorageArea.SYNC});
-                            }
-                        });
-                    } else if (area === StorageArea.LOCAL && chrome.storage.local) {
-                        chrome.storage.local.remove(key, () => {
-                            if (chrome.runtime.lastError) {
-                                this.loggingService.error(`Chrome local storage remove error:`, chrome.runtime.lastError);
+                            });
+                        } catch (error) {
+                            // Catch extension context invalidated errors at the call level
+                            const errorMessage = error instanceof Error ? error.message : String(error);
+                            if (errorMessage.includes('Extension context invalidated')) {
+                                this.loggingService.warn(`Chrome sync storage context invalidated at call level during remove, falling back to localStorage: ${key}`);
                                 this.fallbackToLocalStorageRemove(key, resolve);
-                            } else {
-                                this.loggingService.debug(`Removed from Chrome local storage: ${key}`);
-                                resolve({success: true, source: StorageArea.LOCAL});
+                                return;
                             }
-                        });
+                            throw error; // Re-throw other errors
+                        }
+                    } else if (area === StorageArea.LOCAL && chrome.storage.local) {
+                        try {
+                            chrome.storage.local.remove(key, () => {
+                                if (chrome.runtime.lastError) {
+                                    const errorMessage = chrome.runtime.lastError.message || '';
+                                    
+                                    // Check for extension context invalidated error
+                                    if (errorMessage.includes('Extension context invalidated')) {
+                                        this.loggingService.warn(`Chrome local storage context invalidated during remove, falling back to localStorage: ${key}`);
+                                        this.fallbackToLocalStorageRemove(key, resolve);
+                                        return;
+                                    }
+                                    
+                                    this.loggingService.error(`Chrome local storage remove error:`, chrome.runtime.lastError);
+                                    this.fallbackToLocalStorageRemove(key, resolve);
+                                } else {
+                                    this.loggingService.debug(`Removed from Chrome local storage: ${key}`);
+                                    resolve({success: true, source: StorageArea.LOCAL});
+                                }
+                            });
+                        } catch (error) {
+                            // Catch extension context invalidated errors at the call level
+                            const errorMessage = error instanceof Error ? error.message : String(error);
+                            if (errorMessage.includes('Extension context invalidated')) {
+                                this.loggingService.warn(`Chrome local storage context invalidated at call level during remove, falling back to localStorage: ${key}`);
+                                this.fallbackToLocalStorageRemove(key, resolve);
+                                return;
+                            }
+                            throw error; // Re-throw other errors
+                        }
                     } else {
                         this.fallbackToLocalStorageRemove(key, resolve);
                     }
