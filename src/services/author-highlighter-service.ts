@@ -388,11 +388,8 @@ export class AuthorHighlighterService {
             `;
         });
 
-        // Create and append style element
-        const styleElement = document.createElement('style');
-        styleElement.id = 'eksi-author-colors';
-        styleElement.textContent = cssRules;
-        document.head.appendChild(styleElement);
+        // Add CSS using cssService
+        this.cssService.addCSS(cssRules);
 
         // Store for later access
         this.authorColorMapCSS = cssRules;

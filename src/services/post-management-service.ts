@@ -130,20 +130,14 @@ export class PostManagementService {
 
             const loadAllButton = this.buttonComponent.create(buttonProps);
             
-            // Add custom positioning styles for the button
-            const style = this.domService.createElement("style");
-            style.textContent = `
+            // Add custom positioning styles for the button using cssService
+            const css = `
                 .eksi-arti-load-all-btn {
                     margin-left: 8px !important;
                     white-space: nowrap !important;
                 }
             `;
-            
-            // Add styles to document head if not already present
-            if (!this.domService.querySelector('style[data-eksi-arti-load-all]')) {
-                style.setAttribute('data-eksi-arti-load-all', 'true');
-                this.domService.appendChild(document.head, style);
-            }
+            this.cssService.addCSS(css);
             
             // Insert the button after the profile-dots element
             if (profileDotsElement.parentNode) {
@@ -302,7 +296,6 @@ export class PostManagementService {
 
     private addItemCounterStyles(): void {
         try {
-                            const cssService = new (this.cssService.constructor as { new (): ICSSService })();
             const counterStyles = `
             .topic-item::before {
                 content: "Yazı " counter(my-sec-counter);
@@ -323,7 +316,7 @@ export class PostManagementService {
                 counter-increment: my-sec-counter ${this.domService.querySelectorAll(".topic-item").length + 1};
             }
         `;
-            cssService.addCSS(counterStyles);
+            this.cssService.addCSS(counterStyles);
             this.loggingService.debug("Yazı counter styles added");
         } catch (error) {
             this.loggingService.error("Error adding item counter styles", error);

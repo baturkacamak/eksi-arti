@@ -27,7 +27,7 @@ export class ComponentContainer {
 
     constructor(config: IComponentContainerConfig = {}) {
         this.domService = new DOMService();
-        this.cssService = new CSSService();
+        this.cssService = new CSSService(this.domService);
         this.loggingService = new LoggingService();
 
         // Default configuration

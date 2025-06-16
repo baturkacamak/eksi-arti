@@ -43,7 +43,7 @@ export class ToggleSwitchComponent implements IToggleSwitchComponent {
         loggingService?: ILoggingService
     ) {
         this.domService = domService || new DOMService();
-        this.cssService = cssService || new CSSService();
+        this.cssService = cssService || new CSSService(this.domService);
         this.loggingService = loggingService || new LoggingService();
         this.applyToggleSwitchStyles();
     }

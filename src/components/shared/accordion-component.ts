@@ -35,7 +35,7 @@ export class AccordionComponent {
 
     constructor() {
         this.domService = new DOMService();
-        this.cssService = new CSSService();
+        this.cssService = new CSSService(this.domService);
         this.loggingService = new LoggingService();
         this.applyAccordionStyles();
     }

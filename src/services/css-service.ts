@@ -1,20 +1,16 @@
-import { DOMService } from './dom-service';
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class CSSService implements ICSSService {
   private styleTagId = 'eksi-arti-style';
-  private domService: IDOMService;
 
-  constructor() {
-    this.domService = new DOMService();
-  }
+  constructor(private domService: IDOMService) {}
 
   /**
    * Get existing style tag, or null if it doesn't exist
    */
   getStyleTag(): HTMLStyleElement | null {
-    return document.getElementById(this.styleTagId) as HTMLStyleElement | null;
+    return this.domService.querySelector('#' + this.styleTagId) as HTMLStyleElement | null;
   }
 
   /**
@@ -45,7 +41,7 @@ export class CSSService implements ICSSService {
       style = this.createStyleTag();
     }
     if (!this.hasCSSAdded(css)) {
-      this.domService.appendChild(style, document.createTextNode(css));
+      this.domService.appendChild(style, this.domService.createTextNode(css));
     }
   }
 }

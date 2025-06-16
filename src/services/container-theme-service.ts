@@ -1,6 +1,7 @@
 // src/services/container-theme-service.ts
 
 import { CSSService } from './css-service';
+import { DOMService } from './dom-service';
 import { LoggingService } from './logging-service';
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
@@ -63,7 +64,7 @@ export class ContainerThemeService {
     private stylesApplied: boolean = false;
 
     private constructor() {
-        this.cssService = new CSSService();
+        this.cssService = new CSSService(new DOMService());
         this.loggingService = new LoggingService();
         this.applyBaseStyles();
     }

@@ -78,7 +78,10 @@ export function initializeDI(): Container {
     // Register basic services
     container.register('LoggingService', () => new LoggingService());
     container.register('DOMService', () => new DOMService());
-    container.register('CSSService', () => new CSSService());
+    container.register('CSSService', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        return new CSSService(domService);
+    });
     container.register('ObserverService', () => observerService);
     container.register('PageUtilsService', () => {
         const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
@@ -236,6 +239,7 @@ export function initializeDI(): Container {
     container.register('TrashService', () => {
         const httpService = container.resolve<HttpService>('HttpService');
         const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const notificationService = container.resolve<NotificationService>('NotificationService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
@@ -244,6 +248,7 @@ export function initializeDI(): Container {
         return new TrashService(
             httpService,
             domService,
+            cssService,
             loggingService,
             notificationService,
             iconComponent,

@@ -13,6 +13,7 @@ import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {INotificationService} from "../interfaces/services/INotificationService";
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
+import {ICSSService} from "../interfaces/services/ICSSService";
 
 export class TrashService {
     private isLoading: boolean = false;
@@ -25,6 +26,7 @@ export class TrashService {
     constructor(
         private httpService: IHttpService,
         private domService: IDOMService,
+        private cssService: ICSSService,
         private loggingService: ILoggingService,
         private notificationService: INotificationService,
         private iconComponent:IIconComponent,
@@ -42,6 +44,7 @@ export class TrashService {
 
         try {
             this.loggingService.debug('Initializing Trash Service on trash page');
+            this.addTrashServiceStyles();
             this.detectPagination();
             this.addLoadMoreButton();
 
@@ -66,6 +69,124 @@ export class TrashService {
         } catch (error) {
             this.loggingService.error('Error initializing Trash Service:', error);
         }
+    }
+
+    /**
+     * Add CSS styles for trash service components
+     */
+    private addTrashServiceStyles(): void {
+        const css = `
+            .eksi-load-more-container {
+                text-align: center;
+                margin: 20px 0;
+                padding: 10px;
+            }
+            
+            .eksi-load-more-button {
+                padding: 8px 16px;
+                background-color: #81c14b;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            
+            .eksi-load-all-button {
+                padding: 8px 16px;
+                background-color: #f0f0f0;
+                color: #333;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                margin-left: 10px;
+            }
+            
+            .eksi-load-all-button.cancelling {
+                background-color: #ff7063;
+            }
+            
+            .eksi-load-all-button.completed {
+                background-color: #f0f0f0;
+            }
+            
+            .eksi-page-separator {
+                margin: 20px 0;
+                padding: 5px 10px;
+                background-color: #f5f5f5;
+                border-radius: 4px;
+                text-align: center;
+            }
+            
+            .eksi-trash-item-transitioning {
+                transition: opacity 0.5s, transform 0.5s;
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            
+            .eksi-bulk-controls {
+                margin-bottom: 20px;
+                padding: 10px;
+                background-color: #f9f9f9;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .eksi-bulk-controls button {
+                padding: 6px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            
+            .eksi-bulk-controls .select-all,
+            .eksi-bulk-controls .deselect-all {
+                background-color: #f0f0f0;
+                margin-right: 10px;
+            }
+            
+            .eksi-bulk-controls .revive-selected {
+                background-color: #81c14b;
+                color: white;
+            }
+            
+            .eksi-bulk-controls .selection-count {
+                margin-right: 10px;
+                font-size: 14px;
+            }
+            
+            .eksi-trash-checkbox-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                padding: 0 10px;
+            }
+            
+            .eksi-trash-checkbox {
+                transform: scale(1.2);
+                cursor: pointer;
+            }
+            
+            .eksi-trash-item-with-checkbox {
+                position: relative;
+                padding-left: 40px;
+            }
+            
+            .eksi-trash-item-removing {
+                transition: opacity 0.5s;
+                opacity: 0;
+            }
+        `;
+        
+        this.cssService.addCSS(css);
     }
 
     /**
@@ -127,34 +248,14 @@ export class TrashService {
             }
 
             const loadMoreContainer = this.domService.createElement('div');
-            loadMoreContainer.className = 'eksi-load-more-container';
-            loadMoreContainer.style.textAlign = 'center';
-            loadMoreContainer.style.margin = '20px 0';
-            loadMoreContainer.style.padding = '10px';
+            this.domService.addClass(loadMoreContainer, 'eksi-load-more-container');
 
             const loadMoreButton = this.domService.createElement('button');
-            loadMoreButton.className = 'eksi-load-more-button';
-            loadMoreButton.style.padding = '8px 16px';
-            loadMoreButton.style.backgroundColor = '#81c14b';
-            loadMoreButton.style.color = 'white';
-            loadMoreButton.style.border = 'none';
-            loadMoreButton.style.borderRadius = '4px';
-            loadMoreButton.style.cursor = 'pointer';
-            loadMoreButton.style.fontSize = '14px';
-            loadMoreButton.style.fontWeight = '500';
+            this.domService.addClass(loadMoreButton, 'eksi-load-more-button');
             loadMoreButton.textContent = 'Daha Fazla Yükle';
 
             const loadAllButton = this.domService.createElement('button');
-            loadAllButton.className = 'eksi-load-all-button';
-            loadAllButton.style.padding = '8px 16px';
-            loadAllButton.style.backgroundColor = '#f0f0f0';
-            loadAllButton.style.color = '#333';
-            loadAllButton.style.border = 'none';
-            loadAllButton.style.borderRadius = '4px';
-            loadAllButton.style.cursor = 'pointer';
-            loadAllButton.style.fontSize = '14px';
-            loadAllButton.style.fontWeight = '500';
-            loadAllButton.style.marginLeft = '10px';
+            this.domService.addClass(loadAllButton, 'eksi-load-all-button');
             loadAllButton.textContent = 'Tümünü Yükle';
 
             this.domService.addEventListener(loadMoreButton, 'click', () => {
@@ -204,14 +305,9 @@ export class TrashService {
 
             // Add a page separator
             const pageSeparator = this.domService.createElement('div');
-            pageSeparator.className = 'eksi-page-separator';
-            pageSeparator.style.margin = '20px 0';
-            pageSeparator.style.padding = '5px 10px';
-            pageSeparator.style.backgroundColor = '#f5f5f5';
-            pageSeparator.style.borderRadius = '4px';
-            pageSeparator.style.textAlign = 'center';
+            this.domService.addClass(pageSeparator, 'eksi-page-separator');
             pageSeparator.innerHTML = `<strong>Sayfa ${nextPage}</strong>`;
-            trashItems.appendChild(pageSeparator);
+            this.domService.appendChild(trashItems, pageSeparator);
 
             // Fetch and process the next page
             const html = await this.httpService.get(Endpoints.COP_PAGE(nextPage));
@@ -271,7 +367,7 @@ export class TrashService {
 
             if (loadAllButton) {
                 loadAllButton.textContent = 'Durdur';
-                loadAllButton.style.backgroundColor = '#ff7063';
+                this.domService.addClass(loadAllButton, 'cancelling');
             }
 
             if (loadMoreButton) {
@@ -331,7 +427,8 @@ export class TrashService {
             // Reset button states
             if (loadAllButton) {
                 loadAllButton.textContent = 'Tümünü Yükle';
-                loadAllButton.style.backgroundColor = '#f0f0f0';
+                this.domService.removeClass(loadAllButton, 'cancelling');
+                this.domService.addClass(loadAllButton, 'completed');
                 // Remove the special handler
                 loadAllButton.removeEventListener('click', cancelClickHandler);
             }
@@ -385,9 +482,7 @@ export class TrashService {
                         );
 
                         // Remove the item with animation
-                        item.style.transition = 'opacity 0.5s, transform 0.5s';
-                        item.style.opacity = '0';
-                        item.style.transform = 'translateX(50px)';
+                        this.domService.addClass(item, 'eksi-trash-item-transitioning');
 
                         setTimeout(() => {
                             item.remove();
@@ -443,35 +538,17 @@ export class TrashService {
             if (!trashItems) return;
 
             const controlsContainer = this.domService.createElement('div');
-            controlsContainer.className = 'eksi-bulk-revive-controls';
-            controlsContainer.style.marginBottom = '20px';
-            controlsContainer.style.padding = '10px';
-            controlsContainer.style.backgroundColor = '#f9f9f9';
-            controlsContainer.style.borderRadius = '4px';
-            controlsContainer.style.display = 'flex';
-            controlsContainer.style.alignItems = 'center';
-            controlsContainer.style.justifyContent = 'space-between';
+            this.domService.addClass(controlsContainer, 'eksi-bulk-controls');
 
             // Selection controls
             const selectionControls = this.domService.createElement('div');
 
             const selectAllButton = this.domService.createElement('button');
-            selectAllButton.className = 'eksi-select-all-button';
-            selectAllButton.style.padding = '6px 12px';
-            selectAllButton.style.marginRight = '10px';
-            selectAllButton.style.backgroundColor = '#f0f0f0';
-            selectAllButton.style.border = 'none';
-            selectAllButton.style.borderRadius = '4px';
-            selectAllButton.style.cursor = 'pointer';
+            this.domService.addClass(selectAllButton, 'select-all');
             selectAllButton.textContent = 'Tümünü Seç';
 
             const deselectAllButton = this.domService.createElement('button');
-            deselectAllButton.className = 'eksi-deselect-all-button';
-            deselectAllButton.style.padding = '6px 12px';
-            deselectAllButton.style.backgroundColor = '#f0f0f0';
-            deselectAllButton.style.border = 'none';
-            deselectAllButton.style.borderRadius = '4px';
-            deselectAllButton.style.cursor = 'pointer';
+            this.domService.addClass(deselectAllButton, 'deselect-all');
             deselectAllButton.textContent = 'Seçimi Kaldır';
 
             selectionControls.appendChild(selectAllButton);
@@ -481,20 +558,12 @@ export class TrashService {
             const actionControls = this.domService.createElement('div');
 
             const reviveSelectedButton = this.domService.createElement('button');
-            reviveSelectedButton.className = 'eksi-revive-selected-button';
-            reviveSelectedButton.style.padding = '6px 12px';
-            reviveSelectedButton.style.backgroundColor = '#81c14b';
-            reviveSelectedButton.style.color = 'white';
-            reviveSelectedButton.style.border = 'none';
-            reviveSelectedButton.style.borderRadius = '4px';
-            reviveSelectedButton.style.cursor = 'pointer';
+            this.domService.addClass(reviveSelectedButton, 'revive-selected');
             reviveSelectedButton.textContent = 'Seçilenleri Canlandır';
             reviveSelectedButton.disabled = true;
 
             const selectionCountSpan = this.domService.createElement('span');
-            selectionCountSpan.className = 'eksi-selection-count';
-            selectionCountSpan.style.marginRight = '10px';
-            selectionCountSpan.style.fontSize = '14px';
+            this.domService.addClass(selectionCountSpan, 'selection-count');
             selectionCountSpan.textContent = '0 yazı seçildi';
 
             actionControls.appendChild(selectionCountSpan);
@@ -555,21 +624,12 @@ export class TrashService {
         try {
             // Create checkbox container
             const checkboxContainer = this.domService.createElement('div');
-            checkboxContainer.className = 'eksi-trash-checkbox-container';
-            checkboxContainer.style.position = 'absolute';
-            checkboxContainer.style.left = '0';
-            checkboxContainer.style.top = '0';
-            checkboxContainer.style.height = '100%';
-            checkboxContainer.style.display = 'flex';
-            checkboxContainer.style.alignItems = 'center';
-            checkboxContainer.style.padding = '0 10px';
+            this.domService.addClass(checkboxContainer, 'eksi-trash-checkbox-container');
 
             // Create checkbox
             const checkbox = this.domService.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.className = 'eksi-trash-checkbox';
-            checkbox.style.transform = 'scale(1.2)';
-            checkbox.style.cursor = 'pointer';
+            this.domService.addClass(checkbox, 'eksi-trash-checkbox');
 
             // Get the entry ID from the revive link
             const reviveLink = item.querySelector('a[href^="/cop/canlandir"]') as HTMLAnchorElement;
@@ -586,8 +646,7 @@ export class TrashService {
             checkboxContainer.appendChild(checkbox);
 
             // Adjust list item to make room for checkbox
-            item.style.position = 'relative';
-            item.style.paddingLeft = '40px';
+            this.domService.addClass(item, 'eksi-trash-item-with-checkbox');
 
             // Insert checkbox container at the beginning of the item
             this.domService.insertBefore(item, checkboxContainer, item.firstChild);
@@ -670,12 +729,11 @@ export class TrashService {
                         successCount++;
 
                         // Find and remove the item
-                        const checkbox = document.querySelector(`.eksi-trash-checkbox[data-entry-id="${entryId}"]`);
+                        const checkbox = this.domService.querySelector(`.eksi-trash-checkbox[data-entry-id="${entryId}"]`);
                         if (checkbox) {
                             const item = checkbox.closest('li');
                             if (item) {
-                                item.style.transition = 'opacity 0.5s';
-                                item.style.opacity = '0';
+                                this.domService.addClass(item as HTMLElement, 'eksi-trash-item-removing');
 
                                 setTimeout(() => {
                                     item.remove();

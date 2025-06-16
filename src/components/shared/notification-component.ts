@@ -38,8 +38,7 @@ export class NotificationComponent implements INotificationComponent {
      * Initialize animations for notifications
      */
     private initAnimations(): void {
-        const style = document.createElement('style');
-        style.textContent = `
+        const css = `
       @keyframes eksiNotificationSlideIn {
         from {
           opacity: 0;
@@ -51,7 +50,7 @@ export class NotificationComponent implements INotificationComponent {
         }
       }
     `;
-        document.head.appendChild(style);
+        this.cssService.addCSS(css);
     }
 
     /**

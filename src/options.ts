@@ -546,7 +546,7 @@ class OptionsPage {
     initializeTooltips() {
         try {
             // Create necessary dependencies for TooltipComponent
-            const cssService = new CSSService();
+            const cssService = new CSSService(this.domService);
             // Create and initialize the TooltipComponent
             const tooltipComponent = new TooltipComponent(this.domService, cssService, this.loggingService);
             tooltipComponent.initializeTooltips();
