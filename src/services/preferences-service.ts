@@ -97,10 +97,13 @@ export class PreferencesService implements IPreferencesService {
                     actionType = 'engellendi';
             }
 
+            const currentDate = new Date().toLocaleDateString('tr-TR');
+            
             let noteText = preferences.defaultNoteTemplate
                 .replace('{baslikAdi}', postTitle)
                 .replace('{islemTuru}', actionType)
-                .replace('{yaziLinki}', Endpoints.ENTRY_URL(entryId));
+                .replace('{yaziLinki}', Endpoints.ENTRY_URL(entryId))
+                .replace('{tarih}', currentDate);
 
             // Add thread blocking info if enabled
             if (includeThreadBlocking && blockType !== BlockType.BLOCK_THREADS) {
@@ -127,10 +130,13 @@ export class PreferencesService implements IPreferencesService {
                     actionType = 'engellendi';
             }
 
+            const currentDate = new Date().toLocaleDateString('tr-TR');
+            
             let noteText = this.defaultPreferences.defaultNoteTemplate
                 .replace('{baslikAdi}', postTitle)
                 .replace('{islemTuru}', actionType)
-                .replace('{yaziLinki}', Endpoints.ENTRY_URL(entryId));
+                .replace('{yaziLinki}', Endpoints.ENTRY_URL(entryId))
+                .replace('{tarih}', currentDate);
 
             // Add thread blocking info if enabled
             if (includeThreadBlocking && blockType !== BlockType.BLOCK_THREADS) {

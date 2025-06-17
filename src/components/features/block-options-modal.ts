@@ -584,7 +584,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         const helpText = this.domService.createElement('div');
         this.domService.addClass(helpText, 'help-text');
         helpText.innerHTML = `
-                                💡 <strong>Değişkenler:</strong> {baslikAdi}, {islemTuru}, {yaziLinki}, {date}
+                                💡 <strong>Değişkenler:</strong> {baslikAdi}, {islemTuru}, {yaziLinki}, {tarih}
         `;
 
         this.domService.appendChild(noteSection, noteLabel);
