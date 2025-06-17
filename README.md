@@ -1,98 +1,176 @@
 # Ekşi Artı
 
-**Ekşi Artı**, Ekşi Sözlük deneyimini geliştiren gelişmiş bir Chrome uzantısıdır. Kullanıcı yönetimi ve içerik kontrolü için çeşitli araçlar sunar.
+**Ekşi Artı**, Ekşi Sözlük deneyimini geliştiren gelişmiş bir Chrome uzantısıdır. Kullanıcı yönetimi, içerik kontrolü, arama, filtreleme ve çok daha fazlası için kapsamlı araçlar sunar.
+
+![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-green?style=flat-square&logo=googlechrome)
+![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square&logo=typescript)
+![Version](https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+
+## 📋 İçindekiler
+
+- [🌟 Özellikler](#-özellikler)
+- [📥 Kurulum](#-kurulum)
+- [🚀 Kullanım](#-kullanım)
+- [⚙️ Ayarlar](#️-ayarlar)
+- [🛠 Geliştirme](#-geliştirme)
+- [🏗️ Mimari](#️-mimari)
+- [🧪 Test](#-test)
+- [📂 Proje Yapısı](#-proje-yapısı)
+- [🔧 Teknik Detaylar](#-teknik-detaylar)
+- [🤝 Katkıda Bulunma](#-katkıda-bulunma)
+- [📄 Lisans](#-lisans)
 
 ## 🌟 Özellikler
 
-### Toplu Kullanıcı Engelleme
-- Bir yazıyı favorileyen kullanıcıları kolayca toplu olarak engelleyebilir veya sessize alabilirsiniz
-- Sessiz alma (yazılarını görürsünüz) veya tamamen engelleme seçenekleri
-- Başlık engelleme seçeneği
-- Özel not ekleme imkanı
-- İşlemi istediğiniz anda duraklatabilir ve daha sonra devam ettirebilirsiniz
-- Sunucu yükünü azaltmak için yerleşik gecikme koruması
-- Detaylı ilerleme bildirimleri
+### 🚫 Toplu Kullanıcı Engelleme
+- **Bulk Blocking**: Bir yazıyı favorileyen kullanıcıları kolayca toplu olarak engelleyebilir veya sessize alabilirsiniz
+- **Çoklu Engelleme Seçenekleri**:
+  - Sessiz alma (yazılarını görürsünüz)
+  - Tamamen engelleme
+  - Başlık engelleme seçeneği
+- **Akıllı İşlem Yönetimi**:
+  - Özel not ekleme imkanı
+  - İşlemi istediğiniz anda duraklatabilir ve daha sonra devam ettirebilirsiniz
+  - Sunucu yükünü azaltmak için yerleşik gecikme koruması
+  - Detaylı ilerleme bildirimleri
+  - Hata durumunda otomatik yeniden deneme
+- **Çoklu Entry Desteği**: Birden fazla yazıyı aynı anda işleme alma
+- **Durum Kaydetme**: İşlemi yarıda bırakıp daha sonra devam etme
 
-### Gelişmiş Arama ve Filtreleme
-- **Sayfa içi gerçek zamanlı arama**: Entry'leri anında filtreleyin veya vurgulayın
-- **İki arama modu**:
-  - Filtre Modu: Yalnızca arama terimiyle eşleşen entry'leri gösterir
-  - Vurgulama Modu: Tüm entry'leri gösterir ve eşleşmeleri vurgular
-- **Türkçe karakter normalizasyonu**: ı/i, ö/o, ü/u, ç/c, ş/s, ğ/g otomatik eşleştirme
-- **Gelişmiş arama seçenekleri**:
-  - `*` - Herhangi bir karakter dizisi
+### 🔍 Gelişmiş Arama ve Filtreleme
+- **Gerçek Zamanlı Arama**: Entry'leri anında filtreleyin veya vurgulayın
+- **İki Arama Modu**:
+  - **Filtre Modu**: Yalnızca arama terimiyle eşleşen entry'leri gösterir
+  - **Vurgulama Modu**: Tüm entry'leri gösterir ve eşleşmeleri vurgular
+- **Gelişmiş Arama Operatörleri**:
+  - `*` - Herhangi bir karakter dizisi (wildcard)
   - `?` - Herhangi bir tek karakter
-  - `|` - VEYA operatörü
-  - `"kelime grubu"` - Tam eşleşen kelime grubu
-- **Klavye kısayolları**:
+  - `|` - VEYA operatörü (multiple terms)
+  - `"kelime grubu"` - Tam eşleşen kelime grubu (exact match)
+- **Türkçe Karakter Normalizasyonu**: ı/i, ö/o, ü/u, ç/c, ş/s, ğ/g otomatik eşleştirme
+- **Klavye Kısayolları**:
   - `Ctrl+F` - Arama kutusuna odaklan
   - `Enter` - Sonraki eşleşme
   - `Shift+Enter` - Önceki eşleşme
   - `Esc` - Aramayı temizle
+- **Arama Geçmişi**: Son aramaları hatırlama ve hızlı erişim
+- **RegEx Desteği**: Gelişmiş kullanıcılar için düzenli ifade desteği
 
-### Gelişmiş Yazar Yönetimi
-- **Yazar vurgulama**: Yazarları özel renklerle vurgulayın
-- **Yazar notları**: Yazarlara özel notlar ekleyin
-- **Renk yönetimi**: 
-  - Özel renk seçimi veya rastgele renk atama
+### 🎨 Gelişmiş Yazar Yönetimi
+- **Yazar Vurgulama**: Yazarları özel renklerle vurgulayın
+- **Yazar Notları**: Yazarlara özel notlar ekleyin ve yönetin
+- **Renk Yönetimi**: 
+  - Özel renk seçici ile renk belirleme
+  - Rastgele renk atama
   - Pastel renk seçenekleri
   - Kontrast hesaplaması ile otomatik metin rengi
-- **Yazar istatistikleri**: Son görülme tarihi ve toplam entry sayısı
-- **Toplu işlemler**: 
-  - Yazar verilerini dışa/içe aktarma
-  - Eski yazarları temizleme
+  - Hex, RGB ve HSL renk formatları desteği
+- **Yazar İstatistikleri**: 
+  - Son görülme tarihi takibi
+  - Toplam entry sayısı
+  - Yazar aktivite oranları
+- **Toplu İşlemler**: 
+  - Yazar verilerini JSON formatında dışa/içe aktarma
+  - Eski yazarları temizleme (configurable threshold)
   - Toplu renk değiştirme
-- **Bağlam menüsü**: Entry'den direkt yazar ekleme
+  - Toplu not güncelleme
+- **Bağlam Menüsü**: Entry'den direkt yazar ekleme (sağ tık)
+- **Otomatik Vurgulama**: Yeni entry'lerde otomatik yazar tanıma
 
-### Gelişmiş Entry Sıralama
-- **Çoklu sıralama kriterleri**:
+### 📊 Gelişmiş Entry Sıralama
+- **Çoklu Sıralama Kriterleri**:
   - Tarih (yeni/eski)
-  - Yazar adı
+  - Yazar adı (alfabetik)
   - Entry uzunluğu
   - Favori sayısı
-- **Kullanıcı profili tabanlı sıralama**
-- **Özelleştirilebilir sıralama stratejileri**
-- **Komut deseni ile genişletilebilir sıralama sistemi**
+- **Kullanıcı Profili Tabanlı Sıralama**:
+  - Kullanıcı seviyesi
+  - Hesap yaşı
+  - Aktivite oranı
+  - Takipçi sayısı
+  - Takip oranı
+  - Toplam entry sayısı
+  - Etkileşim oranı
+- **Özelleştirilebilir Sıralama Stratejileri**
+- **Command Pattern**: Genişletilebilir sıralama sistemi
+- **Veri Odaklı Sıralama**: Kullanıcı verilerine dayalı akıllı sıralama
 
-### Çöp Kutusu Yönetimi
-- **Toplu geri getirme**: Seçili entry'leri toplu olarak geri getirin
-- **Gelişmiş sayfa yükleme**: 
-  - Sayfa sayfa yükleme
+### 🗑️ Çöp Kutusu Yönetimi
+- **Toplu Geri Getirme**: Seçili entry'leri toplu olarak geri getirin
+- **Gelişmiş Sayfa Yükleme**: 
+  - Sayfa sayfa yükleme sistemi
   - Tüm sayfaları otomatik yükleme
   - İptal edilebilir işlemler
-- **Seçim sistemi**: Checkbox'larla kolay entry seçimi
+  - Progress tracking
+- **Gelişmiş Seçim Sistemi**: 
+  - Checkbox'larla kolay entry seçimi
+  - Tümünü seç/hiçbirini seçme
+  - Seçim sayacı
 - **Animasyonlar**: Yumuşak geçiş efektleri
-- **Sayfa ayırıcıları**: Hangi sayfadan geldiğini görme
+- **Sayfa Ayırıcıları**: Hangi sayfadan geldiğini görme
+- **Batch Processing**: Büyük miktarlarda entry'yi verimli işleme
 
-### Oy Takip Sistemi
-- **Oy geçmişi izleme**: Kullanıcının oy verme paternlerini takip edin
-- **Yapılandırılabilir izleme**: İzleme aralığını özelleştirin
-- **Bildirim sistemi**: Oy değişikliklerinde bildirim alın
-- **Önbellek yönetimi**: Performans için akıllı önbellekleme
+### 📈 Oy Takip Sistemi
+- **Oy Geçmişi İzleme**: Kullanıcının oy verme paternlerini takip edin
+- **Yapılandırılabilir İzleme**: İzleme aralığını özelleştirin (dakika bazında)
+- **Bildirim Sistemi**: Oy değişikliklerinde anlık bildirim
+- **Cache Yönetimi**: Performans için akıllı önbellekleme
+- **Kullanıcı Adı Çıkarma**: Otomatik kullanıcı tanıma ve cache'leme
+- **Background Processing**: Arka planda sürekli izleme
 
-### Ekran Görüntüsü ve Kopyalama
-- **Gelişmiş ekran görüntüsü**: html2canvas ile yüksek kaliteli görüntü alma
-- **Entry kopyalama**: Hızlı metin kopyalama düğmeleri
-- **Komut tabanlı işlemler**: Genişletilebilir komut sistemi
+### 📷 Ekran Görüntüsü ve Kopyalama
+- **Gelişmiş Ekran Görüntüsü**: 
+  - html2canvas ile yüksek kaliteli görüntü alma
+  - Seçili alan ekran görüntüsü
+  - Full entry capture
+- **Entry Kopyalama**: 
+  - Hızlı metin kopyalama düğmeleri
+  - Formatted text kopyalama
+  - Plain text kopyalama
+- **Command Pattern**: Genişletilebilir komut sistemi
+- **Export Seçenekleri**: Farklı formatlarda dışa aktarma
 
-### Bildirim Sistemi
-- **Çoklu bildirim türleri**: Başarı, hata, uyarı, bilgi
-- **Yapılandırılabilir konum**: 4 farklı köşe seçeneği
-- **Otomatik kaybolma**: Ayarlanabilir süre
-- **İlerleme bildirimleri**: Uzun işlemler için ilerleme çubuğu
+### 🔔 Gelişmiş Bildirim Sistemi
+- **Çoklu Bildirim Türleri**: Başarı, hata, uyarı, bilgi
+- **Yapılandırılabilir Konum**: 4 farklı köşe seçeneği (top-right, top-left, bottom-right, bottom-left)
+- **Otomatik Kaybolma**: Ayarlanabilir süre (1-10 saniye)
+- **İlerleme Bildirimleri**: Uzun işlemler için ilerleme çubuğu
+- **Sticky Notifications**: Kalıcı bildirimler
+- **Rich Notifications**: HTML içerikli bildirimler
+- **Sound Support**: Ses bildirimi seçenekleri
 
-### Tema ve Görünüm
-- **Çoklu tema desteği**: Açık, koyu, sistem teması
-- **Dinamik UI konteynerleri**: 
-  - Özelleştirilebilir şekil ve boyutlar
+### 🎨 Tema ve Görünüm
+- **Çoklu Tema Desteği**: 
+  - Açık tema
+  - Koyu tema
+  - Sistem teması (otomatik)
+- **Dinamik UI Konteynerleri**: 
+  - 8 farklı tema seçeneği (default, primary, secondary, info, warning, danger, success, neutral)
+  - 3 boyut seçeneği (small, medium, large)
+  - 4 şekil seçeneği (square, slightly-rounded, rounded, pill)
   - Hover efektleri
-  - Kenarlık seçenekleri
-- **Responsive tasarım**: Farklı ekran boyutlarına uyum
+  - Gölge ve kenarlık seçenekleri
+- **Responsive Tasarım**: Farklı ekran boyutlarına uyum
+- **Material Design Icons**: Google Material Icons entegrasyonu
+- **CSS Custom Properties**: Dinamik tema değişkenleri
 
-### Erişilebilirlik
-- **Klavye navigasyonu**: Tam klavye desteği
-- **Ekran okuyucu uyumluluğu**: ARIA etiketleri
-- **Yüksek kontrast modu**: Görme zorluğu çekenler için
+### ♿ Erişilebilirlik
+- **Klavye Navigasyonu**: Tam klavye desteği
+- **Ekran Okuyucu Uyumluluğu**: ARIA etiketleri ve semantic markup
+- **Yüksek Kontrast Modu**: Görme zorluğu çekenler için
+- **Focus Management**: Keyboard focus yönetimi
+- **Alternative Text**: Tüm görseller için alt text
+
+### 🔧 Gelişmiş Özellikler
+- **Dependency Injection**: Modern DI container sistemi
+- **Event Bus**: Component'lar arası iletişim
+- **Observer Pattern**: DOM değişikliklerini izleme
+- **Command Pattern**: Genişletilebilir komut sistemi
+- **Service Layer Architecture**: Temiz kod mimarisi
+- **TypeScript**: Full type safety
+- **Webpack Build System**: Modern build pipeline
+- **Jest Testing**: Comprehensive test coverage
 
 ## 📥 Kurulum
 
@@ -102,82 +180,188 @@
 3. "Chrome'a Ekle" düğmesine tıklayın
 
 ### Manuel Kurulum (Geliştirici Modu)
-1. Projeyi ZIP olarak indirin veya klonlayın
-2. Gerekirse ZIP dosyasını çıkarın
-3. Uzantıyı derleyin:
+
+#### Ön Gereksinimler
+- Node.js (v14 veya üzeri)
+- npm veya yarn
+- Chrome/Chromium tabanlı tarayıcı
+- Git (isteğe bağlı)
+
+#### Kurulum Adımları
+1. **Projeyi İndirin**:
+   ```bash
+   # Git ile klonlama
+   git clone https://github.com/kullanici/eksi-arti.git
+   cd eksi-arti
+   
+   # Veya ZIP olarak indirip çıkarın
+   ```
+
+2. **Bağımlılıkları Yükleyin**:
    ```bash
    npm install
-   npm run build
+   # veya
+   yarn install
    ```
-   Bu komut `builds` klasöründe paketlenmiş bir uzantı dosyası oluşturacaktır
 
-4. Chrome'da `chrome://extensions/` sayfasına gidin
-5. Sağ üstte "Geliştirici modu"nu etkinleştirin
-6. İki seçenekten birini uygulayın:
+3. **Uzantıyı Derleyin**:
+   ```bash
+   # Development build
+   npm run build
+   
+   # Production build (minified)
+   npm run build:prod
+   
+   # ZIP paket oluşturma
+   npm run build:zip
+   ```
+
+4. **Chrome'a Yükleyin**:
+   - Chrome'da `chrome://extensions/` sayfasına gidin
+   - Sağ üstte "Geliştirici modu"nu etkinleştirin
    - "Paketlenmemiş öğe yükle"ye tıklayın ve `dist` klasörünü seçin
-   - `builds` klasöründeki ZIP dosyasını Chrome uzantıları sayfasına sürükleyip bırakın
+   - Veya `builds` klasöründeki ZIP dosyasını sürükleyip bırakın
 
 ## 🚀 Kullanım
 
 ### Toplu Kullanıcı Engelleme
+
+#### Temel Kullanım
 1. Herhangi bir Ekşi Sözlük yazı sayfasına gidin
 2. Yazının "..." menüsüne tıklayın
 3. "favorileyenleri engelle" seçeneğini seçin
-4. Şunları yapabilirsiniz:
-   - "Sessiz Al" - Kullanıcının yazılarını görmeye devam edin
-   - "Engelle" - Kullanıcıyı tamamen engelleyin
-   - "Başlık Engelle" - Kullanıcının açtığı başlıkları engelleyin
+4. Engelleme türünü seçin:
+   - **Sessiz Al**: Kullanıcının yazılarını görmeye devam edin
+   - **Engelle**: Kullanıcıyı tamamen engelleyin
+   - **Başlık Engelle**: Kullanıcının açtığı başlıkları engelleyin
+
+#### Gelişmiş Özellikler
+- **Çoklu Entry İşleme**: Birden fazla yazıyı aynı anda işleme alın
+- **İşlemi Duraklat/Devam Et**: Uzun işlemleri kontrol edin
+- **Progress Tracking**: Gerçek zamanlı ilerleme takibi
+- **Custom Notes**: Her kullanıcı için özel notlar
+- **Automatic Retry**: Başarısız isteklerde otomatik tekrar deneme
 
 ### Arama ve Filtreleme
+
+#### Hızlı Arama
 1. Herhangi bir başlık sayfasında `Ctrl+F` tuşuna basın
-2. Arama kutusuna terimi yazın
-3. Filtre/Vurgulama modu arasında geçiş yapın
-4. Gelişmiş arama operatörlerini kullanın:
-   - `javascript*` - javascript ile başlayan
-   - `*web*` - içinde web geçen
-   - `"ekşi sözlük"` - tam eşleşme
-   - `react|vue|angular` - herhangi birini içeren
+2. Arama terimini yazın
+3. Enter ile sonraki eşleşmeye gidin
+
+#### Gelişmiş Arama Operatörleri
+```
+javascript*          # javascript ile başlayan
+*web*               # içinde web geçen
+"ekşi sözlük"       # tam eşleşme
+react|vue|angular   # herhangi birini içeren
+prog?amming         # programing veya programming
+```
+
+#### Arama Modları
+- **Filter Mode**: Sadece eşleşen entry'leri göster
+- **Highlight Mode**: Tüm entry'leri göster, eşleşmeleri vurgula
 
 ### Yazar Yönetimi
+
+#### Yazar Vurgulama
 1. Bir yazarın entry'sine sağ tıklayın
 2. "Yazarı Vurgula" seçeneğini seçin
 3. Renk seçin ve not ekleyin
-4. Ayarlar sayfasından toplu işlemler yapın
+4. Otomatik vurgulama başlar
+
+#### Toplu İşlemler
+1. Ayarlar sayfasını açın
+2. "Yazar Yönetimi" bölümüne gidin
+3. İstediğiniz toplu işlemi gerçekleştirin:
+   - Export/Import
+   - Eski yazarları temizle
+   - Toplu renk değiştirme
 
 ### Entry Sıralama
-1. Başlık sayfasında sıralama düğmelerini kullanın
-2. Tarih, yazar adı, uzunluk gibi kriterlere göre sıralayın
-3. Özel sıralama stratejileri ayarlayın
+
+#### Temel Sıralama
+1. Başlık sayfasında sıralama kontrollerini bulun
+2. İstediğiniz kritere göre sıralayın:
+   - Tarih (yeni/eski)
+   - Yazar adı
+   - Entry uzunluğu
+   - Favori sayısı
+
+#### Gelişmiş Sıralama
+1. Ayarlardan "Sıralama Stratejileri"ni açın
+2. Kullanıcı profili tabanlı sıralama seçeneklerini kullanın
+3. Custom sorting criteria tanımlayın
+
+### Çöp Kutusu Yönetimi
+
+#### Toplu Geri Getirme
+1. Çöp kutusu sayfasına gidin (`/cop`)
+2. Geri getirmek istediğiniz entry'leri seçin
+3. "Seçilenleri Geri Getir" butonuna tıklayın
+
+#### Sayfa Yükleme
+- **Next Page**: Bir sonraki sayfayı yükle
+- **Load All**: Tüm sayfaları otomatik yükle (dikkatli kullanın)
+- **Cancel**: İşlemi iptal et
 
 ## ⚙️ Ayarlar
 
-Uzantı simgesine tıklayarak ayarlar sayfasına erişebilirsiniz:
+Uzantı simgesine tıklayarak veya `chrome://extensions/` → Ekşi Artı → "Seçenekler" ile ayarlar sayfasına erişebilirsiniz.
 
-### Genel Ayarlar
-- **Bildirimler**: Etkinleştir/Devre dışı bırak
+### 🔧 Genel Ayarlar
+- **Tema**: Açık/Koyu/Sistem
+- **Dil**: Türkçe/İngilizce (gelecek sürümlerde)
+- **Debug Modu**: Geliştirici konsol mesajları
+
+### 🔔 Bildirim Ayarları
+- **Bildirimleri Etkinleştir**: Tüm bildirimleri aç/kapat
 - **Bildirim Süresi**: 1-10 saniye arası
 - **Bildirim Konumu**: 4 köşe seçeneği
-- **Tema**: Açık/Koyu/Sistem
+- **Ses Bildirimleri**: Ses efektleri (gelecek sürümlerde)
 
-### Engelleme Ayarları
+### 🚫 Engelleme Ayarları
 - **Varsayılan Engelleme Türü**: Sessiz/Engelle/Başlık Engelle
-- **İstek Gecikmesi**: Sunucu yükünü önlemek için gecikme
-- **Yeniden Deneme**: Başarısız istekler için tekrar sayısı
+- **İstek Gecikmesi**: Sunucu yükünü önlemek için gecikme (1-30 saniye)
+- **Yeniden Deneme Sayısı**: Başarısız istekler için tekrar sayısı (1-10)
+- **Yeniden Deneme Gecikmesi**: Tekrar deneme arasındaki süre
 - **Not Şablonu**: Otomatik not formatı
+  - `{baslikAdi}` - Başlık adı
+  - `{islemTuru}` - İşlem türü
+  - `{yaziLinki}` - Yazı linki
+  - `{tarih}` - İşlem tarihi
 
-### Yazar Vurgulama Ayarları
-- **Varsayılan Opaklık**: Vurgulama şeffaflığı
-- **Animasyon**: Geçiş efektleri
-- **Bağlam Menüsü**: Sağ tık menüsü
+### 🎨 Yazar Vurgulama Ayarları
+- **Vurgulamayı Etkinleştir**: Yazar vurgulama sistemini aç/kapat
+- **Varsayılan Opaklık**: Vurgulama şeffaflığı (0.1-1.0)
+- **Animasyon Süresi**: Geçiş efekti süresi (ms)
+- **Bağlam Menüsü**: Sağ tık menüsünü etkinleştir
+- **Otomatik Renk**: Yeni yazarlar için otomatik renk atama
+- **Pastel Renkler**: Daha yumuşak renk paleti kullan
 
-### Oy Takip Ayarları
-- **İzleme Etkin**: Oy takibini etkinleştir
-- **İzleme Aralığı**: Kontrol sıklığı (dakika)
+### 📊 Oy Takip Ayarları
+- **İzleme Etkin**: Oy takibini etkinleştir/devre dışı bırak
+- **İzleme Aralığı**: Kontrol sıklığı (1-60 dakika)
+- **Bildirim Gönder**: Oy değişikliklerinde bildirim
+- **Cache Süresi**: Verileri ne kadar süre sakla
 
-### Gelişmiş Ayarlar
-- **Debug Modu**: Geliştirici konsol mesajları
-- **İşlem Geçmişi**: Geçmiş işlemleri kaydet
-- **Önbellek Temizleme**: Performans optimizasyonu
+### 🔍 Arama Ayarları
+- **Türkçe Karakter Normalizasyonu**: Otomatik karakter eşleştirme
+- **Büyük/Küçük Harf Duyarlılığı**: Case sensitive arama
+- **RegEx Desteği**: Düzenli ifade kullanımı
+- **Arama Geçmişi**: Son aramaları kaydet
+- **Otomatik Tamamlama**: Arama önerileri
+
+### 🗑️ Çöp Kutusu Ayarları
+- **Otomatik Sayfa Yükleme**: Sayfa geçişlerinde otomatik yükleme
+- **Animasyon Efektleri**: Görsel efektleri etkinleştir
+- **Batch Boyutu**: Aynı anda işlenecek entry sayısı
+
+### 📁 Veri Yönetimi
+- **İşlem Geçmişi**: Gerçekleştirilen işlemleri kaydet
+- **Otomatik Yedekleme**: Periyodik veri yedekleme
+- **Veri Temizleme**: Eski verileri otomatik temizle
+- **Export/Import**: Ayarları yedekle ve geri yükle
 
 ## 🛠 Geliştirme
 
@@ -185,9 +369,11 @@ Uzantı simgesine tıklayarak ayarlar sayfasına erişebilirsiniz:
 - Node.js (v14+)
 - npm veya yarn
 - TypeScript
+- Chrome/Chromium
 - Jest (testler için)
 
 ### Kurulum ve Çalıştırma
+
 ```bash
 # Depoyu klonlayın
 git clone https://github.com/kullanici/eksi-arti.git
@@ -198,33 +384,161 @@ npm install
 
 # Geliştirme modunda izleme
 npm run watch
+
+# Development build
+npm run dev
+
+# Production build
+npm run build
+
+# Tests
+npm test
+
+# Linting
+npm run lint
+
+# Type checking
+npm run type-check
 ```
 
 ### Chrome'da Test Etme
-1. Chrome'da `chrome://extensions/` sayfasına gidin
-2. Sağ üstte "Geliştirici modu"nu etkinleştirin
-3. "Paketlenmemiş öğe yükle"ye tıklayın ve proje `dist` klasörünü seçin
-4. `npm run watch` çalışırken yaptığınız değişiklikler otomatik olarak derlenecektir
-5. Değişikliklerden sonra Chrome'daki uzantıyı yenilemek için yenile düğmesine tıklayın
 
-### Üretim İçin Derleme
+#### Development Mode
+1. `npm run watch` çalıştırın (otomatik derleme için)
+2. Chrome'da `chrome://extensions/` sayfasına gidin
+3. "Geliştirici modu"nu etkinleştirin
+4. "Paketlenmemiş öğe yükle"ye tıklayın ve `dist` klasörünü seçin
+5. Değişiklikler otomatik derlenecek, uzantıyı yenileyin
+
+#### Hot Reload
+- Webpack watch mode ile otomatik derleme
+- Content script değişikliklerinde sayfa yenileme
+- Background script değişikliklerinde uzantı yenileme
+
+### Build Süreçleri
+
+#### Development Build
 ```bash
-# Üretim için derleme (minified, kaynak haritası yok)
-npm run build
-
-# Dağıtım için ZIP olarak paketleme
-npm run build:zip
+npm run dev
+# Webpack dev config kullanır
+# Source maps dahil
+# Minification yok
+# Fast build
 ```
 
-### Mimar ve Tasarım Desenleri
-- **Command Pattern**: Komutlar için (`src/commands/`)
-- **Observer Pattern**: DOM değişiklikleri için (`src/services/observer-service.ts`)
-- **Service Layer**: İş mantığı ayrımı (`src/services/`)
-- **Dependency Injection**: Gevşek bağlılık (`src/di/`)
-- **Event Bus**: Komponent iletişimi
-- **Factory Pattern**: Component oluşturma
+#### Production Build
+```bash
+npm run build
+# Webpack prod config kullanır
+# Minified code
+# Optimized assets
+# No source maps
+```
+
+#### Package Creation
+```bash
+npm run build:zip
+# Production build + ZIP packaging
+# builds/ klasöründe .zip dosyası
+# Chrome Web Store'a yüklemeye hazır
+```
+
+## 🏗️ Mimari
+
+### Design Patterns
+
+#### Dependency Injection
+```typescript
+// DI Container kullanımı
+const container = initializeDI();
+const service = container.resolve<MyService>('MyService');
+```
+
+#### Command Pattern
+```typescript
+// Komut tabanlı işlemler
+const command = commandFactory.create('SortEntries', { criteria: 'date' });
+commandInvoker.execute(command);
+```
+
+#### Observer Pattern
+```typescript
+// DOM değişikliklerini izleme
+const observerId = observerService.observe({
+    selector: '.entry',
+    handler: (entries) => { /* process entries */ },
+    processExisting: true
+});
+```
+
+#### Service Layer
+```typescript
+// Servis katmanı mimarisi
+class BlockUsersService {
+    constructor(
+        private httpService: IHttpService,
+        private storageService: IStorageService,
+        private notificationService: INotificationService
+    ) {}
+}
+```
+
+### Katmanlı Mimari
+
+```
+┌─────────────────────────────────────┐
+│           UI Components             │ ← React-like components
+├─────────────────────────────────────┤
+│           Features Layer            │ ← Feature-specific logic
+├─────────────────────────────────────┤
+│           Services Layer            │ ← Business logic
+├─────────────────────────────────────┤
+│         Infrastructure             │ ← HTTP, Storage, DOM
+├─────────────────────────────────────┤
+│        Chrome APIs/Browser         │ ← Native browser APIs
+└─────────────────────────────────────┘
+```
+
+### Component Architecture
+
+#### Base Components
+- **BaseComponent**: Tüm component'ların base class'ı
+- **BaseFeatureComponent**: Feature component'ları için base
+- **ComponentContainer**: UI container yönetimi
+
+#### Shared Components
+- IconComponent, ButtonComponent, ModalComponent
+- NotificationComponent, ProgressBarComponent
+- TooltipComponent, AccordionComponent
+
+#### Feature Components
+- SearchFilterComponent
+- AuthorHighlightComponent
+- BlockingControlsComponent
+
+### Service Architecture
+
+#### Core Services
+- **DOMService**: DOM manipulation
+- **HttpService**: HTTP requests with retry logic
+- **StorageService**: Chrome storage API wrapper
+- **CSSService**: Dynamic CSS injection
+
+#### Feature Services
+- **BlockUsersService**: Bulk user blocking
+- **AuthorHighlighterService**: Author highlighting
+- **TrashService**: Trash management
+- **VoteMonitoringService**: Vote tracking
+
+#### Infrastructure Services
+- **LoggingService**: Structured logging
+- **NotificationService**: Toast notifications
+- **PreferencesService**: Settings management
+- **EventBus**: Inter-component communication
 
 ## 🧪 Test
+
+### Test Yapılandırması
 ```bash
 # Tüm testleri çalıştır
 npm test
@@ -234,85 +548,314 @@ npm run test:watch
 
 # Kapsamlılık raporu
 npm run test:coverage
+
+# Specific test file
+npm test -- --testPathPattern=BlockUsersService
 ```
+
+### Test Türleri
+
+#### Unit Tests
+```typescript
+// Service testleri
+describe('BlockUsersService', () => {
+    it('should block users successfully', async () => {
+        // Test implementation
+    });
+});
+```
+
+#### Integration Tests
+```typescript
+// Component entegrasyon testleri
+describe('SearchFilterComponent Integration', () => {
+    it('should filter entries correctly', async () => {
+        // Test implementation
+    });
+});
+```
+
+#### E2E Tests (Gelecek)
+- Cypress ile browser automation
+- Real EksiSozluk interaction testing
+
+### Mock Stratejileri
+- Chrome APIs mocking
+- HTTP service mocking
+- DOM manipulation mocking
+- Storage service mocking
 
 ## 📂 Proje Yapısı
+
 ```
 eksi-arti/
-├── dist/                    # Derlenmiş dosyalar
-├── icons/                   # Uzantı simgeleri
-├── src/                     # Kaynak kod
-│   ├── components/          # UI bileşenleri
-│   │   ├── features/        # Özellik bileşenleri
-│   │   └── shared/          # Paylaşılan bileşenler
-│   ├── services/            # Servis sınıfları
-│   │   ├── block-users-service.ts     # Toplu engelleme
+├── 📁 dist/                           # Derlenmiş dosyalar
+├── 📁 builds/                         # Paketlenmiş uzantı dosyaları
+├── 📁 icons/                          # Uzantı simgeleri
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+├── 📁 src/                           # Kaynak kod
+│   ├── 📁 components/                # UI bileşenleri
+│   │   ├── 📁 features/              # Özellik bileşenleri
+│   │   │   ├── search-filter-component.ts
+│   │   │   └── author-highlight-component.ts
+│   │   ├── 📁 shared/                # Paylaşılan bileşenler
+│   │   │   ├── button-component.ts
+│   │   │   ├── modal-component.ts
+│   │   │   ├── notification-component.ts
+│   │   │   ├── progress-widget-component.ts
+│   │   │   └── tooltip-component.ts
+│   │   └── 📁 blocking/              # Engelleme bileşenleri
+│   ├── 📁 services/                  # Servis sınıfları
+│   │   ├── block-users-service.ts    # Toplu engelleme
 │   │   ├── author-highlighter-service.ts # Yazar vurgulama
-│   │   ├── search-filter-service.ts   # Arama ve filtreleme
-│   │   ├── trash-service.ts           # Çöp kutusu yönetimi
+│   │   ├── trash-service.ts          # Çöp kutusu yönetimi
 │   │   ├── vote-monitoring-service.ts # Oy takibi
-│   │   ├── notification-service.ts    # Bildirimler
-│   │   ├── storage-service.ts         # Veri saklama
 │   │   ├── http-service.ts           # HTTP istekleri
-│   │   └── observer-service.ts       # DOM izleme
-│   ├── commands/            # Komut deseni implementasyonu
-│   │   ├── blocking/        # Engelleme komutları
-│   │   ├── screenshots/     # Ekran görüntüsü komutları
-│   │   ├── copying/         # Kopyalama komutları
-│   │   └── sorting/         # Sıralama komutları
-│   ├── interfaces/          # TypeScript arayüzleri
-│   ├── di/                  # Dependency injection
-│   ├── factories/           # Factory sınıfları
-│   ├── utils/               # Yardımcı fonksiyonlar
-│   ├── content.ts           # İçerik betiği
-│   ├── background.ts        # Arka plan betiği
-│   ├── options.ts           # Ayarlar sayfası
-│   ├── constants.ts         # Sabitler ve numaralandırmalar
-│   └── types.ts             # TypeScript tip tanımları
-├── tests/                   # Test dosyaları
-├── scripts/                 # Build ve yardımcı scriptler
-├── manifest.json            # Uzantı manifestosu
-├── options.html             # Ayarlar sayfası HTML
-├── options.css              # Ayarlar sayfası stilleri
-├── webpack.*.js             # Webpack konfigürasyonları
-├── tailwind.config.js       # Tailwind CSS konfigürasyonu
-├── tsconfig.json            # TypeScript konfigürasyonu
-├── jest.config.js           # Jest test konfigürasyonu
-└── package.json             # Proje bağımlılıkları
+│   │   ├── storage-service.ts        # Veri depolama
+│   │   ├── notification-service.ts   # Bildirimler
+│   │   ├── dom-service.ts            # DOM manipülasyonu
+│   │   ├── css-service.ts            # CSS injection
+│   │   ├── logging-service.ts        # Loglama
+│   │   ├── preferences-service.ts    # Ayar yönetimi
+│   │   ├── container-service.ts      # UI container'ları
+│   │   ├── container-theme-service.ts # Tema yönetimi
+│   │   ├── observer-service.ts       # DOM gözlemleme
+│   │   ├── event-bus.ts              # Event sistemi
+│   │   ├── font-loader-service.ts    # Font yükleme
+│   │   ├── communication-service.ts   # Background iletişimi
+│   │   ├── accessibility-service.ts   # Erişilebilirlik
+│   │   └── utilities.ts              # Yardımcı fonksiyonlar
+│   ├── 📁 commands/                  # Command pattern
+│   │   ├── 📁 blocking/              # Engelleme komutları
+│   │   ├── 📁 sorting/               # Sıralama komutları
+│   │   │   ├── 📁 strategies/        # Sıralama stratejileri
+│   │   │   │   ├── DateSortingStrategy.ts
+│   │   │   │   ├── AuthorSortingStrategy.ts
+│   │   │   │   ├── LengthSortingStrategy.ts
+│   │   │   │   └── UserProfileStrategies.ts
+│   │   │   └── SortEntriesCommand.ts
+│   │   ├── 📁 entries/               # Entry komutları
+│   │   ├── 📁 screenshots/           # Ekran görüntüsü
+│   │   ├── 📁 copying/               # Kopyalama
+│   │   ├── CommandFactory.ts         # Komut fabrikası
+│   │   ├── CommandInvoker.ts         # Komut çalıştırıcı
+│   │   └── CommandHistory.ts         # Komut geçmişi
+│   ├── 📁 interfaces/                # TypeScript arayüzleri
+│   │   ├── 📁 services/              # Servis arayüzleri
+│   │   ├── 📁 components/            # Component arayüzlери
+│   │   └── 📁 commands/              # Komut arayüzleri
+│   ├── 📁 di/                        # Dependency Injection
+│   │   └── initialize-di.ts          # DI container kurulumu
+│   ├── 📁 ui/                        # UI katmanı
+│   │   ├── 📁 components/            # UI bileşenleri
+│   │   ├── 📁 services/              # UI servisleri
+│   │   └── 📁 interfaces/            # UI arayüzleri
+│   ├── 📁 core/                      # Temel sınıflar
+│   ├── 📁 infrastructure/            # Altyapı katmanı
+│   ├── 📁 constants/                 # Sabitler
+│   │   └── fonts.ts                  # Font tanımlamaları
+│   ├── 📁 utils/                     # Yardımcı fonksiyonlar
+│   ├── 📁 types/                     # TypeScript tip tanımları
+│   ├── 📁 factories/                 # Factory pattern
+│   ├── 📁 test/                      # Test utilities
+│   ├── content.ts                    # Ana content script
+│   ├── background.ts                 # Background script
+│   ├── options.ts                    # Ayarlar sayfası
+│   ├── constants.ts                  # Genel sabitler
+│   └── types.ts                      # Tip tanımları
+├── 📁 tests/                         # Test dosyaları
+│   ├── 📁 unit/                      # Unit testler
+│   ├── 📁 integration/               # Entegrasyon testleri
+│   └── 📁 fixtures/                  # Test verileri
+├── 📁 scripts/                       # Build scriptleri
+│   └── package-extension.js          # Paketleme scripti
+├── 📁 resources/                     # Kaynak dosyalar
+├── 📁 examples/                      # Örnek kodlar
+├── 📄 manifest.json                  # Chrome uzantı manifestoası
+├── 📄 options.html                   # Ayarlar sayfası HTML
+├── 📄 options.css                    # Ayarlar sayfası CSS
+├── 📄 package.json                   # Node.js bağımlılıkları
+├── 📄 tsconfig.json                  # TypeScript yapılandırması
+├── 📄 webpack.common.js              # Webpack ortak ayarları
+├── 📄 webpack.dev.js                 # Development build
+├── 📄 webpack.prod.js                # Production build
+├── 📄 postcss.config.js              # PostCSS yapılandırması
+├── 📄 tailwind.config.js             # Tailwind CSS ayarları
+├── 📄 jest.config.js                 # Jest test yapılandırması
+└── 📄 README.md                      # Bu dosya
 ```
 
-## 🔧 Kullanılan Teknolojiler
-- **TypeScript**: Tip güvenli JavaScript
-- **Webpack**: Modül paketleyici
-- **Tailwind CSS**: Utility-first CSS framework
-- **Jest**: Test framework
-- **html2canvas**: DOM elementlerini görüntüye çevirme
-- **Chrome Extensions API**: Tarayıcı uzantı geliştirme
+## 🔧 Teknik Detaylar
 
-## 📋 Katkıda Bulunma
-1. Projeyi forklayın
-2. Kendi branch'ınızı oluşturun (`git checkout -b ozellik/harika-eklenti`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Harika bir özellik ekledim'`)
-4. Branch'ınıza push yapın (`git push origin ozellik/harika-eklenti`)
-5. Bir Pull Request açın
+### Teknoloji Stack'i
+- **TypeScript**: Full type safety ve modern JavaScript
+- **Webpack**: Module bundling ve build optimization
+- **PostCSS + Tailwind**: Modern CSS processing
+- **Jest**: Unit ve integration testing
+- **Chrome Extension Manifest V3**: Modern extension API
+- **Material Design Icons**: Consistent iconography
+- **html2canvas**: Screenshot functionality
 
-### Katkı Yönergeleri
-- Kod standartlarına uyun (ESLint/Prettier)
-- Test yazın ve mevcut testlerin geçtiğinden emin olun
-- Commit mesajlarını açıklayıcı yazın
-- Büyük değişiklikler için önce issue açın
+### Performans Optimizasyonları
+- **Lazy Loading**: Component'ları ihtiyaç duyulduğunda yükle
+- **Debouncing**: Arama ve scroll event'lerinde performans
+- **Memoization**: Pahalı hesaplamaları cache'le
+- **Virtual Scrolling**: Büyük listelerde performans
+- **Service Worker**: Background işlemler için
+- **IndexedDB**: Büyük veri setleri için local storage
+
+### Güvenlik Önlemleri
+- **Content Security Policy**: XSS koruması
+- **Input Validation**: Tüm kullanıcı girdilerini doğrula
+- **Rate Limiting**: API isteklerinde hız sınırı
+- **HTTPS Only**: Güvenli bağlantı zorunluluğu
+- **Permission Principle**: Minimum gerekli izinler
+
+### Browser Uyumluluğu
+- ✅ Chrome 88+
+- ✅ Chromium 88+
+- ✅ Edge 88+
+- ✅ Opera 74+
+- ❌ Firefox (farklı extension API)
+- ❌ Safari (farklı extension API)
+
+### API Kullanımı
+```typescript
+// Chrome Extension APIs
+chrome.storage.sync.get()
+chrome.storage.local.set()
+chrome.runtime.sendMessage()
+chrome.contextMenus.create()
+chrome.notifications.create()
+chrome.alarms.create()
+chrome.tabs.query()
+```
+
+### Veri Yapıları
+```typescript
+// Author Highlight Data
+interface AuthorHighlight {
+    color: string;
+    opacity: number;
+    notes: string;
+    enabled: boolean;
+    lastSeen: number;
+    entryCount: number;
+}
+
+// Block Operation Data
+interface BlockOperationRequest {
+    entryId: string;
+    blockType: BlockType;
+    includeThreadBlocking: boolean;
+    customNote?: string;
+}
+
+// Search Pattern
+interface SearchPattern {
+    query: string;
+    caseSensitive: boolean;
+    useRegex: boolean;
+    normalizeText: boolean;
+}
+```
+
+## 🤝 Katkıda Bulunma
+
+### Katkı Türleri
+- 🐛 **Bug Reports**: Hata bildirimleri
+- 💡 **Feature Requests**: Yeni özellik önerileri
+- 📝 **Documentation**: Dokümantasyon iyileştirmeleri
+- 🧪 **Testing**: Test yazma ve iyileştirme
+- 🌐 **Translations**: Çeviri desteği
+- 🎨 **UI/UX**: Tasarım iyileştirmeleri
+
+### Geliştirme Süreci
+1. **Issue Oluştur**: Önce issue açarak önerinizi tartışın
+2. **Fork & Clone**: Projeyi fork'layın ve local'e kopyalayın
+3. **Branch Oluştur**: Feature branch oluşturun
+4. **Develop**: Kodu yazın ve test edin
+5. **Test**: Unit ve integration testlerini çalıştırın
+6. **Commit**: Anlamlı commit mesajları yazın
+7. **Pull Request**: Detaylı PR açıklaması yapın
+
+### Kod Standartları
+```typescript
+// ESLint + Prettier kullanın
+npm run lint
+npm run format
+
+// TypeScript strict mode
+"strict": true,
+"noImplicitAny": true,
+"strictNullChecks": true
+
+// Naming conventions
+class MyService { }          // PascalCase for classes
+const myVariable = '';       // camelCase for variables
+interface IMyInterface { }   // Interface prefix with 'I'
+enum MyEnum { }             // PascalCase for enums
+```
+
+### Commit Message Format
+```
+type(scope): description
+
+feat(search): add regex support for advanced search
+fix(blocking): resolve timeout issue in bulk operations
+docs(readme): update installation instructions
+test(services): add unit tests for AuthorService
+refactor(ui): reorganize component structure
+style(css): fix indentation in theme files
+perf(observer): optimize DOM mutation handling
+```
+
+### PR Checklist
+- [ ] Code compiles without errors
+- [ ] All tests pass
+- [ ] New features have tests
+- [ ] Documentation updated
+- [ ] No breaking changes (or documented)
+- [ ] Performance impact considered
+- [ ] Security implications reviewed
 
 ## 📄 Lisans
-MIT Lisansı altında yayımlanmıştır. Detaylar için LICENSE dosyasına bakın.
 
-## ⚠️ Sorumluluk Reddi
-Bu uzantı Ekşi Sözlük ile resmi olarak ilişkili değildir. Kullanırken site kurallarına ve görgü kurallarına özen gösterin.
+MIT License - detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
-## 🔄 Sürüm Geçmişi
-- **v1.0.0**: İlk sürüm
-  - Toplu kullanıcı engelleme
-  - Temel yazar vurgulama
-  - Entry sıralama
-  - Çöp kutusu yönetimi
-  - Arama ve filtreleme
-  - Oy takip sistemi
+### Üçüncü Taraf Kütüphaneler
+- **html2canvas**: MIT License
+- **Material Design Icons**: Apache License 2.0
+- **TypeScript**: Apache License 2.0
+- **Webpack**: MIT License
+- **Jest**: MIT License
+
+---
+
+## 📞 İletişim ve Destek
+
+### Bug Bildirimi
+GitHub Issues üzerinden bug bildirimi yapabilirsiniz:
+1. Detaylı açıklama
+2. Reproduksiyon adımları
+3. Beklenen vs gerçek davranış
+4. Screenshot/video (varsa)
+5. Browser ve uzantı versiyonu
+
+### Feature Requests
+Yeni özellik önerileri için:
+1. Use case açıklaması
+2. Benzer çözümlerle karşılaştırma
+3. Mockup/wireframe (varsa)
+4. Implementation önerileri
+
+### Güvenlik
+Güvenlik açıkları için: [security@example.com](mailto:security@example.com)
+
+---
+
+**Ekşi Artı** ile Ekşi Sözlük deneyiminizi bir üst seviyeye taşıyın! 🚀
+
+*Bu proje Ekşi Sözlük ile resmi bir bağlantısı bulunmamaktadır ve tamamen bağımsız bir topluluk projesidir.*
