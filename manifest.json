@@ -6,7 +6,6 @@
   "author": "Straits",
   "homepage_url": "https://eksisozluk.com/biri/straits",
   "minimum_chrome_version": "88",
-  "default_locale": "tr",
   "short_name": "EkşiArtı",
   "icons": {
     "16": "icons/icon16.png",
