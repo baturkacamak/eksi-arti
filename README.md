@@ -28,12 +28,12 @@
 - **Çoklu Engelleme Seçenekleri**:
   - Sessiz alma (yazılarını görürsünüz)
   - Tamamen engelleme
-  - Başlık engelleme seçeneği
+- Başlık engelleme seçeneği
 - **Akıllı İşlem Yönetimi**:
-  - Özel not ekleme imkanı
-  - İşlemi istediğiniz anda duraklatabilir ve daha sonra devam ettirebilirsiniz
-  - Sunucu yükünü azaltmak için yerleşik gecikme koruması
-  - Detaylı ilerleme bildirimleri
+- Özel not ekleme imkanı
+- İşlemi istediğiniz anda duraklatabilir ve daha sonra devam ettirebilirsiniz
+- Sunucu yükünü azaltmak için yerleşik gecikme koruması
+- Detaylı ilerleme bildirimleri
   - Hata durumunda otomatik yeniden deneme
 - **Çoklu Entry Desteği**: Birden fazla yazıyı aynı anda işleme alma
 - **Durum Kaydetme**: İşlemi yarıda bırakıp daha sonra devam etme

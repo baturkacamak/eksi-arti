@@ -62,3 +62,21 @@ echo -e "${GREEN}📦 Package location: ${BUILDS_DIR}/${ZIP_NAME}${NC}"
 # Show file size
 FILE_SIZE=$(du -h "$BUILDS_DIR/$ZIP_NAME" | cut -f1)
 echo -e "${BLUE}📊 Package size: ${FILE_SIZE}${NC}"
+
+# Show what's included in the package
+echo -e "${CYAN}📋 Package contains (from dist/ directory):${NC}"
+echo -e "${YELLOW}   ├── manifest.json (Turkish localized)${NC}"
+echo -e "${YELLOW}   ├── background.js${NC}"
+echo -e "${YELLOW}   ├── content.js${NC}"
+echo -e "${YELLOW}   ├── options.html/css/js${NC}"
+echo -e "${YELLOW}   ├── icons/${NC}"
+echo -e "${YELLOW}   └── lib/html2canvas.min.js${NC}"
+
+echo -e "${GREEN}🎯 Ready for Chrome Web Store submission!${NC}"
+echo -e "${BLUE}💡 Note: Only dist/ contents are packaged to avoid manifest conflicts${NC}"
+
+# Check if checklist was created
+CHECKLIST_FILE="$BUILDS_DIR/submission-checklist-v${VERSION}.md"
+if [ -f "$CHECKLIST_FILE" ]; then
+    echo -e "${CYAN}📝 Submission checklist created: ${CHECKLIST_FILE}${NC}"
+fi
