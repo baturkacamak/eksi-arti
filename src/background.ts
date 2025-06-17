@@ -188,7 +188,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         if (details.reason === 'install') {
             // First install
            loggingService.debug('Extension installed');
-            chrome.runtime.openOptionsPage();
+            // Options page is available via right-click on extension icon
         } else if (details.reason === 'update') {
             // Extension updated
             const currentVersion = chrome.runtime.getManifest().version;
@@ -213,5 +213,12 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.action.onClicked.addListener((tab) => {
-    chrome.runtime.openOptionsPage();
+    // Extension icon clicked - you can add your preferred action here
+    // For now, we'll show a notification instead of opening options
+    chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon48.png',
+        title: 'Ekşi Artı',
+        message: 'Extension is active! Right-click the icon to access options.'
+    });
 });
