@@ -261,38 +261,8 @@ export class UIService {
      * Check for saved state and show notification if exists
      */
     private async checkForSavedState(): Promise<void> {
-        try {
-            const storage = this.container.resolve<StorageService>('StorageService');
-            const result = await storage.getItem<BlockerState>(STORAGE_KEYS.CURRENT_OPERATION, undefined, StorageArea.LOCAL);
-            const savedState = result.success && result.data ? result.data : null;
-
-            if (savedState && Date.now() - savedState.timestamp < 3600000) { // Less than 1 hour old
-                const actionType = savedState.blockType === 'u' ? 'sessiz alma' : 'engelleme';
-
-                // Show the notification with more concise wording
-                await this.notificationService.show(
-                    `<div class="eksi-notification-info">
-                        ${this.iconComponent.create({
-                        name: 'info',
-                        color: '#42a5f5',
-                        size: 'medium'
-                    }).outerHTML}
-                        Yazı <strong>${savedState.entryId}</strong> için devam eden ${actionType} işlemi var.
-                        <div>
-                            <strong>${savedState.processedUsers.length}</strong>/${savedState.totalUserCount} kullanıcı işlendi
-                        </div>
-                    </div>`,
-                    {
-                        timeout: 0, // Don't auto-close this notification since it has an action button
-                        width: '380px' // Set explicit width to ensure it's not too wide
-                    }
-                );
-
-
-            }
-        } catch (error) {
-            this.loggingService.error('Error checking for saved state:', error);
-        }
+        // Notification removed as requested by user
+        // The method is kept for potential future use but does nothing now
     }
 
     // Add a method to check if we're on an entries page

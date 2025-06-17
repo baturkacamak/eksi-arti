@@ -13,11 +13,13 @@ import {LoggingService} from './logging-service';
 interface BackgroundBlockingState {
     isProcessing: boolean;
     entryId: string | null;
+    entryIds: string[]; // Track multiple entries in the current operation
     blockType: BlockType;
     includeThreadBlocking: boolean;
     processedUsers: Set<string>;
     skippedUsers: string[];
     pendingUsers: string[];
+    allFavoritesMap: Map<string, string[]>; // Track favorites per entry
     totalUserCount: number;
     currentBlocked: number;
     abortProcessing: boolean;
@@ -29,11 +31,13 @@ export class BackgroundBlockingService {
     private state: BackgroundBlockingState = {
         isProcessing: false,
         entryId: null,
+        entryIds: [],
         blockType: BlockType.MUTE,
         includeThreadBlocking: false,
         processedUsers: new Set(),
         skippedUsers: [],
         pendingUsers: [],
+        allFavoritesMap: new Map(),
         totalUserCount: 0,
         currentBlocked: 0,
         abortProcessing: false,
@@ -41,8 +45,8 @@ export class BackgroundBlockingService {
         maxErrors: 5
     };
 
-
     private processingInterval: NodeJS.Timeout | null = null;
+    private monitoringInterval: NodeJS.Timeout | null = null; // Add monitoring interval reference
     private readonly PROCESSING_INTERVAL = 8000; // 8 seconds between users
 
     constructor(private loggingService: LoggingService) {
@@ -55,8 +59,13 @@ export class BackgroundBlockingService {
      * This creates a persistent background process that checks for work to do
      */
     private startMonitoring() {
+        // Clear existing monitoring interval if any
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+        }
+        
         // Check every 2 seconds for pending work
-        setInterval(async () => {
+        this.monitoringInterval = setInterval(async () => {
             try {
                 if (this.state.isProcessing && !this.state.abortProcessing && 
                     this.state.pendingUsers.length > 0 && this.state.errorCount < this.state.maxErrors) {
@@ -244,18 +253,27 @@ export class BackgroundBlockingService {
                 currentlyProcessing: this.state.isProcessing
             });
             
+            // Check if an operation is already in progress
             if (this.state.isProcessing) {
-                this.loggingService.warn('Blocking operation already in progress');
-                return { success: false, error: 'Operation already in progress' };
+                // Try to add to current operation if compatible
+                const canMerge = await this.canMergeOperation(entryId, blockType, includeThreadBlocking);
+                if (canMerge) {
+                    return await this.addToCurrentOperation(entryId, blockType, includeThreadBlocking);
+                } else {
+                    this.loggingService.warn('Blocking operation already in progress with incompatible settings');
+                    return { success: false, error: 'Operation already in progress with incompatible settings' };
+                }
             }
 
             // Initialize state
             this.state.isProcessing = true;
             this.state.entryId = entryId;
+            this.state.entryIds = [entryId];
             this.state.blockType = blockType;
             this.state.includeThreadBlocking = includeThreadBlocking;
             this.state.abortProcessing = false;
             this.state.errorCount = 0;
+            this.state.allFavoritesMap.clear();
 
             // Try to load existing state first
             const savedState = await this.loadState();
@@ -263,11 +281,13 @@ export class BackgroundBlockingService {
                 this.state.processedUsers = new Set(savedState.processedUsers);
                 this.state.skippedUsers = savedState.skippedUsers || [];
                 this.state.totalUserCount = savedState.totalUserCount;
+                this.state.entryIds = savedState.currentOperationEntries || [entryId];
                 this.state.currentBlocked = this.state.processedUsers.size + this.state.skippedUsers.length + 1;
                 this.loggingService.info('Loaded existing state', {
                     processed: this.state.processedUsers.size,
                     skipped: this.state.skippedUsers.length,
-                    total: this.state.totalUserCount
+                    total: this.state.totalUserCount,
+                    entryIds: this.state.entryIds
                 });
             } else {
                 this.state.processedUsers = new Set();
@@ -291,6 +311,9 @@ export class BackgroundBlockingService {
             if (!userUrls || userUrls.length === 0) {
                 throw new Error('No favorites found or entry does not exist');
             }
+            
+            // Store favorites for this entry
+            this.state.allFavoritesMap.set(entryId, userUrls);
             
             // If not resuming, set total count
             if (!savedState || savedState.entryId !== entryId) {
@@ -319,6 +342,9 @@ export class BackgroundBlockingService {
                 total: this.state.totalUserCount,
                 message: `${this.state.pendingUsers.length} kullanıcı hazırlanıyor...`
             });
+
+            // Restart monitoring loop to ensure it's running
+            this.startMonitoring();
 
             // Start processing - the monitoring loop will handle the rest
             this.loggingService.info('Background blocking started - persistent processing will continue automatically');
@@ -360,6 +386,12 @@ export class BackgroundBlockingService {
                 this.processingInterval = null;
             }
             
+            // Clear monitoring interval to completely stop the operation
+            if (this.monitoringInterval) {
+                clearInterval(this.monitoringInterval);
+                this.monitoringInterval = null;
+            }
+            
             this.clearState().catch(error => {
                 this.loggingService.error('Error clearing state after stop:', error);
             });
@@ -375,6 +407,12 @@ export class BackgroundBlockingService {
         if (this.processingInterval) {
             clearTimeout(this.processingInterval);
             this.processingInterval = null;
+        }
+        
+        // Clear monitoring interval to completely stop the operation
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+            this.monitoringInterval = null;
         }
         
         this.clearState().catch(error => {
@@ -395,6 +433,7 @@ export class BackgroundBlockingService {
         return {
             isProcessing: this.state.isProcessing,
             entryId: this.state.entryId,
+            entryIds: this.state.entryIds,
             processedUsers: this.state.processedUsers.size,
             totalUsers: this.state.totalUserCount,
             blockType: this.state.blockType
@@ -445,8 +484,6 @@ export class BackgroundBlockingService {
             await this.clearState();
         }
     }
-
-
 
     private async processUser(userUrl: string): Promise<void> {
         const username = this.getUsernameFromUrl(userUrl);
@@ -637,7 +674,7 @@ export class BackgroundBlockingService {
             timestamp: Date.now(),
             includeThreadBlocking: this.state.includeThreadBlocking,
             skippedUsers: this.state.skippedUsers,
-            currentOperationEntries: [this.state.entryId!]
+            currentOperationEntries: this.state.entryIds
         };
 
         await storageService.setItem(STORAGE_KEYS.CURRENT_OPERATION, state, StorageArea.LOCAL);
@@ -654,5 +691,107 @@ export class BackgroundBlockingService {
 
     private delay(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Check if a new operation can be merged with the current one
+     */
+    private async canMergeOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean): Promise<boolean> {
+        // Check if entry is already being processed
+        if (this.state.entryIds.includes(entryId)) {
+            this.loggingService.info(`Entry ${entryId} already being processed, skipping duplicate`);
+            return false;
+        }
+
+        // Check if block types are compatible
+        if (blockType !== this.state.blockType) {
+            this.loggingService.warn(`Cannot add entry ${entryId} - incompatible block type`, {
+                currentBlockType: this.state.blockType,
+                requestedBlockType: blockType
+            });
+            return false;
+        }
+
+        // Check if thread blocking settings are compatible
+        if (includeThreadBlocking !== this.state.includeThreadBlocking) {
+            this.loggingService.warn(`Cannot add entry ${entryId} - incompatible thread blocking setting`, {
+                currentThreadBlocking: this.state.includeThreadBlocking,
+                requestedThreadBlocking: includeThreadBlocking
+            });
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Add an entry to the current operation
+     */
+    private async addToCurrentOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean): Promise<any> {
+        try {
+            this.loggingService.info(`Adding entry ${entryId} to current blocking operation`, {
+                entryId,
+                currentEntries: this.state.entryIds.length,
+                blockType,
+                includeThreadBlocking
+            });
+
+            // Fetch favorites for the new entry
+            const favorites = await this.fetchFavorites(entryId);
+            this.state.allFavoritesMap.set(entryId, favorites);
+            this.state.entryIds.push(entryId);
+
+            // Get all unique users from all entries
+            const allUsers = new Set<string>();
+            this.state.allFavoritesMap.forEach(favs => {
+                favs.forEach(userUrl => {
+                    const username = this.getUsernameFromUrl(userUrl);
+                    if (!this.state.processedUsers.has(username)) {
+                        allUsers.add(userUrl);
+                    }
+                });
+            });
+
+            // Update pending users and total count
+            const currentPendingSet = new Set(this.state.pendingUsers);
+            const newUsers = Array.from(allUsers).filter(userUrl => !currentPendingSet.has(userUrl));
+            
+            // Append new users to the existing pending list
+            this.state.pendingUsers.push(...newUsers);
+            this.state.totalUserCount = this.state.pendingUsers.length;
+            
+            this.loggingService.info(`Added ${newUsers.length} new users to pending list`, {
+                originalPendingCount: currentPendingSet.size,
+                newUsersCount: newUsers.length,
+                totalPendingCount: this.state.pendingUsers.length
+            });
+
+            // Update progress
+            const totalProcessed = this.state.processedUsers.size + this.state.skippedUsers.length;
+            const entriesText = this.state.entryIds.length > 1 
+                ? `${this.state.entryIds.length} yazı` 
+                : 'yazı';
+            
+            this.sendProgressUpdate({
+                current: totalProcessed,
+                total: this.state.totalUserCount,
+                message: `${entriesText} için ${this.state.totalUserCount} kullanıcı işleniyor • +${newUsers.length} yeni kullanıcı eklendi`
+            });
+
+            // Save the updated state
+            await this.saveState();
+
+            this.loggingService.info(`Successfully added entry ${entryId} to current operation`, {
+                entryId,
+                addedUsers: favorites.length,
+                totalEntries: this.state.entryIds.length,
+                totalUsers: this.state.totalUserCount
+            });
+
+            return { success: true, message: `Added ${newUsers.length} new users to current operation` };
+        } catch (error) {
+            this.loggingService.error(`Failed to add entry ${entryId} to current operation:`, error);
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+        }
     }
 } 

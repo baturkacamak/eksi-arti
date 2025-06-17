@@ -68,20 +68,10 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
     public async display(): Promise<void> {
         try {
-            // Check if there's already a blocking operation in progress
-            const response = await this.communicationService.sendMessage({ action: 'getBlockingStatus' });
-            
-            if (response.success && response.data && response.data.isProcessing) {
-                // There's already an operation in progress
-                await this.showOperationInProgressModal(response.data);
-            } else {
-                // No operation in progress, show normal modal
-                await this.showNormalModal();
-            }
-        } catch (error) {
-            this.loggingService.error('Error checking blocking status:', error);
-            // Fallback to normal modal
+            // Always show the normal modal - user selections will be queued
             await this.showNormalModal();
+        } catch (error) {
+            this.loggingService.error('Error displaying block options modal:', error);
         }
     }
 
@@ -115,84 +105,9 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         }
     }
 
-    private async showOperationInProgressModal(operationData: any): Promise<void> {
-        try {
-            // Create a simpler modal for operation in progress
-            this.contentElement = this.domService.createElement('div');
 
-            const title = this.domService.createElement('div');
-            this.domService.addClass(title, 'eksi-modal-title');
-            title.innerHTML = `
-                <div class="eksi-modal-title-content">
-                    <div class="title-left">Devam Eden İşlem</div>
-                </div>
-            `;
 
-            const infoSection = this.domService.createElement('div');
-            this.domService.addClass(infoSection, 'eksi-modal-info-section');
-            
-            const actionType = operationData.blockType === 'u' ? 'sessiz alma' : 'engelleme';
-            
-            infoSection.innerHTML = `
-                <div class="operation-info">
-                    <p><strong>Entry ${operationData.entryId}</strong> için ${actionType} işlemi devam ediyor.</p>
-                    <p><strong>${operationData.processedUsers}</strong> / <strong>${operationData.totalUsers}</strong> kullanıcı işlendi.</p>
-                    <p>İşlem arka planda devam etmekte. Sayfa değiştirseniz de durmaz.</p>
-                </div>
-            `;
 
-            const actionsSection = this.domService.createElement('div');
-            this.domService.addClass(actionsSection, 'eksi-modal-actions');
-
-            const stopButton = this.specificButtonComponent.create({
-                text: '⏹ İşlemi Durdur',
-                variant: ButtonVariant.DANGER,
-                onClick: () => this.stopCurrentOperation(),
-                fullWidth: true
-            });
-
-            const cancelButton = this.specificButtonComponent.create({
-                text: 'Tamam',
-                variant: ButtonVariant.DEFAULT,
-                onClick: () => this.close(),
-                fullWidth: true
-            });
-
-            this.domService.appendChild(actionsSection, stopButton);
-            this.domService.appendChild(actionsSection, cancelButton);
-
-            this.domService.appendChild(this.contentElement, title);
-            this.domService.appendChild(this.contentElement, infoSection);
-            this.domService.appendChild(this.contentElement, actionsSection);
-
-            // Show the modal
-            this.modalComponent.show({
-                showCloseButton: false,
-                allowBackdropClose: true,
-                allowEscapeClose: true
-            });
-
-        this.injectContentIntoModal();
-
-        } catch (error) {
-            this.loggingService.error('Error showing operation in progress modal:', error);
-        }
-    }
-
-    private async stopCurrentOperation(): Promise<void> {
-        try {
-            const response = await this.communicationService.sendMessage({ action: 'stopBlocking' });
-            
-            if (response.success) {
-                this.loggingService.info('Blocking operation stopped successfully');
-                this.close();
-            } else {
-                this.loggingService.error('Failed to stop blocking operation:', response.error);
-            }
-        } catch (error) {
-            this.loggingService.error('Error stopping blocking operation:', error);
-        }
-    }
 
     public close(): void {
         this.modalComponent.close();
