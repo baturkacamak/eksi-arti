@@ -13,6 +13,21 @@ export class CopyButtonComponent implements ICopyButtonComponent {
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
     private static stylesApplied = false;
     private observerId: string = '';
+    
+    // Icon configuration constants
+    private static readonly COPY_ICONS = {
+        DEFAULT: 'content_copy'
+    } as const;
+    
+    private static readonly COPY_COLORS = {
+        DEFAULT: '#81c14b'
+    } as const;
+    
+    private static readonly COPY_TOOLTIPS = {
+        DEFAULT: 'İçeriği kopyala',
+        SUCCESS: 'Kopyalandı!',
+        ERROR: 'Kopyalama başarısız!'
+    } as const;
 
     constructor(
         private domService: IDOMService,
@@ -139,13 +154,12 @@ export class CopyButtonComponent implements ICopyButtonComponent {
         this.domService.addClass(buttonContainer, "eksi-copy-button");
         this.domService.addClass(buttonContainer, "eksi-button"); // For theme compatibility
 
-        buttonContainer.setAttribute("title", "İçeriği kopyala");
-        buttonContainer.setAttribute("aria-label", "İçeriği kopyala");
+        this.updateButtonTooltip(buttonContainer, CopyButtonComponent.COPY_TOOLTIPS.DEFAULT);
 
         const copyIcon = this.iconComponent.create({
-            name: "content_copy",
+            name: CopyButtonComponent.COPY_ICONS.DEFAULT,
             size: "small",
-            color: "#81c14b",
+            color: CopyButtonComponent.COPY_COLORS.DEFAULT,
             className: "eksi-copy-icon", // For easier targeting in transitions
         });
 
@@ -169,8 +183,8 @@ export class CopyButtonComponent implements ICopyButtonComponent {
                         if (iconElement) {
                             this.iconComponent.showSuccessState(iconElement, 1500);
                         }
-                        const originalTitle = buttonContainer.getAttribute("title") || "İçeriği kopyala";
-                        buttonContainer.setAttribute("title", "Kopyalandı!");
+                        const originalTitle = buttonContainer.getAttribute("title") || CopyButtonComponent.COPY_TOOLTIPS.DEFAULT;
+                        this.updateButtonTooltip(buttonContainer, CopyButtonComponent.COPY_TOOLTIPS.SUCCESS);
                         setTimeout(() => {
                             this.resetButtonState(buttonContainer, originalTitle);
                         }, 1500);
@@ -179,9 +193,9 @@ export class CopyButtonComponent implements ICopyButtonComponent {
                         if (iconElement) {
                             this.iconComponent.showErrorState(iconElement, 1500);
                         }
-                        buttonContainer.setAttribute("title", "Kopyalama başarısız!");
+                        this.updateButtonTooltip(buttonContainer, CopyButtonComponent.COPY_TOOLTIPS.ERROR);
                         setTimeout(() => {
-                            this.resetButtonState(buttonContainer, "İçeriği kopyala");
+                            this.resetButtonState(buttonContainer, CopyButtonComponent.COPY_TOOLTIPS.DEFAULT);
                         }, 1500);
                     }
                 }).catch((error) => {
@@ -196,12 +210,20 @@ export class CopyButtonComponent implements ICopyButtonComponent {
     }
 
     /**
+     * Update button tooltip
+     */
+    private updateButtonTooltip(button: HTMLElement, tooltip: string): void {
+        button.setAttribute("title", tooltip);
+        button.setAttribute("aria-label", tooltip);
+    }
+
+    /**
      * Reset button to original state after transition completes
      */
     private resetButtonState(button: HTMLElement, originalTitle: string): void {
         this.domService.removeClass(button, "in-transition");
         this.domService.removeClass(button, "eksi-copy-success");
-        button.setAttribute("title", originalTitle);
+        this.updateButtonTooltip(button, originalTitle);
         this.inTransition.delete(button);
     }
 

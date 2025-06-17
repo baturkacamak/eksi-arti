@@ -19,6 +19,15 @@ import { BlockOptionsModal } from './block-options-modal';
 export class BlockFavoritesButtonComponent extends BaseFeatureComponent implements IBlockFavoritesButtonComponent {
     private blockButtons: Map<string, HTMLElement> = new Map();
     private static stylesApplied = false;
+    
+    // Icon configuration constants
+    private static readonly BLOCK_ICONS = {
+        DEFAULT: 'block'
+    } as const;
+    
+    private static readonly BLOCK_COLORS = {
+        DEFAULT: '#ff7063'
+    } as const;
 
     constructor(
         domService: IDOMService,
@@ -171,9 +180,9 @@ export class BlockFavoritesButtonComponent extends BaseFeatureComponent implemen
         this.domService.addClass(buttonContainer, 'eksi-button');
 
         const blockIcon = this.iconComponent.create({
-            name: 'block',
+            name: BlockFavoritesButtonComponent.BLOCK_ICONS.DEFAULT,
             size: 'small',
-            color: '#ff7063',
+            color: BlockFavoritesButtonComponent.BLOCK_COLORS.DEFAULT,
             className: 'eksi-block-favorites-icon'
         });
         this.domService.appendChild(buttonContainer, blockIcon);

@@ -266,45 +266,38 @@ export class ButtonComponent implements IButtonComponent {
     }
 
     /**
+     * Apply temporary animation class and remove it after delay
+     */
+    private applyTemporaryAnimation(className: string, duration: number = 600): void {
+        if (!this.buttonElement) return;
+        
+        this.domService.addClass(this.buttonElement, className);
+        setTimeout(() => {
+            if (this.buttonElement) {
+                this.domService.removeClass(this.buttonElement, className);
+            }
+        }, duration);
+    }
+
+    /**
      * Trigger pulse animation
      */
     private triggerPulse(): void {
-        if (!this.buttonElement) return;
-        
-        this.domService.addClass(this.buttonElement, 'eksi-button-pulse-active');
-        setTimeout(() => {
-            if (this.buttonElement) {
-                this.domService.removeClass(this.buttonElement, 'eksi-button-pulse-active');
-            }
-        }, 600);
+        this.applyTemporaryAnimation('eksi-button-pulse-active');
     }
 
     /**
      * Trigger bounce animation
      */
     private triggerBounce(): void {
-        if (!this.buttonElement) return;
-        
-        this.domService.addClass(this.buttonElement, 'eksi-button-bounce-active');
-        setTimeout(() => {
-            if (this.buttonElement) {
-                this.domService.removeClass(this.buttonElement, 'eksi-button-bounce-active');
-            }
-        }, 600);
+        this.applyTemporaryAnimation('eksi-button-bounce-active');
     }
 
     /**
      * Trigger shake animation
      */
     private triggerShake(): void {
-        if (!this.buttonElement) return;
-        
-        this.domService.addClass(this.buttonElement, 'eksi-button-shake-active');
-        setTimeout(() => {
-            if (this.buttonElement) {
-                this.domService.removeClass(this.buttonElement, 'eksi-button-shake-active');
-            }
-        }, 600);
+        this.applyTemporaryAnimation('eksi-button-shake-active');
     }
 
     /**

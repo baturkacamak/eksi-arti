@@ -19,6 +19,22 @@ import { IDocumentStateService } from "../../interfaces/services/IDocumentStateS
 export class ScreenshotButtonComponent extends BaseFeatureComponent implements IScreenshotButtonComponent {
     private screenshotButtons: Map<string, HTMLElement> = new Map();
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
+    
+    // Icon configuration constants
+    private static readonly SCREENSHOT_ICONS = {
+        DEFAULT: 'photo_camera',
+        PROCESSING: 'hourglass_empty',
+        SUCCESS_DOWNLOAD: 'check_circle',
+        SUCCESS_CLIPBOARD: 'assignment_turned_in',
+        ERROR: 'error_outline'
+    } as const;
+    
+    private static readonly SCREENSHOT_COLORS = {
+        DEFAULT: '#8e9ed9',
+        PROCESSING: '#8e9ed9',
+        SUCCESS: '#43a047',
+        ERROR: '#d9534f'
+    } as const;
 
     constructor(
         domService: IDOMService,
@@ -181,6 +197,50 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
 
     protected cleanup(): void {
         this.screenshotButtons.clear();
+    }
+
+    /**
+     * Get the screenshot icon element from a button, with error handling
+     */
+    private getIconElement(button: HTMLElement): HTMLElement | null {
+        try {
+            const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
+            if (!iconElement) {
+                this.loggingService.warn('Screenshot icon element not found in button');
+                return null;
+            }
+            return iconElement;
+        } catch (error) {
+            this.loggingService.error('Error getting screenshot icon element:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Update icon appearance (content and color)
+     */
+    private updateIconAppearance(iconElement: HTMLElement, iconName: string, color: string): void {
+        iconElement.textContent = iconName;
+        iconElement.style.color = color;
+    }
+
+    /**
+     * Show temporary state and revert after delay
+     */
+    private showTemporaryState(
+        button: HTMLElement, 
+        tempIcon: string, 
+        tempColor: string, 
+        finalCallback: () => void, 
+        delay: number = 1500
+    ): void {
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+
+        this.domService.removeClass(iconElement, 'eksi-screenshot-processing');
+        this.updateIconAppearance(iconElement, tempIcon, tempColor);
+        
+        setTimeout(finalCallback, delay);
     }
 
     /**
@@ -420,51 +480,56 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
     }
 
     private showProcessingState(button: HTMLElement): void {
-        try {
-            const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
-            if (!iconElement) return;
-            iconElement.textContent = 'hourglass_empty';
-            iconElement.style.color = '#8e9ed9';
-            this.domService.addClass(iconElement, 'eksi-screenshot-processing');
-        } catch (error) {
-            this.loggingService.error('Error showing processing state:', error);
-        }
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+        
+        this.updateIconAppearance(
+            iconElement, 
+            ScreenshotButtonComponent.SCREENSHOT_ICONS.PROCESSING, 
+            ScreenshotButtonComponent.SCREENSHOT_COLORS.PROCESSING
+        );
+        this.domService.addClass(iconElement, 'eksi-screenshot-processing');
     }
 
     private showSuccessState(button: HTMLElement, action: 'download' | 'clipboard'): void {
-        try {
-            const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
-            if (!iconElement) return;
-            this.domService.removeClass(iconElement, 'eksi-screenshot-processing');
-            iconElement.textContent = action === 'download' ? 'check_circle' : 'assignment_turned_in';
-            iconElement.style.color = '#43a047';
-            this.domService.addClass(iconElement, 'eksi-screenshot-success');
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+
+        const successIcon = action === 'download' 
+            ? ScreenshotButtonComponent.SCREENSHOT_ICONS.SUCCESS_DOWNLOAD
+            : ScreenshotButtonComponent.SCREENSHOT_ICONS.SUCCESS_CLIPBOARD;
+
+        this.domService.removeClass(iconElement, 'eksi-screenshot-processing');
+        this.updateIconAppearance(iconElement, successIcon, ScreenshotButtonComponent.SCREENSHOT_COLORS.SUCCESS);
+        this.domService.addClass(iconElement, 'eksi-screenshot-success');
+        
+        setTimeout(() => {
+            this.domService.removeClass(iconElement, 'eksi-screenshot-success');
             setTimeout(() => {
-                this.domService.removeClass(iconElement, 'eksi-screenshot-success');
-                setTimeout(() => {
-                    iconElement.textContent = 'photo_camera';
-                    iconElement.style.color = '#8e9ed9';
-                }, 200);
-            }, 1500);
-        } catch (error) {
-            this.loggingService.error('Error showing success state:', error);
-        }
+                this.updateIconAppearance(
+                    iconElement, 
+                    ScreenshotButtonComponent.SCREENSHOT_ICONS.DEFAULT, 
+                    ScreenshotButtonComponent.SCREENSHOT_COLORS.DEFAULT
+                );
+            }, 200);
+        }, 1500);
     }
 
     private showErrorState(button: HTMLElement): void {
-        try {
-            const iconElement = button.querySelector('.eksi-screenshot-icon') as HTMLElement;
-            if (!iconElement) return;
-            this.domService.removeClass(iconElement, 'eksi-screenshot-processing');
-            iconElement.textContent = 'error_outline';
-            iconElement.style.color = '#d9534f';
-
-            setTimeout(() => {
-                iconElement.textContent = 'photo_camera';
-                iconElement.style.color = '#8e9ed9';
-            }, 1500);
-        } catch (error) {
-            this.loggingService.error('Error showing error state:', error);
-        }
+        this.showTemporaryState(
+            button,
+            ScreenshotButtonComponent.SCREENSHOT_ICONS.ERROR,
+            ScreenshotButtonComponent.SCREENSHOT_COLORS.ERROR,
+            () => {
+                const iconElement = this.getIconElement(button);
+                if (iconElement) {
+                    this.updateIconAppearance(
+                        iconElement, 
+                        ScreenshotButtonComponent.SCREENSHOT_ICONS.DEFAULT, 
+                        ScreenshotButtonComponent.SCREENSHOT_COLORS.DEFAULT
+                    );
+                }
+            }
+        );
     }
 }

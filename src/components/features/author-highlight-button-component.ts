@@ -14,6 +14,18 @@ import { ITooltipComponent } from '../../interfaces/components/ITooltipComponent
  */
 export class AuthorHighlightButtonComponent extends BaseFeatureComponent implements IAuthorHighlightButtonComponent {
     private highlightButtons: Map<string, HTMLElement> = new Map();
+    
+    // Icon configuration constants
+    private static readonly HIGHLIGHT_ICONS = {
+        ACTIVE: 'lightbulb',
+        INACTIVE: 'lightbulb_outline'
+    } as const;
+    
+    private static readonly HIGHLIGHT_COLORS = {
+        ACTIVE: '#ffc107',
+        INACTIVE: '#9e9e9e',
+        ERROR: '#f44336'
+    } as const;
 
     constructor(
         domService: IDOMService,
@@ -124,6 +136,83 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
     }
 
     /**
+     * Get the appropriate icon name based on highlight state
+     */
+    private getIconName(isHighlighted: boolean): string {
+        return isHighlighted 
+            ? AuthorHighlightButtonComponent.HIGHLIGHT_ICONS.ACTIVE 
+            : AuthorHighlightButtonComponent.HIGHLIGHT_ICONS.INACTIVE;
+    }
+
+    /**
+     * Get the appropriate icon color based on highlight state
+     */
+    private getIconColor(isHighlighted: boolean): string {
+        return isHighlighted 
+            ? AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.ACTIVE 
+            : AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.INACTIVE;
+    }
+
+    /**
+     * Get the icon element from a button, with error handling
+     */
+    private getIconElement(button: HTMLElement): HTMLElement | null {
+        try {
+            const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
+            if (!iconElement) {
+                this.loggingService.warn('Icon element not found in button');
+                return null;
+            }
+            return iconElement;
+        } catch (error) {
+            this.loggingService.error('Error getting icon element:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Update icon appearance (content and color)
+     */
+    private updateIconAppearance(iconElement: HTMLElement, iconName: string, color: string): void {
+        iconElement.textContent = iconName;
+        iconElement.style.color = color;
+    }
+
+    /**
+     * Update button to reflect highlight state
+     */
+    private setButtonHighlightState(button: HTMLElement, isHighlighted: boolean): void {
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+
+        this.updateIconAppearance(iconElement, this.getIconName(isHighlighted), this.getIconColor(isHighlighted));
+        
+        // Update tooltip
+        this.tooltipComponent.updateTooltipContent(button, 
+            isHighlighted ? 'Vurgulamayı Kaldır' : 'Bu Yazarı Vurgula'
+        );
+    }
+
+    /**
+     * Show temporary state and revert after delay
+     */
+    private showTemporaryState(
+        button: HTMLElement, 
+        tempIcon: string, 
+        tempColor: string, 
+        finalCallback: () => void, 
+        delay: number = 2000
+    ): void {
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+
+        this.domService.removeClass(iconElement, 'eksi-highlight-processing');
+        this.updateIconAppearance(iconElement, tempIcon, tempColor);
+        
+        setTimeout(finalCallback, delay);
+    }
+
+    /**
      * Add a highlight button to a specific entry
      */
     private addHighlightButtonToEntry(entry: HTMLElement): void {
@@ -153,9 +242,9 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         const isHighlighted = config.authors[author] && config.authors[author].enabled;
 
         const highlightIcon = this.iconComponent.create({
-            name: isHighlighted ? 'highlight_off' : 'highlight',
+            name: this.getIconName(isHighlighted),
             size: 'small',
-            color: isHighlighted ? '#f44336' : '#ffc107',
+            color: this.getIconColor(isHighlighted),
             className: 'eksi-highlight-icon'
         });
 
@@ -208,64 +297,49 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
     }
 
     private updateButtonState(button: HTMLElement, isHighlighted: boolean): void {
-        const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
-        if (!iconElement) return;
-
-        iconElement.textContent = isHighlighted ? 'highlight_off' : 'highlight';
-        iconElement.style.color = isHighlighted ? '#f44336' : '#ffc107';
-
-        // Update tooltip
-        this.tooltipComponent.updateTooltipContent(button, 
-            isHighlighted ? 'Vurgulamayı Kaldır' : 'Bu Yazarı Vurgula'
-        );
+        this.setButtonHighlightState(button, isHighlighted);
     }
 
     private showProcessingState(button: HTMLElement): void {
-        try {
-            const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
-            if (!iconElement) return;
-            iconElement.textContent = 'hourglass_empty';
-            iconElement.style.color = '#ffc107';
-            this.domService.addClass(iconElement, 'eksi-highlight-processing');
-        } catch (error) {
-            this.loggingService.error('Error showing processing state:', error);
-        }
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+        
+        this.updateIconAppearance(iconElement, 'hourglass_empty', '#ffc107');
+        this.domService.addClass(iconElement, 'eksi-highlight-processing');
     }
 
     private showSuccessState(button: HTMLElement, action: 'add' | 'remove'): void {
-        try {
-            const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
-            if (!iconElement) return;
-            this.domService.removeClass(iconElement, 'eksi-highlight-processing');
-            iconElement.textContent = action === 'add' ? 'check_circle' : 'remove_circle';
-            iconElement.style.color = action === 'add' ? '#43a047' : '#f44336';
-            this.domService.addClass(iconElement, 'eksi-highlight-success');
+        const iconElement = this.getIconElement(button);
+        if (!iconElement) return;
+
+        const isHighlighted = action === 'add';
+        const tempIcon = action === 'add' ? 'check_circle' : 'remove_circle';
+        const tempColor = action === 'add' ? '#43a047' : '#f44336';
+
+        this.domService.removeClass(iconElement, 'eksi-highlight-processing');
+        this.updateIconAppearance(iconElement, tempIcon, tempColor);
+        this.domService.addClass(iconElement, 'eksi-highlight-success');
+        
+        setTimeout(() => {
+            this.domService.removeClass(iconElement, 'eksi-highlight-success');
             setTimeout(() => {
-                this.domService.removeClass(iconElement, 'eksi-highlight-success');
-                setTimeout(() => {
-                    iconElement.textContent = action === 'add' ? 'highlight_off' : 'highlight';
-                    iconElement.style.color = action === 'add' ? '#f44336' : '#ffc107';
-                }, 200);
-            }, 1500);
-        } catch (error) {
-            this.loggingService.error('Error showing success state:', error);
-        }
+                this.updateIconAppearance(iconElement, this.getIconName(isHighlighted), this.getIconColor(isHighlighted));
+            }, 200);
+        }, 1500);
     }
 
     private showErrorState(button: HTMLElement): void {
-        try {
-            const iconElement = button.querySelector('.eksi-highlight-icon') as HTMLElement;
-            if (!iconElement) return;
-            this.domService.removeClass(iconElement, 'eksi-highlight-processing');
-            iconElement.textContent = 'error';
-            iconElement.style.color = '#f44336';
-            setTimeout(() => {
-                iconElement.textContent = 'highlight';
-                iconElement.style.color = '#ffc107';
-            }, 2000);
-        } catch (error) {
-            this.loggingService.error('Error showing error state:', error);
-        }
+        this.showTemporaryState(
+            button,
+            'error',
+            AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.ERROR,
+            () => {
+                const iconElement = this.getIconElement(button);
+                if (iconElement) {
+                    this.updateIconAppearance(iconElement, this.getIconName(false), this.getIconColor(false));
+                }
+            }
+        );
     }
 
     public cleanup(): void {
