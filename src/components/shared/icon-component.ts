@@ -5,94 +5,31 @@ import {ICSSService} from "../../interfaces/services/ICSSService";
 import {ILoggingService} from "../../interfaces/services/ILoggingService";
 import {IDOMService} from "../../interfaces/services/IDOMService";
 import {IconProps, IconTransitionOptions, IIconComponent} from "../../interfaces/components/IIconComponent";
+import { MATERIAL_ICONS } from '../../constants/fonts';
+import { IFontLoaderService } from '../../interfaces/services/IFontLoaderService';
 
 export class IconComponent implements IIconComponent {
     private static stylesApplied = false;
-    private static fontLoaded = false;
-    private static fontLoadListener: (() => void) | null = null;
-    private static fontLoadTimeout: number | null = null;
-    private static pendingIcons: Set<HTMLElement> = new Set();
 
     constructor(
         private domService: IDOMService,
         private cssService: ICSSService,
-        private loggingService: ILoggingService
+        private loggingService: ILoggingService,
+        private fontLoader: IFontLoaderService
     ) {
         this.applyIconStyles();
-
-        // Initialize font loading check if not already done
-        if (!IconComponent.fontLoadListener) {
-            this.initFontLoadingCheck();
-        }
+        this.initializeFontLoading();
     }
 
     /**
-     * Initialize font loading check
+     * Initialize font loading using the reusable FontLoader service
      */
-    private initFontLoadingCheck(): void {
-        // Set up a document font loading observer if available
-        if ('fonts' in document) {
-            // Create a promise that resolves when Material Icons font is loaded
-            IconComponent.fontLoadListener = () => {
-                document.fonts.ready.then(() => {
-                    // Check if Material Icons font is loaded
-                    if (document.fonts.check('1em "Material Icons"')) {
-                        this.handleFontLoaded();
-                    } else {
-                        // If the font isn't loaded yet, try to load it explicitly
-                        const materialIconsFont = new FontFace(
-                            'Material Icons',
-                            'url(https://fonts.gstatic.com/s/materialicons/v139/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format("woff2")'
-                        );
-
-                        materialIconsFont.load().then(() => {
-                            // Add the loaded font to the document
-                            document.fonts.add(materialIconsFont);
-                            this.handleFontLoaded();
-                        }).catch(error => {
-                          this.loggingService.error('Failed to load Material Icons font:', error);
-                            // Still mark as loaded to avoid hanging
-                            this.handleFontLoaded();
-                        });
-                    }
-                });
-            };
-
-            // Call the listener
-            IconComponent.fontLoadListener();
-        } else {
-            // Fallback method for browsers that don't support document.fonts
-            // Set a timeout to assume the font is loaded after a delay
-            IconComponent.fontLoadTimeout = window.setTimeout(() => {
-                this.handleFontLoaded();
-            }, 2000); // 2 seconds should be enough for most font loading
-        }
+    private initializeFontLoading(): void {
+        // Register the Material Icons font family with the loader
+        this.fontLoader.registerFontFamily(MATERIAL_ICONS.FONT_FAMILY);
     }
 
-    /**
-     * Handle the font loaded event
-     */
-    private handleFontLoaded(): void {
-        IconComponent.fontLoaded = true;
 
-        // Reveal all pending icons with a fade-in effect
-        IconComponent.pendingIcons.forEach(icon => {
-            // Remove the loading class and add the loaded class
-            this.domService.removeClass(icon, 'eksi-icon-loading');
-            this.domService.addClass(icon, 'eksi-icon-loaded');
-        });
-
-        // Clear the set of pending icons
-        IconComponent.pendingIcons.clear();
-
-        // Clear the timeout if it exists
-        if (IconComponent.fontLoadTimeout !== null) {
-            clearTimeout(IconComponent.fontLoadTimeout);
-            IconComponent.fontLoadTimeout = null;
-        }
-
-       this.loggingService.debug('Material Icons font loaded');
-    }
 
     public create(props: IconProps): HTMLElement {
         try {
@@ -103,10 +40,10 @@ export class IconComponent implements IIconComponent {
             this.domService.addClass(iconElement, 'material-icons');
             this.domService.addClass(iconElement, 'eksi-icon');
 
-            // Add the loading class if the font isn't loaded yet
-            if (!IconComponent.fontLoaded) {
-                this.domService.addClass(iconElement, 'eksi-icon-loading');
-                IconComponent.pendingIcons.add(iconElement);
+            // Check font loading status and handle accordingly
+            if (!this.fontLoader.isFontLoaded(MATERIAL_ICONS.FONT_FAMILY)) {
+                // Register element for font loading updates
+                this.fontLoader.registerPendingElement(iconElement, 'eksi-icon-loading', 'eksi-icon-loaded');
             } else {
                 // If the font is already loaded, add the loaded class for transitions
                 this.domService.addClass(iconElement, 'eksi-icon-loaded');
@@ -347,7 +284,7 @@ export class IconComponent implements IIconComponent {
 
         const iconStyles = `
             .eksi-icon {
-                font-family: 'Material Icons';
+                font-family: '${MATERIAL_ICONS.FONT_FAMILY}';
                 font-weight: normal;
                 font-style: normal;
                 display: inline-flex;

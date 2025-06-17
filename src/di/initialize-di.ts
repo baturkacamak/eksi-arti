@@ -72,6 +72,8 @@ import {AuthorHighlightButtonComponent} from "../components/features/author-high
 import {IAuthorHighlightButtonComponent} from "../interfaces/components/features/IAuthorHighlightButtonComponent";
 import {IAuthorHighlighterService} from "../interfaces/services/IAuthorHighlighterService";
 import {VoteMonitoringService} from "../services/vote-monitoring-service";
+import {FontLoaderService} from "../services/font-loader-service";
+import {IFontLoaderService} from "../interfaces/services/IFontLoaderService";
 
 /**
  * Initialize the dependency injection container
@@ -85,6 +87,11 @@ export function initializeDI(): Container {
     container.register('CSSService', () => {
         const domService = container.resolve<IDOMService>('DOMService');
         return new CSSService(domService);
+    });
+    container.register('FontLoader', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new FontLoaderService(domService, loggingService);
     });
     container.register('ObserverService', () => observerService);
     container.register('PageUtilsService', () => {
@@ -131,7 +138,8 @@ export function initializeDI(): Container {
         const domService = container.resolve<IDOMService>('DOMService');
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        return new IconComponent(domService, cssService, loggingService);
+        const fontLoader = container.resolve<IFontLoaderService>('FontLoader');
+        return new IconComponent(domService, cssService, loggingService, fontLoader);
     });
 
     container.register('TooltipComponent', () => {

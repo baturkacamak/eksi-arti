@@ -6,48 +6,44 @@ import { CSSService } from './services/css-service';
 import {ICSSService} from "./interfaces/services/ICSSService";
 import {ILoggingService} from "./interfaces/services/ILoggingService";
 import {ICommunicationService} from "./interfaces/services/ICommunicationService";
+import { FONT_FACE_CSS, MATERIAL_ICONS } from './constants/fonts';
+import { IFontLoaderService } from './interfaces/services/IFontLoaderService';
 
 /**
- * Inject Material Icons font
+ * Initialize Material Icons font using FontLoader
  */
-function injectMaterialIcons(cssService: ICSSService, loggingService: ILoggingService): void {
+async function initializeMaterialIcons(
+    cssService: ICSSService, 
+    fontLoader: IFontLoaderService, 
+    loggingService: ILoggingService
+): Promise<void> {
     try {
-        // Material Icons CSS
-        const materialIconsCSS = `
-            @font-face {
-                font-family: 'Material Icons';
-                font-style: normal;
-                font-weight: 400;
-                src: url(https://fonts.gstatic.com/s/materialicons/v139/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+        // Inject CSS first
+        cssService.addCSS(FONT_FACE_CSS);
+        
+        // Load font with FontLoader
+        await fontLoader.loadFont({
+            fontFamily: MATERIAL_ICONS.FONT_FAMILY,
+            fontUrl: MATERIAL_ICONS.FONT_URL,
+            version: MATERIAL_ICONS.VERSION,
+            fallbackTimeout: 2000
+        }, {
+            onLoad: () => {
+                loggingService.debug('Material Icons font loaded via FontLoader');
+            },
+            onError: (error) => {
+                loggingService.error('Error loading Material Icons font:', error);
             }
-            
-            .material-icons {
-                font-family: 'Material Icons';
-                font-weight: normal;
-                font-style: normal;
-                font-size: 24px;
-                line-height: 1;
-                letter-spacing: normal;
-                text-transform: none;
-                display: inline-block;
-                white-space: nowrap;
-                word-wrap: normal;
-                direction: ltr;
-                -webkit-font-feature-settings: 'liga';
-                -webkit-font-smoothing: antialiased;
-            }
-        `;
-
-        cssService.addCSS(materialIconsCSS);
+        });
     } catch (err) {
-        loggingService.error('Error injecting Material Icons:', err);
+        loggingService.error('Error initializing Material Icons:', err);
     }
 }
 
 /**
  * Main initialization function for the extension
  */
-function init(): void {
+async function init(): Promise<void> {
     try {
         // Initialize the DI container
         const container = initializeDI();
@@ -55,10 +51,11 @@ function init(): void {
         // Resolve required services
         const cssService = container.resolve<CSSService>('CSSService');
         const loggingService = container.resolve<LoggingService>('LoggingService');
+        const fontLoader = container.resolve<IFontLoaderService>('FontLoader');
         const communicationService = container.resolve('CommunicationService') as ICommunicationService;
 
-        // Inject Material Icons first
-        injectMaterialIcons(cssService, loggingService);
+        // Initialize Material Icons first
+        await initializeMaterialIcons(cssService, fontLoader, loggingService);
 
         // Initialize UI service which coordinates all our components and services
         const uiService = container.resolve<UIService>('UIService');
