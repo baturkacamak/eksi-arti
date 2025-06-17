@@ -3,28 +3,39 @@
   "name": "Ekşi Artı",
   "version": "1.0.0",
   "description": "Advanced user interaction tools for EksiSozluk - Block users in bulk and more",
+  "author": "Ekşi Artı Team",
+  "homepage_url": "https://github.com/username/eksi-arti",
+  "minimum_chrome_version": "88",
+  "default_locale": "tr",
+  "short_name": "EkşiArtı",
   "icons": {
     "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
   "action": {
     "default_icon": {
       "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "Ekşi Artı"
+    "default_title": "Ekşi Artı",
+    "default_popup": "popup.html"
   },
   "content_scripts": [
     {
       "matches": ["https://eksisozluk.com/*"],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "options_ui": {
     "page": "options.html",
@@ -35,12 +46,81 @@
     "contextMenus",
     "alarms",
     "notifications",
-    "tabs"
+    "tabs",
+    "activeTab",
+    "scripting",
+    "offscreen"
   ],
+  "optional_permissions": [
+    "downloads",
+    "clipboardWrite",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://eksisozluk.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline';"
+  },
   "web_accessible_resources": [
     {
-      "resources": ["lib/html2canvas.min.js"],
+      "resources": [
+        "lib/html2canvas.min.js",
+        "assets/fonts/*",
+        "assets/icons/*",
+        "injected-scripts/*"
+      ],
       "matches": ["https://eksisozluk.com/*"]
     }
-  ]
+  ],
+  "commands": {
+    "toggle-search": {
+      "suggested_key": {
+        "default": "Ctrl+F",
+        "mac": "Cmd+F"
+      },
+      "description": "Toggle search functionality"
+    },
+    "toggle-author-highlighting": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H",
+        "mac": "Cmd+Shift+H"
+      },
+      "description": "Toggle author highlighting"
+    },
+    "open-options": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+O",
+        "mac": "Cmd+Shift+O"
+      },
+      "description": "Open extension options"
+    },
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Cmd+Shift+E"
+      }
+    }
+  },
+  "omnibox": {
+    "keyword": "eksi"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "externally_connectable": {
+    "matches": ["https://eksisozluk.com/*"]
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "incognito": "split",
+  "offline_enabled": true,
+  "update_url": "https://clients2.google.com/service/update2/crx"
 }

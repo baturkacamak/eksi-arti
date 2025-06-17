@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        {
+          "header": "User-Agent",
+          "operation": "append",
+          "value": " EksiArti/1.0.0"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "https://eksisozluk.com/*",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        {
+          "header": "Cache-Control",
+          "operation": "set",
+          "value": "public, max-age=300"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "https://eksisozluk.com/api/*",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  }
+] 
