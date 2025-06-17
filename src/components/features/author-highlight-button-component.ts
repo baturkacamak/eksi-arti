@@ -17,13 +17,20 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
     
     // Icon configuration constants
     private static readonly HIGHLIGHT_ICONS = {
-        ACTIVE: 'lightbulb',
-        INACTIVE: 'lightbulb_outline'
+        ACTIVE: 'visibility',
+        INACTIVE: 'visibility_off',
+        PROCESSING: 'hourglass_empty',
+        SUCCESS_ADD: 'check_circle',
+        SUCCESS_REMOVE: 'remove_circle',
+        ERROR: 'error'
     } as const;
     
     private static readonly HIGHLIGHT_COLORS = {
         ACTIVE: '#ffc107',
         INACTIVE: '#9e9e9e',
+        PROCESSING: '#ffc107',
+        SUCCESS_ADD: '#43a047',
+        SUCCESS_REMOVE: '#f44336',
         ERROR: '#f44336'
     } as const;
 
@@ -189,7 +196,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         
         // Update tooltip
         this.tooltipComponent.updateTooltipContent(button, 
-            isHighlighted ? 'Vurgulamayı Kaldır' : 'Bu Yazarı Vurgula'
+            isHighlighted ? 'İzlemeyi Bırak' : 'Bu Yazarı İzle'
         );
     }
 
@@ -252,7 +259,7 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
 
         // Add tooltip
         this.tooltipComponent.setupTooltip(buttonContainer, {
-            content: isHighlighted ? 'Vurgulamayı Kaldır' : 'Bu Yazarı Vurgula',
+            content: isHighlighted ? 'İzlemeyi Bırak' : 'Bu Yazarı İzle',
             position: 'top'
         });
 
@@ -285,14 +292,18 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
             }
 
             if (success) {
-                this.showSuccessState(button, isCurrentlyHighlighted ? 'remove' : 'add');
-                this.updateButtonState(button, !isCurrentlyHighlighted);
+                // Pass the final state to showSuccessState, it will handle the transition
+                this.showSuccessState(button, isCurrentlyHighlighted ? 'remove' : 'add', !isCurrentlyHighlighted);
             } else {
-                this.showErrorState(button);
+                this.showErrorState(button, isCurrentlyHighlighted);
             }
         } catch (error) {
             this.loggingService.error('Error handling highlight click:', error);
-            this.showErrorState(button);
+            // Get current state from config since we couldn't complete the operation
+            const author = entry.getAttribute('data-author');
+            const config = this.authorHighlighterService.getConfig();
+            const isCurrentlyHighlighted = author && config.authors[author] && config.authors[author].enabled;
+            this.showErrorState(button, !!isCurrentlyHighlighted);
         }
     }
 
@@ -304,40 +315,48 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         const iconElement = this.getIconElement(button);
         if (!iconElement) return;
         
-        this.updateIconAppearance(iconElement, 'hourglass_empty', '#ffc107');
+        this.updateIconAppearance(
+            iconElement, 
+            AuthorHighlightButtonComponent.HIGHLIGHT_ICONS.PROCESSING, 
+            AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.PROCESSING
+        );
         this.domService.addClass(iconElement, 'eksi-highlight-processing');
     }
 
-    private showSuccessState(button: HTMLElement, action: 'add' | 'remove'): void {
+    private showSuccessState(button: HTMLElement, action: 'add' | 'remove', finalIsHighlighted: boolean): void {
         const iconElement = this.getIconElement(button);
         if (!iconElement) return;
 
-        const isHighlighted = action === 'add';
-        const tempIcon = action === 'add' ? 'check_circle' : 'remove_circle';
-        const tempColor = action === 'add' ? '#43a047' : '#f44336';
+        const tempIcon = action === 'add' 
+            ? AuthorHighlightButtonComponent.HIGHLIGHT_ICONS.SUCCESS_ADD 
+            : AuthorHighlightButtonComponent.HIGHLIGHT_ICONS.SUCCESS_REMOVE;
+        const tempColor = action === 'add' 
+            ? AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.SUCCESS_ADD 
+            : AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.SUCCESS_REMOVE;
 
+        // Remove processing state and show success
         this.domService.removeClass(iconElement, 'eksi-highlight-processing');
         this.updateIconAppearance(iconElement, tempIcon, tempColor);
         this.domService.addClass(iconElement, 'eksi-highlight-success');
         
+        // After success animation, transition to final state
         setTimeout(() => {
             this.domService.removeClass(iconElement, 'eksi-highlight-success');
             setTimeout(() => {
-                this.updateIconAppearance(iconElement, this.getIconName(isHighlighted), this.getIconColor(isHighlighted));
+                // Set final state with proper tooltip update
+                this.setButtonHighlightState(button, finalIsHighlighted);
             }, 200);
         }, 1500);
     }
 
-    private showErrorState(button: HTMLElement): void {
+    private showErrorState(button: HTMLElement, currentlyHighlighted: boolean): void {
         this.showTemporaryState(
             button,
-            'error',
+            AuthorHighlightButtonComponent.HIGHLIGHT_ICONS.ERROR,
             AuthorHighlightButtonComponent.HIGHLIGHT_COLORS.ERROR,
             () => {
-                const iconElement = this.getIconElement(button);
-                if (iconElement) {
-                    this.updateIconAppearance(iconElement, this.getIconName(false), this.getIconColor(false));
-                }
+                // Revert to current state (not changed since operation failed)
+                this.setButtonHighlightState(button, currentlyHighlighted);
             }
         );
     }
