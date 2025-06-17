@@ -140,6 +140,9 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 font-size: 12px;
                 white-space: nowrap;
                 flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                gap: 4px;
             }
 
             .eksi-progress-widget-message {
@@ -163,6 +166,10 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 text-align: center;
                 min-height: 12px; /* Reserve space to prevent jumping */
                 line-height: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
             }
 
             /* Position classes */
@@ -300,7 +307,20 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         const percentage = data.total > 0 ? Math.round((data.current / data.total) * 100) : 0;
 
         if (this.progressText) {
-            this.progressText.textContent = `${data.current} / ${data.total} (${percentage}%)`;
+            // Clear and add progress icon + text
+            this.progressText.innerHTML = '';
+            
+            const progressIcon = this.iconComponent.create({
+                name: 'assessment',
+                color: '#6ea542',
+                size: 'small'
+            });
+            
+            const progressTextSpan = this.domService.createElement('span');
+            progressTextSpan.textContent = `${data.current} / ${data.total} (${percentage}%)`;
+            
+            this.progressText.appendChild(progressIcon);
+            this.progressText.appendChild(progressTextSpan);
         }
 
         if (this.progressBarComponent) {
@@ -328,19 +348,42 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
             // Clear existing content
             this.messageElement.innerHTML = '';
             
-            // If icon data is provided, create and prepend icon
-            if (data.icon) {
-                const iconElement = this.iconComponent.create({
-                    name: data.icon.name,
-                    color: data.icon.color,
-                    size: data.icon.size || 'small'
-                });
-                this.messageElement.appendChild(iconElement);
+            // Determine appropriate icon based on message content
+            let iconName = 'info';
+            let iconColor = '#777';
+            
+            if (data.message.includes('Son işlenen:')) {
+                iconName = 'person';
+                iconColor = '#2196F3';
+            } else if (data.message.includes('Sıradaki:')) {
+                iconName = 'arrow_forward';
+                iconColor = '#FF9800';
+            } else if (data.message.includes('tamamlandı') || data.message.includes('✅')) {
+                iconName = 'check_circle';
+                iconColor = '#4CAF50';
+            } else if (data.message.includes('Hata') || data.message.includes('❌')) {
+                iconName = 'error';
+                iconColor = '#F44336';
+            } else if (data.message.includes('yükleniyor') || data.message.includes('hazırlanıyor')) {
+                iconName = 'hourglass_empty';
+                iconColor = '#9C27B0';
+            } else if (data.message.includes('eklendi')) {
+                iconName = 'add_circle';
+                iconColor = '#4CAF50';
             }
+            
+            // Use custom icon if provided, otherwise use determined icon
+            const iconElement = this.iconComponent.create({
+                name: data.icon?.name || iconName,
+                color: data.icon?.color || iconColor,
+                size: data.icon?.size || 'small'
+            });
             
             // Add text content
             const textSpan = this.domService.createElement('span');
             textSpan.textContent = data.message;
+            
+            this.messageElement.appendChild(iconElement);
             this.messageElement.appendChild(textSpan);
         }
 
@@ -533,10 +576,24 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         const updateCountdown = () => {
             if (this.countdownElement) {
                 if (remaining > 0) {
-                    this.countdownElement.textContent = `Sonraki: ${remaining}s`;
+                    // Clear and add timer icon + countdown text
+                    this.countdownElement.innerHTML = '';
+                    
+                    const timerIcon = this.iconComponent.create({
+                        name: 'schedule',
+                        color: '#999',
+                        size: 'small'
+                    });
+                    
+                    const countdownTextSpan = this.domService.createElement('span');
+                    countdownTextSpan.textContent = `Sonraki: ${remaining}s`;
+                    
+                    this.countdownElement.appendChild(timerIcon);
+                    this.countdownElement.appendChild(countdownTextSpan);
+                    
                     remaining--;
                 } else {
-                    this.countdownElement.textContent = '';
+                    this.countdownElement.innerHTML = '';
                     if (this.countdownInterval) {
                         clearInterval(this.countdownInterval);
                         this.countdownInterval = null;
