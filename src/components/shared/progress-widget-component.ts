@@ -38,7 +38,7 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 border: 1px solid #e0e0e0;
                 border-radius: 8px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                padding: 12px;
+                padding: 10px;
                 width: 320px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 font-size: 13px;
@@ -60,8 +60,8 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 8px;
-                padding-bottom: 6px;
+                margin-bottom: 6px;
+                padding-bottom: 4px;
                 border-bottom: 1px solid #f0f0f0;
             }
 
@@ -123,7 +123,15 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
             .eksi-progress-widget-content {
                 display: flex;
                 flex-direction: column;
-                gap: 6px;
+                gap: 4px;
+            }
+
+            .eksi-progress-widget-info-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                min-height: 16px;
             }
 
             .eksi-progress-widget-text {
@@ -131,29 +139,30 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 color: #555;
                 font-size: 12px;
                 white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                flex-shrink: 0;
             }
 
             .eksi-progress-widget-message {
                 color: #777;
                 font-size: 11px;
-                line-height: 1.3;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                hyphens: auto;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 display: flex;
                 align-items: center;
-                gap: 6px;
+                gap: 4px;
+                flex: 1;
+                justify-content: flex-end;
+                text-align: right;
             }
 
             .eksi-progress-widget-countdown {
                 color: #999;
                 font-size: 10px;
                 text-align: center;
-                margin-top: 2px;
-                min-height: 14px; /* Reserve space to prevent jumping */
-                line-height: 14px;
+                min-height: 12px; /* Reserve space to prevent jumping */
+                line-height: 12px;
             }
 
             /* Position classes */
@@ -236,7 +245,7 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
 
             /* Override progress bar styles for widget context */
             .eksi-progress-widget .eksi-progress-container {
-                margin: 8px 0 4px 0;
+                margin: 0;
                 height: 6px;
                 background-color: #f0f0f0;
                 border-radius: 6px;
@@ -400,18 +409,25 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         this.domService.appendChild(header, title);
         this.domService.appendChild(header, controls);
 
-        // Content
+        // Content - Reorganized into 3 compact rows
         const content = this.domService.createElement('div');
         this.domService.addClass(content, 'eksi-progress-widget-content');
 
-        this.progressText = this.domService.createElement('div');
+        // Row 1: Progress text and message combined
+        const infoRow = this.domService.createElement('div');
+        this.domService.addClass(infoRow, 'eksi-progress-widget-info-row');
+        
+        this.progressText = this.domService.createElement('span');
         this.domService.addClass(this.progressText, 'eksi-progress-widget-text');
         this.progressText.textContent = '0 / 0 (0%)';
 
-        this.messageElement = this.domService.createElement('div');
+        this.messageElement = this.domService.createElement('span');
         this.domService.addClass(this.messageElement, 'eksi-progress-widget-message');
 
-        // Create progress bar using the existing component
+        this.domService.appendChild(infoRow, this.progressText);
+        this.domService.appendChild(infoRow, this.messageElement);
+
+        // Row 2: Progress bar
         this.progressBarComponent = this.progressBar;
         this.progressBarElement = this.progressBarComponent.create({
             height: '6px',
@@ -421,11 +437,11 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
             progressColor: '#81c14b'
         });
 
+        // Row 3: Countdown
         this.countdownElement = this.domService.createElement('div');
         this.domService.addClass(this.countdownElement, 'eksi-progress-widget-countdown');
 
-        this.domService.appendChild(content, this.progressText);
-        this.domService.appendChild(content, this.messageElement);
+        this.domService.appendChild(content, infoRow);
         this.domService.appendChild(content, this.progressBarElement);
         this.domService.appendChild(content, this.countdownElement);
 

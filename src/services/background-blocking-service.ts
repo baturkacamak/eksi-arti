@@ -120,8 +120,8 @@ export class BackgroundBlockingService {
             
             const totalProcessed = this.state.processedUsers.size + this.state.skippedUsers.length;
             
-            // Check if there are more users to process for showing next user info
-            let message = `${totalProcessed} / ${this.state.totalUserCount} kullanıcı ${this.getBlockTypeText()}`;
+            // Show the last processed username instead of repeating the progress info
+            let message = `Son işlenen: ${username}`;
             
             // Find next user to be processed
             if (this.state.pendingUsers.length > 0) {
@@ -221,10 +221,13 @@ export class BackgroundBlockingService {
         const totalProcessed = this.state.processedUsers.size + this.state.skippedUsers.length;
         const countdownSeconds = Math.ceil(this.PROCESSING_INTERVAL / 1000); // Convert to seconds
         
+        // Get the last processed username
+        const lastProcessedUser = Array.from(this.state.processedUsers).pop() || 'Bilinmeyen';
+        
         this.sendProgressUpdate({
             current: totalProcessed,
             total: this.state.totalUserCount,
-            message: `${totalProcessed} / ${this.state.totalUserCount} kullanıcı ${this.getBlockTypeText()}`,
+            message: `Son işlenen: ${lastProcessedUser}`,
             countdownSeconds: countdownSeconds
         });
     }
