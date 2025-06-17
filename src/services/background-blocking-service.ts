@@ -16,6 +16,8 @@ interface BackgroundBlockingState {
     entryIds: string[]; // Track multiple entries in the current operation
     blockType: BlockType;
     includeThreadBlocking: boolean;
+    customNote?: string;
+    blockAuthor?: boolean;
     processedUsers: Set<string>;
     skippedUsers: string[];
     pendingUsers: string[];
@@ -248,7 +250,7 @@ export class BackgroundBlockingService {
         });
     }
 
-    async startBlocking(entryId: string, blockType: BlockType, includeThreadBlocking: boolean) {
+    async startBlocking(entryId: string, blockType: BlockType, includeThreadBlocking: boolean, customNote?: string | undefined, blockAuthor?: boolean) {
         try {
             
             this.loggingService.info('Starting blocking operation in background', { 
@@ -259,9 +261,9 @@ export class BackgroundBlockingService {
             // Check if an operation is already in progress
             if (this.state.isProcessing) {
                 // Try to add to current operation if compatible
-                const canMerge = await this.canMergeOperation(entryId, blockType, includeThreadBlocking);
+                const canMerge = await this.canMergeOperation(entryId, blockType, includeThreadBlocking, customNote, blockAuthor);
                 if (canMerge) {
-                    return await this.addToCurrentOperation(entryId, blockType, includeThreadBlocking);
+                    return await this.addToCurrentOperation(entryId, blockType, includeThreadBlocking, customNote, blockAuthor);
                 } else {
                     this.loggingService.warn('Blocking operation already in progress with incompatible settings');
                     return { success: false, error: 'Operation already in progress with incompatible settings' };
@@ -274,6 +276,8 @@ export class BackgroundBlockingService {
             this.state.entryIds = [entryId];
             this.state.blockType = blockType;
             this.state.includeThreadBlocking = includeThreadBlocking;
+            this.state.customNote = customNote;
+            this.state.blockAuthor = blockAuthor;
             this.state.abortProcessing = false;
             this.state.errorCount = 0;
             this.state.allFavoritesMap.clear();
@@ -558,7 +562,14 @@ export class BackgroundBlockingService {
     private async addNoteToUser(userUrl: string, userId: string): Promise<void> {
         const username = this.getUsernameFromUrl(userUrl);
         const noteUrl = Endpoints.ADD_NOTE.replace('{username}', username);
-        const noteText = `${this.state.entryId} için ${this.getBlockTypeText()}`;
+        
+        // Use custom note if provided, otherwise fall back to simple template
+        let noteText: string;
+        if (this.state.customNote && this.state.customNote.trim()) {
+            noteText = this.state.customNote.trim();
+        } else {
+            noteText = `${this.state.entryId} için ${this.getBlockTypeText()}`;
+        }
 
         const response = await fetch(noteUrl, {
             method: 'POST',
@@ -699,7 +710,7 @@ export class BackgroundBlockingService {
     /**
      * Check if a new operation can be merged with the current one
      */
-    private async canMergeOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean): Promise<boolean> {
+    private async canMergeOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean, customNote?: string, blockAuthor?: boolean): Promise<boolean> {
         // Check if entry is already being processed
         if (this.state.entryIds.includes(entryId)) {
             this.loggingService.info(`Entry ${entryId} already being processed, skipping duplicate`);
@@ -730,7 +741,7 @@ export class BackgroundBlockingService {
     /**
      * Add an entry to the current operation
      */
-    private async addToCurrentOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean): Promise<any> {
+    private async addToCurrentOperation(entryId: string, blockType: BlockType, includeThreadBlocking: boolean, customNote?: string, blockAuthor?: boolean): Promise<any> {
         try {
             this.loggingService.info(`Adding entry ${entryId} to current blocking operation`, {
                 entryId,

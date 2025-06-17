@@ -749,13 +749,21 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 
                 // Send message to background script to start blocking operation
                 try {
+                    // Get entry title from the page
+                    let entryTitle = 'Entry'; // Default fallback
+                    const topicElement = document.querySelector('#topic .topic-title a') || document.querySelector('h1#title a');
+                    if (topicElement && topicElement.textContent) {
+                        entryTitle = topicElement.textContent.trim();
+                    }
+                    
                     const response = await this.communicationService.sendMessage({
                         action: 'startBlocking',
                         entryId: this.entryId,
                         blockType: blockType,
                         includeThreadBlocking: this.threadBlockingEnabled,
                         blockAuthor: this.blockAuthorEnabled,
-                        customNote: this.customNote.trim()
+                        customNote: this.customNote.trim(),
+                        entryTitle: entryTitle
                     });
                     
                     this.loggingService.info('Received response from background', { response });

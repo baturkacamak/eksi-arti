@@ -56,10 +56,33 @@ function setupMessageHandlers() {
     // Register blocking-related handlers
     communicationService.registerHandler('startBlocking', async (message) => {
         try {
+            // Process custom note if provided
+            const processedCustomNote = (() => {
+                if (message.customNote && message.customNote.trim()) {
+                    // Use entry title from the frontend request
+                    const entryTitle = message.entryTitle || 'Entry'; // Default fallback
+                    
+                    let noteText = message.customNote.trim();
+                    
+                    // Variable replacement
+                    const currentDate = new Date().toLocaleDateString('tr-TR');
+                    const actionType = message.blockType === 'u' ? 'sessize alındı' : 'engellendi';
+                    
+                    return noteText
+                        .replace(/{baslikAdi}/g, entryTitle)
+                        .replace(/{islemTuru}/g, actionType)
+                        .replace(/{yaziLinki}/g, `https://eksisozluk.com/entry/${message.entryId}`)
+                        .replace(/{tarih}/g, currentDate);
+                }
+                return undefined;
+            })();
+            
             const result = await blockingService.startBlocking(
                 message.entryId,
                 message.blockType,
-                message.includeThreadBlocking || false
+                message.includeThreadBlocking || false,
+                processedCustomNote,
+                message.blockAuthor || false
             );
             return CommunicationService.createSuccessResponse(result);
         } catch (error) {
