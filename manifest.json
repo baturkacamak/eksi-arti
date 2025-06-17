@@ -2,9 +2,9 @@
   "manifest_version": 3,
   "name": "Ekşi Artı",
   "version": "1.0.0",
-  "description": "Advanced user interaction tools for EksiSozluk - Block users in bulk and more",
-  "author": "Ekşi Artı Team",
-  "homepage_url": "https://github.com/username/eksi-arti",
+  "description": "Ekşi Sözlük için gelişmiş kullanıcı araçları - Toplu engelleme, yazar vurgulama, gelişmiş arama ve daha fazlası",
+  "author": "Straits",
+  "homepage_url": "https://eksisozluk.com/biri/straits",
   "minimum_chrome_version": "88",
   "default_locale": "tr",
   "short_name": "EkşiArtı",
@@ -79,21 +79,21 @@
         "default": "Ctrl+F",
         "mac": "Cmd+F"
       },
-      "description": "Toggle search functionality"
+             "description": "Arama özelliğini aç/kapat"
     },
     "toggle-author-highlighting": {
       "suggested_key": {
         "default": "Ctrl+Shift+H",
         "mac": "Cmd+Shift+H"
       },
-      "description": "Toggle author highlighting"
+             "description": "Yazar vurgulamayı aç/kapat"
     },
     "open-options": {
       "suggested_key": {
         "default": "Ctrl+Shift+O",
         "mac": "Cmd+Shift+O"
       },
-      "description": "Open extension options"
+             "description": "Uzantı ayarlarını aç"
     },
     "_execute_action": {
       "suggested_key": {
