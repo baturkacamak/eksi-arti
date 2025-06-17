@@ -3,6 +3,7 @@ import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IDOMService } from "../../interfaces/services/IDOMService";
 import { IProgressWidgetComponent, ProgressWidgetOptions, ProgressWidgetData } from "../../interfaces/components/IProgressWidgetComponent";
 import { IProgressBarComponent } from "../../interfaces/components/IProgressBarComponent";
+import { IIconComponent } from "../../interfaces/components/IIconComponent";
 
 export class ProgressWidgetComponent implements IProgressWidgetComponent {
     private widgetElement: HTMLElement | null = null;
@@ -21,7 +22,8 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         private domService: IDOMService,
         private cssService: ICSSService,
         private loggingService: ILoggingService,
-        private progressBar: IProgressBarComponent
+        private progressBar: IProgressBarComponent,
+        private iconComponent: IIconComponent
     ) {
         this.initStyles();
     }
@@ -140,6 +142,9 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
                 hyphens: auto;
+                display: flex;
+                align-items: center;
+                gap: 6px;
             }
 
             .eksi-progress-widget-countdown {
@@ -311,7 +316,23 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
         }
 
         if (this.messageElement && data.message) {
-            this.messageElement.textContent = data.message;
+            // Clear existing content
+            this.messageElement.innerHTML = '';
+            
+            // If icon data is provided, create and prepend icon
+            if (data.icon) {
+                const iconElement = this.iconComponent.create({
+                    name: data.icon.name,
+                    color: data.icon.color,
+                    size: data.icon.size || 'small'
+                });
+                this.messageElement.appendChild(iconElement);
+            }
+            
+            // Add text content
+            const textSpan = this.domService.createElement('span');
+            textSpan.textContent = data.message;
+            this.messageElement.appendChild(textSpan);
         }
 
         if (data.countdownSeconds !== undefined) {

@@ -6,6 +6,9 @@ export interface BlockerState {
     processedUsers: string[];
     totalUserCount: number;
     timestamp: number;
+    includeThreadBlocking?: boolean;
+    skippedUsers?: string[];
+    currentOperationEntries?: string[];
 }
 
 export interface BlockerPreferences {

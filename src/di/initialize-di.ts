@@ -52,6 +52,8 @@ import {IButtonComponent} from "../interfaces/components/IButtonComponent";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
+import {ICommunicationService} from "../interfaces/services/ICommunicationService";
+import {CommunicationService} from "../services/communication-service";
 import {IBlockOptionsModalFactory} from "../interfaces/factories";
 import {IUserProfile, UserProfileService} from '../services/user-profile-service';
 import {IPreferencesService} from "../interfaces/services/IPreferencesService";
@@ -191,7 +193,8 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const progressBarComponent = container.resolve<IProgressBarComponent>('ProgressBarComponent');
-        return new ProgressWidgetComponent(domService, cssService, loggingService, progressBarComponent);
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        return new ProgressWidgetComponent(domService, cssService, loggingService, progressBarComponent, iconComponent);
     });
 
     container.register('BlockFavoritesButtonComponent', () => {
@@ -305,6 +308,7 @@ export function initializeDI(): Container {
         const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
         const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
         const preferencesService = container.resolve<IPreferencesService>('PreferencesService');
+        const communicationService = container.resolve<ICommunicationService>('CommunicationService');
 
         return new BlockOptionsModalFactory(
             domService,
@@ -315,6 +319,7 @@ export function initializeDI(): Container {
             commandFactory,
             commandInvoker,
             preferencesService,
+            communicationService,
         );
     });
 
@@ -531,6 +536,11 @@ export function initializeDI(): Container {
     container.register('VoteMonitoringService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new VoteMonitoringService(loggingService);
+    });
+
+    container.register('CommunicationService', () => {
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new CommunicationService(loggingService);
     });
 
     initializeCommandDI(container);

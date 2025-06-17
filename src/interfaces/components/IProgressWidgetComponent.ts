@@ -12,6 +12,11 @@ export interface ProgressWidgetData {
     total: number;
     message?: string;
     countdownSeconds?: number;
+    icon?: {
+        name: string;
+        color?: string;
+        size?: 'small' | 'medium' | 'large' | number;
+    };
 }
 
 export interface IProgressWidgetComponent {

@@ -127,6 +127,9 @@ export class BlockUsersService {
                 processedUsers: string[];
                 blockType: BlockType;
                 totalUserCount: number;
+                includeThreadBlocking?: boolean;
+                skippedUsers?: string[];
+                currentOperationEntries?: string[];
             }>(STORAGE_KEYS.CURRENT_OPERATION);
 
             // If successful and data exists
@@ -137,9 +140,22 @@ export class BlockUsersService {
                 }, 'BlockUsersService');
 
                 this.processedUsers = new Set(result.data.processedUsers || []);
-                this.skippedUsers = [];
-                this.currentBlocked = (result.data.processedUsers || []).length + 1;
+                this.skippedUsers = result.data.skippedUsers || [];
+                this.currentBlocked = (result.data.processedUsers || []).length + this.skippedUsers.length + 1;
                 this.blockType = result.data.blockType;
+                this.includeThreadBlocking = result.data.includeThreadBlocking || false;
+                this.currentOperationEntries = result.data.currentOperationEntries || [this.entryId!];
+                this.totalUserCount = result.data.totalUserCount;
+                
+                this.loggingService.info('Successfully restored blocking operation state', {
+                    entryId: this.entryId,
+                    processedUsers: this.processedUsers.size,
+                    skippedUsers: this.skippedUsers.length,
+                    totalUsers: this.totalUserCount,
+                    blockType: this.blockType,
+                    includeThreadBlocking: this.includeThreadBlocking
+                });
+                
                 return true;
             }
 
@@ -165,6 +181,9 @@ export class BlockUsersService {
                 processedUsers: Array.from(this.processedUsers),
                 totalUserCount: this.totalUserCount,
                 timestamp: Date.now(),
+                includeThreadBlocking: this.includeThreadBlocking,
+                skippedUsers: this.skippedUsers,
+                currentOperationEntries: this.currentOperationEntries,
             };
 
             // Use the instance method that leverages Chrome storage API with proper fallbacks
@@ -258,6 +277,8 @@ export class BlockUsersService {
 
             // Load previous state if exists
             const hasState = await this.loadState();
+            const isResuming = hasState;
+            
             if (!hasState) {
                 this.processedUsers = new Set();
                 this.skippedUsers = [];
@@ -266,7 +287,13 @@ export class BlockUsersService {
 
             const userUrls = await this.fetchFavorites(entryId);
             this.allFavoritesMap.set(entryId, userUrls);
+            
+            // If not resuming, set total count from fetched favorites
+            // If resuming, keep the saved total count (in case some favorites were removed)
+            if (!isResuming) {
             this.totalUserCount = userUrls.length;
+            }
+            
             const postTitle = this.htmlParser.parsePostTitle();
 
             // Filter out already processed users
@@ -274,6 +301,24 @@ export class BlockUsersService {
                 const username = this.getUsernameFromUrl(userUrl);
                 return !this.processedUsers.has(username);
             });
+
+            if (isResuming) {
+                this.loggingService.info('Resuming blocking operation', {
+                    entryId,
+                    totalUsers: this.totalUserCount,
+                    processedUsers: this.processedUsers.size,
+                    skippedUsers: this.skippedUsers.length,
+                    pendingUsers: this.pendingUsers.length
+                });
+                
+                // Update progress widget to show current state when resuming
+                const totalProcessed = this.processedUsers.size + this.skippedUsers.length;
+                this.progressWidget.updateProgress({
+                    current: totalProcessed,
+                    total: this.totalUserCount,
+                    message: `İşlem devam ediyor... ${totalProcessed}/${this.totalUserCount} tamamlandı`
+                });
+            }
 
             if (this.pendingUsers.length === 0) {
                 // Brief notification for "already processed" case - still useful
@@ -310,6 +355,10 @@ export class BlockUsersService {
                 
                 if (this.skippedUsers.length > 0) {
                     completionMessage = `✅ ${this.processedUsers.size} / ${this.totalUserCount} kullanıcı ${this.getBlockTypeText()}. ${this.skippedUsers.length} kullanıcı artık mevcut değil.`;
+                }
+                
+                if (isResuming) {
+                    completionMessage += ' (Sayfa yenilenmeden sonra otomatik devam etti)';
                 }
                 
                 // Show completion status in widget before hiding - include skipped users in count

@@ -13,6 +13,7 @@ import { IToggleSwitchComponent } from "../../interfaces/components/IToggleSwitc
 import { ITooltipComponent } from "../../interfaces/components/ITooltipComponent";
 import { IModalComponent } from "../../interfaces/components/IModalComponent";
 import { IPreferencesService } from "../../interfaces/services/IPreferencesService";
+import { ICommunicationService } from "../../interfaces/services/ICommunicationService";
 
 export class BlockOptionsModal extends BaseFeatureComponent {
     private entryId: string;
@@ -20,6 +21,8 @@ export class BlockOptionsModal extends BaseFeatureComponent {
     private blockAuthorEnabled: boolean = false;
     private customNote: string = '';
     private contentElement?: HTMLElement;
+    private lastOperationTime: number = 0;
+    private readonly OPERATION_DEBOUNCE_DELAY = 2000; // 2 seconds
 
     // Specific dependencies
     private specificContainer: Container;
@@ -30,6 +33,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
     private tooltipComponent: ITooltipComponent;
     private modalComponent: IModalComponent;
     private preferencesService: IPreferencesService;
+    private communicationService: ICommunicationService;
 
     constructor(
         domService: IDOMService,
@@ -44,6 +48,7 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         tooltipComponent: ITooltipComponent,
         modalComponent: IModalComponent,
         preferencesService: IPreferencesService,
+        communicationService: ICommunicationService,
         entryId: string,
         options?: FeatureComponentOptions
     ) {
@@ -55,12 +60,33 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         this.tooltipComponent = tooltipComponent;
         this.modalComponent = modalComponent;
         this.preferencesService = preferencesService;
+        this.communicationService = communicationService;
         this.entryId = entryId;
         // Initialize specificContainer - we'll get it from the global container later if needed
         this.specificContainer = {} as Container;
     }
 
     public async display(): Promise<void> {
+        try {
+            // Check if there's already a blocking operation in progress
+            const response = await this.communicationService.sendMessage({ action: 'getBlockingStatus' });
+            
+            if (response.success && response.data && response.data.isProcessing) {
+                // There's already an operation in progress
+                await this.showOperationInProgressModal(response.data);
+            } else {
+                // No operation in progress, show normal modal
+                await this.showNormalModal();
+            }
+        } catch (error) {
+            this.loggingService.error('Error checking blocking status:', error);
+            // Fallback to normal modal
+            await this.showNormalModal();
+        }
+    }
+
+    private async showNormalModal(): Promise<void> {
+        try {
         // Load default note template from preferences
         try {
             const preferences = await this.preferencesService.getPreferences();
@@ -73,14 +99,99 @@ export class BlockOptionsModal extends BaseFeatureComponent {
         if (!this.contentElement) {
             this.setupUI();
         }
-        // Show the modal first to create the DOM structure with options
+
+            // Show the modal using the modal component
         this.modalComponent.show({
             showCloseButton: false, // We create our own close button in the title
             allowBackdropClose: true,
             allowEscapeClose: true
         });
-        // Then inject our content into the modal
+
+            // After modal is shown, inject our content
+            this.injectContentIntoModal();
+
+        } catch (error) {
+            this.loggingService.error('Error displaying block options modal:', error);
+        }
+    }
+
+    private async showOperationInProgressModal(operationData: any): Promise<void> {
+        try {
+            // Create a simpler modal for operation in progress
+            this.contentElement = this.domService.createElement('div');
+
+            const title = this.domService.createElement('div');
+            this.domService.addClass(title, 'eksi-modal-title');
+            title.innerHTML = `
+                <div class="eksi-modal-title-content">
+                    <div class="title-left">Devam Eden İşlem</div>
+                </div>
+            `;
+
+            const infoSection = this.domService.createElement('div');
+            this.domService.addClass(infoSection, 'eksi-modal-info-section');
+            
+            const actionType = operationData.blockType === 'u' ? 'sessiz alma' : 'engelleme';
+            
+            infoSection.innerHTML = `
+                <div class="operation-info">
+                    <p><strong>Entry ${operationData.entryId}</strong> için ${actionType} işlemi devam ediyor.</p>
+                    <p><strong>${operationData.processedUsers}</strong> / <strong>${operationData.totalUsers}</strong> kullanıcı işlendi.</p>
+                    <p>İşlem arka planda devam etmekte. Sayfa değiştirseniz de durmaz.</p>
+                </div>
+            `;
+
+            const actionsSection = this.domService.createElement('div');
+            this.domService.addClass(actionsSection, 'eksi-modal-actions');
+
+            const stopButton = this.specificButtonComponent.create({
+                text: '⏹ İşlemi Durdur',
+                variant: ButtonVariant.DANGER,
+                onClick: () => this.stopCurrentOperation(),
+                fullWidth: true
+            });
+
+            const cancelButton = this.specificButtonComponent.create({
+                text: 'Tamam',
+                variant: ButtonVariant.DEFAULT,
+                onClick: () => this.close(),
+                fullWidth: true
+            });
+
+            this.domService.appendChild(actionsSection, stopButton);
+            this.domService.appendChild(actionsSection, cancelButton);
+
+            this.domService.appendChild(this.contentElement, title);
+            this.domService.appendChild(this.contentElement, infoSection);
+            this.domService.appendChild(this.contentElement, actionsSection);
+
+            // Show the modal
+            this.modalComponent.show({
+                showCloseButton: false,
+                allowBackdropClose: true,
+                allowEscapeClose: true
+            });
+
         this.injectContentIntoModal();
+
+        } catch (error) {
+            this.loggingService.error('Error showing operation in progress modal:', error);
+        }
+    }
+
+    private async stopCurrentOperation(): Promise<void> {
+        try {
+            const response = await this.communicationService.sendMessage({ action: 'stopBlocking' });
+            
+            if (response.success) {
+                this.loggingService.info('Blocking operation stopped successfully');
+                this.close();
+            } else {
+                this.loggingService.error('Failed to stop blocking operation:', response.error);
+            }
+        } catch (error) {
+            this.loggingService.error('Error stopping blocking operation:', error);
+        }
     }
 
     public close(): void {
@@ -337,6 +448,44 @@ export class BlockOptionsModal extends BaseFeatureComponent {
                 }
                 .modal-info-icon:hover {
                     background-color: #495057;
+                    color: #f8f9fa;
+                }
+            }
+
+            /* Operation in progress modal styles */
+            .eksi-modal-info-section {
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 16px;
+                border: 1px solid #e9ecef;
+                text-align: center;
+            }
+
+            .operation-info {
+                line-height: 1.6;
+            }
+
+            .operation-info p {
+                margin: 8px 0;
+                font-size: 14px;
+                color: #495057;
+            }
+
+            .operation-info strong {
+                color: #333;
+                font-weight: 600;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                .eksi-modal-info-section {
+                    background-color: #343a40;
+                    border-color: #495057;
+                }
+                .operation-info p {
+                    color: #adb5bd;
+                }
+                .operation-info strong {
                     color: #f8f9fa;
                 }
             }
@@ -642,6 +791,19 @@ export class BlockOptionsModal extends BaseFeatureComponent {
     }
 
     private async handleOptionSelected(blockType: BlockType): Promise<void> {
+        const now = Date.now();
+        
+        // Debouncing protection
+        if ((now - this.lastOperationTime) < this.OPERATION_DEBOUNCE_DELAY) {
+            this.loggingService.warn('Operation blocked - too frequent clicks', {
+                timeSinceLastOperation: now - this.lastOperationTime,
+                debounceDelay: this.OPERATION_DEBOUNCE_DELAY
+            });
+            return;
+        }
+        
+        this.lastOperationTime = now;
+        
         // Find the button that was clicked for loading state
         const modalElement = document.querySelector('.eksi-modal .eksi-modal-content');
         let buttonToLoad: HTMLButtonElement | undefined;
@@ -663,22 +825,49 @@ export class BlockOptionsModal extends BaseFeatureComponent {
 
         setTimeout(async () => {
             try {
-                const blockUsersCommand = this.specificCommandFactory.createBlockUsersCommand(this.entryId, blockType, this.threadBlockingEnabled);
-                await this.specificCommandInvoker.execute(blockUsersCommand);
+                this.loggingService.info('Sending blocking request', {
+                    entryId: this.entryId,
+                    blockType,
+                    includeThreadBlocking: this.threadBlockingEnabled,
+                    blockAuthor: this.blockAuthorEnabled
+                });
                 
-                // TODO: Handle author blocking and custom note here
-                // This will require extending the command or creating additional commands
-                if (this.blockAuthorEnabled) {
-                    this.loggingService.debug('Author blocking enabled - implement author blocking logic');
+                // Send message to background script to start blocking operation
+                try {
+                    const response = await this.communicationService.sendMessage({
+                        action: 'startBlocking',
+                        entryId: this.entryId,
+                        blockType: blockType,
+                        includeThreadBlocking: this.threadBlockingEnabled,
+                        blockAuthor: this.blockAuthorEnabled,
+                        customNote: this.customNote.trim()
+                    });
+                    
+                    this.loggingService.info('Received response from background', { response });
+                    
+                    if (!response.success) {
+                        // Log errors without showing modals
+                        if (response.error && response.error.includes('Operation already in progress')) {
+                            this.loggingService.warn('Blocking operation already in progress, ignoring request');
+                        } else if (response.error && response.error.includes('Request too frequent')) {
+                            this.loggingService.warn('Request too frequent, operation skipped');
+                        } else {
+                            this.loggingService.error('Error starting blocking operation:', response.error);
+                        }
+                    } else {
+                        this.loggingService.info('Blocking operation started successfully');
+                    }
+                } catch (error) {
+                    this.loggingService.error('Error sending blocking request to background:', error);
                 }
                 
-                if (this.customNote.trim() !== '') {
-                    this.loggingService.debug('Custom note provided:', this.customNote);
-                }
             } catch (error) {
-                this.loggingService.error('Error executing block users command:', error);
-                // Note: Since modal is already closed, we don't need to handle button loading state here
+                this.loggingService.error('Error sending blocking request to background:', error);
             }
         }, 300);
     }
+
+
+
+
 } 
