@@ -48,11 +48,11 @@ export class CommandFactory implements ICommandFactory {
     ): ICommand {
         return new CaptureScreenshotCommand(
             this.loggingService,
+            this.domService,
             this.html2canvas,
             entryElement,
             action,
-            this.documentState,
-            this.domService
+            this.documentState
         );
     }
 
@@ -73,6 +73,7 @@ export class CommandFactory implements ICommandFactory {
     public createLoadAllEntriesCommand(loadMoreButton: HTMLElement, callbacks?: LoadAllEntriesCallbacks): ICommand {
         return new LoadAllEntriesCommand(
             this.loggingService,
+            this.domService,
             loadMoreButton,
             callbacks
         );

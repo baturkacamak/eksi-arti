@@ -98,12 +98,12 @@ export class CaptureScreenshotCommand implements ICommand {
     return container;
   }
 
-  private downloadScreenshot(canvas: HTMLCanvasElement, author: string, entryId: string): void {
+  private async downloadScreenshot(canvas: HTMLCanvasElement, author: string, entryId: string): Promise<void> {
     try {
       const imageData = canvas.toDataURL("image/png");
       const date = new Date().toISOString().slice(0, 10);
       const filename = `eksisozluk-${author}-${entryId}-${date}.png`;
-
+      
       if (typeof chrome !== 'undefined' && chrome.downloads) {
         // Use Chrome Downloads API (MV3)
         await chrome.downloads.download({
@@ -127,8 +127,6 @@ export class CaptureScreenshotCommand implements ICommand {
       throw error;
     }
   }
-
-
 
   public getDescription(): string {
     const actionType = this.action === "download" ? "indir" : "panoya kopyala";

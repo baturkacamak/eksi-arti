@@ -11,6 +11,7 @@ import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {IDocumentStateService} from "../interfaces/services/IDocumentStateService";
 import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
 import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
+import { IDOMService } from "../interfaces/services/IDOMService";
 
 /**
  * Initialize command-related dependencies in the DI container
@@ -47,13 +48,15 @@ export function initializeCommandDI(container: Container): void {
     const html2canvas = container.resolve<IHtml2Canvas>("Html2Canvas");
     const sortingDataExtractor = container.resolve<SortingDataExtractor>("SortingDataExtractor");
     const documentState = container.resolve<IDocumentStateService>("DocumentStateService");
+    const domService = container.resolve<IDOMService>("DOMService");
 
     return new CommandFactory(
       loggingService,
       blockUsersService,
       html2canvas,
       sortingDataExtractor,
-      documentState
+      documentState,
+      domService
     );
   });
 }
