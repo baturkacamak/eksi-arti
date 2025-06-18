@@ -46,7 +46,7 @@ export class CaptureScreenshotCommand implements ICommand {
         useCORS: true
       });
       if (this.action === "download") {
-        this.downloadScreenshot(canvas, author, entryId);
+        await this.downloadScreenshot(canvas, author, entryId);
       } else if (this.action === "clipboard") {
         await this.documentState.copyImageToClipboard(canvas);
       }
@@ -101,16 +101,26 @@ export class CaptureScreenshotCommand implements ICommand {
   private downloadScreenshot(canvas: HTMLCanvasElement, author: string, entryId: string): void {
     try {
       const imageData = canvas.toDataURL("image/png");
-      const link = this.domService.createElement("a") as HTMLAnchorElement;
-      link.href = imageData;
       const date = new Date().toISOString().slice(0, 10);
       const filename = `eksisozluk-${author}-${entryId}-${date}.png`;
-      link.download = filename;
-      const body = this.domService.querySelector('body');
-      if (body) {
-        this.domService.appendChild(body, link);
+
+      if (typeof chrome !== 'undefined' && chrome.downloads) {
+        // Use Chrome Downloads API (MV3)
+        await chrome.downloads.download({
+          url: imageData,
+          filename: filename,
+          conflictAction: 'uniquify'
+        });
+        this.loggingService.debug("Screenshot downloaded using Chrome Downloads API:", filename);
+      } else {
+        // Fallback to traditional method for non-extension environments
+        const link = this.domService.createElement("a");
+        link.href = imageData;
+        link.download = filename;
+        document.body.appendChild(link);
         link.click();
-        this.domService.removeChild(body, link);
+        document.body.removeChild(link);
+        this.loggingService.debug("Screenshot downloaded using fallback method:", filename);
       }
     } catch (error) {
       this.loggingService.error("Error downloading screenshot:", error);

@@ -115,4 +115,18 @@ export class DOMService implements IDOMService {
             parent.appendChild(newNode);
         }
     }
+
+    insertAfter(parent: Node, newNode: Node, referenceNode: Node | null): void {
+        if (!referenceNode) {
+            parent.appendChild(newNode);
+            return;
+        }
+
+        if (referenceNode.parentNode !== parent) {
+            parent.appendChild(newNode);
+            return;
+        }
+
+        this.insertBefore(parent, newNode, referenceNode.nextSibling);
+    }
 }

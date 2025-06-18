@@ -21,5 +21,6 @@ export interface IDOMService {
         options?: boolean | AddEventListenerOptions
     ): void;
     insertBefore(parent: Node, newNode: Node, referenceNode: Node | null): void;
+    insertAfter(parent: Node, newNode: Node, referenceNode: Node | null): void;
     createTextNode(text: string): Text;
 }

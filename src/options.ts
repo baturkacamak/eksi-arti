@@ -118,7 +118,7 @@ class OptionsPage {
                     this.collectValuesFromUI();
 
                     // Show saving indicator
-                    const statusElement = document.getElementById('status');
+                    const statusElement = this.domService.querySelector('#status');
                     if (statusElement) {
                         statusElement.textContent = 'Kaydediliyor...';
                         statusElement.className = 'status saving visible';
@@ -191,17 +191,28 @@ class OptionsPage {
     /**
      * Export settings to JSON file
      */
-    exportSettings() {
+    async exportSettings() {
         try {
             const dataStr = JSON.stringify(this.preferences, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
             const exportFileDefaultName = `eksi-arti-settings-${new Date().toISOString().slice(0, 10)}.json`;
 
-            const linkElement = this.domService.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
+            if (typeof chrome !== 'undefined' && chrome.downloads) {
+                // Use Chrome Downloads API (MV3)
+                await chrome.downloads.download({
+                    url: dataUri,
+                    filename: exportFileDefaultName,
+                    conflictAction: 'uniquify'
+                });
+                this.loggingService.debug('Settings exported using Chrome Downloads API:', exportFileDefaultName);
+            } else {
+                // Fallback to traditional method for non-extension environments
+                const linkElement = this.domService.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                this.loggingService.debug('Settings exported using fallback method:', exportFileDefaultName);
+            }
 
             this.showStatus('Ayarlar dışa aktarıldı', 'success');
         } catch (error) {
@@ -214,7 +225,7 @@ class OptionsPage {
      * Import settings from JSON file
      */
     importSettings() {
-        const fileInput = document.getElementById('importFile') as HTMLInputElement;
+        const fileInput = this.domService.querySelector('#importFile') as HTMLInputElement;
         fileInput.onchange = async (event) => {
             try {
                 const file = (event.target as HTMLInputElement).files?.[0];
@@ -348,23 +359,23 @@ class OptionsPage {
      * Helper methods for getting UI values
      */
     private getCheckboxValue(id: string): boolean {
-        return (document.getElementById(id) as HTMLInputElement)?.checked || false;
+        return (this.domService.querySelector(`#${id}`) as HTMLInputElement)?.checked || false;
     }
 
     private getInputValue(id: string): string {
-        return (document.getElementById(id) as HTMLInputElement)?.value || '';
+        return (this.domService.querySelector(`#${id}`) as HTMLInputElement)?.value || '';
     }
 
     private getSelectValue(id: string): string {
-        return (document.getElementById(id) as HTMLSelectElement)?.value || '';
+        return (this.domService.querySelector(`#${id}`) as HTMLSelectElement)?.value || '';
     }
 
     private getTextareaValue(id: string): string {
-        return (document.getElementById(id) as HTMLTextAreaElement)?.value || '';
+        return (this.domService.querySelector(`#${id}`) as HTMLTextAreaElement)?.value || '';
     }
 
     private getNumberValue(id: string, min: number, max: number, defaultValue: number): number {
-        const input = document.getElementById(id) as HTMLInputElement;
+        const input = this.domService.querySelector(`#${id}`) as HTMLInputElement;
         if (!input) return defaultValue;
 
         let value = parseInt(input.value, 10);
@@ -382,22 +393,22 @@ class OptionsPage {
      * Helper methods for setting UI values
      */
     private setCheckboxValue(id: string, value: boolean): void {
-        const element = document.getElementById(id) as HTMLInputElement;
+        const element = this.domService.querySelector(`#${id}`) as HTMLInputElement;
         if (element) element.checked = !!value;
     }
 
     private setInputValue(id: string, value: string | number): void {
-        const element = document.getElementById(id) as HTMLInputElement;
+        const element = this.domService.querySelector(`#${id}`) as HTMLInputElement;
         if (element) element.value = value.toString();
     }
 
     private setSelectValue(id: string, value: string): void {
-        const element = document.getElementById(id) as HTMLSelectElement;
+        const element = this.domService.querySelector(`#${id}`) as HTMLSelectElement;
         if (element) element.value = value;
     }
 
     private setTextareaValue(id: string, value: string): void {
-        const element = document.getElementById(id) as HTMLTextAreaElement;
+        const element = this.domService.querySelector(`#${id}`) as HTMLTextAreaElement;
         if (element) element.value = value;
     }
 
@@ -618,7 +629,7 @@ class OptionsPage {
      */
     displayVersion() {
         try {
-            const versionElement = document.getElementById('version');
+            const versionElement = this.domService.querySelector('#version');
             if (!versionElement) return;
 
             try {
@@ -643,7 +654,7 @@ class OptionsPage {
         } catch (error) {
             this.loggingService.error('Error displaying version', error);
             // Fallback version display
-            const versionElement = document.getElementById('version');
+            const versionElement = this.domService.querySelector('#version');
             if (versionElement) versionElement.textContent = '1.0.0';
         }
     }
@@ -653,7 +664,7 @@ class OptionsPage {
      */
     showStatus(message: string, type: 'success' | 'error' | 'saving' = 'success') {
         try {
-            const statusElement = document.getElementById('status');
+            const statusElement = this.domService.querySelector('#status');
             if (!statusElement) return;
 
             statusElement.textContent = message;
@@ -797,8 +808,8 @@ class OptionsPage {
                 isExpired = ageMs > 24 * 60 * 60 * 1000;
             }
             
-            const usernameElement = document.getElementById('cachedUsername');
-            const cacheAgeElement = document.getElementById('cacheAge');
+            const usernameElement = this.domService.querySelector('#cachedUsername');
+            const cacheAgeElement = this.domService.querySelector('#cacheAge');
             
             if (usernameElement && cacheAgeElement) {
                 usernameElement.textContent = username || 'Bulunamadı';
@@ -823,8 +834,8 @@ class OptionsPage {
      * Set username display to error state
      */
     setUsernameDisplayError() {
-        const usernameElement = document.getElementById('cachedUsername');
-        const cacheAgeElement = document.getElementById('cacheAge');
+        const usernameElement = this.domService.querySelector('#cachedUsername');
+        const cacheAgeElement = this.domService.querySelector('#cacheAge');
         
         if (usernameElement) usernameElement.textContent = 'Hata';
         if (cacheAgeElement) {
