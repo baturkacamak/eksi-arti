@@ -35,7 +35,6 @@
     {
       "matches": ["https://eksisozluk.com/*"],
       "js": ["content.js"],
-      "css": ["content.css"],
       "run_at": "document_idle",
       "all_frames": false
     }
@@ -53,11 +52,14 @@
     "alarms",
     "notifications",
     "tabs",
-    "scripting"
+    "activeTab",
+    "scripting",
+    "offscreen"
   ],
   "optional_permissions": [
     "downloads",
-    "clipboardWrite"
+    "clipboardWrite",
+    "identity"
   ],
   "host_permissions": [
     "https://eksisozluk.com/*"
@@ -76,52 +78,11 @@
       "matches": ["https://eksisozluk.com/*"]
     }
   ],
-  "commands": {
-    "toggle-search": {
-      "suggested_key": {
-        "default": "Ctrl+F",
-        "mac": "Cmd+F"
-      },
-             "description": "Arama özelliğini aç/kapat"
-    },
-    "toggle-author-highlighting": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+H",
-        "mac": "Cmd+Shift+H"
-      },
-             "description": "Yazar vurgulamayı aç/kapat"
-    },
-    "open-options": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+O",
-        "mac": "Cmd+Shift+O"
-      },
-             "description": "Uzantı ayarlarını aç"
-    },
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+E",
-        "mac": "Cmd+Shift+E"
-      }
-    }
-  },
   "omnibox": {
     "keyword": "eksi"
   },
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ruleset_1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
   "externally_connectable": {
     "matches": ["https://eksisozluk.com/*"]
-  },
-  "side_panel": {
-    "default_path": "sidepanel.html"
   },
   "incognito": "split",
   "offline_enabled": true,
