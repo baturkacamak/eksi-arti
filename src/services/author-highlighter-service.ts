@@ -347,7 +347,7 @@ export class AuthorHighlighterService {
      */
     private updateAuthorColorStyles(): void {
         // Remove previous style tag if exists
-        const existingStyle = document.getElementById('eksi-author-colors');
+        const existingStyle = this.domService.querySelector('#eksi-author-colors');
         if (existingStyle) {
             existingStyle.remove();
         }
@@ -1025,7 +1025,7 @@ export class AuthorHighlighterService {
                 });
 
                 this.domService.addEventListener(saveButton, 'click', () => {
-                    const colorInput = document.getElementById('eksi-color-input') as HTMLInputElement;
+                    const colorInput = this.domService.querySelector('#eksi-color-input') as HTMLInputElement;
                     if (colorInput) {
                         const color = colorInput.value;
                         this.updateAuthor(author, { color }).then(() => {
@@ -1042,13 +1042,13 @@ export class AuthorHighlighterService {
 
             // Add event listener for color input
             setTimeout(() => {
-                const colorInput = document.getElementById('eksi-color-input');
-                const colorPreview = document.getElementById('eksi-color-preview');
-                const colorPresets = document.getElementById('eksi-color-presets');
+                const colorInput = this.domService.querySelector('#eksi-color-input') as HTMLInputElement;
+                const colorPreview = this.domService.querySelector('#eksi-color-preview') as HTMLElement;
+                const colorPresets = this.domService.querySelector('#eksi-color-presets') as HTMLElement;
 
                 if (colorInput && colorPreview) {
                     this.domService.addEventListener(colorInput, 'input', () => {
-                        const color = (colorInput as HTMLInputElement).value;
+                        const color = colorInput.value;
                         colorPreview.style.backgroundColor = color;
                     });
                 }
@@ -1059,7 +1059,7 @@ export class AuthorHighlighterService {
                         this.domService.addEventListener(preset as HTMLElement, 'click', () => {
                             const color = preset.getAttribute('data-color');
                             if (color && colorInput && colorPreview) {
-                                (colorInput as HTMLInputElement).value = color;
+                                colorInput.value = color;
                                 colorPreview.style.backgroundColor = color;
                             }
                         });
@@ -1142,7 +1142,7 @@ export class AuthorHighlighterService {
                 });
 
                 this.domService.addEventListener(saveButton, 'click', () => {
-                    const noteEditor = document.getElementById('eksi-note-editor') as HTMLTextAreaElement;
+                    const noteEditor = this.domService.querySelector('#eksi-note-editor') as HTMLTextAreaElement;
                     if (noteEditor) {
                         const notes = noteEditor.value.trim();
                         this.updateAuthor(author, { notes }).then(() => {
@@ -1308,7 +1308,7 @@ export class AuthorHighlighterService {
         }
 
         // Remove style elements
-        const styleElement = document.getElementById('eksi-author-colors');
+        const styleElement = this.domService.querySelector('#eksi-author-colors');
         if (styleElement) {
             styleElement.remove();
         }
@@ -1316,7 +1316,7 @@ export class AuthorHighlighterService {
 
 
         // Remove highlights
-        const entries = document.querySelectorAll('li[data-id].eksi-highlighted-author');
+        const entries = this.domService.querySelectorAll('li[data-id].eksi-highlighted-author');
         entries.forEach(entry => {
             this.domService.removeClass(entry as HTMLElement, 'eksi-highlighted-author');
         });

@@ -136,7 +136,7 @@ export class UserProfileService {
     }
 
     private processExistingLinks(): void {
-        const links = document.querySelectorAll(`a${SELECTORS.ENTRY_AUTHOR}[href^="${PATHS.BIRI}"]`) as NodeListOf<HTMLAnchorElement>;
+        const links = this.domService.querySelectorAll<HTMLAnchorElement>(`a${SELECTORS.ENTRY_AUTHOR}[href^="${PATHS.BIRI}"]`);
         links.forEach(link => {
             if (!this.processedLinks.has(link)) {
                 this.addUserProfileBadge(link);
@@ -357,7 +357,10 @@ export class UserProfileService {
                 </div>` : ''}
         `;
 
-        document.body.appendChild(tooltipContent);
+        const body = this.domService.querySelector('body');
+        if (body) {
+            this.domService.appendChild(body, tooltipContent);
+        }
 
         badge.classList.add('tooltip-trigger');
         badge.setAttribute('data-tooltip-content', tooltipId);

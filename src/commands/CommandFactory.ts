@@ -10,6 +10,7 @@ import { BlockType } from '../constants';
 import { ILoggingService } from '../interfaces/services/ILoggingService';
 import { IBlockUsersService } from '../interfaces/services/IBlockUsersService';
 import { IDocumentStateService } from '../interfaces/services/IDocumentStateService';
+import { IDOMService } from '../interfaces/services/IDOMService';
 import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 
 /**
@@ -21,7 +22,8 @@ export class CommandFactory implements ICommandFactory {
         private blockUsersService: IBlockUsersService,
         private html2canvas: IHtml2Canvas,
         private sortingDataExtractor: SortingDataExtractor,
-        private documentState: IDocumentStateService
+        private documentState: IDocumentStateService,
+        private domService: IDOMService
     ) {}
 
     /**
@@ -49,7 +51,8 @@ export class CommandFactory implements ICommandFactory {
             this.html2canvas,
             entryElement,
             action,
-            this.documentState
+            this.documentState,
+            this.domService
         );
     }
 

@@ -1,6 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IDocumentStateService } from "../../interfaces/services/IDocumentStateService";
+import { IDOMService } from "../../interfaces/services/IDOMService";
 
 /**
  * Interface for html2canvas library
@@ -15,6 +16,7 @@ export interface IHtml2Canvas {
 export class CaptureScreenshotCommand implements ICommand {
   constructor(
     private loggingService: ILoggingService,
+    private domService: IDOMService,
     private html2canvas: IHtml2Canvas,
     private entryElement: HTMLElement,
     private action: "download" | "clipboard",
@@ -62,7 +64,7 @@ export class CaptureScreenshotCommand implements ICommand {
     contentElement: Element,
     entryId: string
   ): HTMLElement {
-    const container = document.createElement("div");
+    const container = this.domService.createElement("div");
     container.style.padding = "15px";
     container.style.backgroundColor = "#242424";
     container.style.color = "#fff";
@@ -72,7 +74,7 @@ export class CaptureScreenshotCommand implements ICommand {
     container.style.position = "fixed";
     container.style.left = "-9999px";
     const contentClone = contentElement.cloneNode(true) as HTMLElement;
-    const header = document.createElement("div");
+    const header = this.domService.createElement("div");
     header.style.marginBottom = "10px";
     header.style.display = "flex";
     header.style.justifyContent = "space-between";
@@ -82,7 +84,7 @@ export class CaptureScreenshotCommand implements ICommand {
       <div style="font-weight: bold;">${author}</div>
       <div>${timestamp}</div>
     `;
-    const footer = document.createElement("div");
+    const footer = this.domService.createElement("div");
     footer.style.marginTop = "15px";
     footer.style.borderTop = "1px solid rgba(255, 255, 255, 0.1)";
     footer.style.paddingTop = "10px";
@@ -90,23 +92,26 @@ export class CaptureScreenshotCommand implements ICommand {
     footer.style.color = "rgba(255, 255, 255, 0.5)";
     footer.style.textAlign = "right";
     footer.textContent = "Ekşi Artı ile alındı • eksisozluk.com/" + entryId;
-    container.appendChild(header);
-    container.appendChild(contentClone);
-    container.appendChild(footer);
+    this.domService.appendChild(container, header);
+    this.domService.appendChild(container, contentClone);
+    this.domService.appendChild(container, footer);
     return container;
   }
 
   private downloadScreenshot(canvas: HTMLCanvasElement, author: string, entryId: string): void {
     try {
       const imageData = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
+      const link = this.domService.createElement("a") as HTMLAnchorElement;
       link.href = imageData;
       const date = new Date().toISOString().slice(0, 10);
       const filename = `eksisozluk-${author}-${entryId}-${date}.png`;
       link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const body = this.domService.querySelector('body');
+      if (body) {
+        this.domService.appendChild(body, link);
+        link.click();
+        this.domService.removeChild(body, link);
+      }
     } catch (error) {
       this.loggingService.error("Error downloading screenshot:", error);
       throw error;

@@ -3,6 +3,7 @@ import { LoggingService} from './logging-service';
 import { debounce, delay, generateId } from './utilities';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IObserverService, ObserverConfig} from "../interfaces/services/IObserverService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 
 
@@ -29,16 +30,16 @@ export class ObserverService implements IObserverService {
     private uniqueIdCounter: number = 0;
     private loggingService: ILoggingService;
 
-    private constructor() {
+    private constructor(private domService?: IDOMService) {
         this.loggingService = new LoggingService();
     }
 
     /**
      * Get the singleton instance
      */
-    public static getInstance(): IObserverService {
+    public static getInstance(domService?: IDOMService): IObserverService {
         if (!ObserverService.instance) {
-            ObserverService.instance = new ObserverService();
+            ObserverService.instance = new ObserverService(domService);
         }
         return ObserverService.instance;
     }
@@ -81,7 +82,7 @@ export class ObserverService implements IObserverService {
                     additionsOnly: config.additionsOnly !== false, // Default to true
                     debounceTime: config.debounceTime || 50, // Default to 50ms
                     directMatchesOnly: config.directMatchesOnly || false, // Default to false
-                    root: config.root || document.body
+                    root: config.root || (this.domService?.querySelector('body') as HTMLElement) || document.body
                 },
                 lastProcessTime: 0
             });
@@ -239,7 +240,7 @@ export class ObserverService implements IObserverService {
             }
 
             const { config } = registration;
-            const root = config.root || document.body;
+            const root = config.root || (this.domService?.querySelector('body') as HTMLElement) || document.body;
 
             // Find existing elements that match the selector
             const existingElements = root.querySelectorAll(config.selector);
@@ -271,7 +272,8 @@ export class ObserverService implements IObserverService {
             }
 
             // Start observing the document body
-            this.observer.observe(document.body, {
+            const body = (this.domService?.querySelector('body') as HTMLElement) || document.body;
+            this.observer.observe(body, {
                 childList: true,
                 subtree: true
             });
@@ -314,7 +316,8 @@ export class ObserverService implements IObserverService {
             }
 
             // Store the previous DOM state for comparison
-            let previousDOM = document.body.innerHTML;
+            const body = (this.domService?.querySelector('body') as HTMLElement) || document.body;
+            let previousDOM = body.innerHTML;
 
             // Async polling function using delay utility
             const pollDOM = async () => {
@@ -328,7 +331,7 @@ export class ObserverService implements IObserverService {
 
                 while (isRunning) {
                     try {
-                        const currentDOM = document.body.innerHTML;
+                        const currentDOM = body.innerHTML;
 
                         // If DOM has changed, process all registrations
                         if (currentDOM !== previousDOM) {
@@ -336,7 +339,7 @@ export class ObserverService implements IObserverService {
 
                             // Process each registration
                             this.registrations.forEach(registration => {
-                                const root = registration.config.root || document.body;
+                                const root = registration.config.root || body;
                                 const elements = root.querySelectorAll(registration.config.selector);
                                 if (elements.length > 0) {
                                     this.scheduleProcessing(registration, Array.from(elements));

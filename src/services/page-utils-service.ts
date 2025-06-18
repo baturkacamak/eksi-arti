@@ -1,6 +1,7 @@
 import { IUsernameExtractorService } from "../interfaces/services/IUsernameExtractorService";
 import { UsernameExtractorService } from "./username-extractor-service";
 import { SELECTORS, PATHS } from "../constants";
+import { IDOMService } from "../interfaces/services/IDOMService";
 
 /**
  * Service providing utility methods for page detection and common DOM operations
@@ -8,16 +9,19 @@ import { SELECTORS, PATHS } from "../constants";
 export class PageUtilsService {
     private static instance: PageUtilsService;
 
-    private constructor(private usernameExtractorService: IUsernameExtractorService) {
+    private constructor(
+        private usernameExtractorService: IUsernameExtractorService,
+        private domService: IDOMService
+    ) {
         // Private constructor for singleton
     }
 
     /**
      * Get the singleton instance
      */
-    public static getInstance(usernameExtractorService: IUsernameExtractorService): PageUtilsService {
+    public static getInstance(usernameExtractorService: IUsernameExtractorService, domService: IDOMService): PageUtilsService {
         if (!PageUtilsService.instance) {
-            PageUtilsService.instance = new PageUtilsService(usernameExtractorService);
+            PageUtilsService.instance = new PageUtilsService(usernameExtractorService, domService);
         }
         return PageUtilsService.instance;
     }
@@ -27,7 +31,7 @@ export class PageUtilsService {
      * @returns true if the current page contains an entry list
      */
     public isEntryListPage(): boolean {
-        return !!document.querySelector(SELECTORS.ENTRY_ITEM_LIST) || !!document.querySelector(SELECTORS.TOPIC);
+        return !!this.domService.querySelector(SELECTORS.ENTRY_ITEM_LIST) || !!this.domService.querySelector(SELECTORS.TOPIC);
     }
 
     /**
@@ -59,7 +63,7 @@ export class PageUtilsService {
         }
 
         // Try to get from the main entry element
-        const mainEntry = document.querySelector('article[data-id]');
+        const mainEntry = this.domService.querySelector('article[data-id]');
         if (mainEntry) {
             return mainEntry.getAttribute('data-id');
         }
@@ -81,7 +85,7 @@ export class PageUtilsService {
         }
 
         // For entry pages, try to get the author of the main entry
-        const authorElement = document.querySelector<HTMLAnchorElement>(SELECTORS.ENTRY_AUTHOR);
+        const authorElement = this.domService.querySelector<HTMLAnchorElement>(SELECTORS.ENTRY_AUTHOR);
         if (authorElement) {
             return this.usernameExtractorService.extractFromLink(authorElement);
         }
@@ -96,7 +100,8 @@ export class PageUtilsService {
      */
     public isDarkMode(): boolean {
         // Check for Ekşi's dark mode class on body
-        return document.body.classList.contains('dark-theme') ||
+        const body = this.domService.querySelector('body');
+        return (body?.classList.contains('dark-theme')) ||
             // Or check system preference as fallback
             window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
@@ -117,7 +122,7 @@ export class PageUtilsService {
         }
         
         // Check if there are enough entries to make features worthwhile
-        const entries = document.querySelectorAll('#entry-item-list li[data-id], #topic li[data-id]');
+        const entries = this.domService.querySelectorAll('#entry-item-list li[data-id], #topic li[data-id]');
         const entryCount = entries.length;
         
         return entryCount >= minEntryCount;
@@ -125,9 +130,10 @@ export class PageUtilsService {
 }
 
 // Export factory function for DI container
-export function createPageUtilsService(usernameExtractorService: IUsernameExtractorService): PageUtilsService {
-    return PageUtilsService.getInstance(usernameExtractorService);
+export function createPageUtilsService(usernameExtractorService: IUsernameExtractorService, domService: IDOMService): PageUtilsService {
+    return PageUtilsService.getInstance(usernameExtractorService, domService);
 }
 
-// Export compatibility singleton for existing code
-export const pageUtils = PageUtilsService.getInstance(UsernameExtractorService.createSimple());
+// Export compatibility singleton for existing code (will need DOMService)
+import { DOMService } from "./dom-service";
+export const pageUtils = PageUtilsService.getInstance(UsernameExtractorService.createSimple(), new DOMService());

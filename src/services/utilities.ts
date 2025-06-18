@@ -178,26 +178,47 @@ export const isDarkMode = (): boolean => {
  * @deprecated Use DocumentStateService.copyTextToClipboard() instead
  * Copy text to clipboard
  * @param text Text to copy
+ * @param domService Optional DOM service for dependency injection (recommended)
  * @returns Promise that resolves when text is copied
  */
-export const copyToClipboard = async (text: string): Promise<boolean> => {
+export const copyToClipboard = async (text: string, domService?: any): Promise<boolean> => {
     try {
         if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(text);
             return true;
         } else {
             // Fallback for older browsers
-            const textArea = document.createElement('textarea');
+            const textArea = domService 
+                ? domService.createElement('textarea') 
+                : document.createElement('textarea');
             textArea.value = text;
             textArea.style.position = 'fixed';
             textArea.style.left = '-999999px';
             textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
+            
+            if (domService) {
+                const body = domService.querySelector('body');
+                if (body) {
+                    domService.appendChild(body, textArea);
+                }
+            } else {
+                document.body.appendChild(textArea);
+            }
+            
             textArea.focus();
             textArea.select();
 
             const success = document.execCommand('copy');
-            document.body.removeChild(textArea);
+            
+            if (domService) {
+                const body = domService.querySelector('body');
+                if (body) {
+                    domService.removeChild(body, textArea);
+                }
+            } else {
+                document.body.removeChild(textArea);
+            }
+            
             return success;
         }
     } catch (e) {
@@ -210,10 +231,13 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
 /**
  * Escape HTML special characters
  * @param html HTML string to escape
+ * @param domService Optional DOM service for dependency injection (recommended)
  * @returns Escaped string
  */
-export const escapeHtml = (html: string): string => {
-    const div = document.createElement('div');
+export const escapeHtml = (html: string, domService?: any): string => {
+    const div = domService 
+        ? domService.createElement('div') 
+        : document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
 };

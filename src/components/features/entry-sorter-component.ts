@@ -140,13 +140,13 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
      * Create or get the custom controls row
      */
     private getOrCreateCustomControlsRow(): HTMLElement | null {
-        const contentArea = document.querySelector('#topic');
+        const contentArea = this.domService.querySelector('#topic');
         if (!contentArea) {
             this.loggingService.warn('#topic content area not found for EntrySorterComponent UI setup.');
             return null;
         }
 
-        let customControlsRow = document.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
+        let customControlsRow = this.domService.querySelector('.eksi-custom-controls-row') as HTMLElement | null;
         
         if (!customControlsRow) {
             customControlsRow = this.domService.createElement('div');
@@ -248,7 +248,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
      */
     private sortEntries(strategy: ISortingStrategy, direction?: 'asc' | 'desc'): void {
         try {
-            const entryList = document.querySelector('#entry-item-list');
+            const entryList = this.domService.querySelector('#entry-item-list');
             if (!entryList) {
                 this.loggingService.warn('#entry-item-list not found for sorting.');
                 return;
@@ -407,7 +407,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 }
                 this.loggingService.debug('EntrySorter observer: #topic potentially changed. Re-evaluating sorter UI.');
                 // Simple check: if our specific container isn't there, try to set up UI again.
-                if (!document.querySelector('.eksi-custom-controls-row .eksi-entry-sorter-select-container')) {
+                if (!this.domService.querySelector('.eksi-custom-controls-row .eksi-entry-sorter-select-container')) {
                     this.loggingService.debug('EntrySorter UI not found via observer, attempting to re-add.');
                     this.setupUI(); 
                 }
@@ -422,7 +422,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     protected cleanup(): void {
         this.loggingService.debug('Cleaning up EntrySorterComponent UI elements.');
         this.activeStrategy = null;
-        const sorterContainer = document.querySelector('.eksi-entry-sorter-select-container');
+        const sorterContainer = this.domService.querySelector('.eksi-entry-sorter-select-container');
         if (sorterContainer && sorterContainer.parentElement) {
             if (sorterContainer.parentElement.classList.contains('eksi-custom-controls-row')){
                  sorterContainer.parentElement.removeChild(sorterContainer);

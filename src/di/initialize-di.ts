@@ -93,10 +93,14 @@ export function initializeDI(): Container {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new FontLoaderService(domService, loggingService);
     });
-    container.register('ObserverService', () => observerService);
+    container.register('ObserverService', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        return ObserverService.getInstance(domService);
+    });
     container.register('PageUtilsService', () => {
         const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
-        return createPageUtilsService(usernameExtractorService);
+        const domService = container.resolve<IDOMService>('DOMService');
+        return createPageUtilsService(usernameExtractorService, domService);
     });
     container.register('StorageService', () => storageService);
     container.register('PreferencesManager', () => preferencesManager);
@@ -112,7 +116,8 @@ export function initializeDI(): Container {
     // Register services with dependencies
     container.register('HttpService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        return new HttpService(loggingService);
+        const domService = container.resolve<IDOMService>('DOMService');
+        return new HttpService(loggingService, domService);
     });
 
     container.register('HtmlParserService', () => {
@@ -233,7 +238,8 @@ export function initializeDI(): Container {
         const progressBarComponent = container.resolve<IProgressBarComponent>('ProgressBarComponent');
         const countdownComponent = container.resolve<ICountdownComponent>('CountdownComponent');
         const notificationComponent = container.resolve<INotificationComponent>('NotificationComponent');
-        return new NotificationService(loggingService, buttonComponent, progressBarComponent, countdownComponent, notificationComponent, container);
+        const domService = container.resolve<IDOMService>('DOMService');
+        return new NotificationService(loggingService, buttonComponent, progressBarComponent, countdownComponent, notificationComponent, container, domService);
     });
 
     container.register('BlockUsersService', () => {
@@ -327,7 +333,7 @@ export function initializeDI(): Container {
             commandFactory,
             commandInvoker,
             preferencesService,
-            communicationService,
+            communicationService
         );
     });
 
@@ -483,6 +489,7 @@ export function initializeDI(): Container {
         const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
         const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
         const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
+        const pageUtilsService = container.resolve<PageUtilsService>('PageUtilsService');
 
         return new PostManagementService(
             domService,
@@ -494,6 +501,7 @@ export function initializeDI(): Container {
             commandFactory,
             commandInvoker,
             buttonComponent,
+            pageUtilsService
         );
     });
 
@@ -543,7 +551,8 @@ export function initializeDI(): Container {
 
     container.register('VoteMonitoringService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        return new VoteMonitoringService(loggingService);
+        const domService = container.resolve<IDOMService>('DOMService');
+        return new VoteMonitoringService(loggingService, domService);
     });
 
     container.register('CommunicationService', () => {

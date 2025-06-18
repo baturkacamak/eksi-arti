@@ -44,7 +44,8 @@ export class DocumentStateService implements IDocumentStateService {
 
     // Theme/appearance
     isDarkMode(): boolean {
-        return document.body.classList.contains('dark-theme') ||
+        const body = this.domService.querySelector('body');
+        return (body?.classList.contains('dark-theme')) ||
             (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
 

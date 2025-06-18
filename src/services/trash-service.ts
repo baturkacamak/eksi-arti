@@ -269,8 +269,10 @@ export class TrashService {
             loadMoreContainer.appendChild(loadMoreButton);
             loadMoreContainer.appendChild(loadAllButton);
 
-            const container = trashItems.parentElement || document.body;
-            container.appendChild(loadMoreContainer);
+            const container = trashItems.parentElement || this.domService.querySelector('body');
+            if (container) {
+                container.appendChild(loadMoreContainer);
+            }
         } catch (error) {
             this.loggingService.error('Error adding load more button:', error);
         }
@@ -288,7 +290,7 @@ export class TrashService {
             this.isLoading = true;
             const nextPage = this.currentPage + 1;
 
-            const loadingButton = document.querySelector('.eksi-load-more-button') as HTMLButtonElement;
+            const loadingButton = this.domService.querySelector<HTMLButtonElement>('.eksi-load-more-button');
             if (loadingButton) {
                 const originalText = loadingButton.textContent;
                 loadingButton.textContent = 'Yükleniyor...';
@@ -297,7 +299,7 @@ export class TrashService {
 
             await this.notificationService.show(`Çöp sayfası ${nextPage} yükleniyor...`, { timeout: 2 });
 
-            const trashItems = document.querySelector('#trash-items');
+            const trashItems = this.domService.querySelector('#trash-items');
             if (!trashItems) {
                 this.loggingService.error('Trash items container not found');
                 return false;
@@ -362,8 +364,8 @@ export class TrashService {
             // Create a new AbortController for this operation
             this.abortController = new AbortController();
 
-            const loadAllButton = document.querySelector('.eksi-load-all-button') as HTMLButtonElement;
-            const loadMoreButton = document.querySelector('.eksi-load-more-button') as HTMLButtonElement;
+            const loadAllButton = this.domService.querySelector<HTMLButtonElement>('.eksi-load-all-button');
+            const loadMoreButton = this.domService.querySelector<HTMLButtonElement>('.eksi-load-more-button');
 
             if (loadAllButton) {
                 loadAllButton.textContent = 'Durdur';
@@ -394,7 +396,9 @@ export class TrashService {
             const signal = this.abortController.signal;
 
             // Change button to cancel
-            this.domService.addEventListener(loadAllButton, 'click', cancelClickHandler);
+            if (loadAllButton) {
+                this.domService.addEventListener(loadAllButton, 'click', cancelClickHandler);
+            }
 
             let nextPage = this.currentPage + 1;
             while (nextPage <= this.lastPage && !signal.aborted) {
@@ -534,7 +538,7 @@ export class TrashService {
      */
     private addBulkReviveControls(): void {
         try {
-            const trashItems = document.querySelector('#trash-items');
+            const trashItems = this.domService.querySelector('#trash-items');
             if (!trashItems) return;
 
             const controlsContainer = this.domService.createElement('div');
@@ -605,7 +609,7 @@ export class TrashService {
      */
     private addCheckboxesToTrashItems(): void {
         try {
-            const trashItems = document.querySelectorAll('#trash-items li');
+            const trashItems = this.domService.querySelectorAll('#trash-items li');
 
             trashItems.forEach(item => {
                 if (!item.querySelector('.eksi-trash-checkbox')) {
@@ -659,7 +663,7 @@ export class TrashService {
      * Toggle all checkboxes
      */
     private toggleAllCheckboxes(checked: boolean): void {
-        const checkboxes = document.querySelectorAll('.eksi-trash-checkbox') as NodeListOf<HTMLInputElement>;
+        const checkboxes = this.domService.querySelectorAll<HTMLInputElement>('.eksi-trash-checkbox');
         checkboxes.forEach(checkbox => {
             checkbox.checked = checked;
         });
@@ -670,15 +674,15 @@ export class TrashService {
      */
     private updateSelectionCount(): void {
         try {
-            const checkboxes = document.querySelectorAll('.eksi-trash-checkbox:checked');
+            const checkboxes = this.domService.querySelectorAll('.eksi-trash-checkbox:checked');
             const count = checkboxes.length;
 
-            const countSpan = document.querySelector('.eksi-selection-count');
+            const countSpan = this.domService.querySelector('.eksi-selection-count');
             if (countSpan) {
                 countSpan.textContent = `${count} entry seçildi`;
             }
 
-            const reviveButton = document.querySelector('.eksi-revive-selected-button') as HTMLButtonElement;
+            const reviveButton = this.domService.querySelector<HTMLButtonElement>('.eksi-revive-selected-button');
             if (reviveButton) {
                 reviveButton.disabled = count === 0;
             }
@@ -692,7 +696,7 @@ export class TrashService {
      */
     private async bulkReviveSelected(): Promise<void> {
         try {
-            const checkboxes = document.querySelectorAll('.eksi-trash-checkbox:checked') as NodeListOf<HTMLInputElement>;
+            const checkboxes = this.domService.querySelectorAll<HTMLInputElement>('.eksi-trash-checkbox:checked');
             const entryIds = Array.from(checkboxes).map(checkbox => checkbox.getAttribute('data-entry-id')).filter(Boolean) as string[];
 
             if (entryIds.length === 0) {

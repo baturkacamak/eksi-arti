@@ -1,6 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
 import { delay } from "../../services/utilities";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IDOMService } from "../../interfaces/services/IDOMService";
 
 export interface LoadAllEntriesProgress {
     currentCount: number;
@@ -25,6 +26,7 @@ export class LoadAllEntriesCommand implements ICommand {
 
   constructor(
     private loggingService: ILoggingService,
+    private domService: IDOMService,
     private loadMoreButton: HTMLElement,
     callbacks: LoadAllEntriesCallbacks = {}
   ) {
@@ -52,7 +54,7 @@ export class LoadAllEntriesCommand implements ICommand {
             break;
           }
           
-          const currentEntryCount = document.querySelectorAll(".topic-item").length;
+          const currentEntryCount = this.domService.querySelectorAll(".topic-item").length;
           
           // Call progress callback instead of showing notification
           if (this.callbacks.onProgress) {
@@ -77,7 +79,7 @@ export class LoadAllEntriesCommand implements ICommand {
         }
         return false;
       } else {
-        const totalEntries = document.querySelectorAll(".topic-item").length;
+        const totalEntries = this.domService.querySelectorAll(".topic-item").length;
         // Call complete callback instead of showing notification
         if (this.callbacks.onComplete) {
           this.callbacks.onComplete(totalEntries);

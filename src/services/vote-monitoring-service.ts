@@ -5,13 +5,17 @@ import { SELECTORS, PATHS } from '../constants';
 import { storageService } from './storage-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {StorageArea} from "../interfaces/services/IStorageService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class VoteMonitoringService {
     private userNick: string = '';
     private enabled: boolean = true;
     private checkInterval: number = 1; // minutes
 
-    constructor(private loggingService: ILoggingService) {
+    constructor(
+        private loggingService: ILoggingService,
+        private domService: IDOMService
+    ) {
         this.loggingService.debug('VoteMonitoringService instance created');
     }
 
@@ -88,7 +92,7 @@ export class VoteMonitoringService {
                 pathBiri: PATHS.BIRI
             });
 
-            const usernameElement = document.querySelector(topNavSelector);
+            const usernameElement = this.domService.querySelector(topNavSelector);
             
             this.loggingService.debug('Username element search result', {
                 elementFound: !!usernameElement,
@@ -147,7 +151,7 @@ export class VoteMonitoringService {
                 // Try fallback selector in entry authors as alternative
                 this.loggingService.debug('Attempting fallback username extraction from entry authors');
                 const fallbackSelector = `a${SELECTORS.ENTRY_AUTHOR}[href^="${PATHS.BIRI}"]`;
-                const fallbackElement = document.querySelector(fallbackSelector);
+                const fallbackElement = this.domService.querySelector(fallbackSelector);
                 
                 this.loggingService.debug('Fallback element search result', {
                     selector: fallbackSelector,
@@ -183,7 +187,7 @@ export class VoteMonitoringService {
                 }
                 
                 // Log all potential username elements for debugging
-                const allUserElements = document.querySelectorAll(`a[href*="${PATHS.BIRI}"]`);
+                const allUserElements = this.domService.querySelectorAll(`a[href*="${PATHS.BIRI}"]`);
                 this.loggingService.debug('Found all potential username elements', { 
                     count: allUserElements.length,
                     elements: Array.from(allUserElements).map(el => ({
@@ -218,7 +222,7 @@ export class VoteMonitoringService {
                 error: error instanceof Error ? error.message : String(error),
                 errorName: error instanceof Error ? error.name : 'Unknown',
                 currentUrl: window.location.href,
-                pageTitle: document.title
+                pageTitle: this.domService.querySelector('title')?.textContent || 'Unknown'
             });
             throw error;
         }

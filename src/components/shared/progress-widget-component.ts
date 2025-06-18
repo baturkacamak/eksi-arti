@@ -494,7 +494,10 @@ export class ProgressWidgetComponent implements IProgressWidgetComponent {
 
     private appendToDOM(): void {
         if (this.widgetElement) {
-            this.domService.appendChild(document.body, this.widgetElement);
+            const body = this.domService.querySelector('body');
+            if (body) {
+                this.domService.appendChild(body, this.widgetElement);
+            }
         }
     }
 

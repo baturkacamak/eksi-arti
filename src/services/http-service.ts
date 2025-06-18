@@ -2,6 +2,7 @@ import {RequestHeaders} from '../types';
 import { LoggingService} from './logging-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IHttpService} from "../interfaces/services/IHttpService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 
 export class HttpError extends Error {
     constructor(
@@ -15,7 +16,10 @@ export class HttpError extends Error {
 }
 
 export class HttpService implements IHttpService {
-    constructor(private loggingService: ILoggingService) {}
+    constructor(
+        private loggingService: ILoggingService,
+        private domService: IDOMService
+    ) {}
 
     /**
      * Check if an error indicates a definitive HTTP response that shouldn't trigger fallbacks
@@ -300,13 +304,16 @@ export class HttpService implements IHttpService {
             const jsonpUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + callbackName;
 
             // Create script tag
-            const script = document.createElement('script');
+            const script = this.domService.createElement('script');
             script.src = jsonpUrl;
 
             // Define the callback function
-            (window as any)[callbackName] = function (data: any) {
+            (window as any)[callbackName] = (data: any) => {
                 // Clean up
-                document.body.removeChild(script);
+                const body = this.domService.querySelector('body');
+                if (body) {
+                    this.domService.removeChild(body, script);
+                }
                 delete (window as any)[callbackName];
 
                 // Resolve with stringified data
@@ -314,21 +321,30 @@ export class HttpService implements IHttpService {
             };
 
             // Handle errors
-            script.onerror = function () {
+            script.onerror = () => {
                 // Clean up
-                document.body.removeChild(script);
+                const body = this.domService.querySelector('body');
+                if (body) {
+                    this.domService.removeChild(body, script);
+                }
                 delete (window as any)[callbackName];
 
                 reject(new HttpError('JSONP request failed', 0));
             };
 
             // Add to document to begin request
-            document.body.appendChild(script);
+            const body = this.domService.querySelector('body');
+            if (body) {
+                this.domService.appendChild(body, script);
+            }
 
             // Set timeout for JSONP call
             setTimeout(() => {
                 if ((window as any)[callbackName]) {
-                    document.body.removeChild(script);
+                    const body = this.domService.querySelector('body');
+                    if (body) {
+                        this.domService.removeChild(body, script);
+                    }
                     delete (window as any)[callbackName];
                     reject(new HttpError('JSONP request timed out', 0));
                 }
@@ -350,12 +366,12 @@ export class HttpService implements IHttpService {
             const iframeName = 'iframe_post_' + Math.round(100000 * Math.random());
 
             // Create iframe
-            const iframe = document.createElement('iframe');
+            const iframe = this.domService.createElement('iframe');
             iframe.name = iframeName;
             iframe.style.display = 'none';
 
             // Create a form that targets the iframe
-            const form = document.createElement('form');
+            const form = this.domService.createElement('form');
             form.method = 'POST';
             form.action = url;
             form.target = iframeName;
@@ -364,58 +380,74 @@ export class HttpService implements IHttpService {
             if (data) {
                 const params = new URLSearchParams(data);
                 params.forEach((value, key) => {
-                    const input = document.createElement('input');
+                    const input = this.domService.createElement('input');
                     input.type = 'hidden';
                     input.name = key;
                     input.value = value;
-                    form.appendChild(input);
+                    this.domService.appendChild(form, input);
                 });
             }
 
             // Handle iframe load
-            iframe.onload = function () {
+            iframe.onload = () => {
                 try {
                     // Try to access iframe content (may fail due to same-origin policy)
                     const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
                     if (iframeDocument) {
                         const response = iframeDocument.body.innerHTML;
                         // Clean up
-                        document.body.removeChild(iframe);
-                        document.body.removeChild(form);
+                        const body = this.domService.querySelector('body');
+                        if (body) {
+                            this.domService.removeChild(body, iframe);
+                            this.domService.removeChild(body, form);
+                        }
                         resolve(response);
                     } else {
                         // Can't access content, but assume success
-                        document.body.removeChild(iframe);
-                        document.body.removeChild(form);
+                        const body = this.domService.querySelector('body');
+                        if (body) {
+                            this.domService.removeChild(body, iframe);
+                            this.domService.removeChild(body, form);
+                        }
                         resolve('{"success":true}');
                     }
                 } catch (error) {
                     // Same-origin policy restriction, but assume success
-                    document.body.removeChild(iframe);
-                    document.body.removeChild(form);
+                    const body = this.domService.querySelector('body');
+                    if (body) {
+                        this.domService.removeChild(body, iframe);
+                        this.domService.removeChild(body, form);
+                    }
                     resolve('{"success":true}');
                 }
             };
 
             // Handle errors
-            iframe.onerror = function () {
-                document.body.removeChild(iframe);
-                document.body.removeChild(form);
+            iframe.onerror = () => {
+                const body = this.domService.querySelector('body');
+                if (body) {
+                    this.domService.removeChild(body, iframe);
+                    this.domService.removeChild(body, form);
+                }
                 reject(new HttpError('Iframe request failed', 0));
             };
 
             // Add to document
-            document.body.appendChild(iframe);
-            document.body.appendChild(form);
+            const body = this.domService.querySelector('body');
+            if (body) {
+                this.domService.appendChild(body, iframe);
+                this.domService.appendChild(body, form);
+            }
 
             // Submit the form
             form.submit();
 
             // Set timeout
             setTimeout(() => {
-                if (document.body.contains(iframe)) {
-                    document.body.removeChild(iframe);
-                    document.body.removeChild(form);
+                const body = this.domService.querySelector('body');
+                if (body && body.contains(iframe)) {
+                    this.domService.removeChild(body, iframe);
+                    this.domService.removeChild(body, form);
                     reject(new HttpError('Iframe request timed out', 0));
                 }
             }, 30000);

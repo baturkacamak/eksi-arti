@@ -317,12 +317,12 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             this.searchRow.parentNode.removeChild(this.searchRow);
         }
 
-        const tooltip = document.getElementById(this.searchTooltipId);
+        const tooltip = this.domService.querySelector(`#${this.searchTooltipId}`);
         if (tooltip && tooltip.parentNode) {
             tooltip.parentNode.removeChild(tooltip);
         }
 
-        const sortRow = document.querySelector('.sub-title-menu');
+        const sortRow = this.domService.querySelector('.sub-title-menu');
         if (sortRow) {
             sortRow.classList.remove('eksi-sticky-sort-row');
         }
@@ -338,10 +338,10 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     private injectSearchRowDOM(): void {
         this.loggingService.debug('injectSearchRowDOM: Starting DOM injection');
         try {
-            let customControlsRow = document.querySelector('.eksi-custom-controls-row');
+            let customControlsRow = this.domService.querySelector('.eksi-custom-controls-row');
             this.loggingService.debug(`injectSearchRowDOM: customControlsRow found: ${!!customControlsRow}`);
             
-            const topicElement = document.querySelector('#topic');
+            const topicElement = this.domService.querySelector('#topic');
             this.loggingService.debug(`injectSearchRowDOM: topicElement found: ${!!topicElement}`);
             
             if (!topicElement) {
@@ -595,13 +595,16 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                 <li><kbd>Esc</kbd> - Aramayı temizle</li>
             </ul>
         `;
-        document.body.appendChild(tooltipContent);
+        const body = this.domService.querySelector('body');
+        if (body) {
+            this.domService.appendChild(body, tooltipContent);
+        }
         this.specificTooltipComponent.initializeTooltips();
     }
 
     private collectAllEntries(): void {
         this.loggingService.debug('collectAllEntries: Starting to collect entries');
-        this.allEntries = Array.from(document.querySelectorAll('#entry-item-list li[data-id], #topic li[data-id]')) as HTMLElement[];
+        this.allEntries = Array.from(this.domService.querySelectorAll('#entry-item-list li[data-id], #topic li[data-id]')) as HTMLElement[];
         this.loggingService.debug(`collectAllEntries: Found ${this.allEntries.length} entries`);
         
         this.allEntries.forEach((entry, index) => {
@@ -746,9 +749,9 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
             let match;
             while ((match = pattern.exec(text)) !== null) {
                 if (match.index > lastIndex) {
-                    fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                    fragment.appendChild(this.domService.createTextNode(text.substring(lastIndex, match.index)));
                 }
-                const highlightSpan = document.createElement('span');
+                const highlightSpan = this.domService.createElement('span');
                 highlightSpan.className = 'eksi-search-highlight';
                 highlightSpan.textContent = match[0];
                 this.highlightedElements.push(highlightSpan);
@@ -757,7 +760,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
                 hasHighlights = true;
             }
             if (lastIndex < text.length) {
-                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+                fragment.appendChild(this.domService.createTextNode(text.substring(lastIndex)));
             }
             if (node.parentNode) {
                 node.parentNode.replaceChild(fragment, node);
@@ -887,11 +890,11 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     private clearHighlights(): void {
         this.highlightedElements = [];
         this.currentIndex = -1;
-        const highlights = document.querySelectorAll('.eksi-search-highlight');
+        const highlights = this.domService.querySelectorAll('.eksi-search-highlight');
         highlights.forEach(highlight => {
             const text = highlight.textContent || '';
             if (highlight.parentNode) {
-                const textNode = document.createTextNode(text);
+                const textNode = this.domService.createTextNode(text);
                 highlight.parentNode.replaceChild(textNode, highlight);
             }
         });
@@ -899,7 +902,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     }
 
     private normalizeTextNodes(): void {
-        const contentElements = document.querySelectorAll('#entry-item-list .content, #topic .content');
+        const contentElements = this.domService.querySelectorAll('#entry-item-list .content, #topic .content');
         contentElements.forEach(element => {
             element.normalize();
         });

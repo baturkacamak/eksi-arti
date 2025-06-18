@@ -253,7 +253,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
                     resolve();
                     return;
                 }
-                const script = document.createElement('script');
+                const script = this.domService.createElement('script');
                 script.src = chrome.runtime.getURL('lib/html2canvas.min.js');
                 script.onload = () => {
                     this.loggingService.debug('html2canvas loaded successfully.');
@@ -263,7 +263,10 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
                     this.loggingService.error('Failed to load html2canvas:', err);
                     reject(new Error('Failed to load html2canvas'));
                 };
-                document.head.appendChild(script);
+                const head = this.domService.querySelector('head');
+                if (head) {
+                    this.domService.appendChild(head, script);
+                }
             } catch (error) {
                 this.loggingService.error('Exception during html2canvas load initiation:', error);
                 reject(error);
@@ -313,7 +316,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             this.toggleOptionsMenu(optionsMenu);
         });
 
-        document.addEventListener('click', (e) => {
+        this.domService.addEventListener(document as unknown as HTMLElement, 'click', (e) => {
             if (!buttonContainer.contains(e.target as Node) && this.domService.hasClass(optionsMenu, 'visible')) {
                 this.domService.removeClass(optionsMenu, 'visible');
             }
@@ -330,13 +333,13 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         this.domService.addClass(downloadOption, 'eksi-screenshot-option');
         const downloadIcon = this.iconComponent.create({ name: 'download', size: 'small', color: '#8e9ed9' });
         downloadOption.appendChild(downloadIcon);
-        downloadOption.appendChild(document.createTextNode('İndir'));
+        this.domService.appendChild(downloadOption, this.domService.createTextNode('İndir'));
 
         const clipboardOption = this.domService.createElement('div');
         this.domService.addClass(clipboardOption, 'eksi-screenshot-option');
         const clipboardIcon = this.iconComponent.create({ name: 'content_copy', size: 'small', color: '#8e9ed9' });
         clipboardOption.appendChild(clipboardIcon);
-        clipboardOption.appendChild(document.createTextNode('Panoya Kopyala'));
+        this.domService.appendChild(clipboardOption, this.domService.createTextNode('Panoya Kopyala'));
 
         const handleOptionClick = (action: 'download' | 'clipboard') => (e: Event) => {
             e.preventDefault();
@@ -376,7 +379,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             const timeElement = entry.querySelector('.entry-date');
             if (timeElement) timestamp = timeElement.textContent || '';
 
-            const container = document.createElement('div');
+            const container = this.domService.createElement('div');
             container.style.padding = '15px';
             container.style.backgroundColor = '#242424';
             container.style.color = '#fff';
@@ -385,7 +388,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
             const contentClone = contentElement.cloneNode(true) as HTMLElement;
-            const header = document.createElement('div');
+            const header = this.domService.createElement('div');
             header.style.marginBottom = '10px';
             header.style.display = 'flex';
             header.style.justifyContent = 'space-between';
@@ -393,7 +396,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             header.style.fontSize = '14px';
             header.innerHTML = `<div style="font-weight: bold;">${author}</div><div>${timestamp}</div>`;
 
-            const footer = document.createElement('div');
+            const footer = this.domService.createElement('div');
             footer.style.marginTop = '15px';
             footer.style.borderTop = '1px solid rgba(255, 255, 255, 0.1)';
             footer.style.paddingTop = '10px';
@@ -402,13 +405,16 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             footer.style.textAlign = 'right';
             footer.textContent = 'Ekşi Artı ile alındı • eksisozluk.com/' + entryId;
 
-            container.appendChild(header);
-            container.appendChild(contentClone);
-            container.appendChild(footer);
+            this.domService.appendChild(container, header);
+            this.domService.appendChild(container, contentClone);
+            this.domService.appendChild(container, footer);
 
             container.style.position = 'fixed';
             container.style.left = '-9999px';
-            document.body.appendChild(container);
+            const body = this.domService.querySelector('body');
+            if (body) {
+                this.domService.appendChild(body, container);
+            }
 
             html2canvas(container, {
                 backgroundColor: '#242424',
@@ -429,11 +435,15 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
                             this.showErrorState(button);
                         });
                 }
-                document.body.removeChild(container);
+                if (body) {
+                    this.domService.removeChild(body, container);
+                }
             }).catch((error: Error) => {
                 this.loggingService.error('Error generating screenshot:', error);
                 this.showErrorState(button);
-                document.body.removeChild(container);
+                if (body) {
+                    this.domService.removeChild(body, container);
+                }
             });
         } catch (error) {
             this.loggingService.error('Error capturing entry screenshot:', error);
@@ -443,14 +453,17 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
 
     private downloadScreenshot(imageData: string, author: string, entryId: string): void {
         try {
-            const link = document.createElement('a');
+            const link = this.domService.createElement('a') as HTMLAnchorElement;
             link.href = imageData;
             const date = new Date().toISOString().slice(0, 10);
             const filename = `eksisozluk-${author}-${entryId}-${date}.png`;
             link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const body = this.domService.querySelector('body');
+            if (body) {
+                this.domService.appendChild(body, link);
+                link.click();
+                this.domService.removeChild(body, link);
+            }
         } catch (error) {
             this.loggingService.error('Error downloading screenshot:', error);
         }
@@ -460,7 +473,10 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
         try {
             // Store current focus and ensure document has focus for clipboard operations
             const storedFocus = this.documentStateService.storeFocus();
-            this.documentStateService.focusElement(document.body);
+            const body = this.domService.querySelector('body') as HTMLElement;
+            if (body) {
+                this.documentStateService.focusElement(body);
+            }
             
             // Use DocumentStateService for clipboard operations
             const success = await this.documentStateService.copyImageToClipboard(canvas);

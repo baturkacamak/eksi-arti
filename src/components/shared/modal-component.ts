@@ -44,7 +44,7 @@ export class ModalComponent implements IModalComponent {
 
             // Add keydown listener for Escape key to close modal (if enabled)
             if (this.options.allowEscapeClose !== false) {
-                document.addEventListener('keydown', this.handleEscapeKey);
+                this.domService.addEventListener(document as unknown as HTMLElement, 'keydown', this.handleEscapeKey);
             }
         } catch (err) {
             this.loggingService.error('Error showing modal:', err);
@@ -168,7 +168,10 @@ export class ModalComponent implements IModalComponent {
      */
     protected appendModalToDOM(): void {
         if (this.modalElement) {
-            this.domService.appendChild(document.body, this.modalElement);
+            const body = this.domService.querySelector('body');
+            if (body) {
+                this.domService.appendChild(body, this.modalElement);
+            }
         }
     }
 

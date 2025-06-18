@@ -62,7 +62,7 @@ export class TooltipComponent {
         const tooltipContentId = triggerElement.getAttribute('data-tooltip-content');
         if (!tooltipContentId) return;
 
-        const tooltipContent = document.getElementById(tooltipContentId);
+        const tooltipContent = this.domService.querySelector(`#${tooltipContentId}`) as HTMLElement;
         if (!tooltipContent) return;
 
         // Hide tooltip content element
@@ -198,7 +198,10 @@ export class TooltipComponent {
             tooltipElement.style.visibility = 'visible';
 
             // Add to DOM first so dimensions can be calculated
-            this.domService.appendChild(document.body, tooltipElement);
+            const body = this.domService.querySelector('body');
+        if (body) {
+            this.domService.appendChild(body, tooltipElement);
+        }
 
             // Force a layout calculation
             void tooltipElement.offsetWidth;
@@ -473,7 +476,7 @@ export class TooltipComponent {
             }
         };
 
-        document.addEventListener('click', this.documentClickListener);
+        this.domService.addEventListener(document as unknown as HTMLElement, 'click', this.documentClickListener);
     }
 
     /**
@@ -493,7 +496,7 @@ export class TooltipComponent {
         const tooltipContentId = triggerElement.getAttribute('data-tooltip-content');
         if (!tooltipContentId) return;
 
-        const tooltipContent = document.getElementById(tooltipContentId);
+        const tooltipContent = this.domService.querySelector(`#${tooltipContentId}`) as HTMLElement;
         if (!tooltipContent) return;
 
         const options = this.parseOptions(triggerElement);

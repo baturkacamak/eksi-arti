@@ -7,7 +7,7 @@
 import { DOMService } from './dom-service';
 import { LoggingService } from './logging-service';
 import { observerService } from './observer-service';
-import { pageUtils } from './page-utils-service';
+import { PageUtilsService } from './page-utils-service';
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 
@@ -23,7 +23,7 @@ export class AccessibilityService {
     };
     private loggingService: ILoggingService;
 
-    private constructor() {
+    private constructor(private pageUtilsService?: PageUtilsService) {
         this.domService = new DOMService();
         this.loggingService = new LoggingService();
     }
@@ -31,9 +31,9 @@ export class AccessibilityService {
     /**
      * Get singleton instance
      */
-    public static getInstance(): AccessibilityService {
+    public static getInstance(pageUtilsService?: PageUtilsService): AccessibilityService {
         if (!AccessibilityService.instance) {
-            AccessibilityService.instance = new AccessibilityService();
+            AccessibilityService.instance = new AccessibilityService(pageUtilsService);
         }
         return AccessibilityService.instance;
     }
@@ -47,7 +47,7 @@ export class AccessibilityService {
                 return;
             }
 
-            if (!pageUtils.isEntryListPage()) {
+            if (!this.pageUtilsService?.isEntryListPage()) {
                this.loggingService.debug('No entry list found, skipping accessibility initialization', {}, 'AccessibilityService');
                 return;
             }
@@ -66,7 +66,7 @@ export class AccessibilityService {
                     });
 
                     // Also observe dropdown menus that might be outside the entry list
-                    const dropdownMenus = document.querySelectorAll('.dropdown-menu:not([aria-hidden])');
+                    const dropdownMenus = this.domService.querySelectorAll('.dropdown-menu:not([aria-hidden])');
                     dropdownMenus.forEach(menu => {
                         if (!menu.hasAttribute('aria-hidden')) {
                             menu.setAttribute('aria-hidden', 'true');
@@ -94,7 +94,7 @@ export class AccessibilityService {
      */
     private enhanceAccessibility(): void {
         try {
-            const entryList = document.querySelector(this.SELECTORS.ENTRY_LIST);
+            const entryList = this.domService.querySelector(this.SELECTORS.ENTRY_LIST);
             if (!entryList) return;
 
             // Process entry list elements
@@ -107,7 +107,7 @@ export class AccessibilityService {
 
             // Also process any dropdown menus in the entire document
             // These are typically outside the entry list but should still be accessible
-            const dropdownMenus = document.querySelectorAll('.dropdown-menu:not([aria-hidden])');
+            const dropdownMenus = this.domService.querySelectorAll('.dropdown-menu:not([aria-hidden])');
             dropdownMenus.forEach((element) => {
                 // Only add aria-hidden if it doesn't already have it
                 if (!element.hasAttribute('aria-hidden')) {
