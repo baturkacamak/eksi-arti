@@ -42,7 +42,6 @@
   },
   "permissions": [
     "storage",
-    "contextMenus",
     "alarms",
     "notifications",
     "tabs",
