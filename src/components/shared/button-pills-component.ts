@@ -146,12 +146,20 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
 
         // Add direction indicator for active pill if enabled
         if (isActive && this.props.showDirectionOnActive) {
-            const directionIcon = this.iconComponent.create({
-                name: this.currentDirection === 'desc' ? 'arrow_downward' : 'arrow_upward',
-                size: 'small',
-                className: 'eksi-pill-direction'
-            });
-            this.domService.appendChild(content, directionIcon);
+            try {
+                const direction = this.currentDirection || 'desc';
+                const directionIcon = this.iconComponent.create({
+                    name: 'arrow_upward', // Always use upward arrow, we'll rotate it with CSS
+                    size: 'small',
+                    className: 'eksi-pill-direction'
+                });
+                
+                // Add direction class after creation
+                this.domService.addClass(directionIcon, direction);
+                this.domService.appendChild(content, directionIcon);
+            } catch (error) {
+                this.loggingService.error('Error creating direction icon in createPill:', error);
+            }
         }
 
         this.domService.appendChild(pill, content);
@@ -205,20 +213,34 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
             // Update content to add/remove direction indicator
             const content = pill.querySelector('.eksi-pill-content');
             if (content) {
-                // Remove existing direction icon
                 const existingDirection = content.querySelector('.eksi-pill-direction');
-                if (existingDirection) {
-                    content.removeChild(existingDirection);
-                }
-
-                // Add direction icon if this is the active pill and feature is enabled
+                
                 if (isActive && this.props.showDirectionOnActive) {
-                    const directionIcon = this.iconComponent.create({
-                        name: this.currentDirection === 'desc' ? 'arrow_downward' : 'arrow_upward',
-                        size: 'small',
-                        className: 'eksi-pill-direction'
-                    });
-                    this.domService.appendChild(content, directionIcon);
+                    if (existingDirection) {
+                        // Update existing direction icon with smooth transition
+                        this.domService.removeClass(existingDirection, 'asc');
+                        this.domService.removeClass(existingDirection, 'desc');
+                        this.domService.addClass(existingDirection, this.currentDirection);
+                    } else {
+                        try {
+                            // Create new direction icon
+                            const direction = this.currentDirection || 'desc';
+                            const directionIcon = this.iconComponent.create({
+                                name: 'arrow_upward', // Always use upward arrow, we'll rotate it with CSS
+                                size: 'small',
+                                className: 'eksi-pill-direction'
+                            });
+                            
+                            // Add direction class after creation
+                            this.domService.addClass(directionIcon, direction);
+                            this.domService.appendChild(content, directionIcon);
+                        } catch (error) {
+                            this.loggingService.error('Error creating direction icon:', error);
+                        }
+                    }
+                } else if (existingDirection) {
+                    // Remove direction icon if not active
+                    content.removeChild(existingDirection);
                 }
             }
         });
@@ -311,6 +333,16 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 align-items: center;
                 margin-left: 2px;
                 opacity: 0.9;
+                transition: transform 0.3s ease-in-out;
+                transform-origin: center;
+            }
+            
+            .eksi-pill-direction.asc {
+                transform: rotate(0deg);
+            }
+            
+            .eksi-pill-direction.desc {
+                transform: rotate(180deg);
             }
             
             /* Dark mode support */

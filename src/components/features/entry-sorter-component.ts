@@ -187,7 +187,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         if (!strategy) return;
 
         this.currentDirection = data.direction;
-        this.activeStrategy = strategy;
+            this.activeStrategy = strategy;
         
         // Sort entries with the new strategy and direction
         this.sortEntries(strategy, data.direction);
@@ -337,7 +337,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
 
     protected registerObservers(): void {
         const observerConfig: ObserverConfig = {
-            selector: '#topic',
+            selector: '#topic', 
             handler: () => {
                 if (!this.specificPageUtils.isEntryListPage()) {
                     this.loggingService.debug('EntrySorter observer: Not an entry list page, skipping UI re-check.');
