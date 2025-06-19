@@ -14,6 +14,7 @@ import {IconComponent} from '../components/shared/icon-component';
 import {TooltipComponent} from '../components/shared/tooltip-component';
 import {ToggleSwitchComponent} from '../components/shared/toggle-switch-component';
 import {ButtonComponent} from '../components/shared/button-component';
+import {ButtonPillsComponent} from '../components/shared/button-pills-component';
 import {ProgressBarComponent} from '../components/shared/progress-bar-component';
 import {ModalComponent} from '../components/shared/modal-component';
 import {CountdownComponent} from '../components/features/countdown-component';
@@ -49,6 +50,7 @@ import {EventBus} from "../services/event-bus";
 import {IEventBus} from "../interfaces/services/IEventBus";
 import {initializeCommandDI} from "./initialize-di-commands";
 import {IButtonComponent} from "../interfaces/components/IButtonComponent";
+import {IButtonPillsComponent} from "../interfaces/components/IButtonPillsComponent";
 import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
@@ -166,6 +168,14 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ButtonComponent(domService, cssService, loggingService);
+    });
+
+    container.register('ButtonPillsComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        return new ButtonPillsComponent(domService, cssService, loggingService, iconComponent);
     });
 
     container.register('ProgressBarComponent', () => {
@@ -458,9 +468,8 @@ export function initializeDI(): Container {
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
         const userProfileService = container.resolve<IUserProfileService>('UserProfileService');
-        const selectBoxComponent = container.resolve<ISelectBoxComponent>('SelectBoxComponent');
         const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
-        const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
+        const buttonPillsComponent = container.resolve<IButtonPillsComponent>('ButtonPillsComponent');
         const sortingDataExtractor = container.resolve<SortingDataExtractor>('SortingDataExtractor');
 
         return new EntrySorterComponent(
@@ -471,9 +480,8 @@ export function initializeDI(): Container {
             observerService,
             pageUtils,
             userProfileService,
-            selectBoxComponent,
             usernameExtractorService,
-            buttonComponent,
+            buttonPillsComponent,
             sortingDataExtractor
         );
     });

@@ -13,10 +13,9 @@ import { IEntrySorterComponent } from "../../interfaces/components/IEntrySorterC
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
 import { ISortingStrategy } from "../../commands/sorting/ISortingStrategy";
 import { IUserProfileService } from "../../interfaces/services/IUserProfileService";
-import { ISelectBoxComponent, SelectOption } from "../../interfaces/components/ISelectBoxComponent";
 import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
 import { SortingDataExtractor } from "../../commands/sorting/SortingDataExtractor";
-import { IButtonComponent, ButtonVariant, ButtonSize, ButtonAnimation } from "../../interfaces/components/IButtonComponent";
+import { IButtonPillsComponent, PillOption, PillClickData } from "../shared/button-pills-component";
 import {
     DateDataStrategy,
     FavoriteCountDataStrategy,
@@ -32,22 +31,20 @@ import {
 
 /**
  * EntrySorterComponent
- * A component for sorting entries by different criteria
+ * A component for sorting entries by different criteria using horizontal button pills
  */
 export class EntrySorterComponent extends BaseFeatureComponent implements IEntrySorterComponent {
     private activeStrategy: ISortingStrategy | null = null;
     private currentDirection: 'asc' | 'desc' = 'desc';
     private strategies: ISortingStrategy[] = [];
     private observer: MutationObserver | null = null;
-    private sortButtons: HTMLElement[] = [];
 
     // Store specific instances to avoid DI issues
     private specificPageUtils: PageUtilsService;
     private specificUserProfileService: IUserProfileService;
-    private specificSelectBoxComponent: ISelectBoxComponent;
     private specificUsernameExtractorService: IUsernameExtractorService;
     private sortingDataExtractor: SortingDataExtractor;
-    private buttonComponent: IButtonComponent;
+    private buttonPillsComponent: IButtonPillsComponent;
 
     // Strategy display name mapping
     private readonly strategyDisplayNames: Record<string, string> = {
@@ -71,19 +68,17 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         observerServiceInstance: IObserverService,
         pageUtils: PageUtilsService,
         userProfileService: IUserProfileService,
-        selectBoxComponent: ISelectBoxComponent,
         usernameExtractorService: IUsernameExtractorService,
-        buttonComponent: IButtonComponent,
+        buttonPillsComponent: IButtonPillsComponent,
         sortingDataExtractor: SortingDataExtractor,
         options?: FeatureComponentOptions
     ) {
         super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
         this.specificPageUtils = pageUtils;
         this.specificUserProfileService = userProfileService;
-        this.specificSelectBoxComponent = selectBoxComponent;
         this.specificUsernameExtractorService = usernameExtractorService;
         this.sortingDataExtractor = sortingDataExtractor;
-        this.buttonComponent = buttonComponent;
+        this.buttonPillsComponent = buttonPillsComponent;
 
         // Initialize new data-driven strategies (much cleaner and more performant)
         this.strategies = [
@@ -172,76 +167,31 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
     }
 
     /**
-     * Create select options from strategies
+     * Create pill options from strategies
      */
-    private createSelectOptions(): SelectOption[] {
+    private createPillOptions(): PillOption[] {
         return this.strategies.map(strategy => ({
             value: strategy.name,
             label: this.getStrategyDisplayName(strategy),
-            icon: strategy.icon
+            icon: strategy.icon,
+            defaultDirection: strategy.defaultDirection || 'desc',
+            ariaLabel: `${this.getStrategyDisplayName(strategy)} ile sırala`
         }));
     }
 
     /**
-     * Handle strategy selection change
+     * Handle pill click from ButtonPillsComponent
      */
-    private handleStrategyChange = (selectedOption: SelectOption): void => {
-        const strategy = this.strategies.find(s => s.name === selectedOption.value);
-        if (strategy) {
-            // Keep the current direction - don't reset to strategy's default
-            // Only use strategy's default if no direction has been set yet (first time)
-            if (this.activeStrategy === null) {
-                this.currentDirection = strategy.defaultDirection || 'desc';
-                this.updateDirectionToggleInUI();
-            }
-            this.sortEntries(strategy);
-            this.activeStrategy = strategy;
-        }
+    private handlePillClick = (data: PillClickData): void => {
+        const strategy = this.strategies.find(s => s.name === data.option.value);
+        if (!strategy) return;
+
+        this.currentDirection = data.direction;
+        this.activeStrategy = strategy;
+        
+        // Sort entries with the new strategy and direction
+        this.sortEntries(strategy, data.direction);
     };
-
-    /**
-     * Create direction toggle button
-     */
-    private createDirectionToggle(): HTMLElement {
-        const isDesc = this.currentDirection === 'desc';
-        const text = isDesc ? 'Azalan' : 'Artan';
-        
-        const toggle = this.buttonComponent.create({
-            text: text,
-            variant: ButtonVariant.SECONDARY,
-            size: ButtonSize.SMALL,
-            icon: 'arrow_upward', // Always use upward arrow, ButtonComponent will rotate it
-            iconPosition: 'left',
-            ariaLabel: `Sıralama yönü: ${text}`,
-            className: 'eksi-direction-toggle',
-            animation: ButtonAnimation.DIRECTION_TOGGLE,
-            animationState: this.currentDirection,
-            onClick: () => {
-                this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
-                this.updateDirectionToggleInUI();
-                
-                // Re-sort with new direction if there's an active strategy
-                if (this.activeStrategy) {
-                    this.sortEntries(this.activeStrategy, this.currentDirection);
-                }
-            }
-        });
-        
-        // Add custom styling for the direction toggle
-        toggle.style.marginLeft = '8px';
-        
-        return toggle;
-    }
-
-    /**
-     * Update direction toggle in the UI
-     */
-    private updateDirectionToggleInUI(): void {
-        // Use ButtonComponent's setAnimationState method for smooth updates
-        if (this.buttonComponent && this.buttonComponent.setAnimationState) {
-            this.buttonComponent.setAnimationState(this.currentDirection);
-        }
-    }
 
     /**
      * Sort entries using the specified strategy
@@ -311,8 +261,8 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             this.observer = null;
         }
 
-        this.sortButtons = [];
         this.activeStrategy = null;
+        this.buttonPillsComponent.destroy();
     }
 
     protected getStyles(): string | null {
@@ -333,16 +283,10 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                     border-color: rgba(255, 255, 255, 0.08) !important;
                 }
             }
-            .eksi-sort-buttons { /* Container for the select box and direction toggle */
-                display: flex; 
-                align-items: center;
-                margin-right: auto; /* Push sort select box to the left */
-            }
-            .eksi-entry-sorter-select-container .eksi-selectbox-container { 
-                /* Styles for the select box can be added here if needed for this specific context */
-            }
-            .eksi-direction-toggle {
-                margin-left: 8px;
+            
+            /* Button pills container positioning */
+            .eksi-sort-pills-container {
+                margin-right: auto;
             }
         `;
     }
@@ -360,46 +304,40 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             const customControlsRow = this.getOrCreateCustomControlsRow();
             if (!customControlsRow) return;
 
-            const sorterContainerExists = customControlsRow.querySelector('.eksi-entry-sorter-select-container');
+            const sorterContainerExists = customControlsRow.querySelector('.eksi-sort-pills-container');
             if (sorterContainerExists) {
-                this.loggingService.debug('Entry sorter select box already present in custom controls row.');
+                this.loggingService.debug('Entry sorter buttons already present in custom controls row.');
                 return; 
             }
 
-            const options = this.createSelectOptions();
+            // Create pill options from strategies
+            const pillOptions = this.createPillOptions();
 
-            const selectContainer = this.domService.createElement('div');
-            this.domService.addClass(selectContainer, 'eksi-sort-buttons'); 
-            this.domService.addClass(selectContainer, 'eksi-entry-sorter-select-container');
-            
-            const selectElement = this.specificSelectBoxComponent.create({
-                options: options,
-                onChange: this.handleStrategyChange,
-                placeholder: 'Sırala...',
-                width: '200px',
-                className: 'eksi-entry-sorter-select'
+            // Create button pills using the component
+            const pillsContainer = this.buttonPillsComponent.create({
+                options: pillOptions,
+                onPillClick: this.handlePillClick,
+                direction: this.currentDirection,
+                showDirectionOnActive: true,
+                allowDirectionToggle: true,
+                className: 'eksi-sort-pills-container'
             });
-            this.domService.appendChild(selectContainer, selectElement);
-
-            // Add direction toggle button
-            const directionToggle = this.createDirectionToggle();
-            this.domService.appendChild(selectContainer, directionToggle);
             
             // Prepend to ensure it is on the left of other controls in the row
-            this.domService.insertBefore(customControlsRow, selectContainer, customControlsRow.firstChild);
-            this.loggingService.debug('Entry sorter select box added/ensured in custom controls row.');
+            this.domService.insertBefore(customControlsRow, pillsContainer, customControlsRow.firstChild);
+            this.loggingService.debug('Entry sorter button pills added to custom controls row.');
         } catch (error) {
             this.loggingService.error('Error in EntrySorterComponent.setupUI:', error);
         }
     }
 
     protected setupListeners(): void {
-        // No global listeners specific to this component beyond what selectbox handles itself.
+        // Button event listeners are handled by ButtonPillsComponent
     }
 
     protected registerObservers(): void {
-        const observerOptions: ObserverConfig = {
-            selector: '#topic', 
+        const observerConfig: ObserverConfig = {
+            selector: '#topic',
             handler: () => {
                 if (!this.specificPageUtils.isEntryListPage()) {
                     this.loggingService.debug('EntrySorter observer: Not an entry list page, skipping UI re-check.');
@@ -407,7 +345,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                 }
                 this.loggingService.debug('EntrySorter observer: #topic potentially changed. Re-evaluating sorter UI.');
                 // Simple check: if our specific container isn't there, try to set up UI again.
-                if (!this.domService.querySelector('.eksi-custom-controls-row .eksi-entry-sorter-select-container')) {
+                if (!this.domService.querySelector('.eksi-custom-controls-row .eksi-sort-pills-container')) {
                     this.loggingService.debug('EntrySorter UI not found via observer, attempting to re-add.');
                     this.setupUI(); 
                 }
@@ -415,20 +353,21 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             processExisting: true, 
             subtree: true,
         };
-        this.observerId = this.observerServiceInstance.observe(observerOptions);
+        this.observerId = this.observerServiceInstance.observe(observerConfig);
         this.loggingService.debug(`EntrySorterComponent observer registered (ID: ${this.observerId}) for #topic.`);
     }
 
     protected cleanup(): void {
         this.loggingService.debug('Cleaning up EntrySorterComponent UI elements.');
         this.activeStrategy = null;
-        const sorterContainer = this.domService.querySelector('.eksi-entry-sorter-select-container');
+        
+        const sorterContainer = this.domService.querySelector('.eksi-sort-pills-container');
         if (sorterContainer && sorterContainer.parentElement) {
             if (sorterContainer.parentElement.classList.contains('eksi-custom-controls-row')){
                  sorterContainer.parentElement.removeChild(sorterContainer);
-                 this.loggingService.debug('Removed sorter select container from custom controls row.');
-                 // If customControlsRow is now empty and was created by this component, and no other components use it,
-                 // it could be removed. This logic might need to be more robust if row is shared.
+                 this.loggingService.debug('Removed sorter container from custom controls row.');
+                 
+                 // If customControlsRow is now empty, remove it
                  if(sorterContainer.parentElement.children.length === 0){
                      const customRow = sorterContainer.parentElement;
                      customRow.parentElement?.removeChild(customRow);
@@ -436,7 +375,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                  }
             } else { 
                 sorterContainer.parentElement.removeChild(sorterContainer);
-                 this.loggingService.debug('Removed sorter select container (not in custom controls row).');
+                this.loggingService.debug('Removed sorter container (not in custom controls row).');
             }
         }
         // BaseFeatureComponent will call unobserve for this.observerId
