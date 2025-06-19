@@ -52,14 +52,11 @@
     "alarms",
     "notifications",
     "tabs",
-    "activeTab",
-    "scripting",
-    "offscreen"
+    "activeTab"
   ],
   "optional_permissions": [
     "downloads",
-    "clipboardWrite",
-    "identity"
+    "clipboardWrite"
   ],
   "host_permissions": [
     "https://eksisozluk.com/*"
