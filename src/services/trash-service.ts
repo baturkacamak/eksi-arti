@@ -107,16 +107,19 @@ export class TrashService {
             
             .eksi-load-all-button.cancelling {
                 background-color: #ff7063;
+                color: white;
             }
             
             .eksi-load-all-button.completed {
                 background-color: #f0f0f0;
+                color: #333;
             }
             
             .eksi-page-separator {
                 margin: 20px 0;
                 padding: 5px 10px;
                 background-color: #f5f5f5;
+                color: #333;
                 border-radius: 4px;
                 text-align: center;
             }
@@ -147,6 +150,7 @@ export class TrashService {
             .eksi-bulk-controls .select-all,
             .eksi-bulk-controls .deselect-all {
                 background-color: #f0f0f0;
+                color: #333;
                 margin-right: 10px;
             }
             
@@ -158,6 +162,7 @@ export class TrashService {
             .eksi-bulk-controls .selection-count {
                 margin-right: 10px;
                 font-size: 14px;
+                color: #333;
             }
             
             .eksi-trash-checkbox-container {
@@ -183,6 +188,38 @@ export class TrashService {
             .eksi-trash-item-removing {
                 transition: opacity 0.5s;
                 opacity: 0;
+            }
+            
+            /* Dark mode support */
+            @media (prefers-color-scheme: dark) {
+                .eksi-load-all-button {
+                    background-color: #3a3a3a;
+                    color: #e0e0e0;
+                }
+                
+                .eksi-load-all-button.completed {
+                    background-color: #3a3a3a;
+                    color: #e0e0e0;
+                }
+                
+                .eksi-page-separator {
+                    background-color: #2d2d2d;
+                    color: #e0e0e0;
+                }
+                
+                .eksi-bulk-controls {
+                    background-color: #2d2d2d;
+                }
+                
+                .eksi-bulk-controls .select-all,
+                .eksi-bulk-controls .deselect-all {
+                    background-color: #3a3a3a;
+                    color: #e0e0e0;
+                }
+                
+                .eksi-bulk-controls .selection-count {
+                    color: #e0e0e0;
+                }
             }
         `;
         
@@ -526,7 +563,19 @@ export class TrashService {
         try {
             const url = Endpoints.RESTORE_ENTRY(entryId);
             const response = await this.httpService.post(url);
-            return response.includes("canlandirildi") || response.includes("success");
+            
+            // Check for successful revive indicators
+            // The response might contain success messages or lack error indicators
+            const isSuccess = response.includes("canlandirildi") || 
+                            response.includes("success") || 
+                            response.includes("başarıyla") ||
+                            (!response.includes("hata") && 
+                             !response.includes("error") && 
+                             !response.includes("başarısız") &&
+                             response.trim().length > 0);
+            
+            this.loggingService.debug(`Revive entry ${entryId} response: ${response.substring(0, 100)}...`);
+            return isSuccess;
         } catch (error) {
             this.loggingService.error(`Error reviving entry ${entryId}:`, error);
             return false;
@@ -677,12 +726,12 @@ export class TrashService {
             const checkboxes = this.domService.querySelectorAll('.eksi-trash-checkbox:checked');
             const count = checkboxes.length;
 
-            const countSpan = this.domService.querySelector('.eksi-selection-count');
+            const countSpan = this.domService.querySelector('.selection-count');
             if (countSpan) {
-                countSpan.textContent = `${count} entry seçildi`;
+                countSpan.textContent = `${count} yazı seçildi`;
             }
 
-            const reviveButton = this.domService.querySelector<HTMLButtonElement>('.eksi-revive-selected-button');
+            const reviveButton = this.domService.querySelector<HTMLButtonElement>('.revive-selected');
             if (reviveButton) {
                 reviveButton.disabled = count === 0;
             }
@@ -732,15 +781,19 @@ export class TrashService {
                     if (success) {
                         successCount++;
 
-                        // Find and remove the item
+                        // Find and remove the item immediately
                         const checkbox = this.domService.querySelector(`.eksi-trash-checkbox[data-entry-id="${entryId}"]`);
                         if (checkbox) {
                             const item = checkbox.closest('li');
                             if (item) {
+                                // Add transition class and remove after animation
                                 this.domService.addClass(item as HTMLElement, 'eksi-trash-item-removing');
-
+                                
+                                // Remove the item after a short delay for animation
                                 setTimeout(() => {
                                     item.remove();
+                                    // Update selection count after item removal
+                                    this.updateSelectionCount();
                                 }, 500);
                             }
                         }
