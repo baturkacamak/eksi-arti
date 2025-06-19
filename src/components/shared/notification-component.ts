@@ -128,8 +128,13 @@ export class NotificationComponent implements INotificationComponent {
             this.removeExistingNotification();
         }
 
+        const type = options.type || 'notification';
+        
         this.notificationElement = this.domService.createElement('div');
         this.domService.addClass(this.notificationElement, 'eksi-notification-container');
+
+        // Add type class
+        this.domService.addClass(this.notificationElement, `eksi-notification-type-${type}`);
 
         // Add theme class
         const theme = options.theme || 'default';
@@ -144,6 +149,56 @@ export class NotificationComponent implements INotificationComponent {
             this.notificationElement.style.width = options.width;
         }
 
+        if (type === 'toast') {
+            // Toast layout: simple content with optional close button
+            this.createToastLayout(content, options);
+        } else {
+            // Notification layout: header + content + footer (current behavior)
+            this.createNotificationLayout(content, options);
+        }
+    }
+
+    /**
+     * Create toast layout (simple and compact)
+     */
+    private createToastLayout(content: string, options: ExtendedNotificationOptions): void {
+        // Create content container
+        this.contentContainer = this.domService.createElement('div');
+        this.domService.addClass(this.contentContainer, 'eksi-toast-content');
+        this.contentContainer.innerHTML = content;
+
+        // Add close button if closable
+        if (options.closable !== false) {
+            const closeButton = this.domService.createElement('button');
+            this.domService.addClass(closeButton, 'eksi-toast-close');
+            closeButton.innerHTML = '×';
+            closeButton.setAttribute('aria-label', 'Kapat');
+
+            this.domService.addEventListener(closeButton, 'click', () => {
+                this.removeWithTransition(options.onClose);
+            });
+
+            if (this.notificationElement) {
+                this.domService.appendChild(this.notificationElement, closeButton);
+            }
+        }
+
+        // Create minimal footer for compatibility
+        this.footerContainer = this.domService.createElement('div');
+        this.domService.addClass(this.footerContainer, 'eksi-toast-footer');
+        this.footerContainer.style.display = 'none'; // Hidden by default for toasts
+
+        // Assemble toast
+        if (this.notificationElement && this.contentContainer && this.footerContainer) {
+            this.domService.appendChild(this.notificationElement, this.contentContainer);
+            this.domService.appendChild(this.notificationElement, this.footerContainer);
+        }
+    }
+
+    /**
+     * Create notification layout (rich with header and footer)
+     */
+    private createNotificationLayout(content: string, options: ExtendedNotificationOptions): void {
         // Create a header with title
         const headerElement = this.domService.createElement('div');
         this.domService.addClass(headerElement, 'eksi-notification-header');
@@ -178,9 +233,11 @@ export class NotificationComponent implements INotificationComponent {
         this.domService.addClass(this.footerContainer, 'eksi-notification-footer');
 
         // Assemble notification
-        this.domService.appendChild(this.notificationElement, headerElement);
-        this.domService.appendChild(this.notificationElement, this.contentContainer);
-        this.domService.appendChild(this.notificationElement, this.footerContainer);
+        if (this.notificationElement && this.contentContainer && this.footerContainer) {
+            this.domService.appendChild(this.notificationElement, headerElement);
+            this.domService.appendChild(this.notificationElement, this.contentContainer);
+            this.domService.appendChild(this.notificationElement, this.footerContainer);
+        }
     }
 
     /**
@@ -477,6 +534,76 @@ export class NotificationComponent implements INotificationComponent {
       
       .eksi-notification-theme-info .eksi-notification-title {
         color: #1e88e5;
+      }
+
+      /* Toast-specific styles */
+      .eksi-notification-type-toast {
+        padding: 12px 16px !important;
+        min-width: 250px !important;
+        max-width: 350px !important;
+        border-radius: 6px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+        border-left: none !important;
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+      }
+
+      /* Toast content */
+      .eksi-toast-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+        word-wrap: break-word !important;
+      }
+
+      /* Toast close button */
+      .eksi-toast-close {
+        position: absolute !important;
+        top: 8px !important;
+        right: 8px !important;
+        background: transparent !important;
+        border: none !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 18px !important;
+        cursor: pointer !important;
+        width: 20px !important;
+        height: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: color 0.2s ease !important;
+        padding: 0 !important;
+      }
+
+      .eksi-toast-close:hover {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+
+      /* Toast theme variations */
+      .eksi-notification-type-toast.eksi-notification-theme-success {
+        background-color: #2d5a2d !important;
+        border-left: 3px solid #43a047 !important;
+      }
+      
+      .eksi-notification-type-toast.eksi-notification-theme-error {
+        background-color: #5a2d2d !important;
+        border-left: 3px solid #e53935 !important;
+      }
+      
+      .eksi-notification-type-toast.eksi-notification-theme-warning {
+        background-color: #5a4d2d !important;
+        border-left: 3px solid #ffa000 !important;
+      }
+      
+      .eksi-notification-type-toast.eksi-notification-theme-info {
+        background-color: #2d3e5a !important;
+        border-left: 3px solid #1e88e5 !important;
+      }
+
+      /* Toast footer (hidden by default) */
+      .eksi-toast-footer {
+        display: none !important;
       }
 
       /* Utility tooltip for the notification */

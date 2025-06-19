@@ -742,17 +742,11 @@ export class AuthorHighlighterService {
             const success = await this.addAuthor(author, color);
 
             if (success) {
-                // Show a notification
-                this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({ name: 'person', color, size: 'medium' }).outerHTML}
-                        <span>"${author}" yazarının entry'leri vurgulanıyor.</span>
-                    </div>`,
-                    {
-                        theme: 'info',
-                        timeout: 3
-                    }
-                );
+                // Show a toast notification
+                this.notificationService.show(`"${author}" yazarının entry'leri vurgulanıyor.`, {
+                    type: 'toast',
+                    theme: 'info'
+                });
             }
 
             return success;

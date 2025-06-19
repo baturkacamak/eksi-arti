@@ -153,9 +153,9 @@ export class PreferencesService implements IPreferencesService {
      */
     showSavedNotification(notification: any, success: boolean): void {
         if (success) {
-            notification.show('Tercihler kaydedildi.', { timeout: 3 });
+            notification.show('Tercihler kaydedildi.', { type: 'toast', theme: 'success' });
         } else {
-            notification.show('Tercihler kaydedilemedi.', { timeout: 5 });
+            notification.show('Tercihler kaydedilemedi.', { type: 'toast', theme: 'error', timeout: 5 });
         }
     }
 }

@@ -59,7 +59,7 @@ export class PreferencesModal extends BaseFeatureComponent {
                 await this.loadPreferences();
             } catch (error) {
                 this.loggingService.error('Error loading preferences for modal display:', error);
-                await this.specificNotificationComponent.show('Tercihler yüklenemedi.', { timeout: 5 });
+                await this.specificNotificationComponent.show('Tercihler yüklenemedi.', { type: 'toast', theme: 'error', timeout: 5 });
                 return;
             }
         }
@@ -211,11 +211,11 @@ export class PreferencesModal extends BaseFeatureComponent {
         try {
             await this.specificPreferencesService.savePreferences(newPreferences);
             this.preferences = newPreferences;
-            await this.specificNotificationComponent.show('Tercihler kaydedildi!', { timeout: 3 });
+            await this.specificNotificationComponent.show('Tercihler kaydedildi!', { type: 'toast', theme: 'success' });
             this.close();
         } catch (error) {
             this.loggingService.error('Error saving preferences:', error);
-            await this.specificNotificationComponent.show('Tercihler kaydedilemedi.', { timeout: 5 });
+            await this.specificNotificationComponent.show('Tercihler kaydedilemedi.', { type: 'toast', theme: 'error', timeout: 5 });
         }
     }
 } 

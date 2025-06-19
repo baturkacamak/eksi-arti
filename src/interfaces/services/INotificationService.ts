@@ -1,4 +1,5 @@
 export interface INotificationServiceOptions {
+    type?: 'notification' | 'toast';
     position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
     theme?: 'default' | 'success' | 'error' | 'warning' | 'info';
     closable?: boolean;

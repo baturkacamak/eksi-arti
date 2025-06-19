@@ -33,6 +33,25 @@ export class NotificationService implements INotificationService {
      */
     async show(content: string, options: INotificationServiceOptions = {}): Promise<void> {
         try {
+            const type = options.type || 'notification';
+
+            // Apply toast-specific defaults
+            if (type === 'toast') {
+                // Set shorter timeout for toasts if not specified
+                if (options.timeout === undefined) {
+                    options.timeout = 3;
+                }
+                
+                // Disable progress bars, countdowns, and buttons for toasts
+                // These don't make sense for simple toast messages
+                if (options.progress || options.countdown || options.buttons) {
+                    this.loggingService.warn('Progress bars, countdowns, and buttons are not supported for toast notifications. Use type: "notification" for rich content.');
+                    delete options.progress;
+                    delete options.countdown;
+                    delete options.buttons;
+                }
+            }
+
             // First show the basic notification
             const notificationElement = await this.notificationComponent.show(content, options);
 
@@ -40,27 +59,30 @@ export class NotificationService implements INotificationService {
                 return; // Notification settings disabled or error occurred
             }
 
-            // Get containers for adding components
-            const contentContainer = this.notificationComponent.getContentContainer();
-            const footerContainer = this.notificationComponent.getFooterContainer();
+            // Only add rich components for notification type
+            if (type === 'notification') {
+                // Get containers for adding components
+                const contentContainer = this.notificationComponent.getContentContainer();
+                const footerContainer = this.notificationComponent.getFooterContainer();
 
-            if (!contentContainer || !footerContainer) {
-                return;
-            }
+                if (!contentContainer || !footerContainer) {
+                    return;
+                }
 
-            // Add progress bar if requested
-            if (options.progress) {
-                this.addProgressBar(footerContainer, options.progress.current, options.progress.total, options.progress.options);
-            }
+                // Add progress bar if requested
+                if (options.progress) {
+                    this.addProgressBar(footerContainer, options.progress.current, options.progress.total, options.progress.options);
+                }
 
-            // Add countdown timer if requested
-            if (options.countdown) {
-                this.addCountdown(footerContainer, options.countdown.seconds, options.countdown.options);
-            }
+                // Add countdown timer if requested
+                if (options.countdown) {
+                    this.addCountdown(footerContainer, options.countdown.seconds, options.countdown.options);
+                }
 
-            // Add buttons if requested
-            if (options.buttons && options.buttons.length > 0) {
-                this.addButtons(footerContainer, options.buttons);
+                // Add buttons if requested
+                if (options.buttons && options.buttons.length > 0) {
+                    this.addButtons(footerContainer, options.buttons);
+                }
             }
         } catch (error) {
             this.loggingService.error('Error showing notification with components:', error);

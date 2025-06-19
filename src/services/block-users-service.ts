@@ -235,6 +235,7 @@ export class BlockUsersService {
             const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
             // Keep error notifications as they're important for troubleshooting
             await this.notificationService.show(`Favori listesi yüklenemedi: ${message}`, {
+                type: 'toast',
                 theme: 'error',
                 timeout: 10
             });
@@ -321,17 +322,11 @@ export class BlockUsersService {
             }
 
             if (this.pendingUsers.length === 0) {
-                // Brief notification for "already processed" case - still useful
-                await this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({name: 'check_circle', color: '#81c14b', size: 'medium'}).outerHTML}
-                        <span>Tüm kullanıcılar zaten işlendi.</span>
-                    </div>`,
-                    {
-                        theme: 'success',
-                        timeout: 5
-                    }
-                );
+                // Brief notification for "already processed" case - convert to toast
+                await this.notificationService.show('Tüm kullanıcılar zaten işlendi.', {
+                    type: 'toast',
+                    theme: 'success'
+                });
                 return;
             }
 
@@ -773,16 +768,10 @@ export class BlockUsersService {
             });
 
             // Show notification about adding to current operation
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                    ${this.iconComponent.create({name: 'add_circle', color: '#059669', size: 'medium'}).outerHTML}
-                    <span>Mevcut işleme eklendi (+${newUsers.length} kullanıcı)</span>
-                </div>`,
-                {
-                    theme: 'success',
-                    timeout: 3
-                }
-            );
+            await this.notificationService.show(`Mevcut işleme eklendi (+${newUsers.length} kullanıcı)`, {
+                type: 'toast',
+                theme: 'success'
+            });
 
             this.loggingService.info(`Successfully added entry ${entryId} to current operation`, {
                 entryId,

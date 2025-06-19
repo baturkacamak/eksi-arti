@@ -454,15 +454,15 @@ export class TrashService {
 
             // Complete or aborted
             if (signal.aborted) {
-                await this.notificationService.show('Sayfa yükleme durduruldu.', {
-                    timeout: 3,
-                    theme: 'warning'
-                });
+                            await this.notificationService.show('Sayfa yükleme durduruldu.', {
+                type: 'toast',
+                theme: 'warning'
+            });
             } else {
-                await this.notificationService.show('Tüm çöp sayfaları yüklendi.', {
-                    timeout: 3,
-                    theme: 'success'
-                });
+                            await this.notificationService.show('Tüm çöp sayfaları yüklendi.', {
+                type: 'toast',
+                theme: 'success'
+            });
             }
 
             // Reset button states
@@ -484,8 +484,9 @@ export class TrashService {
             this.loggingService.error('Error loading all pages:', error);
 
             await this.notificationService.show('Sayfa yükleme sırasında hata oluştu.', {
-                timeout: 5,
-                theme: 'error'
+                type: 'toast',
+                theme: 'error',
+                timeout: 5
             });
         }
     }
@@ -513,14 +514,11 @@ export class TrashService {
                     if (success) {
                         this.loggingService.info(`Entry ${entryId} successfully revived`);
 
-                        // Show success notification
-                        await this.notificationService.show(
-                            `<div style="display: flex; align-items: center">
-                                ${this.iconComponent.create({ name: 'check_circle', color: '#43a047', size: 'medium' }).outerHTML}
-                                <span>Yazı başarıyla canlandırıldı.</span>
-                            </div>`,
-                            { theme: 'success', timeout: 3 }
-                        );
+                        // Show success toast
+                        await this.notificationService.show('Yazı başarıyla canlandırıldı.', {
+                            type: 'toast',
+                            theme: 'success'
+                        });
 
                         // Remove the item with animation
                         this.domService.addClass(item, 'eksi-trash-item-transitioning');
@@ -531,26 +529,22 @@ export class TrashService {
                     } else {
                         this.loggingService.error(`Failed to revive entry ${entryId}`);
 
-                        // Show error notification
-                        await this.notificationService.show(
-                            `<div style="display: flex; align-items: center">
-                                ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
-                                <span>Yazı canlandırılamadı.</span>
-                            </div>`,
-                            { theme: 'error', timeout: 5 }
-                        );
+                        // Show error toast
+                        await this.notificationService.show('Yazı canlandırılamadı.', {
+                            type: 'toast',
+                            theme: 'error',
+                            timeout: 5
+                        });
                     }
                 } catch (error) {
                     this.loggingService.error(`Error reviving entry ${entryId}:`, error);
 
-                    // Show error notification
-                    await this.notificationService.show(
-                        `<div style="display: flex; align-items: center">
-                            ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
-                            <span>Yazı canlandırılırken hata oluştu.</span>
-                        </div>`,
-                        { theme: 'error', timeout: 5 }
-                    );
+                    // Show error toast
+                    await this.notificationService.show('Yazı canlandırılırken hata oluştu.', {
+                        type: 'toast',
+                        theme: 'error',
+                        timeout: 5
+                    });
                 }
             }
         });
@@ -750,8 +744,8 @@ export class TrashService {
 
             if (entryIds.length === 0) {
                 await this.notificationService.show('Canlandırılacak entry seçilmedi.', {
-                    theme: 'warning',
-                    timeout: 3
+                    type: 'toast',
+                    theme: 'warning'
                 });
                 return;
             }
@@ -809,23 +803,19 @@ export class TrashService {
                 }
             }
 
-            // Show final result
+            // Show final result as toast
             if (failCount === 0) {
-                await this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({ name: 'check_circle', color: '#43a047', size: 'medium' }).outerHTML}
-                        <span>${successCount} entry başarıyla canlandırıldı.</span>
-                    </div>`,
-                    { theme: 'success', timeout: 5 }
-                );
+                await this.notificationService.show(`${successCount} entry başarıyla canlandırıldı.`, {
+                    type: 'toast',
+                    theme: 'success',
+                    timeout: 5
+                });
             } else {
-                await this.notificationService.show(
-                    `<div style="display: flex; align-items: center">
-                        ${this.iconComponent.create({ name: 'info', color: '#1e88e5', size: 'medium' }).outerHTML}
-                        <span>${successCount} entry başarıyla canlandırıldı, ${failCount} entry canlandırılamadı.</span>
-                    </div>`,
-                    { theme: 'info', timeout: 5 }
-                );
+                await this.notificationService.show(`${successCount} entry başarıyla canlandırıldı, ${failCount} entry canlandırılamadı.`, {
+                    type: 'toast',
+                    theme: 'info',
+                    timeout: 5
+                });
             }
 
             // Update selection count
@@ -833,13 +823,11 @@ export class TrashService {
         } catch (error) {
             this.loggingService.error('Error during bulk revive:', error);
 
-            await this.notificationService.show(
-                `<div style="display: flex; align-items: center">
-                    ${this.iconComponent.create({ name: 'error', color: '#e53935', size: 'medium' }).outerHTML}
-                    <span>Toplu canlandırma sırasında hata oluştu.</span>
-                </div>`,
-                { theme: 'error', timeout: 5 }
-            );
+            await this.notificationService.show('Toplu canlandırma sırasında hata oluştu.', {
+                type: 'toast',
+                theme: 'error',
+                timeout: 5
+            });
         }
     }
 
