@@ -378,7 +378,7 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
             /* Responsive design */
             @media (max-width: 768px) {
                 .eksi-button-pills-container {
-                    gap: 4px;
+                    gap: 6px;
                 }
                 
                 .eksi-pill {

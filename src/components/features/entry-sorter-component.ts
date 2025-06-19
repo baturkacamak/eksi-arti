@@ -287,6 +287,7 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             /* Button pills container positioning */
             .eksi-sort-pills-container {
                 margin-right: auto;
+                padding: 10px;
             }
         `;
     }
