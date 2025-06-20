@@ -19,6 +19,7 @@ import { IDocumentStateService } from "../../interfaces/services/IDocumentStateS
 export class ScreenshotButtonComponent extends BaseFeatureComponent implements IScreenshotButtonComponent {
     private screenshotButtons: Map<string, HTMLElement> = new Map();
     private inTransition: Set<HTMLElement> = new Set(); // Track buttons currently in transition
+    private static html2canvasLoadPromise: Promise<void> | null = null; // Singleton promise for loading html2canvas
     
     // Icon configuration constants
     private static readonly SCREENSHOT_ICONS = {
@@ -244,15 +245,46 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
     }
 
     /**
-     * Dynamically load html2canvas library
+     * Dynamically load html2canvas library (singleton pattern to avoid multiple script tags)
      */
     private async loadHtml2Canvas(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+        // Return existing promise if loading is already in progress or completed
+        if (ScreenshotButtonComponent.html2canvasLoadPromise) {
+            return ScreenshotButtonComponent.html2canvasLoadPromise;
+        }
+
+        // Check if html2canvas is already available
+        if (typeof (window as any).html2canvas !== 'undefined') {
+            ScreenshotButtonComponent.html2canvasLoadPromise = Promise.resolve();
+            return ScreenshotButtonComponent.html2canvasLoadPromise;
+        }
+
+        // Check if script tag already exists to avoid duplicate injections
+        const existingScript = document.querySelector('script[src*="html2canvas.min.js"]');
+        if (existingScript) {
+            this.loggingService.debug('html2canvas script already exists, waiting for it to load...');
+            ScreenshotButtonComponent.html2canvasLoadPromise = new Promise<void>((resolve, reject) => {
+                const checkLoaded = () => {
+                    if (typeof (window as any).html2canvas !== 'undefined') {
+                        this.loggingService.debug('html2canvas loaded from existing script.');
+                        resolve();
+                    } else {
+                        setTimeout(checkLoaded, 100); // Check every 100ms
+                    }
+                };
+                checkLoaded();
+                
+                // Timeout after 10 seconds
+                setTimeout(() => {
+                    reject(new Error('Timeout waiting for existing html2canvas script to load'));
+                }, 10000);
+            });
+            return ScreenshotButtonComponent.html2canvasLoadPromise;
+        }
+
+        // Create new script tag
+        ScreenshotButtonComponent.html2canvasLoadPromise = new Promise<void>((resolve, reject) => {
             try {
-                if (typeof (window as any).html2canvas !== 'undefined') {
-                    resolve();
-                    return;
-                }
                 const script = document.createElement('script');
                 script.src = chrome.runtime.getURL('lib/html2canvas.min.js');
                 script.onload = () => {
@@ -261,14 +293,18 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
                 };
                 script.onerror = (err) => {
                     this.loggingService.error('Failed to load html2canvas:', err);
+                    ScreenshotButtonComponent.html2canvasLoadPromise = null; // Reset on error
                     reject(new Error('Failed to load html2canvas'));
                 };
                 document.head.appendChild(script);
             } catch (error) {
                 this.loggingService.error('Exception during html2canvas load initiation:', error);
+                ScreenshotButtonComponent.html2canvasLoadPromise = null; // Reset on error
                 reject(error);
             }
         });
+
+        return ScreenshotButtonComponent.html2canvasLoadPromise;
     }
 
     /**
