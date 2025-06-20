@@ -9,6 +9,10 @@ import {CSSService} from "./services/css-service";
 import {DOMService} from "./services/dom-service";
 import {ILoggingService} from "./interfaces/services/ILoggingService";
 import {IDOMService} from "./interfaces/services/IDOMService";
+import {ICommandFactory} from "./commands/interfaces/ICommandFactory";
+import {ICommandInvoker} from "./commands/interfaces/ICommandInvoker";
+import {initializeDI} from "./di/initialize-di";
+import {Container} from "./di/container";
 
 /**
  * Options Manager Class
@@ -19,13 +23,21 @@ class OptionsPage {
     private preferences: any = {...DEFAULT_PREFERENCES};
     private saveDebounceTimer: number | null = null;
     private savePending: boolean = false;
-    private loggingService: ILoggingService = new LoggingService();
-    private domService: IDOMService = new DOMService();
-
+    private loggingService: ILoggingService;
+    private domService: IDOMService;
+    private commandInvoker: ICommandInvoker;
+    private commandFactory: ICommandFactory;
+    private container: Container;
 
     constructor() {
-        this.loggingService = new LoggingService();
-        this.domService = new DOMService();
+        // Initialize DI container
+        this.container = initializeDI();
+        
+        // Resolve services from DI container
+        this.loggingService = this.container.resolve<ILoggingService>('LoggingService');
+        this.domService = this.container.resolve<IDOMService>('DOMService');
+        this.commandInvoker = this.container.resolve<ICommandInvoker>('CommandInvoker');
+        this.commandFactory = this.container.resolve<ICommandFactory>('CommandFactory');
     }
 
     /**
@@ -99,7 +111,7 @@ class OptionsPage {
     }
 
     /**
-     * Save preferences to storage
+     * Save preferences to storage using commands for undo/redo support
      */
     async savePreferences() {
         try {
@@ -124,20 +136,25 @@ class OptionsPage {
                         statusElement.className = 'status saving visible';
                     }
 
-                    // Save to storage
-                    await this.saveToStorage({[STORAGE_KEYS.PREFERENCES]: this.preferences});
+                    // Use SavePreferencesCommand for undo/redo support
+                    const saveCommand = this.commandFactory.createSavePreferencesCommand(this.preferences);
+                    const success = await this.commandInvoker.execute(saveCommand);
 
-                    // Backup to localStorage
-                    this.backupToLocalStorage();
+                    if (success) {
+                        // Backup to localStorage for fallback
+                        this.backupToLocalStorage();
 
-                    this.loggingService.debug('Preferences saved successfully', this.preferences);
-                    this.showStatus('Kaydedildi', 'success');
+                        this.loggingService.debug('Preferences saved successfully using command', this.preferences);
+                        this.showStatus('Kaydedildi', 'success');
 
-                    // Update theme if it has changed
-                    this.updateTheme();
+                        // Update theme if it has changed
+                        this.updateTheme();
+                    } else {
+                        throw new Error('Command execution failed');
+                    }
 
                     this.savePending = false;
-                    return true;
+                    return success;
                 } catch (error) {
                     this.savePending = false;
                     this.loggingService.error('Error executing debounced save', error);
@@ -167,18 +184,33 @@ class OptionsPage {
     }
 
     /**
-     * Reset options to defaults
+     * Reset options to defaults using commands for undo/redo support
      */
     async resetPreferences() {
         try {
             if (confirm('Tüm ayarlar varsayılan değerlere sıfırlanacak. Emin misiniz?')) {
-                this.preferences = {...DEFAULT_PREFERENCES};
-                await this.saveToStorage({[STORAGE_KEYS.PREFERENCES]: this.preferences});
-                localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
-                this.populateUI();
-                this.updateTheme();
-                this.showStatus('Ayarlar varsayılan değerlere sıfırlandı', 'success');
-                return true;
+                // Use ResetPreferencesCommand for undo/redo support
+                const resetCommand = this.commandFactory.createResetPreferencesCommand();
+                const success = await this.commandInvoker.execute(resetCommand);
+
+                if (success) {
+                    // Update local state
+                    this.preferences = {...DEFAULT_PREFERENCES};
+                    
+                    // Backup to localStorage for fallback
+                    localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(this.preferences));
+                    
+                    // Update UI
+                    this.populateUI();
+                    this.updateTheme();
+                    
+                    this.showStatus('Ayarlar varsayılan değerlere sıfırlandı', 'success');
+                    this.loggingService.debug('Preferences reset successfully using command');
+                } else {
+                    throw new Error('Reset command execution failed');
+                }
+                
+                return success;
             }
             return false;
         } catch (error) {
@@ -493,12 +525,64 @@ class OptionsPage {
             this.domService.addEventListener(document as unknown as HTMLElement, 'keydown', (e) => {
                 if (e.key === 'Enter' && e.ctrlKey) {
                     this.savePreferences();
+                } else if (e.key === 'z' && e.ctrlKey && !e.shiftKey) {
+                    // Ctrl+Z for undo
+                    e.preventDefault();
+                    this.undoLastAction();
+                } else if (e.key === 'y' && e.ctrlKey) {
+                    // Ctrl+Y for redo
+                    e.preventDefault();
+                    this.redoLastAction();
                 }
             });
 
             this.loggingService.debug('Event listeners set up with auto-save functionality');
         } catch (error) {
             this.loggingService.error('Error setting up event listeners', error);
+        }
+    }
+
+    /**
+     * Undo the last action using command history
+     */
+    async undoLastAction(): Promise<void> {
+        try {
+            const success = await this.commandInvoker.undo();
+            if (success) {
+                // Reload preferences from storage and update UI
+                await this.loadPreferences();
+                this.populateUI();
+                this.updateTheme();
+                this.showStatus('Son işlem geri alındı', 'success');
+                this.loggingService.debug('Successfully undid last action');
+            } else {
+                this.showStatus('Geri alınacak işlem bulunamadı', 'error');
+            }
+        } catch (error) {
+            this.loggingService.error('Error undoing last action:', error);
+            this.showStatus('Geri alma işlemi başarısız: ' + this.getErrorMessage(error), 'error');
+        }
+    }
+
+    /**
+     * Redo the last undone action using command history
+     */
+    async redoLastAction(): Promise<void> {
+        try {
+            const success = await this.commandInvoker.redo();
+            if (success) {
+                // Reload preferences from storage and update UI
+                await this.loadPreferences();
+                this.populateUI();
+                this.updateTheme();
+                this.showStatus('Son işlem tekrar yapıldı', 'success');
+                this.loggingService.debug('Successfully redid last action');
+            } else {
+                this.showStatus('Tekrar yapılacak işlem bulunamadı', 'error');
+            }
+        } catch (error) {
+            this.loggingService.error('Error redoing last action:', error);
+            this.showStatus('Tekrar yapma işlemi başarısız: ' + this.getErrorMessage(error), 'error');
         }
     }
 

@@ -12,87 +12,11 @@ import {IStorageService, StorageArea} from "../interfaces/services/IStorageServi
 import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/services/IAuthorHighlighterService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import { SELECTORS } from "../constants";
+import { ICommandFactory } from '../commands/interfaces/ICommandFactory';
+import { ICommandInvoker } from '../commands/interfaces/ICommandInvoker';
+import { IColorService } from '../interfaces/services/IColorService';
 
-/**
- * Color management utility functions
- */
-export class ColorUtils {
-    /**
-     * Calculate appropriate text color (black or white) based on background color brightness
-     * @param bgColor Background color in hex format (#RRGGBB)
-     * @returns Text color (#000000 or #FFFFFF)
-     */
-    static getContrastTextColor(bgColor: string): string {
-        // Remove # if present
-        const color = bgColor.charAt(0) === '#' ? bgColor.substring(1) : bgColor;
 
-        // Convert to RGB
-        const r = parseInt(color.substr(0, 2), 16);
-        const g = parseInt(color.substr(2, 2), 16);
-        const b = parseInt(color.substr(4, 2), 16);
-
-        // Calculate brightness (YIQ formula)
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-        // Return black for bright backgrounds, white for dark backgrounds
-        return brightness > 128 ? '#000000' : '#FFFFFF';
-    }
-
-    /**
-     * Apply opacity to a hex color
-     * @param color Hex color
-     * @param opacity Opacity value (0-1)
-     * @returns RGBA color string
-     */
-    static applyOpacity(color: string, opacity: number): string {
-        // Remove # if present
-        const hexColor = color.charAt(0) === '#' ? color.substring(1) : color;
-
-        // Convert to RGB
-        const r = parseInt(hexColor.substr(0, 2), 16);
-        const g = parseInt(hexColor.substr(2, 2), 16);
-        const b = parseInt(hexColor.substr(4, 2), 16);
-
-        // Return rgba string
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    }
-
-    /**
-     * Generate a random color
-     * @returns Random hex color
-     */
-    static generateRandomColor(): string {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-
-    /**
-     * Get a pastel version of a color (lighter and less saturated)
-     * @param color Hex color
-     * @returns Pastel hex color
-     */
-    static getPastelColor(color: string): string {
-        // Remove # if present
-        const hexColor = color.charAt(0) === '#' ? color.substring(1) : color;
-
-        // Convert to RGB
-        const r = parseInt(hexColor.substr(0, 2), 16);
-        const g = parseInt(hexColor.substr(2, 2), 16);
-        const b = parseInt(hexColor.substr(4, 2), 16);
-
-        // Make pastel by mixing with white
-        const pastelR = Math.floor((r + 255) / 2);
-        const pastelG = Math.floor((g + 255) / 2);
-        const pastelB = Math.floor((b + 255) / 2);
-
-        // Convert back to hex
-        return `#${pastelR.toString(16).padStart(2, '0')}${pastelG.toString(16).padStart(2, '0')}${pastelB.toString(16).padStart(2, '0')}`;
-    }
-}
 
 /**
  * Author Highlighter Service
@@ -126,7 +50,10 @@ export class AuthorHighlighterService {
         private iconComponent: IIconComponent,
         private tooltipComponent: TooltipComponent,
         private notificationService: INotificationService,
-        private observerService: IObserverService
+        private observerService: IObserverService,
+        private colorService: IColorService,
+        private commandFactory?: ICommandFactory,
+        private commandInvoker?: ICommandInvoker
     ) {
         this.config = { ...this.defaultConfig };
     }
@@ -359,13 +286,13 @@ export class AuthorHighlighterService {
             if (!settings.enabled) return;
 
             // Get text color automatically if not set
-            const textColor = settings.textColor || ColorUtils.getContrastTextColor(settings.color);
+            const textColor = settings.textColor || this.colorService.getContrastTextColor(settings.color);
 
             // Background with opacity
-            const bgColor = ColorUtils.applyOpacity(settings.color, this.config.defaultOpacity);
+            const bgColor = this.colorService.applyOpacity(settings.color, this.config.defaultOpacity);
 
             // Border color (same but more opaque)
-            const borderColor = ColorUtils.applyOpacity(settings.color, 0.7);
+            const borderColor = this.colorService.applyOpacity(settings.color, 0.7);
 
             // Create CSS rules
             cssRules += `
@@ -464,7 +391,7 @@ export class AuthorHighlighterService {
     public async addAuthor(author: string, color: string, notes?: string): Promise<boolean> {
         try {
             // Generate text color based on background
-            const textColor = ColorUtils.getContrastTextColor(color);
+            const textColor = this.colorService.getContrastTextColor(color);
 
             // Add to config
             this.config.authors[author] = {
@@ -545,7 +472,7 @@ export class AuthorHighlighterService {
             // If color changed, update text color
             if (settings.color) {
                 this.config.authors[author].textColor =
-                    settings.textColor || ColorUtils.getContrastTextColor(settings.color);
+                    settings.textColor || this.colorService.getContrastTextColor(settings.color);
             }
 
             // Update styles
@@ -735,8 +662,8 @@ export class AuthorHighlighterService {
             }
 
             // Generate a color (pastel by default)
-            const baseColor = ColorUtils.generateRandomColor();
-            const color = ColorUtils.getPastelColor(baseColor);
+            const baseColor = this.colorService.generateRandomColor();
+            const color = this.colorService.getPastelColor(baseColor);
 
             // Add the author
             const success = await this.addAuthor(author, color);
@@ -815,11 +742,33 @@ export class AuthorHighlighterService {
                     isEnabled ? 'highlight_off' : 'highlight',
                     isEnabled ? 'Vurgulamayı Kaldır' : 'Vurgula',
                     () => {
-                        this.toggleAuthor(author).then(success => {
-                            if (success) {
-                                menu.remove();
+                        // Use ToggleAuthorCommand for undo/redo support if available
+                        if (this.commandFactory && this.commandInvoker) {
+                            try {
+                                const toggleCommand = this.commandFactory.createToggleAuthorCommand(author);
+                                this.commandInvoker.execute(toggleCommand).then((success: boolean) => {
+                                    if (success) {
+                                        menu.remove();
+                                        this.loggingService.debug('Author toggle executed using command', { author, success });
+                                    }
+                                });
+                            } catch (error) {
+                                this.loggingService.error('Error using toggle command, falling back to direct call:', error);
+                                // Fallback to direct service call
+                                this.toggleAuthor(author).then(success => {
+                                    if (success) {
+                                        menu.remove();
+                                    }
+                                });
                             }
-                        });
+                        } else {
+                            // Fallback to direct service call if commands not available
+                            this.toggleAuthor(author).then(success => {
+                                if (success) {
+                                    menu.remove();
+                                }
+                            });
+                        }
                     }
                 );
                 menuItems.appendChild(toggleItem);
@@ -852,11 +801,31 @@ export class AuthorHighlighterService {
                     'Listeden Çıkar',
                     () => {
                         if (confirm(`"${author}" yazarını vurgulama listesinden çıkarmak istediğinize emin misiniz?`)) {
-                            this.removeAuthor(author).then(success => {
-                                if (success) {
-                                    menu.remove();
+                            // Use RemoveAuthorCommand for undo/redo support if available
+                            if (this.commandFactory && this.commandInvoker) {
+                                try {
+                                    const removeCommand = this.commandFactory.createRemoveAuthorCommand(author);
+                                    this.commandInvoker.execute(removeCommand).then(success => {
+                                        if (success) {
+                                            menu.remove();
+                                        }
+                                    });
+                                } catch (error) {
+                                    this.loggingService.error('Error using remove command, falling back to direct call:', error);
+                                    this.removeAuthor(author).then(success => {
+                                        if (success) {
+                                            menu.remove();
+                                        }
+                                    });
                                 }
-                            });
+                            } else {
+                                // Fallback to direct service call if commands not available
+                                this.removeAuthor(author).then(success => {
+                                    if (success) {
+                                        menu.remove();
+                                    }
+                                });
+                            }
                         } else {
                             menu.remove();
                         }
@@ -1069,15 +1038,7 @@ export class AuthorHighlighterService {
      * Generate color presets HTML
      */
     private generateColorPresets(): string {
-        // Preset colors (pastel and standard)
-        const presets = [
-            '#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF', '#FFC6FF', // Pastel
-            '#FF5252', '#FF7043', '#FFCA28', '#66BB6A', '#26C6DA', '#42A5F5', '#7E57C2', '#EC407A'  // Standard
-        ];
-
-        return presets.map(color =>
-            `<div class="eksi-color-preset" style="background-color: ${color};" data-color="${color}"></div>`
-        ).join('');
+        return this.colorService.generateColorPresetsHtml();
     }
 
     /**

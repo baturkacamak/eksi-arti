@@ -1,11 +1,5 @@
 // src/services/trash-service.ts
-import { HttpService } from './http-service';
-import { DOMService } from './dom-service';
-import { LoggingService } from './logging-service';
-import { NotificationService } from './notification-service';
-import { IconComponent } from '../components/shared/icon-component';
 import { Endpoints } from '../constants';
-import { ObserverService } from "./observer-service";
 import { PageUtilsService } from "./page-utils-service";
 import {IHttpService} from "../interfaces/services/IHttpService";
 import {IDOMService} from "../interfaces/services/IDOMService";
@@ -14,6 +8,8 @@ import {INotificationService} from "../interfaces/services/INotificationService"
 import {IObserverService} from "../interfaces/services/IObserverService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import {ICSSService} from "../interfaces/services/ICSSService";
+import { ICommandFactory } from '../commands/interfaces/ICommandFactory';
+import { ICommandInvoker } from '../commands/interfaces/ICommandInvoker';
 
 export class TrashService {
     private isLoading: boolean = false;
@@ -31,7 +27,9 @@ export class TrashService {
         private notificationService: INotificationService,
         private iconComponent:IIconComponent,
         private observerService: IObserverService,
-        private pageUtils: PageUtilsService
+        private pageUtils: PageUtilsService,
+        private commandFactory?: ICommandFactory,
+        private commandInvoker?: ICommandInvoker
     ) {}
 
     /**
@@ -300,7 +298,22 @@ export class TrashService {
             });
 
             this.domService.addEventListener(loadAllButton, 'click', () => {
-                this.loadAllPages();
+                // Use LoadAllPagesCommand for undo/redo support if available
+                if (this.commandFactory && this.commandInvoker) {
+                    try {
+                        const loadAllCommand = this.commandFactory.createLoadAllPagesCommand();
+                        this.commandInvoker.execute(loadAllCommand).then((success: boolean) => {
+                            this.loggingService.debug('LoadAllPages executed using command', { success });
+                        });
+                    } catch (error) {
+                        this.loggingService.error('Error using LoadAllPagesCommand, falling back to direct call:', error);
+                        // Fallback to direct service call
+                        this.loadAllPages();
+                    }
+                } else {
+                    // Fallback to direct service call if commands not available
+                    this.loadAllPages();
+                }
             });
 
             loadMoreContainer.appendChild(loadMoreButton);
@@ -509,7 +522,22 @@ export class TrashService {
 
             if (confirm(confirmMessage)) {
                 try {
-                    const success = await this.reviveEntry(entryId);
+                    // Use ReviveEntryCommand for action tracking (Note: not undoable)
+                    let success = false;
+                    if (this.commandFactory && this.commandInvoker) {
+                        try {
+                            const reviveCommand = this.commandFactory.createReviveEntryCommand(entryId);
+                            success = await this.commandInvoker.execute(reviveCommand);
+                            this.loggingService.debug('ReviveEntry executed using command', { entryId, success });
+                        } catch (commandError) {
+                            this.loggingService.error('Error using ReviveEntryCommand, falling back to direct call:', commandError);
+                            // Fallback to direct service call
+                            success = await this.reviveEntry(entryId);
+                        }
+                    } else {
+                        // Fallback to direct service call if commands not available
+                        success = await this.reviveEntry(entryId);
+                    }
 
                     if (success) {
                         this.loggingService.info(`Entry ${entryId} successfully revived`);
@@ -553,7 +581,7 @@ export class TrashService {
     /**
      * Revive an entry from trash
      */
-    private async reviveEntry(entryId: string): Promise<boolean> {
+    public async reviveEntry(entryId: string): Promise<boolean> {
         try {
             const url = Endpoints.RESTORE_ENTRY(entryId);
             const response = await this.httpService.post(url);
@@ -770,7 +798,21 @@ export class TrashService {
                 this.notificationService.updateContent(`${i + 1}/${entryIds.length} - Yazı ${entryId} canlandırılıyor...`);
 
                 try {
-                    const success = await this.reviveEntry(entryId);
+                    // Use ReviveEntryCommand for each entry in bulk operation
+                    let success = false;
+                    if (this.commandFactory && this.commandInvoker) {
+                        try {
+                            const reviveCommand = this.commandFactory.createReviveEntryCommand(entryId);
+                            success = await this.commandInvoker.execute(reviveCommand);
+                        } catch (commandError) {
+                            this.loggingService.error('Error using ReviveEntryCommand in bulk operation, falling back:', commandError);
+                            // Fallback to direct service call
+                            success = await this.reviveEntry(entryId);
+                        }
+                    } else {
+                        // Fallback to direct service call if commands not available
+                        success = await this.reviveEntry(entryId);
+                    }
 
                     if (success) {
                         successCount++;

@@ -8,6 +8,9 @@ import { IContainerService } from '../../interfaces/services/IContainerService';
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { IAuthorHighlighterService } from '../../interfaces/services/IAuthorHighlighterService';
 import { ITooltipComponent } from '../../interfaces/components/ITooltipComponent';
+import { ICommandFactory } from '../../commands/interfaces/ICommandFactory';
+import { ICommandInvoker } from '../../commands/interfaces/ICommandInvoker';
+import { IColorService } from '../../interfaces/services/IColorService';
 
 /**
  * Component for adding author highlight buttons to entries
@@ -43,6 +46,9 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
         private specificContainerService: IContainerService,
         private authorHighlighterService: IAuthorHighlighterService,
         private tooltipComponent: ITooltipComponent,
+        private commandFactory: ICommandFactory,
+        private commandInvoker: ICommandInvoker,
+        private colorService: IColorService,
         options?: FeatureComponentOptions
     ) {
         super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
@@ -284,11 +290,15 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
 
             let success = false;
             if (isCurrentlyHighlighted) {
-                // Remove highlighting
-                success = await this.authorHighlighterService.removeAuthor(author);
+                // Remove highlighting using command
+                const removeCommand = this.commandFactory.createRemoveAuthorCommand(author);
+                success = await this.commandInvoker.execute(removeCommand);
             } else {
-                // Add highlighting
-                success = await this.authorHighlighterService.highlightAuthorFromEntry(entry);
+                // Add highlighting using command - first generate a color
+                const baseColor = this.colorService.generateRandomColor();
+                const color = this.colorService.getPastelColor(baseColor);
+                const addCommand = this.commandFactory.createAddAuthorCommand(author, color);
+                success = await this.commandInvoker.execute(addCommand);
             }
 
             if (success) {
@@ -306,6 +316,8 @@ export class AuthorHighlightButtonComponent extends BaseFeatureComponent impleme
             this.showErrorState(button, !!isCurrentlyHighlighted);
         }
     }
+
+
 
     private updateButtonState(button: HTMLElement, isHighlighted: boolean): void {
         this.setButtonHighlightState(button, isHighlighted);

@@ -13,6 +13,21 @@ import { IDocumentStateService } from '../interfaces/services/IDocumentStateServ
 import { IDOMService } from '../interfaces/services/IDOMService';
 import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 
+// New command imports
+import { AddAuthorCommand } from './highlighting/AddAuthorCommand';
+import { RemoveAuthorCommand } from './highlighting/RemoveAuthorCommand';
+import { ToggleAuthorCommand } from './highlighting/ToggleAuthorCommand';
+import { ResetHighlighterConfigCommand } from './highlighting/ResetHighlighterConfigCommand';
+import { SavePreferencesCommand } from './preferences/SavePreferencesCommand';
+import { ResetPreferencesCommand } from './preferences/ResetPreferencesCommand';
+import { ReviveEntryCommand } from './trash/ReviveEntryCommand';
+import { LoadAllPagesCommand } from './trash/LoadAllPagesCommand';
+
+// New service interfaces
+import { IAuthorHighlighterService } from '../interfaces/services/IAuthorHighlighterService';
+import { IPreferencesManager, IExtensionPreferences } from '../interfaces/services/IPreferencesManager';
+import { ITrashService } from '../interfaces/services/ITrashService';
+
 /**
  * Implementation of ICommandFactory - creates command objects with proper dependencies
  */
@@ -23,7 +38,10 @@ export class CommandFactory implements ICommandFactory {
         private html2canvas: IHtml2Canvas,
         private sortingDataExtractor: SortingDataExtractor,
         private documentState: IDocumentStateService,
-        private domService: IDOMService
+        private domService: IDOMService,
+        private getAuthorHighlighterService: () => IAuthorHighlighterService,
+        private getPreferencesManager: () => IPreferencesManager,
+        private getTrashService: () => ITrashService
     ) {}
 
     /**
@@ -88,6 +106,99 @@ export class CommandFactory implements ICommandFactory {
             strategy,
             direction,
             this.sortingDataExtractor
+        );
+    }
+
+    // Author Highlighter Commands
+
+    /**
+     * Create an AddAuthorCommand
+     */
+    public createAddAuthorCommand(author: string, color: string, notes?: string): ICommand {
+        return new AddAuthorCommand(
+            this.getAuthorHighlighterService(),
+            this.loggingService,
+            author,
+            color,
+            notes
+        );
+    }
+
+    /**
+     * Create a RemoveAuthorCommand
+     */
+    public createRemoveAuthorCommand(author: string): ICommand {
+        return new RemoveAuthorCommand(
+            this.getAuthorHighlighterService(),
+            this.loggingService,
+            author
+        );
+    }
+
+    /**
+     * Create a ToggleAuthorCommand
+     */
+    public createToggleAuthorCommand(author: string): ICommand {
+        return new ToggleAuthorCommand(
+            this.getAuthorHighlighterService(),
+            this.loggingService,
+            author
+        );
+    }
+
+    /**
+     * Create a ResetHighlighterConfigCommand
+     */
+    public createResetHighlighterConfigCommand(): ICommand {
+        return new ResetHighlighterConfigCommand(
+            this.getAuthorHighlighterService(),
+            this.loggingService
+        );
+    }
+
+    // Preferences Commands
+
+    /**
+     * Create a SavePreferencesCommand
+     */
+    public createSavePreferencesCommand(preferences: Partial<IExtensionPreferences>): ICommand {
+        return new SavePreferencesCommand(
+            this.getPreferencesManager(),
+            this.loggingService,
+            preferences
+        );
+    }
+
+    /**
+     * Create a ResetPreferencesCommand
+     */
+    public createResetPreferencesCommand(): ICommand {
+        return new ResetPreferencesCommand(
+            this.getPreferencesManager(),
+            this.loggingService
+        );
+    }
+
+    // Trash Commands
+
+    /**
+     * Create a ReviveEntryCommand
+     */
+    public createReviveEntryCommand(entryId: string): ICommand {
+        return new ReviveEntryCommand(
+            this.getTrashService(),
+            this.loggingService,
+            entryId
+        );
+    }
+
+    /**
+     * Create a LoadAllPagesCommand
+     */
+    public createLoadAllPagesCommand(): ICommand {
+        return new LoadAllPagesCommand(
+            this.getTrashService(),
+            this.loggingService
         );
     }
 } 

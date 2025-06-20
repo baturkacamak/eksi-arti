@@ -15,6 +15,8 @@ import { IObserverService } from '../../interfaces/services/IObserverService';
 import { IPreferencesService } from "../../interfaces/services/IPreferencesService";
 import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IButtonComponent";
 import { IModalComponent } from "../../interfaces/components/IModalComponent";
+import { ICommandFactory } from "../../commands/interfaces/ICommandFactory";
+import { ICommandInvoker } from "../../commands/interfaces/ICommandInvoker";
 
 export class PreferencesModal extends BaseFeatureComponent {
     private preferences?: BlockerPreferences;
@@ -26,6 +28,8 @@ export class PreferencesModal extends BaseFeatureComponent {
     private specificNotificationComponent: NotificationComponent;
     private specificButtonComponent: IButtonComponent;
     private modalComponent: IModalComponent;
+    private commandFactory: ICommandFactory;
+    private commandInvoker: ICommandInvoker;
 
     constructor(
         domService: IDOMService,
@@ -37,6 +41,8 @@ export class PreferencesModal extends BaseFeatureComponent {
         notificationComponent: NotificationComponent,
         buttonComponent: IButtonComponent,
         modalComponent: IModalComponent,
+        commandFactory: ICommandFactory,
+        commandInvoker: ICommandInvoker,
         options?: FeatureComponentOptions
     ) {
         super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
@@ -44,6 +50,8 @@ export class PreferencesModal extends BaseFeatureComponent {
         this.specificNotificationComponent = notificationComponent;
         this.specificButtonComponent = buttonComponent;
         this.modalComponent = modalComponent;
+        this.commandFactory = commandFactory;
+        this.commandInvoker = commandInvoker;
     }
 
     private async loadPreferences(): Promise<void> {
@@ -209,7 +217,15 @@ export class PreferencesModal extends BaseFeatureComponent {
         };
 
         try {
+            // Use command instead of direct service call for undo/redo support
+            // Note: This uses BlockerPreferences which is different from IExtensionPreferences
+            // For now, calling service directly but this could be refactored to use a specialized command
             await this.specificPreferencesService.savePreferences(newPreferences);
+            
+            // TODO: Create BlockerPreferencesCommand if this needs undo/redo functionality
+            // const saveCommand = this.commandFactory.createSaveBlockerPreferencesCommand(newPreferences);
+            // await this.commandInvoker.execute(saveCommand);
+            
             this.preferences = newPreferences;
             await this.specificNotificationComponent.show('Tercihler kaydedildi!', { type: 'toast', theme: 'success' });
             this.close();

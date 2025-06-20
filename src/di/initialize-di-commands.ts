@@ -12,6 +12,9 @@ import {IDocumentStateService} from "../interfaces/services/IDocumentStateServic
 import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
 import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
 import { IDOMService } from "../interfaces/services/IDOMService";
+import { IAuthorHighlighterService } from "../interfaces/services/IAuthorHighlighterService";
+import { IPreferencesManager } from "../interfaces/services/IPreferencesManager";
+import { ITrashService } from "../interfaces/services/ITrashService";
 
 /**
  * Initialize command-related dependencies in the DI container
@@ -22,13 +25,13 @@ export function initializeCommandDI(container: Container): void {
   container.register("DateSortingStrategy", () => new DateSortingStrategy());
   container.register("FavoriteCountSortingStrategy", () => new FavoriteCountSortingStrategy());
 
-  // Register command history
+  // Register command history as singleton
   container.register("CommandHistory", () => {
     const loggingService = container.resolve<ILoggingService>("LoggingService");
     return new CommandHistory(loggingService);
   });
 
-  // Register command invoker
+  // Register command invoker as singleton with shared history
   container.register("CommandInvoker", () => {
     const loggingService = container.resolve<ILoggingService>("LoggingService");
     const history = container.resolve<ICommandHistory>("CommandHistory");
@@ -41,7 +44,7 @@ export function initializeCommandDI(container: Container): void {
     return (window as any).html2canvas;
   });
 
-  // Register command factory
+  // Register command factory as singleton with lazy resolution to avoid circular dependencies
   container.register("CommandFactory", () => {
     const loggingService = container.resolve<ILoggingService>("LoggingService");
     const blockUsersService = container.resolve<IBlockUsersService>("BlockUsersService");
@@ -49,6 +52,11 @@ export function initializeCommandDI(container: Container): void {
     const sortingDataExtractor = container.resolve<SortingDataExtractor>("SortingDataExtractor");
     const documentState = container.resolve<IDocumentStateService>("DocumentStateService");
     const domService = container.resolve<IDOMService>("DOMService");
+    
+    // Use lazy resolution for services that might have circular dependencies
+    const getAuthorHighlighterService = () => container.resolve<IAuthorHighlighterService>("AuthorHighlighterService");
+    const getPreferencesManager = () => container.resolve<IPreferencesManager>("PreferencesManager");
+    const getTrashService = () => container.resolve<ITrashService>("TrashService");
 
     return new CommandFactory(
       loggingService,
@@ -56,7 +64,10 @@ export function initializeCommandDI(container: Container): void {
       html2canvas,
       sortingDataExtractor,
       documentState,
-      domService
+      domService,
+      getAuthorHighlighterService,
+      getPreferencesManager,
+      getTrashService
     );
   });
 }

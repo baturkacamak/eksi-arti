@@ -76,6 +76,8 @@ import {IAuthorHighlighterService} from "../interfaces/services/IAuthorHighlight
 import {VoteMonitoringService} from "../services/vote-monitoring-service";
 import {FontLoaderService} from "../services/font-loader-service";
 import {IFontLoaderService} from "../interfaces/services/IFontLoaderService";
+import {ColorService} from "../services/color-service";
+import {IColorService} from "../interfaces/services/IColorService";
 
 /**
  * Initialize the dependency injection container
@@ -283,6 +285,8 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
+        const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
+        const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
         return new TrashService(
             httpService,
             domService,
@@ -291,7 +295,9 @@ export function initializeDI(): Container {
             notificationService,
             iconComponent,
             observerService,
-            pageUtils
+            pageUtils,
+            commandFactory,
+            commandInvoker
         );
     });
 
@@ -399,6 +405,9 @@ export function initializeDI(): Container {
         const containerService = container.resolve<ContainerService>('ContainerService');
         const authorHighlighterService = container.resolve<IAuthorHighlighterService>('AuthorHighlighterService');
         const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
+        const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
+        const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
+        const colorService = container.resolve<IColorService>('ColorService');
 
         return new AuthorHighlightButtonComponent(
             domService,
@@ -408,7 +417,10 @@ export function initializeDI(): Container {
             observerService,
             containerService,
             authorHighlighterService,
-            tooltipComponent
+            tooltipComponent,
+            commandFactory,
+            commandInvoker,
+            colorService
         );
     });
 
@@ -539,7 +551,10 @@ export function initializeDI(): Container {
             container.resolve<IIconComponent>('IconComponent'),
             container.resolve<TooltipComponent>('TooltipComponent'),
             container.resolve<NotificationService>('NotificationService'),
-            container.resolve<IObserverService>('ObserverService')
+            container.resolve<IObserverService>('ObserverService'),
+            container.resolve<IColorService>('ColorService'),
+            container.resolve<ICommandFactory>('CommandFactory'),
+            container.resolve<ICommandInvoker>('CommandInvoker')
         );
     });
 
@@ -563,6 +578,11 @@ export function initializeDI(): Container {
     container.register('CommunicationService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new CommunicationService(loggingService);
+    });
+
+    container.register('ColorService', () => {
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new ColorService(loggingService);
     });
 
     initializeCommandDI(container);

@@ -8,10 +8,19 @@ import {LoggingService} from './services/logging-service';
 import {Endpoints} from "./constants";
 import {BackgroundBlockingService} from './services/background-blocking-service';
 import {CommunicationService} from './services/communication-service';
+import {initializeDI} from './di/initialize-di';
+import {Container} from './di/container';
+import {ICommandInvoker} from './commands/interfaces/ICommandInvoker';
+import {ICommandFactory} from './commands/interfaces/ICommandFactory';
 
 const loggingService = new LoggingService();
 const communicationService = new CommunicationService(loggingService);
 let blockingService: BackgroundBlockingService;
+
+// Initialize DI container for command infrastructure
+let container: Container;
+let commandInvoker: ICommandInvoker;
+let commandFactory: ICommandFactory;
 
 // Global flag to prevent duplicate setup
 let voteMonitoringSetup = false;
@@ -21,6 +30,13 @@ let voteMonitoringSetup = false;
  */
 async function initializeExtension() {
     try {
+        // Initialize DI container
+        container = initializeDI();
+        
+        // Resolve command services from DI container
+        commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
+        commandFactory = container.resolve<ICommandFactory>('CommandFactory');
+
         // Initialize preferences
         await preferencesManager.initialize();
         const preferences = preferencesManager.getPreferences();
@@ -138,7 +154,10 @@ function setupMessageHandlers() {
 
     communicationService.registerHandler('savePreferences', async (message) => {
         try {
-            const success = await preferencesManager.savePreferences(message.data);
+            // Use SavePreferencesCommand for undo/redo support
+            const saveCommand = commandFactory.createSavePreferencesCommand(message.data);
+            const success = await commandInvoker.execute(saveCommand);
+            loggingService.debug('Preferences saved using command in background', { success });
             return CommunicationService.createSuccessResponse({ success });
         } catch (error) {
             loggingService.error('Error saving preferences', error);
@@ -150,7 +169,10 @@ function setupMessageHandlers() {
 
     communicationService.registerHandler('resetPreferences', async () => {
         try {
-            const success = await preferencesManager.resetPreferences();
+            // Use ResetPreferencesCommand for undo/redo support
+            const resetCommand = commandFactory.createResetPreferencesCommand();
+            const success = await commandInvoker.execute(resetCommand);
+            loggingService.debug('Preferences reset using command in background', { success });
             return CommunicationService.createSuccessResponse({ success });
         } catch (error) {
             loggingService.error('Error resetting preferences', error);
