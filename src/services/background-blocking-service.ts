@@ -7,7 +7,7 @@ import {Endpoints, BlockType, STORAGE_KEYS} from '../constants';
 import {storageService} from './storage-service';
 import {StorageArea} from '../interfaces/services/IStorageService';
 import {BlockerState} from '../types';
-import {LoggingService} from './logging-service';
+import {ILoggingService} from '../interfaces/services/ILoggingService';
 
 // Background blocking service state
 interface BackgroundBlockingState {
@@ -51,7 +51,7 @@ export class BackgroundBlockingService {
     private monitoringInterval: NodeJS.Timeout | null = null; // Add monitoring interval reference
     private readonly PROCESSING_INTERVAL = 8000; // 8 seconds between users
 
-    constructor(private loggingService: LoggingService) {
+    constructor(private loggingService: ILoggingService) {
         // Start monitoring for persistent processing on construction
         this.startMonitoring();
     }

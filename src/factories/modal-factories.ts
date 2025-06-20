@@ -1,8 +1,5 @@
 // src/factories/modal-factories.ts
-import { DOMService } from '../services/dom-service';
-import { CSSService } from '../services/css-service';
-import { LoggingService } from '../services/logging-service';
-import { BlockUsersService } from '../services/block-users-service';
+
 import { BlockOptionsModal } from '../components/features/block-options-modal';
 import { BlockerState } from '../types';
 import {ButtonComponent} from "../components/shared/button-component";

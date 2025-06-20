@@ -9,10 +9,12 @@ import {CSSService} from "./services/css-service";
 import {DOMService} from "./services/dom-service";
 import {ILoggingService} from "./interfaces/services/ILoggingService";
 import {IDOMService} from "./interfaces/services/IDOMService";
+import {ICSSService} from "./interfaces/services/ICSSService";
 import {ICommandFactory} from "./commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "./commands/interfaces/ICommandInvoker";
 import {initializeDI} from "./di/initialize-di";
 import {Container} from "./di/container";
+import {PreferencesModal} from "./components/features/preferences-modal";
 
 /**
  * Options Manager Class
@@ -28,6 +30,8 @@ class OptionsPage {
     private commandInvoker: ICommandInvoker;
     private commandFactory: ICommandFactory;
     private container: Container;
+    private cssService: ICSSService;
+    private preferencesModal: PreferencesModal | null;
 
     constructor() {
         // Initialize DI container
@@ -38,6 +42,8 @@ class OptionsPage {
         this.domService = this.container.resolve<IDOMService>('DOMService');
         this.commandInvoker = this.container.resolve<ICommandInvoker>('CommandInvoker');
         this.commandFactory = this.container.resolve<ICommandFactory>('CommandFactory');
+        this.cssService = this.container.resolve<ICSSService>('CSSService');
+        this.preferencesModal = this.container.resolve<PreferencesModal>('PreferencesModal');
     }
 
     /**

@@ -1,36 +1,29 @@
-import {DOMService} from './dom-service';
-import {CSSService} from './css-service';
+import {ICSSService} from "../interfaces/services/ICSSService";
+import {IDOMService} from "../interfaces/services/IDOMService";
 import {BlockOptionsModal} from '../components/features/block-options-modal';
 
-import { StorageService, storageService} from './storage-service';
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {STORAGE_KEYS, SELECTORS} from '../constants';
 import {BlockerState} from '../types';
-import {LoggingService} from "./logging-service";
-import {NotificationService} from "./notification-service";
+import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {INotificationService} from "../interfaces/services/INotificationService";
 import {IconComponent} from "../components/shared/icon-component";
 import {CopyButtonComponent} from "../components/shared/copy-button-component";
 import {ScreenshotButtonComponent} from "../components/features/screenshot-button-component";
 import {AuthorHighlightButtonComponent} from "../components/features/author-highlight-button-component";
 import {EntrySorterComponent} from "../components/features/entry-sorter-component";
-import {PostManagementService} from "./post-management-service";
-import {TrashService} from "./trash-service";
+import {IPostManagementService} from "../interfaces/services/IPostManagementService";
+import {ITrashService} from "../interfaces/services/ITrashService";
 import {SearchFilterComponent} from "../components/features/search-filter-component";
-import {AuthorHighlighterService} from "./author-highlighter-service";
-import {ObserverService, observerService} from "./observer-service";
-import {BlockUsersService} from "./block-users-service";
+import {IAuthorHighlighterService} from "../interfaces/services/IAuthorHighlighterService";
+import {IObserverService} from "../interfaces/services/IObserverService";
+import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
 import {Container} from "../di/container";
-import {PreferencesManager} from "./preferences-manager";
+import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
 import {BlockOptionsModalFactory} from "../factories/modal-factories";
 import {BlockFavoritesButtonComponent} from "../components/features/block-favorites-button-component";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {INotificationService} from "../interfaces/services/INotificationService";
-import {IObserverService} from "../interfaces/services/IObserverService";
-import {IPreferencesManager} from "../interfaces/services/IPreferencesManager";
-import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
-import { UserProfileService } from './user-profile-service';
+import {IUserProfileService} from "../interfaces/services/IUserProfileService";
 import {VoteMonitoringService} from './vote-monitoring-service';
 import { pageUtils } from './page-utils-service';
 
@@ -43,11 +36,11 @@ export class UIService {
     private screenshotButtonComponent: ScreenshotButtonComponent;
     private authorHighlightButtonComponent: AuthorHighlightButtonComponent;
     private entrySorterComponent: EntrySorterComponent;
-    private postManagementService: PostManagementService;
-    private authorHighlighterService: AuthorHighlighterService;
+    private postManagementService: IPostManagementService;
+    private authorHighlighterService: IAuthorHighlighterService;
 
     // Services resolved from the DI container
-    private trashService: TrashService;
+    private trashService: ITrashService;
     private blockFavoritesButtonComponent: BlockFavoritesButtonComponent;
     private searchFilterComponent: SearchFilterComponent;
     private voteMonitoringService: VoteMonitoringService;
@@ -57,27 +50,27 @@ export class UIService {
         private cssService: ICSSService,
         private loggingService: ILoggingService,
         private iconComponent: IIconComponent,
-        private blockUsersService: BlockUsersService,
+        private blockUsersService: IBlockUsersService,
         private notificationService: INotificationService,
         private preferencesManager: IPreferencesManager,
         private storageService: IStorageService,
         private observerService: IObserverService,
         private container: Container,
-        private userProfileService: UserProfileService,
+        private userProfileService: IUserProfileService,
     ) {
         // Resolve components from container instead of creating them directly
         this.copyButtonComponent = container.resolve<CopyButtonComponent>('CopyButtonComponent');
         this.screenshotButtonComponent = container.resolve<ScreenshotButtonComponent>('ScreenshotButtonComponent');
         this.authorHighlightButtonComponent = container.resolve<AuthorHighlightButtonComponent>('AuthorHighlightButtonComponent');
         this.entrySorterComponent = container.resolve<EntrySorterComponent>('EntrySorterComponent');
-        this.postManagementService = container.resolve<PostManagementService>('PostManagementService');
+        this.postManagementService = container.resolve<IPostManagementService>('PostManagementService');
         this.searchFilterComponent = container.resolve<SearchFilterComponent>('SearchFilterComponent');
-        this.trashService = container.resolve<TrashService>('TrashService');
+        this.trashService = container.resolve<ITrashService>('TrashService');
 
         this.blockFavoritesButtonComponent = container.resolve<BlockFavoritesButtonComponent>('BlockFavoritesButtonComponent');
 
         // Use getInstance for singleton services
-        this.authorHighlighterService = container.resolve<AuthorHighlighterService>('AuthorHighlighterService');
+        this.authorHighlighterService = container.resolve<IAuthorHighlighterService>('AuthorHighlighterService');
         this.voteMonitoringService = container.resolve<VoteMonitoringService>('VoteMonitoringService');
     }
 
@@ -90,14 +83,14 @@ export class UIService {
             this.menuItemSelector = SELECTORS.MENU_ITEM;
 
             // Initialize observer service
-            observerService.initialize();
+            this.observerService.initialize();
 
             setTimeout(async () => {
                 // Register for menu changes
-                this.menuObserverId = observerService.observe({
+                this.menuObserverId = this.observerService.observe({
                     selector: this.menuItemSelector,
-                    handler: (dropdownMenus) => {
-                        dropdownMenus.forEach((dropdownMenu) => {
+                    handler: (dropdownMenus: any[]) => {
+                        dropdownMenus.forEach((dropdownMenu: Element) => {
                             try {
                                 // Check if this menu already has our custom option
                                 const existingItem = this.domService.querySelector('li a[aria-label="favorileyenleri engelle"]', dropdownMenu);
@@ -277,7 +270,7 @@ export class UIService {
      */
     dispose(): void {
         if (this.menuObserverId) {
-            observerService.unobserve(this.menuObserverId);
+            this.observerService.unobserve(this.menuObserverId);
         }
 
         if (this.screenshotButtonComponent) {

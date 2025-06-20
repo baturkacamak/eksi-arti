@@ -163,7 +163,7 @@ export class UserProfileService {
         return this.cache[username] || null;
     }
 
-    private async fetchUserProfile(username: string): Promise<IUserProfile | null> {
+    public async fetchUserProfile(username: string): Promise<IUserProfile | null> {
         if (this.activeRequests.has(username)) {
             return this.activeRequests.get(username)!;
         }

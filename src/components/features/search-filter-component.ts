@@ -1,18 +1,15 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
-import { DOMService } from '../../services/dom-service';
-import { CSSService } from '../../services/css-service';
-import { IconComponent } from '../shared/icon-component';
-import { LoggingService } from '../../services/logging-service';
-import { debounce } from '../../services/utilities';
-import { ObserverService, observerService as globalObserverService } from "../../services/observer-service";
-import { pageUtils, PageUtilsService } from "../../services/page-utils-service";
-import { TooltipComponent } from '../shared/tooltip-component';
 import { ICSSService } from "../../interfaces/services/ICSSService";
 import { IDOMService } from "../../interfaces/services/IDOMService";
+import { IconComponent } from '../shared/icon-component';
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { debounce } from '../../services/utilities';
 import { IObserverService } from "../../interfaces/services/IObserverService";
+import { pageUtils, PageUtilsService } from "../../services/page-utils-service";
+import { TooltipComponent } from '../shared/tooltip-component';
+import { ITooltipComponent } from '../../interfaces/components/ITooltipComponent';
+import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { ISearchFilterComponent } from "../../interfaces/components/ISearchFilterComponent";
-import { IIconComponent } from "../../interfaces/components/IIconComponent";
 
 /**
  * SearchFilterComponent
@@ -53,7 +50,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         loggingService: ILoggingService,
         iconComponent: IIconComponent,
         observerServiceInstance: IObserverService,
-        private specificTooltipComponent: TooltipComponent,
+        private specificTooltipComponent: ITooltipComponent,
         private specificPageUtils: PageUtilsService,
         options?: FeatureComponentOptions
     ) {

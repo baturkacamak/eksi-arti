@@ -1,11 +1,8 @@
-import { DOMService } from '../../services/dom-service';
-import { CSSService } from '../../services/css-service';
-import { IconComponent } from './icon-component';
-import { LoggingService } from '../../services/logging-service';
-import { IDOMService } from "../../interfaces/services/IDOMService";
 import { ICSSService } from "../../interfaces/services/ICSSService";
+import { IDOMService } from "../../interfaces/services/IDOMService";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IIconComponent } from "../../interfaces/components/IIconComponent";
+import { IIconComponent } from '../../interfaces/components/IIconComponent';
+import { IconComponent } from '../shared/icon-component';
 import { debounce } from '../../services/utilities';
 
 // Define types directly in the file to avoid import issues

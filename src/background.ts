@@ -4,14 +4,16 @@
  */
 
 import { preferencesManager } from './services/preferences-manager';
-import {LoggingService} from './services/logging-service';
-import {Endpoints} from "./constants";
-import {BackgroundBlockingService} from './services/background-blocking-service';
-import {CommunicationService} from './services/communication-service';
-import {initializeDI} from './di/initialize-di';
-import {Container} from './di/container';
-import {ICommandInvoker} from './commands/interfaces/ICommandInvoker';
-import {ICommandFactory} from './commands/interfaces/ICommandFactory';
+import { ILoggingService } from './interfaces/services/ILoggingService';
+import { ICommunicationService } from './interfaces/services/ICommunicationService';
+import { LoggingService } from './services/logging-service';
+import { CommunicationService } from './services/communication-service';
+import { Endpoints } from "./constants";
+import { BackgroundBlockingService } from './services/background-blocking-service';
+import { initializeDI } from './di/initialize-di';
+import { Container } from './di/container';
+import { ICommandInvoker } from './commands/interfaces/ICommandInvoker';
+import { ICommandFactory } from './commands/interfaces/ICommandFactory';
 
 const loggingService = new LoggingService();
 const communicationService = new CommunicationService(loggingService);

@@ -1,7 +1,7 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
 import { BlockerPreferences } from '../../types';
 import { BlockType } from '../../constants';
-import { PreferencesService } from '../../services/preferences-service';
+
 import { NotificationComponent } from '../shared/notification-component';
 import { LoggingService } from "../../services/logging-service";
 import { ButtonComponent } from "../shared/button-component";
@@ -17,6 +17,10 @@ import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IBu
 import { IModalComponent } from "../../interfaces/components/IModalComponent";
 import { ICommandFactory } from "../../commands/interfaces/ICommandFactory";
 import { ICommandInvoker } from "../../commands/interfaces/ICommandInvoker";
+import { ModalComponent } from '../shared/modal-component';
+import { ToggleSwitchComponent } from '../shared/toggle-switch-component';
+import { SelectBoxComponent } from '../shared/select-box-component';
+import { IconComponent } from '../shared/icon-component';
 
 export class PreferencesModal extends BaseFeatureComponent {
     private preferences?: BlockerPreferences;

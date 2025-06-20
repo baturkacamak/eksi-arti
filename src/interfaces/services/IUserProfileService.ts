@@ -103,9 +103,9 @@ export interface IUserProfileService {
      * Fetch user profile from server
      * @param username Username to fetch
      * @param force Force refresh even if cached
-     * @returns Promise resolving to user profile
+     * @returns Promise resolving to user profile or null if not found
      */
-    fetchUserProfile(username: string, force?: boolean): Promise<IUserProfile>;
+    fetchUserProfile(username: string, force?: boolean): Promise<IUserProfile | null>;
 
     /**
      * Clear profile cache

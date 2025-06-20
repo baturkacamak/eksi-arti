@@ -1,11 +1,7 @@
-import { DOMService } from '../../services/dom-service';
-import { CSSService } from '../../services/css-service';
-import { IconComponent } from './icon-component';
-import { LoggingService } from '../../services/logging-service';
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ICSSService } from '../../interfaces/services/ICSSService';
+import { IDOMService } from '../../interfaces/services/IDOMService';
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
+import { ILoggingService } from '../../interfaces/services/ILoggingService';
 import {
     ISelectBoxComponent,
     SelectBoxProps,

@@ -1,15 +1,12 @@
-import { DOMService } from '../../services/dom-service';
-import { CSSService } from '../../services/css-service';
-import {LoggingService} from '../../services/logging-service';
+import { ICSSService } from '../../interfaces/services/ICSSService';
+import { IDOMService } from '../../interfaces/services/IDOMService';
+import { ILoggingService } from '../../interfaces/services/ILoggingService';
 import {
     ContainerShape,
     ContainerSize,
     ContainerTheme, ContainerThemeConfig,
     containerThemeService
 } from "../../services/container-theme-service";
-import {ICSSService} from "../../interfaces/services/ICSSService";
-import {IDOMService} from "../../interfaces/services/IDOMService";
-import {ILoggingService} from "../../interfaces/services/ILoggingService";
 import {IComponentContainerConfig, IContainer} from "../../interfaces/IContainer";
 
 /**
@@ -25,10 +22,26 @@ export class ComponentContainer {
     private static stylesApplied = false;
     private loggingService: ILoggingService;
 
-    constructor(config: IComponentContainerConfig = {}) {
-        this.domService = new DOMService();
-        this.cssService = new CSSService(this.domService);
-        this.loggingService = new LoggingService();
+    constructor(
+        config: IComponentContainerConfig = {},
+        domService?: IDOMService,
+        cssService?: ICSSService,
+        loggingService?: ILoggingService
+    ) {
+        // Import concrete classes for fallback
+        if (!domService || !cssService || !loggingService) {
+            const { DOMService } = require('../../services/dom-service');
+            const { CSSService } = require('../../services/css-service');
+            const { LoggingService } = require('../../services/logging-service');
+            
+            this.domService = domService || new DOMService();
+            this.cssService = cssService || new CSSService(this.domService);
+            this.loggingService = loggingService || new LoggingService();
+        } else {
+            this.domService = domService;
+            this.cssService = cssService;
+            this.loggingService = loggingService;
+        }
 
         // Default configuration
         this.config = {

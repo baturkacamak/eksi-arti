@@ -1,11 +1,8 @@
-
 // src/services/container-service.ts
 import { ComponentContainer } from '../components/shared/component-container';
-import { LoggingService} from './logging-service';
-import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
-import {DOMService} from "./dom-service";
-import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
+import {ContainerShape, ContainerSize, ContainerTheme} from "./container-theme-service";
+import {IDOMService} from "../interfaces/services/IDOMService";
 import {IComponentContainerConfig} from "../interfaces/IContainer";
 
 export class ContainerService {

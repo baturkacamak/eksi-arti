@@ -3,12 +3,10 @@
  * A reusable slider component for filtering numeric values
  */
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
-import { DOMService } from '../../services/dom-service';
-import { CSSService } from '../../services/css-service';
-import { LoggingService } from '../../services/logging-service';
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+
+import { ICSSService } from '../../interfaces/services/ICSSService';
+import { IDOMService } from '../../interfaces/services/IDOMService';
+import { ILoggingService } from '../../interfaces/services/ILoggingService';
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { IObserverService } from '../../interfaces/services/IObserverService';
 

@@ -1,8 +1,7 @@
-import { DOMService } from '../../services/dom-service';
-import {LoggingService} from "../../services/logging-service";
-import {ICSSService} from "../../interfaces/services/ICSSService";
-import {IDOMService} from "../../interfaces/services/IDOMService";
+import { ICSSService } from "../../interfaces/services/ICSSService";
+import { IDOMService } from "../../interfaces/services/IDOMService";
 import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import { ITooltipComponent, ITooltipOptions } from "../../interfaces/components/ITooltipComponent";
 
 export interface TooltipOptions {
     position?: 'top' | 'bottom' | 'left' | 'right';
@@ -802,6 +801,35 @@ export class TooltipComponent {
         `;
 
         this.cssService.addCSS(css);
+    }
+
+    /**
+     * Update tooltip content for a specific element
+     */
+    public updateTooltipContent(element: HTMLElement, content: string): void {
+        const tooltip = this.activeTooltips.get(element);
+        if (tooltip) {
+            const contentElement = tooltip.querySelector('.eksi-tooltip-content');
+            if (contentElement) {
+                contentElement.innerHTML = content;
+            }
+        }
+    }
+
+    /**
+     * Destroy tooltip for a specific element
+     */
+    public destroyTooltip(element: HTMLElement): void {
+        this.hideTooltip(element);
+        // Remove any stored references or listeners for this specific element
+        this.clearDelayTimeout(element);
+    }
+
+    /**
+     * Destroy all tooltips
+     */
+    public destroyAllTooltips(): void {
+        this.hideAll();
     }
 
     /**

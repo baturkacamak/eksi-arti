@@ -1,14 +1,13 @@
 // src/services/author-highlighter-service.ts
-import {storageService, StorageService} from './storage-service';
+import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import { IconComponent } from '../components/shared/icon-component';
 import { TooltipComponent } from '../components/shared/tooltip-component';
-import {ObserverService, observerService} from "./observer-service";
+import { ITooltipComponent } from '../interfaces/components/ITooltipComponent';
+import {IObserverService} from "../interfaces/services/IObserverService";
 import {ICSSService} from "../interfaces/services/ICSSService";
 import {IDOMService} from "../interfaces/services/IDOMService";
 import {ILoggingService} from "../interfaces/services/ILoggingService";
 import {INotificationService} from "../interfaces/services/INotificationService";
-import {IObserverService} from "../interfaces/services/IObserverService";
-import {IStorageService, StorageArea} from "../interfaces/services/IStorageService";
 import {AuthorHighlight, AuthorHighlightConfig} from "../interfaces/services/IAuthorHighlighterService";
 import {IIconComponent} from "../interfaces/components/IIconComponent";
 import { SELECTORS } from "../constants";
@@ -82,10 +81,10 @@ export class AuthorHighlighterService {
             }
 
             // Observe DOM for new entries
-            this.observerId = observerService.observe({
+            this.observerId = this.observerService.observe({
                 selector: 'li[data-id][data-author]',
-                handler: (entries) => {
-                    entries.forEach(entry => this.processEntry(entry as HTMLElement));
+                handler: (entries: any[]) => {
+                    entries.forEach((entry: HTMLElement) => this.processEntry(entry as HTMLElement));
                 },
                 processExisting: true
             });
@@ -104,7 +103,7 @@ export class AuthorHighlighterService {
      */
     private async loadConfig(): Promise<void> {
         try {
-            const result = await storageService.getItem<AuthorHighlightConfig>(
+            const result = await this.storageService.getItem<AuthorHighlightConfig>(
                 this.STORAGE_KEY,
                 undefined,
                 StorageArea.SYNC
@@ -128,7 +127,7 @@ export class AuthorHighlighterService {
      */
     private async saveConfig(): Promise<void> {
         try {
-            await storageService.setItem(
+            await this.storageService.setItem(
                 this.STORAGE_KEY,
                 this.config,
                 StorageArea.SYNC
@@ -1259,7 +1258,7 @@ export class AuthorHighlighterService {
      */
     public destroy(): void {
         if (this.observerId) {
-            observerService.unobserve(this.observerId);
+            this.observerService.unobserve(this.observerId);
         }
 
         // Remove style elements

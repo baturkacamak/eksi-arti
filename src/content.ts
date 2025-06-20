@@ -1,13 +1,13 @@
 // In src/content.ts
 import { initializeDI } from './di/initialize-di';
 import { UIService } from './services/ui-service';
-import { LoggingService } from './services/logging-service';
-import { CSSService } from './services/css-service';
-import {ICSSService} from "./interfaces/services/ICSSService";
-import {ILoggingService} from "./interfaces/services/ILoggingService";
+import { ILoggingService } from "./interfaces/services/ILoggingService";
+import { ICSSService } from "./interfaces/services/ICSSService";
 import {ICommunicationService} from "./interfaces/services/ICommunicationService";
+import { CommunicationService } from './services/communication-service';
 import { FONT_FACE_CSS, MATERIAL_ICONS } from './constants/fonts';
 import { IFontLoaderService } from './interfaces/services/IFontLoaderService';
+import { Container } from './di/container';
 
 /**
  * Initialize Material Icons font using FontLoader
@@ -49,8 +49,8 @@ async function init(): Promise<void> {
         const container = initializeDI();
 
         // Resolve required services
-        const cssService = container.resolve<CSSService>('CSSService');
-        const loggingService = container.resolve<LoggingService>('LoggingService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
         const fontLoader = container.resolve<IFontLoaderService>('FontLoader');
         const communicationService = container.resolve('CommunicationService') as ICommunicationService;
 

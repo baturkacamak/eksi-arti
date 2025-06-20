@@ -1,9 +1,6 @@
-import { DOMService } from '../../services/dom-service';
-import { CSSService } from '../../services/css-service';
-import {LoggingService} from '../../services/logging-service';
-import {ICSSService} from "../../interfaces/services/ICSSService";
-import {IDOMService} from "../../interfaces/services/IDOMService";
-import {ILoggingService} from "../../interfaces/services/ILoggingService";
+import { ICSSService } from '../../interfaces/services/ICSSService';
+import { IDOMService } from '../../interfaces/services/IDOMService';
+import {ILoggingService} from '../../interfaces/services/ILoggingService';
 import {IToggleSwitchComponent} from "../../interfaces/components/IToggleSwitchComponent";
 
 /**
@@ -26,25 +23,19 @@ export interface ToggleSwitchProps {
  * Reusable toggle switch component for creating consistent toggle switches across the extension
  */
 export class ToggleSwitchComponent implements IToggleSwitchComponent {
-    private domService: IDOMService;
-    private cssService: ICSSService;
     private containerElement: HTMLElement | null = null;
     private inputElement: HTMLInputElement | null = null;
     private labelElement: HTMLLabelElement | null = null;
     private static stylesApplied = false;
-    private loggingService: ILoggingService;
 
     /**
      * Constructor
      */
     constructor(
-        domService?: IDOMService,
-        cssService?: ICSSService,
-        loggingService?: ILoggingService
+        private domService: IDOMService,
+        private cssService: ICSSService,
+        private loggingService: ILoggingService
     ) {
-        this.domService = domService || new DOMService();
-        this.cssService = cssService || new CSSService(this.domService);
-        this.loggingService = loggingService || new LoggingService();
         this.applyToggleSwitchStyles();
     }
 

@@ -176,7 +176,7 @@ export function initializeDI(): Container {
         const domService = container.resolve<IDOMService>('DOMService');
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
-        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const iconComponent = container.resolve<IconComponent>('IconComponent');
         return new ButtonPillsComponent(domService, cssService, loggingService, iconComponent);
     });
 
@@ -527,7 +527,7 @@ export function initializeDI(): Container {
         const cssService = container.resolve<ICSSService>('CSSService');
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
-        const tooltipComponent = container.resolve<TooltipComponent>('TooltipComponent');
+        const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
 
