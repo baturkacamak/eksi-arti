@@ -37,6 +37,8 @@ export class UserProfileService {
     private observerId: string = '';
     private processedLinks: WeakSet<HTMLElement> = new WeakSet();
     private activeRequests: Map<string, Promise<IUserProfile | null>> = new Map();
+    private sharedTooltip: HTMLElement | null = null;
+    private readonly SHARED_TOOLTIP_ID = 'eksi-profile-shared-tooltip';
 
     public constructor(
         private domService: IDOMService,
@@ -300,11 +302,71 @@ export class UserProfileService {
             this.domService.insertBefore(link.parentNode, badge, link.nextSibling);
         }
 
-        const tooltipId = `eksi-profile-tooltip-${userProfile.username}`;
-        const tooltipContent = this.domService.createElement('div');
-        tooltipContent.id = tooltipId;
-        tooltipContent.style.display = 'none';
+        // Ensure shared tooltip exists
+        this.ensureSharedTooltip();
 
+        badge.classList.add('tooltip-trigger');
+        badge.setAttribute('data-tooltip-content', this.SHARED_TOOLTIP_ID);
+
+        // Store user profile data on the badge for later use
+        badge.setAttribute('data-user-profile', JSON.stringify(userProfile));
+
+        // Setup custom tooltip behavior
+        this.setupProfileTooltip(badge);
+    }
+
+    private ensureSharedTooltip(): void {
+        if (this.sharedTooltip) {
+            return;
+        }
+
+        // Check if already exists in DOM
+        this.sharedTooltip = this.domService.querySelector(`#${this.SHARED_TOOLTIP_ID}`);
+        if (this.sharedTooltip) {
+            return;
+        }
+
+        // Create shared tooltip
+        this.sharedTooltip = this.domService.createElement('div');
+        this.sharedTooltip.id = this.SHARED_TOOLTIP_ID;
+        this.sharedTooltip.style.display = 'none';
+
+        const body = this.domService.querySelector('body');
+        if (body) {
+            this.domService.appendChild(body, this.sharedTooltip);
+        }
+    }
+
+    private setupProfileTooltip(badge: HTMLElement): void {
+        // Override the default tooltip behavior with custom handlers
+        this.domService.addEventListener(badge, 'mouseenter', () => {
+            this.updateSharedTooltipContent(badge);
+        });
+
+        this.tooltipComponent.setupTooltip(badge, {
+            offset: 15
+        });
+    }
+
+    private updateSharedTooltipContent(badge: HTMLElement): void {
+        if (!this.sharedTooltip) {
+            return;
+        }
+
+        const userProfileData = badge.getAttribute('data-user-profile');
+        if (!userProfileData) {
+            return;
+        }
+
+        try {
+            const userProfile: IUserProfile = JSON.parse(userProfileData);
+            this.sharedTooltip.innerHTML = this.generateTooltipContent(userProfile);
+        } catch (error) {
+            this.loggingService.warn('Failed to parse user profile data for tooltip:', error);
+        }
+    }
+
+    private generateTooltipContent(userProfile: IUserProfile): string {
         const yearNames = [
             'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
             'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
@@ -313,7 +375,7 @@ export class UserProfileService {
         // Convert timestamp to Date for display
         const registrationDate = new Date(userProfile.registrationDate);
 
-// Create icon elements
+        // Create icon elements
         const calendarIcon = this.iconComponent.create({
             name: 'calendar_today',
             size: 'small',
@@ -325,7 +387,7 @@ export class UserProfileService {
         const groupIcon = this.iconComponent.create({name: 'group', size: 'small', color: '#81c14b'}).outerHTML;
         const followIcon = this.iconComponent.create({name: 'person_add', size: 'small', color: '#81c14b'}).outerHTML;
 
-        tooltipContent.innerHTML = `
+        return `
             <div class="eksi-user-profile-tooltip-row">
                 <span class="eksi-user-profile-tooltip-icon">${calendarIcon}</span>
                 <span class="eksi-user-profile-tooltip-text"><strong>Kayıt:</strong> ${yearNames[registrationDate.getMonth()]} ${registrationDate.getFullYear()}</span>
@@ -356,18 +418,6 @@ export class UserProfileService {
                     <span class="eksi-user-profile-tooltip-text"><strong>Takip:</strong> ${userProfile.stats.followingCount}</span>
                 </div>` : ''}
         `;
-
-        const body = this.domService.querySelector('body');
-        if (body) {
-            this.domService.appendChild(body, tooltipContent);
-        }
-
-        badge.classList.add('tooltip-trigger');
-        badge.setAttribute('data-tooltip-content', tooltipId);
-
-        this.tooltipComponent.setupTooltip(badge, {
-            offset: 15
-        });
     }
 
     private createBadge(userProfile: IUserProfile): HTMLElement {
@@ -499,6 +549,11 @@ export class UserProfileService {
                 line-height: 1.4;
             }
             
+            .tooltip-divider {
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                margin: 6px 0;
+            }
+            
             ${SELECTORS.ENTRY_NICK_CONTAINER} {
                 display: flex;
                 align-items: center;
@@ -522,6 +577,10 @@ export class UserProfileService {
                 .eksi-user-profile-tooltip::before {
                     border-bottom-color: #1a1a1a;
                 }
+                
+                .tooltip-divider {
+                    border-top-color: rgba(255, 255, 255, 0.1);
+                }
             }
         `;
 
@@ -533,5 +592,11 @@ export class UserProfileService {
             this.observerService.unobserve(this.observerId);
         }
         this.activeRequests.clear();
+        
+        // Clean up shared tooltip
+        if (this.sharedTooltip && this.sharedTooltip.parentNode) {
+            this.sharedTooltip.parentNode.removeChild(this.sharedTooltip);
+            this.sharedTooltip = null;
+        }
     }
 }
