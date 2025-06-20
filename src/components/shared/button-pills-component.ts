@@ -6,6 +6,7 @@ import { IDOMService } from "../../interfaces/services/IDOMService";
 import { ICSSService } from "../../interfaces/services/ICSSService";
 import { ILoggingService } from "../../interfaces/services/ILoggingService";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
+import { debounce } from '../../services/utilities';
 
 // Define types directly in the file to avoid import issues
 export interface PillOption {
@@ -51,6 +52,10 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
     private currentDirection: 'asc' | 'desc' = 'desc';
     private props: ButtonPillsProps;
     private static stylesApplied = false;
+    private isProcessing = false;
+    
+    // Debounced click handler to prevent rapid clicking
+    private debouncedClickHandler: (option: PillOption) => void;
 
     constructor(
         private domService: IDOMService,
@@ -64,6 +69,12 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
             direction: 'desc',
             showDirectionOnActive: true
         };
+        
+        // Initialize debounced click handler (300ms debounce to prevent rapid clicking)
+        this.debouncedClickHandler = debounce((option: PillOption) => {
+            this.executeClick(option);
+        }, 300);
+        
         this.applyStyles();
     }
 
@@ -171,31 +182,54 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
     }
 
     private handlePillClick(option: PillOption): void {
-        if (option.disabled) return;
+        if (option.disabled || this.isProcessing) return;
 
-        const wasActive = this.activePill === option.value;
+        // Use debounced handler to prevent rapid clicks
+        this.debouncedClickHandler(option);
+    }
+
+    private executeClick(option: PillOption): void {
+        if (option.disabled || this.isProcessing) return;
+
+        // Set processing flag to prevent additional clicks until processing is complete
+        this.isProcessing = true;
         
-        if (wasActive && this.props.allowDirectionToggle !== false) {
-            // Toggle direction if clicking the active pill
-            this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
-        } else {
-            // Switch to new pill
-            this.activePill = option.value;
-            // Use option's default direction or keep current
-            if (option.defaultDirection && !wasActive) {
-                this.currentDirection = option.defaultDirection;
-            }
-        }
-
-        // Update visual state
+        // Update visual state to show processing
         this.updatePillsState();
 
-        // Call callback with updated state
-        this.props.onPillClick({
-            option,
-            direction: this.currentDirection,
-            wasActive
-        });
+        try {
+            const wasActive = this.activePill === option.value;
+            
+            if (wasActive && this.props.allowDirectionToggle !== false) {
+                // Toggle direction if clicking the active pill
+                this.currentDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
+            } else {
+                // Switch to new pill
+                this.activePill = option.value;
+                // Use option's default direction or keep current
+                if (option.defaultDirection && !wasActive) {
+                    this.currentDirection = option.defaultDirection;
+                }
+            }
+
+            // Update visual state
+            this.updatePillsState();
+
+            // Call callback with updated state
+            this.props.onPillClick({
+                option,
+                direction: this.currentDirection,
+                wasActive
+            });
+        } catch (error) {
+            this.loggingService.error('Error in executeClick:', error);
+        } finally {
+            // Reset processing flag after a short delay to allow for any async operations
+            setTimeout(() => {
+                this.isProcessing = false;
+                this.updatePillsState(); // Update visual state to remove processing indicators
+            }, 100);
+        }
     }
 
     private updatePillsState(): void {
@@ -208,6 +242,13 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 this.domService.addClass(pill, 'active');
             } else {
                 this.domService.removeClass(pill, 'active');
+            }
+
+            // Update processing state
+            if (this.isProcessing) {
+                this.domService.addClass(pill, 'processing');
+            } else {
+                this.domService.removeClass(pill, 'processing');
             }
 
             // Update content to add/remove direction indicator
@@ -276,13 +317,13 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 outline: none;
             }
             
-            .eksi-pill:hover:not(.disabled) {
+            .eksi-pill:hover:not(.disabled):not(.processing) {
                 background-color: rgba(0, 0, 0, 0.08);
                 border-color: rgba(0, 0, 0, 0.25);
                 transform: translateY(-1px);
             }
             
-            .eksi-pill:active:not(.disabled) {
+            .eksi-pill:active:not(.disabled):not(.processing) {
                 transform: translateY(0);
             }
             
@@ -310,6 +351,33 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 cursor: not-allowed;
                 background-color: rgba(0, 0, 0, 0.02);
                 border-color: rgba(0, 0, 0, 0.1);
+            }
+            
+            /* Processing pill styling */
+            .eksi-pill.processing {
+                opacity: 0.7;
+                cursor: wait;
+                pointer-events: none;
+                position: relative;
+            }
+            
+            .eksi-pill.processing::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                right: 8px;
+                width: 12px;
+                height: 12px;
+                margin-top: -6px;
+                border: 2px solid transparent;
+                border-top: 2px solid currentColor;
+                border-radius: 50%;
+                animation: pill-spin 0.8s linear infinite;
+            }
+            
+            @keyframes pill-spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
             }
             
             /* Pill content */

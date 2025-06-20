@@ -187,11 +187,43 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         if (!strategy) return;
 
         this.currentDirection = data.direction;
-            this.activeStrategy = strategy;
+        this.activeStrategy = strategy;
         
         // Sort entries with the new strategy and direction
         this.sortEntries(strategy, data.direction);
     };
+
+
+
+    /**
+     * Batch process entries for very large lists to prevent UI blocking
+     * Processes in chunks of 50 entries at a time
+     */
+    private async processBatchedSorting(entries: HTMLElement[], strategy: ISortingStrategy, sortDirection: 'asc' | 'desc'): Promise<HTMLElement[]> {
+        const BATCH_SIZE = 50;
+        const totalBatches = Math.ceil(entries.length / BATCH_SIZE);
+        let allSortingData: any[] = [];
+
+        // Process in batches to prevent UI blocking
+        for (let i = 0; i < totalBatches; i++) {
+            const startIndex = i * BATCH_SIZE;
+            const endIndex = Math.min(startIndex + BATCH_SIZE, entries.length);
+            const batch = entries.slice(startIndex, endIndex);
+            
+            // Extract data for this batch
+            const batchData = batch.map(entry => this.sortingDataExtractor.extractSortingData(entry));
+            allSortingData.push(...batchData);
+            
+            // Yield control to prevent blocking UI
+            if (i < totalBatches - 1) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        // Sort all data at once (this is still fast)
+        const sortedData = allSortingData.sort((a, b) => strategy.sortData!(a, b, sortDirection));
+        return sortedData.map(data => data.element);
+    }
 
     /**
      * Sort entries using the specified strategy
@@ -209,6 +241,8 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
             const sortDirection = direction || this.currentDirection;
             this.loggingService.debug(`Sorting ${entries.length} entries using ${strategy.name} (${sortDirection})`);
             
+
+            
             // Pre-fetch data if strategy requires it
             const prefetchPromises = entries.map(entry => 
                 typeof (strategy as any).prefetchData === 'function' ? (strategy as any).prefetchData(entry) : Promise.resolve()
@@ -220,29 +254,41 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
                     (strategy as any).preCacheUsernames(entries);
                 }
                 
-                // Use data-driven approach if available, fallback to legacy approach
-                let sortedEntries: HTMLElement[];
-                if (strategy.sortData) {
-                    // Extract sorting data once for all entries (O(n) operation)
-                    const sortingDataArray = entries.map(entry => this.sortingDataExtractor.extractSortingData(entry));
-                    
-                    // Sort the data (O(n log n) but pure function operations)
-                    const sortedData = [...sortingDataArray].sort((a, b) => strategy.sortData!(a, b, sortDirection));
-                    
-                    // Return sorted elements
-                    sortedEntries = sortedData.map(data => data.element);
-                } else if (strategy.sort) {
-                    // Legacy HTMLElement-based sorting
-                    sortedEntries = [...entries].sort((a, b) => strategy.sort!(a, b, sortDirection));
+                // PERFORMANCE OPTIMIZATION: Use different strategies based on list size
+                if (entries.length > 50 && strategy.sortData) {
+                    // For large lists, use batched processing
+                    this.processBatchedSorting(entries, strategy, sortDirection).then(sortedEntries => {
+                        this.applyDomUpdates(entryList, sortedEntries, strategy.name, sortDirection);
+                    });
                 } else {
-                    throw new Error(`Strategy "${strategy.name}" has neither sort nor sortData method`);
+                    // For smaller lists, use standard processing
+                    requestAnimationFrame(() => {
+                        const startTime = performance.now();
+                        
+                        // Use data-driven approach if available, fallback to legacy approach
+                        let sortedEntries: HTMLElement[];
+                        if (strategy.sortData) {
+                            // Extract sorting data once for all entries (O(n) operation)
+                            const sortingDataArray = entries.map(entry => this.sortingDataExtractor.extractSortingData(entry));
+                            
+                            // Sort the data (O(n log n) but pure function operations)
+                            const sortedData = [...sortingDataArray].sort((a, b) => strategy.sortData!(a, b, sortDirection));
+                            
+                            // Return sorted elements
+                            sortedEntries = sortedData.map(data => data.element);
+                        } else if (strategy.sort) {
+                            // Legacy HTMLElement-based sorting
+                            sortedEntries = [...entries].sort((a, b) => strategy.sort!(a, b, sortDirection));
+                        } else {
+                            throw new Error(`Strategy "${strategy.name}" has neither sort nor sortData method`);
+                        }
+                        
+                        const endTime = performance.now();
+                        this.loggingService.debug(`Data extraction and sorting completed in ${(endTime - startTime).toFixed(2)}ms`);
+                        
+                        this.applyDomUpdates(entryList, sortedEntries, strategy.name, sortDirection);
+                    });
                 }
-                const fragment = document.createDocumentFragment();
-                sortedEntries.forEach(entry => fragment.appendChild(entry));
-                entryList.innerHTML = ''; 
-                entryList.appendChild(fragment);
-                this.loggingService.debug(`Entries sorted and re-appended using ${strategy.name} strategy (${sortDirection})`);
-                this.activeStrategy = strategy;
             }).catch(error => {
                 this.loggingService.error('Error during prefetch or sorting:', error);
             });
@@ -250,6 +296,43 @@ export class EntrySorterComponent extends BaseFeatureComponent implements IEntry
         } catch (error) {
             this.loggingService.error('Error in sortEntries execution:', error);
         }
+    }
+
+    /**
+     * Apply DOM updates with performance optimizations
+     */
+    private applyDomUpdates(entryList: Element, sortedEntries: HTMLElement[], strategyName: string, sortDirection: 'asc' | 'desc'): void {
+        const startTime = performance.now();
+        
+        // PERFORMANCE OPTIMIZATION: Batch DOM updates to minimize reflows
+        const fragment = document.createDocumentFragment();
+        
+        // Create placeholder to maintain scroll position
+        const placeholder = this.domService.createElement('div');
+        const entryListElement = entryList as HTMLElement;
+        placeholder.style.height = entryListElement.offsetHeight + 'px';
+        
+        // Replace content with placeholder first to prevent layout thrashing
+        entryListElement.style.visibility = 'hidden';
+        entryList.parentNode?.insertBefore(placeholder, entryList);
+        
+        // Clear and rebuild in fragment (off-DOM for performance)
+        entryList.innerHTML = '';
+        sortedEntries.forEach(entry => fragment.appendChild(entry));
+        entryList.appendChild(fragment);
+        
+        // Restore visibility and remove placeholder
+        entryListElement.style.visibility = 'visible';
+        placeholder.remove();
+        
+
+        
+
+        
+        const endTime = performance.now();
+        this.loggingService.debug(`DOM updates completed in ${(endTime - startTime).toFixed(2)}ms`);
+        this.loggingService.debug(`Entries sorted and re-appended using ${strategyName} strategy (${sortDirection})`);
+        this.activeStrategy = this.strategies.find(s => s.name === strategyName) || null;
     }
 
     /**
