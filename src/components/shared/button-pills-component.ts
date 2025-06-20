@@ -53,6 +53,7 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
     private props: ButtonPillsProps;
     private static stylesApplied = false;
     private isProcessing = false;
+    private processingPill: string | null = null; // Track which specific pill is processing
     
     // Debounced click handler to prevent rapid clicking
     private debouncedClickHandler: (option: PillOption) => void;
@@ -193,6 +194,7 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
 
         // Set processing flag to prevent additional clicks until processing is complete
         this.isProcessing = true;
+        this.processingPill = option.value; // Track which specific pill is processing
         
         // Update visual state to show processing
         this.updatePillsState();
@@ -227,6 +229,7 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
             // Reset processing flag after a short delay to allow for any async operations
             setTimeout(() => {
                 this.isProcessing = false;
+                this.processingPill = null; // Clear processing pill
                 this.updatePillsState(); // Update visual state to remove processing indicators
             }, 100);
         }
@@ -244,8 +247,8 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 this.domService.removeClass(pill, 'active');
             }
 
-            // Update processing state
-            if (this.isProcessing) {
+            // Update processing state - only show processing on the clicked pill
+            if (this.isProcessing && this.processingPill === value) {
                 this.domService.addClass(pill, 'processing');
             } else {
                 this.domService.removeClass(pill, 'processing');
