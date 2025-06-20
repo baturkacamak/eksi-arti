@@ -317,7 +317,12 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 transition: all 0.2s ease;
                 white-space: nowrap;
                 user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
                 outline: none;
+                -webkit-touch-callout: none;
+                -webkit-tap-highlight-color: transparent;
             }
             
             .eksi-pill:hover:not(.disabled):not(.processing) {
@@ -368,10 +373,10 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 content: '';
                 position: absolute;
                 top: 50%;
-                right: 8px;
+                right: 11px;
                 width: 12px;
                 height: 12px;
-                margin-top: -6px;
+                margin-top: -8px;
                 border: 2px solid transparent;
                 border-top: 2px solid currentColor;
                 border-radius: 50%;
@@ -388,15 +393,27 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 display: flex;
                 align-items: center;
                 gap: 4px;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
             
             .eksi-pill-icon {
                 display: flex;
                 align-items: center;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
             
             .eksi-pill-label {
                 line-height: 1;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
             
             .eksi-pill-direction {
@@ -406,6 +423,10 @@ export class ButtonPillsComponent implements IButtonPillsComponent {
                 opacity: 0.9;
                 transition: transform 0.3s ease-in-out;
                 transform-origin: center;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
             
             .eksi-pill-direction.asc {
