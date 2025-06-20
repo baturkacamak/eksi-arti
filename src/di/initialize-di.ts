@@ -78,6 +78,8 @@ import {FontLoaderService} from "../services/shared/font-loader-service";
 import {IFontLoaderService} from "../interfaces/services/shared/IFontLoaderService";
 import {ColorService} from "../services/shared/color-service";
 import {IColorService} from "../interfaces/services/shared/IColorService";
+import { FollowedThreadsNavigationComponent } from '../components/features/followed-threads-navigation-component';
+import { FollowedThreadsCacheService } from '../services/features/followed-threads-cache-service';
 
 /**
  * Initialize the dependency injection container
@@ -583,6 +585,32 @@ export function initializeDI(): Container {
     container.register('ColorService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ColorService(loggingService);
+    });
+
+    container.register('FollowedThreadsNavigationComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const observerService = container.resolve<IObserverService>('ObserverService');
+        const httpService = container.resolve<IHttpService>('HttpService');
+
+        return new FollowedThreadsNavigationComponent(
+            domService,
+            cssService,
+            loggingService,
+            iconComponent,
+            observerService,
+            httpService
+        );
+    });
+
+    container.register('FollowedThreadsCacheService', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const observerService = container.resolve<IObserverService>('ObserverService');
+
+        return new FollowedThreadsCacheService(domService, loggingService, observerService);
     });
 
     initializeCommandDI(container);
