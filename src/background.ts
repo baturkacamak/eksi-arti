@@ -6,66 +6,184 @@
 import { preferencesManager } from './services/features/preferences/preferences-manager';
 import {LoggingService} from './services/shared/logging-service';
 import {Endpoints} from "./constants";
+import {BackgroundBlockingService} from './services/features/blocking/background-blocking-service';
+import {CommunicationService} from './services/shared/communication-service';
 
 const loggingService = new LoggingService();
+const communicationService = new CommunicationService(loggingService);
+let blockingService: BackgroundBlockingService;
 
 // Global flag to prevent duplicate setup
 let voteMonitoringSetup = false;
 
 /**
- * Safely decode HTML entities from text
- * This function is XSS-safe as it only decodes common HTML entities
+ * Initialize extension
  */
-function decodeHtmlEntities(text: string): string {
-    const htmlEntities: { [key: string]: string } = {
-        '&amp;': '&',
-        '&lt;': '<',
-        '&gt;': '>',
-        '&quot;': '"',
-        '&#x27;': "'",
-        '&#39;': "'",
-        '&#x2F;': '/',
-        '&#47;': '/',
-        '&#x5C;': '\\',
-        '&#92;': '\\',
-        '&#x60;': '`',
-        '&#96;': '`',
-        '&#x131;': 'ı',
-        '&#305;': 'ı',
-        '&#x130;': 'İ',
-        '&#304;': 'İ',
-        '&#x11E;': 'Ğ',
-        '&#286;': 'Ğ',
-        '&#x11F;': 'ğ',
-        '&#287;': 'ğ',
-        '&#x15E;': 'Ş',
-        '&#350;': 'Ş',
-        '&#x15F;': 'ş',
-        '&#351;': 'ş',
-        '&#xDC;': 'Ü',
-        '&#220;': 'Ü',
-        '&#xFC;': 'ü',
-        '&#252;': 'ü',
-        '&#xD6;': 'Ö',
-        '&#214;': 'Ö',
-        '&#xF6;': 'ö',
-        '&#246;': 'ö',
-        '&#xC7;': 'Ç',
-        '&#199;': 'Ç',
-        '&#xE7;': 'ç',
-        '&#231;': 'ç'
-    };
+async function initializeExtension() {
+    try {
+        loggingService.debug('Initializing extension...');
+        // Initialize preferences
+        await preferencesManager.initialize();
+        const preferences = preferencesManager.getPreferences();
 
-    // Only decode known safe entities - this prevents XSS
-    return text.replace(/&[#\w]+;/g, (entity) => {
-        return htmlEntities[entity] || entity;
-    });
+        // Set up logger based on preferences
+        loggingService.debug('Setting debug mode', { enableDebugMode: preferences.enableDebugMode });
+        loggingService.setDebugMode(preferences.enableDebugMode);
+
+        // Initialize blocking service
+        loggingService.debug('Initializing BackgroundBlockingService...');
+        blockingService = new BackgroundBlockingService(loggingService);
+
+        // Set up vote monitoring
+        loggingService.debug('Calling setupVoteMonitoring...');
+        setupVoteMonitoring();
+
+        loggingService.debug('Extension initialized successfully', { version: chrome.runtime.getManifest().version });
+
+        // Set up message handlers
+        loggingService.debug('Registering message handlers...');
+        setupMessageHandlers();
+
+        // Check for saved blocking state and auto-resume
+        loggingService.debug('Checking and resuming blocking if needed...');
+        await blockingService.checkAndResumeBlocking();
+
+        loggingService.debug('Initialization complete.');
+        return true;
+    } catch (error) {
+        loggingService.error('Failed to initialize extension', error);
+        return false;
+    }
 }
 
 /**
- * Set up vote monitoring
+ * Set up message handlers for communication between scripts
+ */
+function setupMessageHandlers() {
+    loggingService.debug('Setting up message handlers for communication...');
+    // Register blocking-related handlers
+    communicationService.registerHandler('startBlocking', async (message) => {
+        loggingService.debug('Received startBlocking message', message);
+        try {
+            const result = await blockingService.startBlocking(
+                message.entryId,
+                message.blockType,
+                message.includeThreadBlocking || false
+            );
+            loggingService.debug('Blocking started', result);
+            return CommunicationService.createSuccessResponse(result);
+        } catch (error) {
+            loggingService.error('Error starting blocking operation', error);
+            return CommunicationService.createErrorResponse(
+                error instanceof Error ? error.message : 'Unknown error'
+            );
+        }
+    });
+
+    communicationService.registerHandler('stopBlocking', () => {
+        loggingService.debug('Received stopBlocking message');
+        blockingService.stopBlocking();
+        loggingService.debug('Blocking stopped');
+        return CommunicationService.createSuccessResponse();
+    });
+
+    communicationService.registerHandler('forceStopBlocking', () => {
+        loggingService.debug('Received forceStopBlocking message');
+        blockingService.forceStopBlocking();
+        loggingService.debug('Blocking force-stopped');
+        return CommunicationService.createSuccessResponse();
+    });
+
+    communicationService.registerHandler('resetStuckState', async () => {
+        loggingService.debug('Received resetStuckState message');
+        try {
+            const result = await blockingService.resetStuckState();
+            loggingService.debug('Stuck state reset', result);
+            return CommunicationService.createSuccessResponse(result);
+        } catch (error) {
+            loggingService.error('Error resetting stuck state', error);
+            return CommunicationService.createErrorResponse(
+                error instanceof Error ? error.message : 'Unknown error'
+            );
+        }
+    });
+
+    communicationService.registerHandler('getBlockingStatus', () => {
+        loggingService.debug('Received getBlockingStatus message');
+        return CommunicationService.createSuccessResponse(blockingService.getStatus());
+    });
+
+    communicationService.registerHandler('checkAndResumeBlocking', async () => {
+        loggingService.debug('Received checkAndResumeBlocking message');
+        try {
+            await blockingService.checkAndResumeBlocking();
+            loggingService.debug('Checked and resumed blocking if needed');
+            return CommunicationService.createSuccessResponse();
+        } catch (error) {
+            loggingService.error('Error checking/resuming blocking', error);
+            return CommunicationService.createErrorResponse(
+                error instanceof Error ? error.message : 'Unknown error'
+            );
+        }
+    });
+
+    // Register preferences-related handlers
+    communicationService.registerHandler('getPreferences', () => {
+        loggingService.debug('Received getPreferences message');
+        return CommunicationService.createSuccessResponse(preferencesManager.getPreferences());
+    });
+
+    communicationService.registerHandler('savePreferences', async (message) => {
+        loggingService.debug('Received savePreferences message', message);
+        try {
+            const success = await preferencesManager.savePreferences(message.data);
+            loggingService.debug('Preferences saved', { success });
+            return CommunicationService.createSuccessResponse({ success });
+        } catch (error) {
+            loggingService.error('Error saving preferences', error);
+            return CommunicationService.createErrorResponse(
+                error instanceof Error ? error.message : 'Unknown error'
+            );
+        }
+    });
+
+    communicationService.registerHandler('resetPreferences', async () => {
+        loggingService.debug('Received resetPreferences message');
+        try {
+            const success = await preferencesManager.resetPreferences();
+            loggingService.debug('Preferences reset', { success });
+            return CommunicationService.createSuccessResponse({ success });
+        } catch (error) {
+            loggingService.error('Error resetting preferences', error);
+            return CommunicationService.createErrorResponse(
+                error instanceof Error ? error.message : 'Unknown error'
+            );
+        }
+    });
+
+    // Register utility handlers
+    communicationService.registerHandler('getVersion', () => {
+        loggingService.debug('Received getVersion message');
+        return CommunicationService.createSuccessResponse({
+            version: chrome.runtime.getManifest().version
+        });
+    });
+
+    communicationService.registerHandler('getLogs', () => {
+        loggingService.debug('Received getLogs message');
+        return CommunicationService.createSuccessResponse({
+            logs: loggingService.getLogs()
+        });
+    });
+
+    loggingService.debug('Message handlers registered successfully');
+}
+
+/**
+ * Set up vote monitoring (existing functionality)
  */
 function setupVoteMonitoring() {
+    loggingService.debug('setupVoteMonitoring called');
     // Prevent duplicate setup
     if (voteMonitoringSetup) {
         loggingService.debug('Vote monitoring already set up, skipping duplicate setup');
@@ -84,490 +202,215 @@ function setupVoteMonitoring() {
         periodInMinutes: 1
     });
 
-    // Listen for alarm events
-    chrome.alarms.onAlarm.addListener((alarm) => {
-        loggingService.debug('Alarm triggered', {
-            alarmName: alarm.name,
-            scheduledTime: alarm.scheduledTime
-        });
-
-        if (alarm.name === 'checkForNewVote') {
-            loggingService.debug('Processing vote check alarm');
-            checkForNewVote();
-        } else {
-            loggingService.debug('Ignoring non-vote-check alarm', { alarmName: alarm.name });
-        }
-    });
-
     // Mark vote monitoring as set up
     voteMonitoringSetup = true;
     loggingService.debug('Vote monitoring setup completed');
-
-    // Set up notification click handler
-    chrome.notifications.onClicked.addListener(async (notificationId) => {
-        loggingService.debug('Notification clicked', { notificationId });
-
-        try {
-            // Get the stored URL for this notification
-            const storage = await chrome.storage.local.get([
-                `notification_${notificationId}_url`,
-                `notification_${notificationId}_title`
-            ]);
-
-            const entryUrl = storage[`notification_${notificationId}_url`];
-            const entryTitle = storage[`notification_${notificationId}_title`];
-
-            loggingService.debug('Retrieved notification data', {
-                entryUrl,
-                entryTitle
-            });
-
-            if (entryUrl) {
-                // Open the entry in a new tab
-                chrome.tabs.create({ url: entryUrl });
-                loggingService.debug('Opened entry in new tab', { url: entryUrl });
-
-                // Clear the notification
-                chrome.notifications.clear(notificationId);
-
-                // Clean up stored notification data
-                chrome.storage.local.remove([
-                    `notification_${notificationId}_url`,
-                    `notification_${notificationId}_title`
-                ]);
-
-                loggingService.debug('Notification clicked and cleaned up', { notificationId });
-            } else {
-                loggingService.error('No URL found for notification', { notificationId });
-            }
-        } catch (error) {
-            loggingService.error('Error handling notification click', {
-                error: error instanceof Error ? error.message : String(error),
-                notificationId
-            });
-        }
-    });
-
-    // Set up notification closed handler for cleanup
-    chrome.notifications.onClosed.addListener(async (notificationId, byUser) => {
-        loggingService.debug('Notification closed', { notificationId, byUser });
-
-        // Clean up stored notification data when notification is closed
-        chrome.storage.local.remove([
-            `notification_${notificationId}_url`,
-            `notification_${notificationId}_title`
-        ]);
-    });
-
-    // Listen for changes to the monitoring settings
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        loggingService.debug('Vote monitoring message received', {
-            message,
-            hasUsername: !!message.username,
-            action: message.action
-        });
-
-        if (message.username) {
-            // Store username
-            chrome.storage.local.set({'userNick': message.username});
-            loggingService.debug('Username updated and stored', { username: message.username });
-        }
-
-        if (message.action === 'updateVoteMonitoring') {
-            loggingService.debug('Processing vote monitoring update', {
-                hasInterval: !!message.interval,
-                interval: message.interval,
-                hasEnabledFlag: message.enabled !== undefined,
-                enabled: message.enabled
-            });
-
-            if (message.interval) {
-                // Update alarm interval
-                chrome.alarms.clear('checkForNewVote').then(() => {
-                    chrome.alarms.create('checkForNewVote', {
-                        periodInMinutes: message.interval
-                    });
-                    loggingService.debug('Vote monitoring alarm interval updated', {
-                        newInterval: message.interval
-                    });
-                }).catch(error => {
-                    loggingService.error('Failed to update vote monitoring interval', {
-                        error: error instanceof Error ? error.message : String(error),
-                        requestedInterval: message.interval
-                    });
-                });
-            }
-
-            if (message.enabled !== undefined) {
-                if (message.enabled) {
-                    // Ensure alarm is set up
-                    chrome.alarms.create('checkForNewVote', {
-                        periodInMinutes: message.interval || 1 // Use provided interval or default
-                    });
-                    loggingService.debug('Vote monitoring enabled - alarm created', {
-                        interval: message.interval || 1
-                    });
-                } else {
-                    // Clear the alarm if disabled
-                    chrome.alarms.clear('checkForNewVote').then((wasCleared) => {
-                        loggingService.debug('Vote monitoring disabled - alarm cleared', {
-                            wasCleared
-                        });
-                    }).catch(error => {
-                        loggingService.error('Failed to clear vote monitoring alarm', {
-                            error: error instanceof Error ? error.message : String(error)
-                        });
-                    });
-                }
-                loggingService.debug('Vote monitoring enabled state updated', { enabled: message.enabled });
-            }
-        }
-    });
 }
 
 /**
- * Check for new votes on the user's entries
+ * Check for new votes for a user
  */
-async function checkForNewVote() {
+async function checkForNewVotes(username: string): Promise<void> {
     try {
-        loggingService.debug('Starting vote check cycle');
-
-        // Get username from storage
-        const storage = await chrome.storage.local.get(['userNick', 'voteMonitoringEnabled']);
-        loggingService.debug('Retrieved storage data', {
-            hasUserNick: !!storage.userNick,
-            userNick: storage.userNick,
-            voteMonitoringEnabled: storage.voteMonitoringEnabled
-        });
-
-        if (!storage.userNick) {
-            loggingService.debug('Vote check skipped: No username found in storage');
+        loggingService.debug('Starting vote check', { username });
+        
+        if (!username || username === 'unknown') {
+            loggingService.debug('Cannot check votes - no valid username');
             return;
         }
 
-        if (storage.voteMonitoringEnabled === false) {
-            loggingService.debug('Vote check skipped: Vote monitoring is disabled');
-            return;
-        }
-
-        const userNick = storage.userNick;
-        const baseUrl = Endpoints.VOTE_HISTORY(userNick, 1);
-        const timestamp = Date.now();
-        const urlWithTimestamp = `${baseUrl}&_=${timestamp}`;
-
-        loggingService.debug('Making vote history request', {
-            userNick,
-            baseUrl,
-            urlWithTimestamp
-        });
-
-        // Use HttpService pattern but we need direct fetch for background
-        const response = await fetch(urlWithTimestamp, {
-            headers: {
-                'accept': '*/*',
-                'accept-language': 'en-US,en;q=0.9,tr;q=0.8',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'same-origin',
-                'x-requested-with': 'XMLHttpRequest'
-            },
-            referrerPolicy: 'strict-origin-when-cross-origin',
+        // Fetch the user's vote history (first page)
+        const voteHistoryUrl = Endpoints.VOTE_HISTORY(username, 1);
+        loggingService.debug('Fetching vote history', { url: voteHistoryUrl });
+        
+        const response = await fetch(voteHistoryUrl, {
             method: 'GET',
-            mode: 'cors',
-            credentials: 'include'
-        });
-
-        loggingService.debug('Vote history response received', {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
-            contentType: response.headers.get('content-type')
+            credentials: 'include',
+            headers: {
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'x-requested-with': 'XMLHttpRequest'
+            }
         });
 
         if (!response.ok) {
-            loggingService.error('Vote history request failed', {
+            loggingService.error('Failed to fetch vote history', {
                 status: response.status,
                 statusText: response.statusText,
-                url: urlWithTimestamp
+                url: voteHistoryUrl
             });
             return;
         }
 
         const html = await response.text();
-        loggingService.debug('Retrieved HTML response', {
-            htmlLength: html.length,
-            htmlPreview: html.substring(0, 200) + '...'
+        loggingService.debug('Vote history response received', { 
+            responseLength: html.length,
+            username 
         });
 
-        // Parse out the entry title and ID
-        const titleRegex = /<h1 id="title" data-title="([^"]+)" data-id="(\d+)"/;
-        loggingService.debug('Attempting to parse entry title and ID with regex', { regex: titleRegex.toString() });
-
-        const match = html.match(titleRegex);
-        loggingService.debug('Regex match result', {
-            matchFound: !!match,
-            matchGroups: match ? match.length : 0,
-            titleMatch: match ? match[1] : null,
-            entryIdMatch: match ? match[2] : null
+        // Extract the most recent voted item from the HTML
+        const mostRecentVotedItem = extractMostRecentVotedItem(html);
+        loggingService.debug('Extracted most recent voted item', { 
+            mostRecentVotedItem,
+            username 
         });
 
-        if (match && match[1] && match[2]) {
-            const currentTitle = decodeHtmlEntities(match[1]);
-            const entryId = match[2];
-            // Correct Eksisozluk entry URL format
-            const entryUrl = `https://eksisozluk.com/entry/${entryId}`;
+        if (mostRecentVotedItem) {
+            // Get the last known voted item from storage
+            const lastVotedRes = await chrome.storage.local.get('lastVotedItem');
+            const lastKnownVotedItem = lastVotedRes.lastVotedItem || null;
 
-            loggingService.debug('Successfully extracted current title and entry info', {
-                currentTitle,
-                entryId,
-                entryUrl
+            loggingService.debug('Comparing voted items', {
+                mostRecentVotedItem,
+                lastKnownVotedItem,
+                isNewVote: mostRecentVotedItem !== lastKnownVotedItem
             });
 
-            // Get previous title from storage
-            const titleStorage = await chrome.storage.local.get(['previousTitle', 'previousEntryId']);
-            const previousTitle = titleStorage.previousTitle || '';
-            const previousEntryId = titleStorage.previousEntryId || '';
-
-            loggingService.debug('Retrieved previous entry info from storage', {
-                previousTitle,
-                previousEntryId,
-                hasPreviousTitle: !!previousTitle
-            });
-
-            // If there's a change, show notification
-            if (previousTitle && (currentTitle !== previousTitle || entryId !== previousEntryId)) {
-                loggingService.debug('New vote detected - entry info changed', {
-                    currentTitle,
-                    previousTitle,
-                    currentEntryId: entryId,
-                    previousEntryId
+            // If this is a new vote, update storage and potentially notify
+            if (mostRecentVotedItem !== lastKnownVotedItem) {
+                await chrome.storage.local.set({ 
+                    lastVotedItem: mostRecentVotedItem,
+                    lastVoteCheckTime: Date.now()
+                });
+                
+                loggingService.info('New vote detected!', {
+                    username,
+                    newVotedItem: mostRecentVotedItem,
+                    previousVotedItem: lastKnownVotedItem
                 });
 
-                // Create enhanced notification
-                const notificationId = `vote-notification-${Date.now()}`;
-                const notificationResult = chrome.notifications.create(notificationId, {
-                    type: 'basic',
-                    iconUrl: 'icons/icon128.png',
-                    title: '🗳️ Yeni Oy Aldınız!',
-                    message: `"${currentTitle}" başlıklı yazınıza oy verildi.\n\nTıklayarak yazıya gidin.`,
-                    priority: 2
-                });
-
-                // Store entry URL for click handler
-                await chrome.storage.local.set({
-                    [`notification_${notificationId}_url`]: entryUrl,
-                    [`notification_${notificationId}_title`]: currentTitle
-                });
-
-                loggingService.debug('Enhanced notification created', {
-                    notificationId,
-                    entryUrl,
-                    title: currentTitle
-                });
-            } else if (!previousTitle) {
-                loggingService.debug('First run - no previous entry to compare, setting baseline', {
-                    currentTitle,
-                    entryId
-                });
+                // Show notification for new vote
+                try {
+                    // Extract entry title without the timestamp for cleaner display
+                    const cleanTitle = mostRecentVotedItem.replace(/\s*\(\d+\)$/, ''); // Remove (entryId)
+                    
+                    const notificationOptions = {
+                        type: 'basic' as const,
+                        iconUrl: 'icons/icon48.png',
+                        title: '🗳️ Yeni Oy Tespit Edildi!',
+                        message: `"${cleanTitle}" başlığına oy verildi`,
+                        requireInteraction: true, // Keep notification visible until user interacts
+                        priority: 1 // Higher priority for better visibility
+                    };
+                    
+                    const notificationId = `newVote_${Date.now()}`;
+                    await chrome.notifications.create(notificationId, notificationOptions);
+                    loggingService.debug('Vote notification sent', {
+                        username,
+                        votedItem: mostRecentVotedItem,
+                        cleanTitle,
+                        notificationId
+                    });
+                } catch (notificationError) {
+                    loggingService.error('Failed to send vote notification', {
+                        error: notificationError instanceof Error ? notificationError.message : String(notificationError),
+                        username,
+                        votedItem: mostRecentVotedItem
+                    });
+                }
             } else {
-                loggingService.debug('No new votes - entry info unchanged', {
-                    currentTitle,
-                    previousTitle,
-                    currentEntryId: entryId,
-                    previousEntryId
-                });
+                loggingService.debug('No new votes detected', { username });
             }
-
-            // Update stored entry info
-            await chrome.storage.local.set({
-                'previousTitle': currentTitle,
-                'previousEntryId': entryId
-            });
-            loggingService.debug('Updated previous entry info in storage', {
-                previousTitle: currentTitle,
-                previousEntryId: entryId
-            });
         } else {
-            loggingService.error('Failed to parse entry title and ID from HTML', {
-                htmlLength: html.length,
-                regexUsed: titleRegex.toString(),
-                htmlSample: html.substring(0, 500)
-            });
-
-            // Try alternative parsing methods
-            loggingService.debug('Attempting alternative title and ID parsing methods');
-
-            // Look for any h1 elements with data attributes
-            const h1Match = html.match(/<h1[^>]*data-title="([^"]*)"[^>]*data-id="([^"]*)"[^>]*>/);
-            if (h1Match) {
-                loggingService.debug('Found h1 element with alternative pattern', {
-                    title: h1Match[1],
-                    id: h1Match[2]
-                });
-            }
-
-            // Look for title and ID attributes separately
-            const titleAttrMatch = html.match(/data-title="([^"]+)"/);
-            const idAttrMatch = html.match(/data-id="(\d+)"/);
-            if (titleAttrMatch && idAttrMatch) {
-                loggingService.debug('Found separate title and ID attributes', {
-                    titleAttr: titleAttrMatch[1],
-                    idAttr: idAttrMatch[1]
-                });
-            }
+            loggingService.debug('No voted items found in response', { username });
         }
+
     } catch (error) {
         loggingService.error('Error checking for new votes', {
+            username,
             error: error instanceof Error ? error.message : String(error),
-            errorName: error instanceof Error ? error.name : 'Unknown',
             errorStack: error instanceof Error ? error.stack : undefined
         });
     }
 }
 
-
 /**
- * Initialize extension
+ * Extract the most recent voted item from vote history HTML
  */
-async function initializeExtension() {
+function extractMostRecentVotedItem(html: string): string | null {
     try {
-        // Initialize preferences
-        await preferencesManager.initialize();
-        const preferences = preferencesManager.getPreferences();
-
-        // Set up logger based on preferences
-        loggingService.setDebugMode(preferences.enableDebugMode);
-
-        // Set up vote monitoring
-        setupVoteMonitoring();
-
-        loggingService.debug('Extension initialized successfully', { version: chrome.runtime.getManifest().version });
-
-        // Set up message listeners
-        setupMessageListeners();
-
-        // Set up context menu if needed
-        // setupContextMenu();
-
-        return true;
-    } catch (error) {
-        loggingService.error('Failed to initialize extension', error);
-        return false;
-    }
-}
-
-/**
- * Set up message listeners for communication between scripts
- */
-function setupMessageListeners() {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        try {
-            loggingService.debug('Message received', { message, sender });
-
-            switch (message.action) {
-                case 'getPreferences':
-                    // Send current preferences
-                    sendResponse({
-                        success: true,
-                        data: preferencesManager.getPreferences()
-                    });
-                    break;
-
-                case 'savePreferences':
-                    // Save preferences
-                    preferencesManager.savePreferences(message.data)
-                        .then(success => {
-                            sendResponse({ success });
-                        })
-                        .catch(error => {
-                            loggingService.error('Error saving preferences', error);
-                            sendResponse({
-                                success: false,
-                                error: error instanceof Error ? error.message : 'Unknown error'
-                            });
-                        });
-                    return true; // Indicates we will call sendResponse asynchronously
-
-                case 'resetPreferences':
-                    // Reset preferences to defaults
-                    preferencesManager.resetPreferences()
-                        .then(success => {
-                            sendResponse({ success });
-                        })
-                        .catch(error => {
-                            loggingService.error('Error resetting preferences', error);
-                            sendResponse({
-                                success: false,
-                                error: error instanceof Error ? error.message : 'Unknown error'
-                            });
-                        });
-                    return true; // Indicates we will call sendResponse asynchronously
-
-                case 'getVersion':
-                    // Get extension version
-                    sendResponse({
-                        success: true,
-                        version: chrome.runtime.getManifest().version
-                    });
-                    break;
-
-                case 'getLogs':
-                    // Get debug logs
-                    sendResponse({
-                        success: true,
-                        logs: loggingService.getLogs()
-                    });
-                    break;
-
-
-
-                default:
-                    loggingService.debug('Unknown message action', message.action);
-                    sendResponse({
-                        success: false,
-                        error: 'Unknown action'
-                    });
-            }
-        } catch (error) {
-            loggingService.error('Error processing message', error);
-            sendResponse({
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
+        // Look for the topic title in the h1 tag and entry ID in the li tag
+        // Method 1: Try to get title from h1 data-title attribute
+        const titleFromDataAttr = html.match(/<h1[^>]*data-title="([^"]+)"[^>]*>/);
+        
+        // Method 2: Try to get title from span with itemprop="name"
+        const titleFromItemprop = html.match(/<span[^>]*itemprop="name"[^>]*>([^<]+)<\/span>/);
+        
+        // Method 3: Try to get title from h1 > a > span structure
+        const titleFromStructure = html.match(/<h1[^>]*>.*?<a[^>]*>.*?<span[^>]*>([^<]+)<\/span>.*?<\/a>.*?<\/h1>/s);
+        
+        // Get entry ID from the first li with data-id
+        const entryIdMatch = html.match(/<li[^>]*data-id="(\d+)"[^>]*>/);
+        
+        let topicTitle = null;
+        let entryId = null;
+        
+        // Try different methods to get the title
+        if (titleFromDataAttr) {
+            topicTitle = titleFromDataAttr[1].trim();
+        } else if (titleFromItemprop) {
+            topicTitle = titleFromItemprop[1].trim();
+        } else if (titleFromStructure) {
+            topicTitle = titleFromStructure[1].trim();
+        }
+        
+        // Get entry ID
+        if (entryIdMatch) {
+            entryId = entryIdMatch[1];
+        }
+        
+        if (topicTitle && entryId) {
+            const votedItem = `${topicTitle} (${entryId})`;
+            
+            loggingService.debug('Successfully extracted voted item from vote history structure', {
+                entryId,
+                topicTitle,
+                votedItem,
+                extractionMethod: titleFromDataAttr ? 'data-title' : titleFromItemprop ? 'itemprop' : 'structure'
             });
+            
+            return votedItem;
         }
-
-        return false; // No asynchronous response for default cases
-    });
-}
-
-/**
- * Set up context menu for the extension
- */
-function setupContextMenu() {
-    // Clear existing menu items
-    chrome.contextMenus.removeAll();
-
-    // Create main menu item
-    chrome.contextMenus.create({
-        id: 'eksiArti',
-        title: 'Ekşi Artı',
-        contexts: ['page']
-    });
-
-    // Add options submenu
-    chrome.contextMenus.create({
-        id: 'eksiArtiOptions',
-        parentId: 'eksiArti',
-        title: 'Ayarlar',
-        contexts: ['page']
-    });
-
-    // Add context menu click listener
-    chrome.contextMenus.onClicked.addListener((info, tab) => {
-        if (info.menuItemId === 'eksiArtiOptions') {
-            chrome.runtime.openOptionsPage();
+        
+        // Fallback: try the old method for backward compatibility
+        const fallbackTitleRegex = /<a[^>]*href="[^"]*\/([^\/\?"]+)(?:\?[^"]*)?(?:#\d+)?"[^>]*>([^<]+)<\/a>/g;
+        const fallbackEntryRegex = /<a[^>]*href="[^"]*\/entry\/(\d+)[^"]*"[^>]*>/;
+        
+        let fallbackMatch;
+        while ((fallbackMatch = fallbackTitleRegex.exec(html)) !== null) {
+            const potentialTitle = fallbackMatch[2].trim();
+            // Skip datetime patterns and short/common texts
+            if (!potentialTitle.match(/^\d{2}\.\d{2}\.\d{4}/) && 
+                potentialTitle.length > 3 &&
+                !potentialTitle.includes('sayfa') &&
+                !potentialTitle.includes('önceki') &&
+                !potentialTitle.includes('sonraki')) {
+                
+                const entryMatch = html.match(fallbackEntryRegex);
+                if (entryMatch) {
+                    const votedItem = `${potentialTitle} (${entryMatch[1]})`;
+                    
+                    loggingService.debug('Successfully extracted voted item (fallback method)', {
+                        entryId: entryMatch[1],
+                        topicTitle: potentialTitle,
+                        votedItem
+                    });
+                    
+                    return votedItem;
+                }
+            }
         }
-    });
+        
+        loggingService.debug('No topic title found in vote history HTML', {
+            hadDataTitle: !!titleFromDataAttr,
+            hadItemprop: !!titleFromItemprop,
+            hadStructure: !!titleFromStructure,
+            hadEntryId: !!entryIdMatch
+        });
+        return null;
+    } catch (error) {
+        loggingService.error('Error extracting voted item from HTML', error);
+        return null;
+    }
 }
 
 // Handle extension install or update
@@ -578,37 +421,17 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         if (details.reason === 'install') {
             // First install
             loggingService.debug('Extension installed');
-
-            // Open options page on first install
-            chrome.runtime.openOptionsPage();
+            // Options page is available via right-click on extension icon
         } else if (details.reason === 'update') {
             // Extension updated
             const currentVersion = chrome.runtime.getManifest().version;
             const previousVersion = details.previousVersion;
-
             loggingService.debug('Extension updated', { previousVersion, currentVersion });
-
-            // Check if this is a major update that needs attention
-            if (previousVersion && isMajorUpdate(previousVersion, currentVersion)) {
-                // Show update notification or open options page
-                // chrome.runtime.openOptionsPage();
-            }
         }
     } catch (error) {
         loggingService.error('Error during extension installation', error);
     }
 });
-
-/**
- * Check if this is a major version update
- */
-function isMajorUpdate(oldVersion: string, newVersion: string): boolean {
-    const oldParts = oldVersion.split('.').map(Number);
-    const newParts = newVersion.split('.').map(Number);
-
-    // Consider it a major update if the major version number changed
-    return oldParts[0] < newParts[0];
-}
 
 // Initialize when background script loads
 initializeExtension().catch(error => {
@@ -623,5 +446,78 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.action.onClicked.addListener((tab) => {
-    chrome.runtime.openOptionsPage();
+    // Extension icon clicked - you can add your preferred action here
+    // For now, we'll show a notification instead of opening options
+    chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon48.png',
+        title: 'Ekşi Artı',
+        message: 'Extension is active! Right-click the icon to access options.'
+    });
+});
+
+// Listen for vote checking alarm
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === 'checkForNewVote') {
+        // Retrieve last voted item and username from storage
+        let lastVotedItem = 'unknown';
+        let username = 'unknown';
+        try {
+            const [lastVotedRes, userNickRes] = await Promise.all([
+                chrome.storage.local.get('lastVotedItem'),
+                chrome.storage.local.get('userNick'),
+            ]);
+            if (lastVotedRes && lastVotedRes.lastVotedItem) lastVotedItem = lastVotedRes.lastVotedItem;
+            if (userNickRes && userNickRes.userNick) username = userNickRes.userNick;
+        } catch (e) {
+            loggingService.error('Error retrieving last voted item or username', e);
+        }
+        loggingService.debug('Vote checking alarm fired', {
+            alarmName: alarm.name,
+            scheduledTime: alarm.scheduledTime,
+            firedAt: Date.now(),
+            lastVotedItem,
+            username,
+        });
+        
+        // Actually check for new votes
+        await checkForNewVotes(username);
+    }
+});
+
+// Handle notification clicks
+chrome.notifications.onClicked.addListener((notificationId) => {
+    if (notificationId.startsWith('newVote_')) {
+        loggingService.debug('Vote notification clicked', { notificationId });
+        
+        // Get the entry ID from storage to construct the URL
+        chrome.storage.local.get('lastVotedItem').then((result) => {
+            if (result.lastVotedItem) {
+                // Extract entry ID from the voted item string like "Title (123456)"
+                const entryIdMatch = result.lastVotedItem.match(/\((\d+)\)$/);
+                if (entryIdMatch) {
+                    const entryId = entryIdMatch[1];
+                    const entryUrl = Endpoints.ENTRY_URL(entryId);
+                    
+                    loggingService.debug('Opening entry URL from notification', {
+                        entryId,
+                        entryUrl,
+                        votedItem: result.lastVotedItem
+                    });
+                    
+                    // Open the entry in a new tab
+                    chrome.tabs.create({ url: entryUrl });
+                } else {
+                    loggingService.error('Could not extract entry ID from voted item', {
+                        votedItem: result.lastVotedItem
+                    });
+                }
+            }
+        }).catch((error) => {
+            loggingService.error('Error retrieving voted item for notification click', error);
+        });
+        
+        // Clear the notification
+        chrome.notifications.clear(notificationId);
+    }
 });
