@@ -1,5 +1,5 @@
-import { IUserProfileService } from "../../interfaces/services/IUserProfileService";
-import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
+import { IUserProfileService } from "../../interfaces/services/features/user/IUserProfileService";
+import { IUsernameExtractorService } from "../../interfaces/services/shared/IUsernameExtractorService";
 
 /**
  * Comprehensive data structure for sorting

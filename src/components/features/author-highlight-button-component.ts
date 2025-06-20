@@ -1,16 +1,16 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
 import { IAuthorHighlightButtonComponent } from '../../interfaces/components/features/IAuthorHighlightButtonComponent';
-import { IDOMService } from '../../interfaces/services/IDOMService';
-import { ICSSService } from '../../interfaces/services/ICSSService';
-import { ILoggingService } from '../../interfaces/services/ILoggingService';
-import { IObserverService } from '../../interfaces/services/IObserverService';
-import { IContainerService } from '../../interfaces/services/IContainerService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
+import { ICSSService } from '../../interfaces/services/shared/ICSSService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
+import { IObserverService } from '../../interfaces/services/shared/IObserverService';
+import { IContainerService } from '../../interfaces/services/features/ui/IContainerService';
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
-import { IAuthorHighlighterService } from '../../interfaces/services/IAuthorHighlighterService';
+import { IAuthorHighlighterService } from '../../interfaces/services/features/highlighting/IAuthorHighlighterService';
 import { ITooltipComponent } from '../../interfaces/components/ITooltipComponent';
 import { ICommandFactory } from '../../commands/interfaces/ICommandFactory';
 import { ICommandInvoker } from '../../commands/interfaces/ICommandInvoker';
-import { IColorService } from '../../interfaces/services/IColorService';
+import { IColorService } from '../../interfaces/services/shared/IColorService';
 
 /**
  * Component for adding author highlight buttons to entries

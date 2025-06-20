@@ -1,7 +1,7 @@
-import { ICSSService } from '../../interfaces/services/ICSSService';
-import { IDOMService } from '../../interfaces/services/IDOMService';
+import { ICSSService } from '../../interfaces/services/shared/ICSSService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
-import { ILoggingService } from '../../interfaces/services/ILoggingService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 import {
     ISelectBoxComponent,
     SelectBoxProps,

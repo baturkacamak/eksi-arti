@@ -3,13 +3,13 @@
  * Handles extension initialization and background operations
  */
 
-import { preferencesManager } from './services/preferences-manager';
-import { ILoggingService } from './interfaces/services/ILoggingService';
-import { ICommunicationService } from './interfaces/services/ICommunicationService';
-import { LoggingService } from './services/logging-service';
-import { CommunicationService } from './services/communication-service';
+import { preferencesManager } from './services/features/preferences/preferences-manager';
+import { ILoggingService } from './interfaces/services/shared/ILoggingService';
+import { ICommunicationService } from './interfaces/services/shared/ICommunicationService';
+import { LoggingService } from './services/shared/logging-service';
+import { CommunicationService } from './services/shared/communication-service';
 import { Endpoints } from "./constants";
-import { BackgroundBlockingService } from './services/background-blocking-service';
+import { BackgroundBlockingService } from './services/features/blocking/background-blocking-service';
 import { initializeDI } from './di/initialize-di';
 import { Container } from './di/container';
 import { ICommandInvoker } from './commands/interfaces/ICommandInvoker';

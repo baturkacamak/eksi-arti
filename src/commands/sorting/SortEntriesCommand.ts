@@ -1,5 +1,5 @@
 import { ICommand } from "../interfaces/ICommand";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 import { ISortingStrategy } from "./ISortingStrategy";
 import { SortingDataExtractor } from "./SortingDataExtractor";
 

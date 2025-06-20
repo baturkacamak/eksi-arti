@@ -1,11 +1,11 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
 import { IconComponent } from '../shared/icon-component';
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { debounce } from '../../services/utilities';
-import { IObserverService } from "../../interfaces/services/IObserverService";
-import { pageUtils, PageUtilsService } from "../../services/page-utils-service";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
+import { debounce } from '../../services/shared/utilities';
+import { IObserverService } from "../../interfaces/services/shared/IObserverService";
+import { pageUtils, PageUtilsService } from "../../services/shared/page-utils-service";
 import { TooltipComponent } from '../shared/tooltip-component';
 import { ITooltipComponent } from '../../interfaces/components/ITooltipComponent';
 import { IIconComponent } from '../../interfaces/components/IIconComponent';

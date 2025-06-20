@@ -1,8 +1,8 @@
 import {ButtonComponent} from './button-component';
-import {ICSSService} from "../../interfaces/services/ICSSService";
-import {ILoggingService} from "../../interfaces/services/ILoggingService";
-import {IDOMService} from "../../interfaces/services/IDOMService";
-import {IDocumentStateService} from "../../interfaces/services/IDocumentStateService";
+import {ICSSService} from "../../interfaces/services/shared/ICSSService";
+import {ILoggingService} from "../../interfaces/services/shared/ILoggingService";
+import {IDOMService} from "../../interfaces/services/shared/IDOMService";
+import {IDocumentStateService} from '../../interfaces/services/shared/IDocumentStateService';
 import {ButtonSize, ButtonVariant} from "../../interfaces/components/IButtonComponent";
 import {IModalComponent, ModalOptions} from "../../interfaces/components/IModalComponent";
 

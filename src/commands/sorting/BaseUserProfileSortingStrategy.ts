@@ -1,6 +1,6 @@
 import { BaseSortingStrategy } from "./BaseSortingStrategy";
-import { IUserProfileService } from "../../interfaces/services/IUserProfileService";
-import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
+import { IUserProfileService } from "../../interfaces/services/features/user/IUserProfileService";
+import { IUsernameExtractorService } from "../../interfaces/services/shared/IUsernameExtractorService";
 
 /**
  * Abstract base class for sorting strategies that require user profile services

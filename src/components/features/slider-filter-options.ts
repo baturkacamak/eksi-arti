@@ -4,11 +4,11 @@
  */
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
 
-import { ICSSService } from '../../interfaces/services/ICSSService';
-import { IDOMService } from '../../interfaces/services/IDOMService';
-import { ILoggingService } from '../../interfaces/services/ILoggingService';
+import { ICSSService } from '../../interfaces/services/shared/ICSSService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
-import { IObserverService } from '../../interfaces/services/IObserverService';
+import { IObserverService } from '../../interfaces/services/shared/IObserverService';
 
 export interface SliderFilterOptions {
     min?: number;

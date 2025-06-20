@@ -1,4 +1,4 @@
-import {ContainerShape, ContainerSize, ContainerTheme} from "../services/container-theme-service";
+import { ContainerShape, ContainerSize, ContainerTheme } from "../services/features/ui/container-theme-service";
 
 /**
  * Component Container Configuration

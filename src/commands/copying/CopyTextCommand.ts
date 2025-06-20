@@ -1,6 +1,6 @@
 import { ICommand } from "../interfaces/ICommand";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IDocumentStateService } from "../../interfaces/services/IDocumentStateService";
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
+import { IDocumentStateService } from '../../interfaces/services/shared/IDocumentStateService';
 
 /**
  * Command for copying text to clipboard

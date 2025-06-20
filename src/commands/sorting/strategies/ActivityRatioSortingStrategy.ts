@@ -1,6 +1,6 @@
 import { BaseUserProfileSortingStrategy } from "../BaseUserProfileSortingStrategy";
-import { IUserProfileService } from "../../../interfaces/services/IUserProfileService";
-import { IUsernameExtractorService } from "../../../interfaces/services/IUsernameExtractorService";
+import { IUserProfileService } from '../../../interfaces/services/features/user/IUserProfileService';
+import { IUsernameExtractorService } from '../../../interfaces/services/shared/IUsernameExtractorService';
 
 export class ActivityRatioSortingStrategy extends BaseUserProfileSortingStrategy {
     public readonly name: string = 'activity-ratio';

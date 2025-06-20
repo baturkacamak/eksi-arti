@@ -1,12 +1,12 @@
 // In src/content.ts
 import { initializeDI } from './di/initialize-di';
-import { UIService } from './services/ui-service';
-import { ILoggingService } from "./interfaces/services/ILoggingService";
-import { ICSSService } from "./interfaces/services/ICSSService";
-import {ICommunicationService} from "./interfaces/services/ICommunicationService";
-import { CommunicationService } from './services/communication-service';
+import { UIService } from './services/features/ui/ui-service';
+import { ILoggingService } from "./interfaces/services/shared/ILoggingService";
+import { ICSSService } from "./interfaces/services/shared/ICSSService";
+import {ICommunicationService} from "./interfaces/services/shared/ICommunicationService";
+import { CommunicationService } from './services/shared/communication-service';
 import { FONT_FACE_CSS, MATERIAL_ICONS } from './constants/fonts';
-import { IFontLoaderService } from './interfaces/services/IFontLoaderService';
+import { IFontLoaderService } from './interfaces/services/shared/IFontLoaderService';
 import { Container } from './di/container';
 
 /**

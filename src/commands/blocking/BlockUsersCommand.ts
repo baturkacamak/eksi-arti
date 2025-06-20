@@ -1,7 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
-import { IBlockUsersService } from "../../interfaces/services/IBlockUsersService";
+import { IBlockUsersService } from '../../interfaces/services/features/blocking/IBlockUsersService';
 import { BlockType } from "../../constants";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 
 /**
  * Command for blocking users who favorited a specific entry

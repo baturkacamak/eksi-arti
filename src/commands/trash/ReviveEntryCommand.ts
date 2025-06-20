@@ -1,6 +1,6 @@
 import { ICommand } from "../interfaces/ICommand";
-import { ITrashService } from "../../interfaces/services/ITrashService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ITrashService } from '../../interfaces/services/features/content/ITrashService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 
 /**
  * Command for reviving an entry from trash

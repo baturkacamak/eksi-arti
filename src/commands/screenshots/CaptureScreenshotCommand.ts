@@ -1,7 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IDocumentStateService } from "../../interfaces/services/IDocumentStateService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
+import { IDocumentStateService } from '../../interfaces/services/shared/IDocumentStateService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
 
 /**
  * Interface for html2canvas library

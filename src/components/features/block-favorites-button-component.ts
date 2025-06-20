@@ -1,12 +1,12 @@
 // src/components/block-favorites-button-component.ts
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
-import { ContainerService } from "../../services/container-service";
+import { ContainerService } from '../../services/features/ui/container-service';
 import { BlockOptionsModalFactory } from "../../factories/modal-factories";
 import { Container } from "../../di/container";
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IObserverService } from "../../interfaces/services/IObserverService";
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
+import { IObserverService } from "../../interfaces/services/shared/IObserverService";
 import { IBlockFavoritesButtonComponent } from "../../interfaces/components/IBlockFavoritesButtonComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
 import { IBlockOptionsModalFactory } from "../../interfaces/factories";

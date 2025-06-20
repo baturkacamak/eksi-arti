@@ -1,7 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
-import { delay } from "../../services/utilities";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
+import { delay } from "../../services/shared/utilities";
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
 
 export interface LoadAllEntriesProgress {
     currentCount: number;

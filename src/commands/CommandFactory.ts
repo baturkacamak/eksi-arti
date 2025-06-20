@@ -7,10 +7,10 @@ import { LoadAllEntriesCommand, LoadAllEntriesCallbacks } from './entries/LoadAl
 import { SortEntriesCommand } from './sorting/SortEntriesCommand';
 import { ISortingStrategy } from './sorting/ISortingStrategy';
 import { BlockType } from '../constants';
-import { ILoggingService } from '../interfaces/services/ILoggingService';
-import { IBlockUsersService } from '../interfaces/services/IBlockUsersService';
-import { IDocumentStateService } from '../interfaces/services/IDocumentStateService';
-import { IDOMService } from '../interfaces/services/IDOMService';
+import { ILoggingService } from '../interfaces/services/shared/ILoggingService';
+import { IBlockUsersService } from '../interfaces/services/features/blocking/IBlockUsersService';
+import { IDocumentStateService } from '../interfaces/services/shared/IDocumentStateService';
+import { IDOMService } from '../interfaces/services/shared/IDOMService';
 import { SortingDataExtractor } from './sorting/SortingDataExtractor';
 
 // New command imports
@@ -24,9 +24,9 @@ import { ReviveEntryCommand } from './trash/ReviveEntryCommand';
 import { LoadAllPagesCommand } from './trash/LoadAllPagesCommand';
 
 // New service interfaces
-import { IAuthorHighlighterService } from '../interfaces/services/IAuthorHighlighterService';
-import { IPreferencesManager, IExtensionPreferences } from '../interfaces/services/IPreferencesManager';
-import { ITrashService } from '../interfaces/services/ITrashService';
+import { IAuthorHighlighterService } from '../interfaces/services/features/highlighting/IAuthorHighlighterService';
+import { IPreferencesManager, IExtensionPreferences } from '../interfaces/services/features/preferences/IPreferencesManager';
+import { ITrashService } from '../interfaces/services/features/content/ITrashService';
 
 /**
  * Implementation of ICommandFactory - creates command objects with proper dependencies

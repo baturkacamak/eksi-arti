@@ -1,16 +1,16 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
 import { IconComponent } from '../shared/icon-component';
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IObserverService, ObserverConfig } from "../../interfaces/services/IObserverService";
-import { PageUtilsService } from "../../services/page-utils-service";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
+import { IObserverService, ObserverConfig } from "../../interfaces/services/shared/IObserverService";
+import { PageUtilsService } from "../../services/shared/page-utils-service";
 import { IEntrySorterComponent } from "../../interfaces/components/IEntrySorterComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
 import { SelectBoxComponent } from '../shared/select-box-component';
 import { ISortingStrategy } from '../../commands/sorting/ISortingStrategy';
-import { IUserProfileService } from "../../interfaces/services/IUserProfileService";
-import { IUsernameExtractorService } from "../../interfaces/services/IUsernameExtractorService";
+import { IUserProfileService } from "../../interfaces/services/features/user/IUserProfileService";
+import { IUsernameExtractorService } from "../../interfaces/services/shared/IUsernameExtractorService";
 import { SortingDataExtractor } from "../../commands/sorting/SortingDataExtractor";
 import { IButtonPillsComponent, PillOption, PillClickData } from "../shared/button-pills-component";
 import {

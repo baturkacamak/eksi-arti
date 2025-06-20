@@ -1,6 +1,6 @@
 import { ICommand } from "../interfaces/ICommand";
-import { IAuthorHighlighterService } from "../../interfaces/services/IAuthorHighlighterService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IAuthorHighlighterService } from '../../interfaces/services/features/highlighting/IAuthorHighlighterService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 
 /**
  * Command for resetting the author highlighter configuration to defaults

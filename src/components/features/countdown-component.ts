@@ -5,12 +5,12 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
 
 import { IconComponent } from "../shared/icon-component";
-import { ICSSService } from '../../interfaces/services/ICSSService';
-import { ILoggingService } from '../../interfaces/services/ILoggingService';
-import { IDOMService } from '../../interfaces/services/IDOMService';
+import { ICSSService } from '../../interfaces/services/shared/ICSSService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
 import { CountdownOptions, ICountdownComponent } from "../../interfaces/components/ICountdownComponent";
 import { IconProps, IIconComponent } from "../../interfaces/components/IIconComponent";
-import { IObserverService } from '../../interfaces/services/IObserverService';
+import { IObserverService } from '../../interfaces/services/shared/IObserverService';
 
 export class CountdownComponent extends BaseFeatureComponent implements ICountdownComponent {
     private countdownInstanceElement: HTMLElement | null = null;

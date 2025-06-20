@@ -2,7 +2,7 @@ import { ICommand } from "./ICommand";
 import { BlockType } from "../../constants";
 import { ISortingStrategy } from "../sorting/ISortingStrategy";
 import { LoadAllEntriesCallbacks } from '../entries/LoadAllEntriesCommand';
-import { IExtensionPreferences } from "../../interfaces/services/IPreferencesManager";
+import { IExtensionPreferences } from '../../interfaces/services/features/preferences/IPreferencesManager';
 
 /**
  * Interface for command factory

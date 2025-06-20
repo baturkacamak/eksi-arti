@@ -6,15 +6,15 @@ import { CommandInvoker } from "../commands/CommandInvoker";
 import { LengthSortingStrategy } from "../commands/sorting/strategies/LengthSortingStrategy";
 import { DateSortingStrategy } from "../commands/sorting/strategies/DateSortingStrategy";
 import { FavoriteCountSortingStrategy } from "../commands/sorting/strategies/FavoriteCountSortingStrategy";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
-import {IDocumentStateService} from "../interfaces/services/IDocumentStateService";
+import {ILoggingService} from "../interfaces/services/shared/ILoggingService";
+import { IBlockUsersService } from '../interfaces/services/features/blocking/IBlockUsersService';
+import {IDocumentStateService} from "../interfaces/services/shared/IDocumentStateService";
 import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
 import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
-import { IDOMService } from "../interfaces/services/IDOMService";
-import { IAuthorHighlighterService } from "../interfaces/services/IAuthorHighlighterService";
-import { IPreferencesManager } from "../interfaces/services/IPreferencesManager";
-import { ITrashService } from "../interfaces/services/ITrashService";
+import { IDOMService } from "../interfaces/services/shared/IDOMService";
+import { IAuthorHighlighterService } from '../interfaces/services/features/highlighting/IAuthorHighlighterService';
+import { IPreferencesManager } from '../interfaces/services/features/preferences/IPreferencesManager';
+import { ITrashService } from '../interfaces/services/features/content/ITrashService';
 
 /**
  * Initialize command-related dependencies in the DI container

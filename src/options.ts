@@ -4,12 +4,12 @@
  */
 import {DEFAULT_PREFERENCES, STORAGE_KEYS} from './constants';
 import {TooltipComponent} from "./components/shared/tooltip-component";
-import {LoggingService} from "./services/logging-service";
-import {CSSService} from "./services/css-service";
-import {DOMService} from "./services/dom-service";
-import {ILoggingService} from "./interfaces/services/ILoggingService";
-import {IDOMService} from "./interfaces/services/IDOMService";
-import {ICSSService} from "./interfaces/services/ICSSService";
+import {LoggingService} from "./services/shared/logging-service";
+import {CSSService} from "./services/shared/css-service";
+import {DOMService} from "./services/shared/dom-service";
+import {ILoggingService} from "./interfaces/services/shared/ILoggingService";
+import {IDOMService} from "./interfaces/services/shared/IDOMService";
+import {ICSSService} from "./interfaces/services/shared/ICSSService";
 import {ICommandFactory} from "./commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "./commands/interfaces/ICommandInvoker";
 import {initializeDI} from "./di/initialize-di";

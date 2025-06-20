@@ -1,6 +1,6 @@
 import { ICommand } from "./interfaces/ICommand";
 import { ICommandHistory } from "./interfaces/ICommandHistory";
-import { ILoggingService } from "../interfaces/services/ILoggingService";
+import { ILoggingService } from "../interfaces/services/shared/ILoggingService";
 
 /**
  * Implementation of ICommandHistory for tracking executed commands

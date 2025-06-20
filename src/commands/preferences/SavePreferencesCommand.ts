@@ -1,6 +1,7 @@
 import { ICommand } from "../interfaces/ICommand";
-import { IPreferencesManager, IExtensionPreferences } from "../../interfaces/services/IPreferencesManager";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { IPreferencesManager } from '../../interfaces/services/features/preferences/IPreferencesManager';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
+import { IExtensionPreferences } from '../../interfaces/services/features/preferences/IPreferencesManager';
 
 /**
  * Command for saving preferences

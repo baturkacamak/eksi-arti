@@ -1,6 +1,6 @@
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
 import { IProgressWidgetComponent, ProgressWidgetOptions, ProgressWidgetData } from "../../interfaces/components/IProgressWidgetComponent";
 import { IProgressBarComponent } from "../../interfaces/components/IProgressBarComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";

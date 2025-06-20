@@ -1,12 +1,12 @@
-import { ICSSService } from '../../interfaces/services/ICSSService';
-import { IDOMService } from '../../interfaces/services/IDOMService';
-import { ILoggingService } from '../../interfaces/services/ILoggingService';
+import { ICSSService } from '../../interfaces/services/shared/ICSSService';
+import { IDOMService } from '../../interfaces/services/shared/IDOMService';
+import { ILoggingService } from '../../interfaces/services/shared/ILoggingService';
 import {
     ContainerShape,
     ContainerSize,
     ContainerTheme, ContainerThemeConfig,
     containerThemeService
-} from "../../services/container-theme-service";
+} from "../../services/features/ui/container-theme-service";
 import {IComponentContainerConfig, IContainer} from "../../interfaces/IContainer";
 
 /**
@@ -30,9 +30,9 @@ export class ComponentContainer {
     ) {
         // Import concrete classes for fallback
         if (!domService || !cssService || !loggingService) {
-            const { DOMService } = require('../../services/dom-service');
-            const { CSSService } = require('../../services/css-service');
-            const { LoggingService } = require('../../services/logging-service');
+            const { DOMService } = require('../../services/shared/dom-service');
+            const { CSSService } = require('../../services/shared/css-service');
+            const { LoggingService } = require('../../services/shared/logging-service');
             
             this.domService = domService || new DOMService();
             this.cssService = cssService || new CSSService(this.domService);

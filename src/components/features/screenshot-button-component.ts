@@ -1,15 +1,15 @@
 import { BaseFeatureComponent, FeatureComponentOptions } from './base-feature-component';
 import { IconComponent } from '../shared/icon-component';
 import html2canvas from 'html2canvas';
-import { ContainerService } from "../../services/container-service";
-import { ObserverService, observerService as globalObserverService } from "../../services/observer-service";
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { IObserverService } from "../../interfaces/services/IObserverService";
+import { ContainerService } from '../../services/features/ui/container-service';
+import { ObserverService } from '../../services/shared/observer-service';
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
+import { IObserverService } from "../../interfaces/services/shared/IObserverService";
 import { IScreenshotButtonComponent } from "../../interfaces/components/IScreenshotButtonComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
-import { IDocumentStateService } from "../../interfaces/services/IDocumentStateService";
+import { IDocumentStateService } from '../../interfaces/services/shared/IDocumentStateService';
 
 /**
  * ScreenshotButtonComponent

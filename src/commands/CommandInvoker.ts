@@ -1,7 +1,7 @@
 import { ICommand } from "./interfaces/ICommand";
 import { ICommandInvoker } from "./interfaces/ICommandInvoker";
 import { ICommandHistory } from "./interfaces/ICommandHistory";
-import { ILoggingService } from "../interfaces/services/ILoggingService";
+import { ILoggingService } from "../interfaces/services/shared/ILoggingService";
 
 /**
  * Implementation of ICommandInvoker to execute commands

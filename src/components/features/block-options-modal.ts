@@ -3,17 +3,17 @@ import { BlockType } from '../../constants';
 import { Container } from "../../di/container";
 import { ICommandFactory } from "../../commands/interfaces/ICommandFactory";
 import { ICommandInvoker } from "../../commands/interfaces/ICommandInvoker";
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
-import { IObserverService } from '../../interfaces/services/IObserverService';
+import { IObserverService } from '../../interfaces/services/shared/IObserverService';
 import { ButtonVariant, IButtonComponent } from "../../interfaces/components/IButtonComponent";
 import { IToggleSwitchComponent } from "../../interfaces/components/IToggleSwitchComponent";
 import { ITooltipComponent } from "../../interfaces/components/ITooltipComponent";
 import { IModalComponent } from "../../interfaces/components/IModalComponent";
-import { IPreferencesService } from "../../interfaces/services/IPreferencesService";
-import { ICommunicationService } from "../../interfaces/services/ICommunicationService";
+import { IPreferencesService } from '../../interfaces/services/features/preferences/IPreferencesService';
+import { ICommunicationService } from '../../interfaces/services/shared/ICommunicationService';
 
 export class BlockOptionsModal extends BaseFeatureComponent {
     private entryId: string;

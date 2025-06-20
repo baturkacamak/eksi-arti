@@ -1,9 +1,9 @@
-import { ICSSService } from "../../interfaces/services/ICSSService";
-import { IDOMService } from "../../interfaces/services/IDOMService";
-import { ILoggingService } from "../../interfaces/services/ILoggingService";
+import { ICSSService } from "../../interfaces/services/shared/ICSSService";
+import { IDOMService } from "../../interfaces/services/shared/IDOMService";
+import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { IconComponent } from '../shared/icon-component';
-import { debounce } from '../../services/utilities';
+import { debounce } from '../../services/shared/utilities';
 
 // Define types directly in the file to avoid import issues
 export interface PillOption {

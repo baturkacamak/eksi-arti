@@ -4,18 +4,18 @@ import { BlockOptionsModal } from '../components/features/block-options-modal';
 import { BlockerState } from '../types';
 import {ButtonComponent} from "../components/shared/button-component";
 import {Container} from "../di/container";
-import {ICSSService} from "../interfaces/services/ICSSService";
-import {ILoggingService} from "../interfaces/services/ILoggingService";
-import {IDOMService} from "../interfaces/services/IDOMService";
-import {IBlockUsersService} from "../interfaces/services/IBlockUsersService";
+import {ICSSService} from "../interfaces/services/shared/ICSSService";
+import {ILoggingService} from "../interfaces/services/shared/ILoggingService";
+import {IDOMService} from "../interfaces/services/shared/IDOMService";
+import {IBlockUsersService} from '../interfaces/services/features/blocking/IBlockUsersService';
 import {IButtonComponent} from "../interfaces/components/IButtonComponent";
 import {ICommandFactory} from "../commands/interfaces/ICommandFactory";
 import {ICommandInvoker} from "../commands/interfaces/ICommandInvoker";
 import {IToggleSwitchComponent} from "../interfaces/components/IToggleSwitchComponent";
 import {ITooltipComponent} from "../interfaces/components/ITooltipComponent";
 import {IModalComponent} from "../interfaces/components/IModalComponent";
-import {IPreferencesService} from "../interfaces/services/IPreferencesService";
-import {ICommunicationService} from "../interfaces/services/ICommunicationService";
+import {IPreferencesService} from '../interfaces/services/features/preferences/IPreferencesService';
+import {ICommunicationService} from "../interfaces/services/shared/ICommunicationService";
 
 /**
  * Factory for creating BlockOptionsModal instances
