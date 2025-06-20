@@ -281,11 +281,14 @@ async function checkForNewVotes(username: string): Promise<void> {
                 // Show notification for new vote
                 try {
                     // Extract entry title without the timestamp for cleaner display
-                    const cleanTitle = mostRecentVotedItem.replace(/\s*\(\d+\)$/, ''); // Remove (entryId)
+                    let cleanTitle = mostRecentVotedItem.replace(/\s*\(\d+\)$/, ''); // Remove (entryId)
+                    
+                    // Decode HTML entities
+                    cleanTitle = decodeHtmlEntities(cleanTitle);
                     
                     const notificationOptions = {
                         type: 'basic' as const,
-                        iconUrl: 'icons/icon48.png',
+                        iconUrl: chrome.runtime.getURL('icons/icon48.png'),
                         title: '🗳️ Yeni Oy Tespit Edildi!',
                         message: `"${cleanTitle}" başlığına oy verildi`,
                         requireInteraction: true, // Keep notification visible until user interacts
@@ -298,6 +301,7 @@ async function checkForNewVotes(username: string): Promise<void> {
                         username,
                         votedItem: mostRecentVotedItem,
                         cleanTitle,
+                        decodedTitle: cleanTitle,
                         notificationId
                     });
                 } catch (notificationError) {
@@ -411,6 +415,28 @@ function extractMostRecentVotedItem(html: string): string | null {
         loggingService.error('Error extracting voted item from HTML', error);
         return null;
     }
+}
+
+/**
+ * Decode HTML entities in text (background script compatible)
+ */
+function decodeHtmlEntities(text: string): string {
+    // Use a simple map for common HTML entities since document may not be available in background
+    const entityMap: { [key: string]: string } = {
+        '&#x27;': "'",
+        '&#39;': "'",
+        '&quot;': '"',
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&#x2F;': '/',
+        '&#x60;': '`',
+        '&#x3D;': '='
+    };
+    
+    return text.replace(/&#x27;|&#39;|&quot;|&amp;|&lt;|&gt;|&#x2F;|&#x60;|&#x3D;/g, (match) => {
+        return entityMap[match] || match;
+    });
 }
 
 // Handle extension install or update
