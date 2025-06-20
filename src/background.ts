@@ -4,48 +4,61 @@
  */
 
 import { preferencesManager } from './services/features/preferences/preferences-manager';
-import { ILoggingService } from './interfaces/services/shared/ILoggingService';
-import { ICommunicationService } from './interfaces/services/shared/ICommunicationService';
 import { LoggingService } from './services/shared/logging-service';
-import { CommunicationService } from './services/shared/communication-service';
-import { Endpoints } from "./constants";
 import { BackgroundBlockingService } from './services/features/blocking/background-blocking-service';
-import { initializeDI } from './di/initialize-di';
-import { Container } from './di/container';
 import { ICommandInvoker } from './commands/interfaces/ICommandInvoker';
-import { ICommandFactory } from './commands/interfaces/ICommandFactory';
+import { CommandInvoker } from './commands/CommandInvoker';
+import { CommandHistory } from './commands/CommandHistory';
+import { SavePreferencesCommand } from './commands/preferences/SavePreferencesCommand';
+import { ResetPreferencesCommand } from './commands/preferences/ResetPreferencesCommand';
+import { CommunicationService } from './services/shared/communication-service';
 
 const loggingService = new LoggingService();
-const communicationService = new CommunicationService(loggingService);
 let blockingService: BackgroundBlockingService;
-
-// Initialize DI container for command infrastructure
-let container: Container;
+const communicationService = new CommunicationService(loggingService);
+// Global command infrastructure instance
 let commandInvoker: ICommandInvoker;
-let commandFactory: ICommandFactory;
 
 // Global flag to prevent duplicate setup
 let voteMonitoringSetup = false;
+
+// Track the most recently reported username from content scripts
+let currentUsername: string | null = null;
+let lastVotedEntry: string | null = null; // e.g., entry URL or ID
+
+// Listen for raw runtime messages to capture username updates (bypasses CommunicationService action handling)
+chrome.runtime.onMessage.addListener((msg, sender, _sendResponse) => {
+    if (msg && typeof msg.username === 'string') {
+        currentUsername = msg.username;
+        loggingService.debug('Username updated from content script', {
+            username: currentUsername,
+            senderTabId: sender.tab?.id,
+            senderUrl: sender.tab?.url
+        });
+    }
+
+    // Capture message containing last voted entry information
+    if (msg && typeof msg.lastVotedEntry === 'string') {
+        lastVotedEntry = msg.lastVotedEntry;
+        loggingService.debug('Last voted entry updated from content script', {
+            lastVotedEntry,
+            senderTabId: sender.tab?.id,
+            senderUrl: sender.tab?.url
+        });
+    } else {
+        loggingService.debug('Received runtime message without username field', {
+            messageContent: msg,
+            senderTabId: sender.tab?.id,
+            senderUrl: sender.tab?.url
+        });
+    }
+});
 
 /**
  * Initialize extension
  */
 async function initializeExtension() {
     try {
-        // Initialize DI container
-        container = initializeDI();
-        
-        // Resolve command services from DI container
-        commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
-        commandFactory = container.resolve<ICommandFactory>('CommandFactory');
-
-        // Initialize preferences
-        await preferencesManager.initialize();
-        const preferences = preferencesManager.getPreferences();
-
-        // Set up logger based on preferences
-        loggingService.setDebugMode(preferences.enableDebugMode);
-
         // Initialize blocking service
         blockingService = new BackgroundBlockingService(loggingService);
 
@@ -56,6 +69,27 @@ async function initializeExtension() {
 
         // Set up message handlers
         setupMessageHandlers();
+
+        // Initialize preferences and set debug mode
+        await preferencesManager.initialize();
+        const preferences = preferencesManager.getPreferences();
+        loggingService.setDebugMode(preferences.enableDebugMode);
+
+        // Manually initialize command infrastructure (avoid DOMService)
+        const commandHistory = new CommandHistory(loggingService);
+        commandInvoker = new CommandInvoker(loggingService, commandHistory);
+
+        // Attempt to load cached username from storage at startup
+        chrome.storage.local.get('userNick', (items) => {
+            if (items && items.userNick) {
+                currentUsername = items.userNick as string;
+                loggingService.debug('Username loaded from chrome.storage.local during initialization', {
+                    username: currentUsername
+                });
+            } else {
+                loggingService.debug('No cached username found in chrome.storage.local during initialization');
+            }
+        });
 
         // Check for saved blocking state and auto-resume
         await blockingService.checkAndResumeBlocking();
@@ -156,8 +190,8 @@ function setupMessageHandlers() {
 
     communicationService.registerHandler('savePreferences', async (message) => {
         try {
-            // Use SavePreferencesCommand for undo/redo support
-            const saveCommand = commandFactory.createSavePreferencesCommand(message.data);
+            // Use SavePreferencesCommand for undo/redo support (manual instantiation)
+            const saveCommand = new SavePreferencesCommand(preferencesManager, loggingService, message.data);
             const success = await commandInvoker.execute(saveCommand);
             loggingService.debug('Preferences saved using command in background', { success });
             return CommunicationService.createSuccessResponse({ success });
@@ -171,8 +205,8 @@ function setupMessageHandlers() {
 
     communicationService.registerHandler('resetPreferences', async () => {
         try {
-            // Use ResetPreferencesCommand for undo/redo support
-            const resetCommand = commandFactory.createResetPreferencesCommand();
+            // Use ResetPreferencesCommand for undo/redo support (manual instantiation)
+            const resetCommand = new ResetPreferencesCommand(preferencesManager, loggingService);
             const success = await commandInvoker.execute(resetCommand);
             loggingService.debug('Preferences reset using command in background', { success });
             return CommunicationService.createSuccessResponse({ success });
@@ -212,14 +246,39 @@ function setupVoteMonitoring() {
     
     loggingService.debug('Setting up vote monitoring');
 
-    // Set up alarm for checking votes
-    chrome.alarms.create('checkForNewVote', {
-        periodInMinutes: 1 // Default to 1 minute
+    // Extra debugging information
+    loggingService.debug('Preparing to create checkForNewVote alarm', {
+        defaultIntervalMinutes: 1,
+        existingAlarmsChecked: false
     });
-    
-    loggingService.debug('Vote monitoring alarm created', { 
-        alarmName: 'checkForNewVote', 
-        periodInMinutes: 1 
+
+    // Clear any existing alarm with the same name just in case
+    chrome.alarms.clear('checkForNewVote', (wasCleared) => {
+        loggingService.debug('Existing checkForNewVote alarm cleared (if existed)', { wasCleared });
+
+        // Set up alarm for checking votes
+        chrome.alarms.create('checkForNewVote', {
+            periodInMinutes: 1 // Default to 1 minute
+        });
+        loggingService.debug('checkForNewVote alarm created successfully', {
+            alarmName: 'checkForNewVote',
+            periodInMinutes: 1
+        });
+    });
+
+    // Listen for the alarm firing and log it for debugging purposes
+    chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm.name === 'checkForNewVote') {
+            loggingService.debug('checkForNewVote alarm fired', {
+                scheduledTime: alarm.scheduledTime,
+                humanReadableTime: new Date(alarm.scheduledTime).toLocaleString(),
+                username: currentUsername ?? 'unknown',
+                lastVotedEntry: lastVotedEntry ?? 'unknown'
+            });
+
+            // Note: Background scripts cannot fetch authenticated pages like vote history
+            // Last voted entry must be provided by content scripts when user votes
+        }
     });
 
     // Mark vote monitoring as set up
