@@ -606,6 +606,7 @@ export function initializeDI(): Container {
         const observerService = container.resolve<IObserverService>('ObserverService');
         const followedThreadsService = container.resolve<IFollowedThreadsNavigationService>('FollowedThreadsNavigationService');
         const keyboardService = container.resolve<IKeyboardService>('KeyboardService');
+        const buttonComponent = container.resolve<IButtonComponent>('ButtonComponent');
         return new FollowedThreadsNavComponent(
             domService,
             cssService,
@@ -613,7 +614,8 @@ export function initializeDI(): Container {
             iconComponent,
             observerService,
             followedThreadsService,
-            keyboardService
+            keyboardService,
+            buttonComponent
         );
     });
 

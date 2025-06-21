@@ -3,6 +3,7 @@ import { IDOMService } from "../../interfaces/services/shared/IDOMService";
 import { ICSSService } from "../../interfaces/services/shared/ICSSService";
 import { ILoggingService } from "../../interfaces/services/shared/ILoggingService";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
+import { IButtonComponent, ButtonVariant } from "../../interfaces/components/IButtonComponent";
 import { IObserverService } from "../../interfaces/services/shared/IObserverService";
 import { IFollowedThreadsNavigationService, FollowedThread } from "../../../types/interfaces/services/features/content/IFollowedThreadsNavigationService";
 import { IKeyboardService } from "../../interfaces/services/shared/IKeyboardService";
@@ -16,6 +17,8 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
     private navContainer: HTMLElement | null = null;
     private prevButton: HTMLButtonElement | null = null;
     private nextButton: HTMLButtonElement | null = null;
+    private bottomPrevButton: HTMLButtonElement | null = null;
+    private bottomNextButton: HTMLButtonElement | null = null;
     private currentThreadIndex: number = -1;
     private readonly KEYBOARD_GROUP_ID = 'followed-threads-nav';
 
@@ -27,6 +30,7 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
         observerService: IObserverService,
         private followedThreadsService: IFollowedThreadsNavigationService,
         private keyboardService: IKeyboardService,
+        private buttonComponent: IButtonComponent,
         options?: FeatureComponentOptions
     ) {
         super(domService, cssService, loggingService, observerService, iconComponent, options);
@@ -267,7 +271,8 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
             ]
         });
 
-        return this.createNavigationButtons();
+        await this.createNavigationButtons();
+        await this.updateNavigationState();
     }
 
     protected registerObservers(): void {
@@ -343,6 +348,8 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
             this.navContainer = topNavContainer;
             this.prevButton = topPrevButton;
             this.nextButton = topNextButton;
+            this.bottomPrevButton = bottomPrevButton;
+            this.bottomNextButton = bottomNextButton;
 
             // Insert containers into the page
             entryList.parentNode?.insertBefore(topNavContainer, entryList);
@@ -358,35 +365,55 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
      * Create a single navigation button
      */
     private async createNavigationButton(direction: 'prev' | 'next'): Promise<HTMLButtonElement> {
-        const button = this.domService.createElement('button') as HTMLButtonElement;
-        button.className = 'followed-threads-nav-btn';
-        button.type = 'button';
-        // Add keyboard shortcut hint
-        button.setAttribute('data-shortcut', direction === 'prev' ? 'Alt+←' : 'Alt+→');
-        // Add ARIA labels for accessibility
-        button.setAttribute('aria-label', direction === 'prev' ? 'Previous thread (Alt + Left Arrow)' : 'Next thread (Alt + Right Arrow)');
-
         const iconName = direction === 'prev' ? 'chevron_left' : 'chevron_right';
-        const iconElement = await this.iconComponent.create({
-            name: iconName,
-            className: 'icon'
+        const defaultText = direction === 'prev' ? 'Önceki' : 'Sonraki';
+        
+        // Create button using the button component
+        const button = this.buttonComponent.create({
+            text: defaultText,
+            variant: ButtonVariant.DEFAULT,
+            icon: iconName,
+            iconPosition: 'left',
+            ariaLabel: direction === 'prev' ? 'Previous thread (Alt + Left Arrow)' : 'Next thread (Alt + Right Arrow)',
+            className: 'followed-threads-nav-btn',
+            onClick: () => this.handleNavigationClick(direction)
         });
 
+        // Add keyboard shortcut hint
+        button.setAttribute('data-shortcut', direction === 'prev' ? 'Alt+←' : 'Alt+→');
+
+        // Transform the button to have the multi-part structure we need
+        // The button component creates a simple structure, we need to enhance it
+        this.transformButtonStructure(button, defaultText);
+
+        return button;
+    }
+
+    /**
+     * Transform the button structure to support title + meta content
+     */
+    private transformButtonStructure(button: HTMLButtonElement, defaultText: string): void {
+        // Clear the existing text content but keep the icon
+        const existingIcon = button.querySelector('.material-icons');
+        const textContent = button.textContent?.replace(existingIcon?.textContent || '', '').trim() || defaultText;
+        
+        // Clear all text nodes but keep the icon
+        const textNodes = Array.from(button.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+        textNodes.forEach(node => button.removeChild(node));
+        
+        // Create title span
         const titleSpan = this.domService.createElement('span');
         titleSpan.className = 'title';
-        titleSpan.textContent = direction === 'prev' ? 'Önceki' : 'Sonraki';
+        titleSpan.textContent = textContent;
 
+        // Create meta span
         const metaSpan = this.domService.createElement('span');
         metaSpan.className = 'meta';
         metaSpan.textContent = 'Yükleniyor...';
 
-        button.appendChild(iconElement);
+        // Add spans to button (after the icon if it exists)
         button.appendChild(titleSpan);
         button.appendChild(metaSpan);
-
-        button.addEventListener('click', () => this.handleNavigationClick(direction));
-
-        return button;
     }
 
     /**
@@ -394,24 +421,31 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
      */
     private async updateNavigationState(): Promise<void> {
         try {
-            const currentUrl = window.location.href;
-            this.currentThreadIndex = this.followedThreadsService.getCurrentThreadIndex(currentUrl);
+            // Use the stored position instead of trying to find it by URL
+            this.currentThreadIndex = this.followedThreadsService.getCurrentPosition();
 
-            const prevThread = this.followedThreadsService.getPreviousThread(this.currentThreadIndex);
-            const nextThread = this.followedThreadsService.getNextThread(this.currentThreadIndex);
+            const prevThread = this.followedThreadsService.getPreviousThread();
+            const nextThread = this.followedThreadsService.getNextThread();
 
-            // Update previous button
+            // Update previous button (top)
             if (this.prevButton) {
                 this.updateButton(this.prevButton, prevThread, 'prev');
             }
-
-            // Update next button
+            // Update next button (top)
             if (this.nextButton) {
                 this.updateButton(this.nextButton, nextThread, 'next');
             }
+            // Update previous button (bottom)
+            if (this.bottomPrevButton) {
+                this.updateButton(this.bottomPrevButton, prevThread, 'prev');
+            }
+            // Update next button (bottom)
+            if (this.bottomNextButton) {
+                this.updateButton(this.bottomNextButton, nextThread, 'next');
+            }
 
             this.loggingService.debug('Navigation state updated', {
-                currentIndex: this.currentThreadIndex,
+                currentPosition: this.currentThreadIndex,
                 hasPrev: !!prevThread,
                 hasNext: !!nextThread
             });
@@ -429,13 +463,21 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
         const metaElement = button.querySelector('.meta') as HTMLElement;
 
         if (!thread) {
-            buttonElement.disabled = true;
+            // Use button component's setDisabled method
+            if ('setDisabled' in this.buttonComponent) {
+                // Find which button instance this is and disable it
+                // Since IButtonComponent doesn't have a way to reference specific instances,
+                // we'll manually set the disabled state
+                buttonElement.disabled = true;
+            }
+            
             if (titleElement) titleElement.textContent = direction === 'prev' ? 'Önceki' : 'Sonraki';
             if (metaElement) metaElement.textContent = 'Başlık yok';
             button.classList.remove('new-entries');
             return;
         }
 
+        // Enable the button
         buttonElement.disabled = false;
         
         if (titleElement) {
@@ -461,23 +503,20 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
      */
     private handleNavigationClick(direction: 'prev' | 'next'): void {
         try {
-            const thread = direction === 'prev' 
-                ? this.followedThreadsService.getPreviousThread(this.currentThreadIndex)
-                : this.followedThreadsService.getNextThread(this.currentThreadIndex);
+            const currentPosition = this.followedThreadsService.getCurrentPosition();
+            const targetPosition = direction === 'prev' ? currentPosition - 1 : currentPosition + 1;
+            
+            // For "next" when no current position is set (-1), go to first thread (position 0)
+            const finalPosition = direction === 'next' && currentPosition === -1 ? 0 : targetPosition;
 
-            if (!thread) {
-                this.loggingService.debug(`No ${direction} thread available`);
-                return;
-            }
-
-            this.loggingService.info(`Navigating to ${direction} thread`, {
-                title: thread.title,
-                url: thread.url,
-                hasNewEntry: thread.hasNewEntry
+            this.loggingService.info(`Attempting to navigate ${direction}`, {
+                currentPosition,
+                targetPosition: finalPosition,
+                direction
             });
 
-            // Navigate to the thread
-            window.location.href = thread.url;
+            // Use the service's navigation method which handles position tracking
+            this.followedThreadsService.navigateToThread(finalPosition);
         } catch (error) {
             this.loggingService.error(`Error handling ${direction} navigation`, error);
         }
@@ -492,6 +531,8 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
             this.navContainer = null;
             this.prevButton = null;
             this.nextButton = null;
+            this.bottomPrevButton = null;
+            this.bottomNextButton = null;
         }
     }
 

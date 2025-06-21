@@ -7,6 +7,7 @@ import { PATHS, Endpoints } from "../../../constants";
 
 export class FollowedThreadsNavigationService implements IFollowedThreadsNavigationService {
     private threadsData: FollowedThread[] = [];
+    private currentThreadPosition: number = -1; // Store the current position
 
     /**
      * CSS selectors used for parsing Olay page content
@@ -37,13 +38,18 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
             // If we're on the Olay page, capture current threads data
             if (this.isOlayPage()) {
                 await this.captureThreadsFromOlayPage();
+                // Enhance thread links with position tracking
+                this.enhanceOlayThreadLinks();
             } else if (this.isFollowedThreadPage()) {
                 // If we're on a tracked thread page, fetch fresh data from Olay page
                 await this.fetchOlayPageData();
+                // Try to restore the current position from URL parameters or storage
+                await this.restoreCurrentPosition();
             }
 
             this.loggingService.debug('FollowedThreadsNavigationService initialized', {
                 threadsCount: this.threadsData.length,
+                currentPosition: this.currentThreadPosition,
                 isOlayPage: this.isOlayPage(),
                 isTrackedPage: this.isFollowedThreadPage(),
                 currentUrl: window.location.href
@@ -51,6 +57,24 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
         } catch (error) {
             this.loggingService.error('Error initializing FollowedThreadsNavigationService', error);
         }
+    }
+
+    /**
+     * Set the current thread position (called when navigating from Olay page)
+     */
+    setCurrentPosition(position: number): void {
+        this.currentThreadPosition = position;
+        this.loggingService.debug('Current thread position set', {
+            position,
+            totalThreads: this.threadsData.length
+        });
+    }
+
+    /**
+     * Get the current thread position
+     */
+    getCurrentPosition(): number {
+        return this.currentThreadPosition;
     }
 
     /**
@@ -62,35 +86,103 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
 
     /**
      * Get the index of the current thread in the list
+     * @deprecated Use getCurrentPosition() instead
      */
     getCurrentThreadIndex(currentUrl: string): number {
-        // Clean the URL - remove query parameters for comparison
-        const cleanCurrentUrl = this.cleanThreadUrl(currentUrl);
-        
-        return this.threadsData.findIndex(thread => {
-            const cleanThreadUrl = this.cleanThreadUrl(thread.url);
-            return cleanThreadUrl === cleanCurrentUrl;
-        });
+        // Return the stored position instead of trying to match URLs
+        return this.currentThreadPosition;
     }
 
     /**
      * Get the previous thread in the list
      */
-    getPreviousThread(currentIndex: number): FollowedThread | null {
-        if (currentIndex <= 0 || currentIndex >= this.threadsData.length) {
+    getPreviousThread(currentIndex?: number): FollowedThread | null {
+        const position = currentIndex !== undefined ? currentIndex : this.currentThreadPosition;
+        
+        // If current thread not found in list or at beginning, no previous thread available
+        if (position <= 0 || position >= this.threadsData.length) {
             return null;
         }
-        return this.threadsData[currentIndex - 1];
+        return this.threadsData[position - 1];
     }
 
     /**
      * Get the next thread in the list
      */
-    getNextThread(currentIndex: number): FollowedThread | null {
-        if (currentIndex < 0 || currentIndex >= this.threadsData.length - 1) {
+    getNextThread(currentIndex?: number): FollowedThread | null {
+        const position = currentIndex !== undefined ? currentIndex : this.currentThreadPosition;
+        
+        // If current thread not found in list (-1), return first thread as next
+        if (position === -1) {
+            return this.threadsData.length > 0 ? this.threadsData[0] : null;
+        }
+        
+        // If we're at the end of the list, no next thread
+        if (position >= this.threadsData.length - 1) {
             return null;
         }
-        return this.threadsData[currentIndex + 1];
+        
+        return this.threadsData[position + 1];
+    }
+
+    /**
+     * Navigate to a specific thread and update the position
+     */
+    navigateToThread(position: number): void {
+        if (position < 0 || position >= this.threadsData.length) {
+            this.loggingService.error('Invalid thread position', { position, totalThreads: this.threadsData.length });
+            return;
+        }
+
+        const thread = this.threadsData[position];
+        this.setCurrentPosition(position);
+        
+        // Add position parameter to URL for persistence
+        const url = new URL(thread.url);
+        url.searchParams.set('thread_pos', position.toString());
+        
+        this.loggingService.info('Navigating to thread', {
+            position,
+            title: thread.title,
+            url: url.toString()
+        });
+        
+        window.location.href = url.toString();
+    }
+
+    /**
+     * Restore current position from URL parameters or storage
+     */
+    private async restoreCurrentPosition(): Promise<void> {
+        try {
+            const url = new URL(window.location.href);
+            const positionParam = url.searchParams.get('thread_pos');
+            
+            if (positionParam) {
+                const position = parseInt(positionParam, 10);
+                if (!isNaN(position) && position >= 0 && position < this.threadsData.length) {
+                    this.currentThreadPosition = position;
+                    this.loggingService.debug('Restored current position from URL', { position });
+                    return;
+                }
+            }
+
+            // Fallback: try to find current thread by URL matching
+            const cleanCurrentUrl = this.cleanThreadUrl(window.location.href);
+            const foundIndex = this.threadsData.findIndex(thread => {
+                const cleanThreadUrl = this.cleanThreadUrl(thread.url);
+                return cleanThreadUrl === cleanCurrentUrl;
+            });
+
+            if (foundIndex >= 0) {
+                this.currentThreadPosition = foundIndex;
+                this.loggingService.debug('Found current position by URL matching', { position: foundIndex });
+            } else {
+                this.loggingService.debug('Could not determine current position, keeping -1');
+            }
+        } catch (error) {
+            this.loggingService.error('Error restoring current position', error);
+        }
     }
 
     /**
@@ -135,10 +227,11 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
                 return;
             }
 
-            const threadElements = this.domService.querySelectorAll(this.SELECTORS.THREAD_ITEM, topicList);
+            // Only select threads with new entries
+            const threadElements = topicList.querySelectorAll(`li.${this.SELECTORS.NEW_UPDATE_CLASS}`);
             const capturedThreads: FollowedThread[] = [];
 
-            this.loggingService.debug('Starting to capture threads from current Olay page', {
+            this.loggingService.debug('Starting to capture threads with new entries from current Olay page', {
                 threadElementsFound: threadElements.length,
                 topicListSelector: this.SELECTORS.TOPIC_LIST
             });
@@ -152,10 +245,8 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
 
                 const title = this.extractThreadTitle(linkElement);
                 const entryCount = this.extractEntryCount(linkElement);
-                // Try multiple methods to detect new-update class
-                const hasNewEntry = threadElement.classList.contains(this.SELECTORS.NEW_UPDATE_CLASS) ||
-                                  threadElement.className.includes(this.SELECTORS.NEW_UPDATE_CLASS) ||
-                                  threadElement.getAttribute('class')?.includes(this.SELECTORS.NEW_UPDATE_CLASS) || false;
+                // All these have new entries by selector
+                const hasNewEntry = true;
 
                 // Convert relative URL to absolute
                 const fullUrl = href.startsWith('http') ? href : `https://eksisozluk.com${href}`;
@@ -182,12 +273,11 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
 
             this.threadsData = capturedThreads;
 
-            this.loggingService.info('Captured threads from Olay page', {
+            this.loggingService.info('Captured threads with new entries from Olay page', {
                 totalThreads: capturedThreads.length,
-                newThreads: capturedThreads.filter(t => t.hasNewEntry).length,
                 selectors: {
                     topicList: this.SELECTORS.TOPIC_LIST,
-                    threadItem: this.SELECTORS.THREAD_ITEM,
+                    threadItem: `li.${this.SELECTORS.NEW_UPDATE_CLASS}`,
                     threadLink: this.SELECTORS.THREAD_LINK
                 }
             });
@@ -268,8 +358,6 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
             return url.split('?')[0].split('#')[0];
         }
     }
-
-
 
     /**
      * Fetch the Olay page data in the background to get threads list
@@ -354,7 +442,7 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
                     ulElements: (html.match(/<ul/g) || []).length,
                     liElements: (html.match(/<li/g) || []).length,
                     linkElements: (html.match(/<a/g) || []).length,
-                    newUpdateElements: (html.match(/class="[^"]*new-update[^"]*"/g) || []).length
+                    newUpdateElements: (html.match(/class="[^\"]*new-update[^\"]*"/g) || []).length
                 },
                 primarySelector: this.SELECTORS.TOPIC_LIST,
                 // Log first few new-update elements found in raw HTML
@@ -390,10 +478,11 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
                 selector: this.SELECTORS.TOPIC_LIST
             });
 
-            const threadElements = topicList.querySelectorAll(this.SELECTORS.THREAD_ITEM);
-            this.loggingService.debug('Found thread elements', {
+            // Only select threads with new entries
+            const threadElements = topicList.querySelectorAll(`li.${this.SELECTORS.NEW_UPDATE_CLASS}`);
+            this.loggingService.debug('Found thread elements with new entries', {
                 threadCount: threadElements.length,
-                threadItemSelector: this.SELECTORS.THREAD_ITEM
+                threadItemSelector: `li.${this.SELECTORS.NEW_UPDATE_CLASS}`
             });
 
             const capturedThreads: FollowedThread[] = [];
@@ -401,7 +490,6 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
 
             for (let i = 0; i < threadElements.length; i++) {
                 const threadElement = threadElements[i];
-                
                 try {
                     const linkElement = threadElement.querySelector(this.SELECTORS.THREAD_LINK) as HTMLAnchorElement;
                     if (!linkElement) {
@@ -424,27 +512,11 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
 
                     const title = this.extractThreadTitleFromHtml(linkElement);
                     const entryCount = this.extractEntryCountFromHtml(linkElement);
-                    // With DOMParser, classList should work reliably, but keep fallbacks just in case
-                    const hasNewEntry = threadElement.classList.contains(this.SELECTORS.NEW_UPDATE_CLASS) ||
-                                      threadElement.className.includes(this.SELECTORS.NEW_UPDATE_CLASS) ||
-                                      threadElement.getAttribute('class')?.includes(this.SELECTORS.NEW_UPDATE_CLASS) || false;
+                    // All these have new entries by selector
+                    const hasNewEntry = true;
 
                     // Convert relative URL to absolute
                     const fullUrl = href.startsWith('http') ? href : `https://eksisozluk.com${href}`;
-
-                    // Enhanced debugging for new entry detection
-                    this.loggingService.debug(`Thread ${i + 1}: New entry detection details`, {
-                        threadElementClassName: threadElement.className,
-                        threadElementClassList: Array.from(threadElement.classList),
-                        hasNewEntryClass: hasNewEntry,
-                        detectionMethods: {
-                            classList: threadElement.classList.contains(this.SELECTORS.NEW_UPDATE_CLASS),
-                            className: threadElement.className.includes(this.SELECTORS.NEW_UPDATE_CLASS),
-                            getAttribute: threadElement.getAttribute('class')?.includes(this.SELECTORS.NEW_UPDATE_CLASS)
-                        },
-                        newUpdateClassSelector: this.SELECTORS.NEW_UPDATE_CLASS,
-                        threadElementOuterHTML: threadElement.outerHTML.substring(0, 200) + '...'
-                    });
 
                     // Debug the thread object before pushing
                     this.loggingService.debug(`Creating FollowedThread object for thread ${i + 1}`, {
@@ -483,9 +555,8 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
 
             this.threadsData = capturedThreads;
 
-            this.loggingService.info('Completed parsing Olay page HTML', {
+            this.loggingService.info('Completed parsing Olay page HTML (only threads with new entries)', {
                 totalThreads: capturedThreads.length,
-                newThreads: capturedThreads.filter(t => t.hasNewEntry).length,
                 skippedThreads,
                 successRate: `${Math.round((capturedThreads.length / (capturedThreads.length + skippedThreads)) * 100)}%`
             });
@@ -553,5 +624,48 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
         // Look for patterns like "3 yeni" or just "5"
         const match = text.match(/(\d+)/);
         return match ? parseInt(match[1], 10) : 0;
+    }
+
+    /**
+     * Enhance thread links on Olay page to track position when clicked
+     */
+    private enhanceOlayThreadLinks(): void {
+        try {
+            const topicList = this.domService.querySelector(this.SELECTORS.TOPIC_LIST);
+            if (!topicList) return;
+
+            const threadElements = topicList.querySelectorAll(`li.${this.SELECTORS.NEW_UPDATE_CLASS}`);
+            
+            this.loggingService.debug('Enhancing Olay thread links with position tracking', {
+                threadsFound: threadElements.length
+            });
+
+            threadElements.forEach((threadElement, index) => {
+                const linkElement = threadElement.querySelector(this.SELECTORS.THREAD_LINK) as HTMLAnchorElement;
+                if (!linkElement) return;
+
+                // Add click handler to store position
+                linkElement.addEventListener('click', (event) => {
+                    // Prevent default navigation
+                    event.preventDefault();
+                    
+                    this.loggingService.debug('Thread link clicked', {
+                        position: index,
+                        title: this.threadsData[index]?.title || 'Unknown',
+                        originalUrl: linkElement.href
+                    });
+
+                    // Store the position and navigate
+                    this.setCurrentPosition(index);
+                    this.navigateToThread(index);
+                });
+            });
+
+            this.loggingService.info('Enhanced Olay thread links with position tracking', {
+                enhancedLinks: threadElements.length
+            });
+        } catch (error) {
+            this.loggingService.error('Error enhancing Olay thread links', error);
+        }
     }
 } 
