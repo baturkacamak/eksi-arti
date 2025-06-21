@@ -137,7 +137,6 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
             .followed-threads-nav-btn .title {
                 display: block;
                 font-size: 13px;
-                margin-bottom: 2px;
                 line-height: 1.2;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -146,9 +145,13 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
 
             .followed-threads-nav-btn .meta {
                 display: block;
-                font-size: 12px;
-                opacity: 0.7;
-                color: inherit;
+                font-size: 10px;
+                padding: 5px;
+                vertical-align: middle;
+                margin-left: 9px;
+                background: #45731f;
+                border-radius: 4px;
+                color: white;
             }
 
             .followed-threads-nav-btn.new-entries {
