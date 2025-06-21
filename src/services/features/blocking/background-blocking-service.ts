@@ -3,7 +3,7 @@
  * Handles blocking operations in the background script
  */
 
-import {Endpoints, BlockType, STORAGE_KEYS} from '../../../constants';
+import {Endpoints, BlockType, STORAGE_KEYS, DEFAULT_PREFERENCES, buildUrl, SITE_DOMAIN} from '../../../constants';
 import {storageService} from '../../shared/storage-service';
 import {StorageArea} from '../../../interfaces/services/shared/IStorageService';
 import {BlockerState} from '../../../types';
@@ -238,7 +238,7 @@ export class BackgroundBlockingService {
     private sendProgressUpdate(data: any) {
         chrome.tabs.query({}, (tabs) => {
             tabs.forEach(tab => {
-                if (tab.id && tab.url?.includes('eksisozluk.com')) {
+                if (tab.id && tab.url?.includes(SITE_DOMAIN)) {
                     chrome.tabs.sendMessage(tab.id, {
                         action: 'progressUpdate',
                         data: data
@@ -644,7 +644,7 @@ export class BackgroundBlockingService {
             let match;
 
             while ((match = regex.exec(html)) !== null) {
-                userUrls.push(`https://eksisozluk.com${match[1]}`);
+                userUrls.push(buildUrl(match[1]));
             }
 
             this.loggingService.info('Successfully fetched favorites', {

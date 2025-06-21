@@ -10,6 +10,7 @@ import { IObserverService } from "../../interfaces/services/shared/IObserverServ
 import { IScreenshotButtonComponent } from "../../interfaces/components/IScreenshotButtonComponent";
 import { IIconComponent } from "../../interfaces/components/IIconComponent";
 import { IDocumentStateService } from '../../interfaces/services/shared/IDocumentStateService';
+import { buildUrl } from '../../constants';
 
 /**
  * ScreenshotButtonComponent
@@ -436,7 +437,7 @@ export class ScreenshotButtonComponent extends BaseFeatureComponent implements I
             footer.style.fontSize = '12px';
             footer.style.color = 'rgba(255, 255, 255, 0.5)';
             footer.style.textAlign = 'right';
-            footer.textContent = 'Ekşi Artı ile alındı • eksisozluk.com/' + entryId;
+            footer.textContent = 'Ekşi Artı ile alındı • ' + buildUrl(entryId);
 
             container.appendChild(header);
             container.appendChild(contentClone);

@@ -16,6 +16,7 @@ import {initializeDI} from "./di/initialize-di";
 import {Container} from "./di/container";
 import {PreferencesModal} from "./components/features/preferences-modal";
 import {IKeyboardService} from "./interfaces/services/shared/IKeyboardService";
+import {buildUrl} from "./constants";
 
 /**
  * Options Manager Class
@@ -979,7 +980,7 @@ class OptionsPage {
     async refreshUsername() {
         try {
             // Find Eksisozluk tab and send refresh message
-            const tabs = await chrome.tabs.query({url: 'https://eksisozluk.com/*'});
+            const tabs = await chrome.tabs.query({url: buildUrl('*')});
             
             if (tabs.length === 0) {
                 this.showStatus('Eksisözlük sekmesi bulunamadı. Lütfen bir Eksisözlük sayfası açın.', 'error');

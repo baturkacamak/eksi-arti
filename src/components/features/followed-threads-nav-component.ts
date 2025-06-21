@@ -34,6 +34,38 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
         options?: FeatureComponentOptions
     ) {
         super(domService, cssService, loggingService, observerService, iconComponent, options);
+        this.setupKeyboardShortcuts();
+    }
+
+    /**
+     * Setup keyboard shortcuts (available on all pages, not just followed thread pages)
+     */
+    private setupKeyboardShortcuts(): void {
+        this.loggingService.debug('Setting up keyboard shortcuts for followed threads navigation');
+        this.keyboardService.registerShortcuts({
+            id: this.KEYBOARD_GROUP_ID,
+            shortcuts: [
+                {
+                    key: 'ArrowLeft',
+                    description: 'Navigate to previous thread',
+                    handler: () => {
+                        this.loggingService.debug('Left arrow pressed - navigating to previous thread');
+                        this.handleNavigationClick('prev');
+                        this.addButtonFeedback(this.prevButton);
+                    }
+                },
+                {
+                    key: 'ArrowRight',
+                    description: 'Navigate to next thread',
+                    handler: () => {
+                        this.loggingService.debug('Right arrow pressed - navigating to next thread');
+                        this.handleNavigationClick('next');
+                        this.addButtonFeedback(this.nextButton);
+                    }
+                }
+            ]
+        });
+        this.loggingService.debug('Keyboard shortcuts registered for followed threads navigation');
     }
 
     // Required BaseFeatureComponent methods
@@ -249,31 +281,6 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
     }
 
     protected async setupUI(): Promise<void> {
-        // Register keyboard shortcuts
-        this.keyboardService.registerShortcuts({
-            id: this.KEYBOARD_GROUP_ID,
-            shortcuts: [
-                {
-                    key: 'ArrowLeft',
-                    altKey: true,
-                    description: 'Navigate to previous thread',
-                    handler: () => {
-                        this.handleNavigationClick('prev');
-                        this.addButtonFeedback(this.prevButton);
-                    }
-                },
-                {
-                    key: 'ArrowRight',
-                    altKey: true,
-                    description: 'Navigate to next thread',
-                    handler: () => {
-                        this.handleNavigationClick('next');
-                        this.addButtonFeedback(this.nextButton);
-                    }
-                }
-            ]
-        });
-
         await this.createNavigationButtons();
         await this.updateNavigationState();
     }
@@ -307,6 +314,8 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
     public destroy(): void {
         try {
             this.removeNavigationButtons();
+            // Unregister keyboard shortcuts
+            this.keyboardService.unregisterShortcuts(this.KEYBOARD_GROUP_ID);
             this.loggingService.debug('Followed threads navigation component destroyed');
         } catch (error) {
             this.loggingService.error('Error destroying followed threads navigation component', error);
@@ -377,13 +386,13 @@ export class FollowedThreadsNavComponent extends BaseFeatureComponent implements
             variant: ButtonVariant.DEFAULT,
             icon: iconName,
             iconPosition: 'left',
-            ariaLabel: direction === 'prev' ? 'Previous thread (Alt + Left Arrow)' : 'Next thread (Alt + Right Arrow)',
+            ariaLabel: direction === 'prev' ? 'Previous thread (Left Arrow)' : 'Next thread (Right Arrow)',
             className: 'followed-threads-nav-btn',
             onClick: () => this.handleNavigationClick(direction)
         });
 
         // Add keyboard shortcut hint
-        button.setAttribute('data-shortcut', direction === 'prev' ? 'Alt+←' : 'Alt+→');
+        button.setAttribute('data-shortcut', direction === 'prev' ? '←' : '→');
 
         // Transform the button to have the multi-part structure we need
         // The button component creates a simple structure, we need to enhance it

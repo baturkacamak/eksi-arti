@@ -3,7 +3,7 @@ import { ILoggingService } from "../../../interfaces/services/shared/ILoggingSer
 import { IHttpService } from "../../../interfaces/services/shared/IHttpService";
 import { IHtmlParserService } from "../../../interfaces/services/shared/IHtmlParserService";
 import { IFollowedThreadsNavigationService, FollowedThread } from "../../../../types/interfaces/services/features/content/IFollowedThreadsNavigationService";
-import { PATHS, Endpoints } from "../../../constants";
+import { PATHS, Endpoints, buildUrl } from "../../../constants";
 
 export class FollowedThreadsNavigationService implements IFollowedThreadsNavigationService {
     private threadsData: FollowedThread[] = [];
@@ -249,7 +249,7 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
                 const hasNewEntry = true;
 
                 // Convert relative URL to absolute
-                const fullUrl = href.startsWith('http') ? href : `https://eksisozluk.com${href}`;
+                const fullUrl = href.startsWith('http') ? href : buildUrl(href);
 
                 // Debug the thread object before pushing (DOM version)
                 this.loggingService.debug(`Creating FollowedThread object from DOM`, {
@@ -516,7 +516,7 @@ export class FollowedThreadsNavigationService implements IFollowedThreadsNavigat
                     const hasNewEntry = true;
 
                     // Convert relative URL to absolute
-                    const fullUrl = href.startsWith('http') ? href : `https://eksisozluk.com${href}`;
+                    const fullUrl = href.startsWith('http') ? href : buildUrl(href);
 
                     // Debug the thread object before pushing
                     this.loggingService.debug(`Creating FollowedThread object for thread ${i + 1}`, {
