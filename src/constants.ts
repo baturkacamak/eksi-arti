@@ -78,7 +78,6 @@ export const PATHS = {
 export const Endpoints = {
     BLOCK: buildUrl('userrelation/addrelation'),
     FAVORITES: buildUrl('entry/favorileyenler'),
-    FOLLOWED_THREADS: buildUrl('basliklar/m/olay'),
     ADD_NOTE: buildUrl(`${PATHS.BIRI.slice(1)}{username}/note`),
     USER_PROFILE: (username: string) => buildUrl(`${PATHS.BIRI.slice(1)}${encodeURIComponent(username)}`),
     VOTE_HISTORY: (userNick: string, page: number = 1) => buildUrl(`${PATHS.VOTE_HISTORY}?nick=${encodeURIComponent(userNick)}&p=${page}`),

@@ -26,8 +26,6 @@ import {IIconComponent} from "../../../interfaces/components/IIconComponent";
 import {IUserProfileService} from "../../../interfaces/services/features/user/IUserProfileService";
 import { VoteMonitoringService } from '../content/vote-monitoring-service';
 import { pageUtils } from '../../shared/page-utils-service';
-import { FollowedThreadsNavigationComponent } from '../../../components/features/followed-threads-navigation-component';
-import { FollowedThreadsCacheService } from '../followed-threads-cache-service';
 
 export class UIService {
     private initialized: boolean = false;
@@ -46,8 +44,6 @@ export class UIService {
     private blockFavoritesButtonComponent: BlockFavoritesButtonComponent;
     private searchFilterComponent: SearchFilterComponent;
     private voteMonitoringService: VoteMonitoringService;
-    private followedThreadsNavigationComponent: FollowedThreadsNavigationComponent;
-    private followedThreadsCacheComponent: FollowedThreadsCacheService;
 
     constructor(
         private domService: IDOMService,
@@ -76,10 +72,6 @@ export class UIService {
         // Use getInstance for singleton services
         this.authorHighlighterService = container.resolve<IAuthorHighlighterService>('AuthorHighlighterService');
         this.voteMonitoringService = container.resolve<VoteMonitoringService>('VoteMonitoringService');
-
-        // Navigation component for followed threads
-        this.followedThreadsNavigationComponent = container.resolve<FollowedThreadsNavigationComponent>('FollowedThreadsNavigationComponent');
-        this.followedThreadsCacheComponent = container.resolve<FollowedThreadsCacheService>('FollowedThreadsCacheService');
     }
 
     /**
@@ -130,10 +122,6 @@ export class UIService {
 
                 await this.checkForSavedState();
 
-                // If we are currently on the followed-threads list, initialize cache component
-                if (window.location.pathname.startsWith('/basliklar/m/olay')) {
-                    this.followedThreadsCacheComponent.initialize();
-                }
 
                 // Initialize entry-related features (search and sorting) together
                 // Only on thread pages (not profile pages) with sufficient entries
@@ -204,9 +192,6 @@ export class UIService {
 
                 // Add version info to console
                 this.loggingService.info('Ekşi Artı v1.0.0 loaded.');
-
-                // Initialize followed threads navigation if on a tracked snapshot page
-                this.followedThreadsNavigationComponent.initialize();
             }, 500);
         } catch (err) {
             this.loggingService.error('Error initializing UI service:', err);
@@ -304,16 +289,8 @@ export class UIService {
             this.blockFavoritesButtonComponent.destroy();
         }
 
-        if (this.followedThreadsNavigationComponent) {
-            this.followedThreadsNavigationComponent.destroy();
-        }
-
         if (this.userProfileService) {
             this.userProfileService.destroy();
-        }
-
-        if (this.followedThreadsCacheComponent) {
-            this.followedThreadsCacheComponent.dispose();
         }
     }
 }
