@@ -15,6 +15,7 @@ import {ICommandInvoker} from "./commands/interfaces/ICommandInvoker";
 import {initializeDI} from "./di/initialize-di";
 import {Container} from "./di/container";
 import {PreferencesModal} from "./components/features/preferences-modal";
+import {IKeyboardService} from "./interfaces/services/shared/IKeyboardService";
 
 /**
  * Options Manager Class
@@ -32,6 +33,8 @@ class OptionsPage {
     private container: Container;
     private cssService: ICSSService;
     private preferencesModal: PreferencesModal | null;
+    private keyboardService: IKeyboardService;
+    private readonly KEYBOARD_GROUP_ID = 'options-page';
 
     constructor() {
         // Initialize DI container
@@ -44,6 +47,7 @@ class OptionsPage {
         this.commandFactory = this.container.resolve<ICommandFactory>('CommandFactory');
         this.cssService = this.container.resolve<ICSSService>('CSSService');
         this.preferencesModal = this.container.resolve<PreferencesModal>('PreferencesModal');
+        this.keyboardService = this.container.resolve<IKeyboardService>('KeyboardService');
     }
 
     /**
@@ -70,6 +74,11 @@ class OptionsPage {
 
             // Load username information
             await this.loadUsernameInfo();
+
+            // Add cleanup on page unload
+            window.addEventListener('beforeunload', () => {
+                this.cleanup();
+            });
 
             this.isInitialized = true;
             this.loggingService.debug('Options page initialized');
@@ -527,19 +536,32 @@ class OptionsPage {
                 });
             }
 
-            // Enter key to save
-            this.domService.addEventListener(document as unknown as HTMLElement, 'keydown', (e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                    this.savePreferences();
-                } else if (e.key === 'z' && e.ctrlKey && !e.shiftKey) {
-                    // Ctrl+Z for undo
-                    e.preventDefault();
-                    this.undoLastAction();
-                } else if (e.key === 'y' && e.ctrlKey) {
-                    // Ctrl+Y for redo
-                    e.preventDefault();
-                    this.redoLastAction();
-                }
+            // Register keyboard shortcuts
+            this.keyboardService.registerShortcuts({
+                id: this.KEYBOARD_GROUP_ID,
+                shortcuts: [
+                    {
+                        key: 'Enter',
+                        ctrlKey: true,
+                        description: 'Save preferences',
+                        handler: () => this.savePreferences(),
+                        allowInInputs: true
+                    },
+                    {
+                        key: 'z',
+                        ctrlKey: true,
+                        description: 'Undo last action',
+                        handler: () => this.undoLastAction(),
+                        allowInInputs: true
+                    },
+                    {
+                        key: 'y',
+                        ctrlKey: true,
+                        description: 'Redo last action',
+                        handler: () => this.redoLastAction(),
+                        allowInInputs: true
+                    }
+                ]
             });
 
             this.loggingService.debug('Event listeners set up with auto-save functionality');
@@ -980,6 +1002,18 @@ class OptionsPage {
         } catch (error) {
             this.loggingService.error('Error refreshing username', error);
             this.showStatus('Kullanıcı adı yenilemek için bir Eksisözlük sekmesi açık olmalı', 'error');
+        }
+    }
+
+    /**
+     * Cleanup resources
+     */
+    private cleanup(): void {
+        try {
+            this.keyboardService.unregisterShortcuts(this.KEYBOARD_GROUP_ID);
+            this.loggingService.debug('Options page cleanup completed');
+        } catch (error) {
+            this.loggingService.error('Error during options page cleanup', error);
         }
     }
 }

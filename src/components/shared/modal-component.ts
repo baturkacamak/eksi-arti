@@ -5,6 +5,7 @@ import {IDOMService} from "../../interfaces/services/shared/IDOMService";
 import {IDocumentStateService} from '../../interfaces/services/shared/IDocumentStateService';
 import {ButtonSize, ButtonVariant} from "../../interfaces/components/IButtonComponent";
 import {IModalComponent, ModalOptions} from "../../interfaces/components/IModalComponent";
+import {IKeyboardService} from "../../interfaces/services/shared/IKeyboardService";
 
 export class ModalComponent implements IModalComponent {
     protected modalElement: HTMLElement | null = null;
@@ -13,6 +14,7 @@ export class ModalComponent implements IModalComponent {
         allowBackdropClose: true,
         allowEscapeClose: true
     };
+    private keyboardGroupId: string | null = null;
 
     constructor(
         protected domService: IDOMService,
@@ -20,6 +22,7 @@ export class ModalComponent implements IModalComponent {
         protected loggingService: ILoggingService,
         protected buttonComponent: ButtonComponent,
         protected documentState: IDocumentStateService,
+        protected keyboardService: IKeyboardService,
     ) {
         this.applyModalStyles();
     }
@@ -38,9 +41,20 @@ export class ModalComponent implements IModalComponent {
             // Disable page scrolling while modal is open
             this.documentState.setScrollEnabled(false);
 
-            // Add keydown listener for Escape key to close modal (if enabled)
+            // Register keyboard shortcuts for modal
             if (this.options.allowEscapeClose !== false) {
-                this.domService.addEventListener(document as unknown as HTMLElement, 'keydown', this.handleEscapeKey);
+                this.keyboardGroupId = `modal-${Date.now()}-${Math.random()}`;
+                this.keyboardService.registerShortcuts({
+                    id: this.keyboardGroupId,
+                    shortcuts: [
+                        {
+                            key: 'Escape',
+                            description: 'Close modal',
+                            handler: () => this.close(),
+                            allowInInputs: true
+                        }
+                    ]
+                });
             }
         } catch (err) {
             this.loggingService.error('Error showing modal:', err);
@@ -59,14 +73,7 @@ export class ModalComponent implements IModalComponent {
         }
     }
 
-    /**
-     * Handle Escape key press
-     */
-    private handleEscapeKey = (e: KeyboardEvent): void => {
-        if (e.key === 'Escape' && this.modalElement && this.options.allowEscapeClose !== false) {
-            this.close();
-        }
-    };
+
 
     /**
      * Create modal element with basic structure
@@ -177,7 +184,11 @@ export class ModalComponent implements IModalComponent {
     close(): void {
         if (!this.modalElement) return;
 
-        document.removeEventListener('keydown', this.handleEscapeKey);
+        // Unregister keyboard shortcuts
+        if (this.keyboardGroupId) {
+            this.keyboardService.unregisterShortcuts(this.keyboardGroupId);
+            this.keyboardGroupId = null;
+        }
 
         // Add closing animation classes
         this.domService.addClass(this.modalElement, 'eksi-modal-closing');

@@ -10,6 +10,7 @@ import { TooltipComponent } from '../shared/tooltip-component';
 import { ITooltipComponent } from '../../interfaces/components/ITooltipComponent';
 import { IIconComponent } from '../../interfaces/components/IIconComponent';
 import { ISearchFilterComponent } from "../../interfaces/components/ISearchFilterComponent";
+import { IKeyboardService } from "../../interfaces/services/shared/IKeyboardService";
 
 /**
  * SearchFilterComponent
@@ -31,6 +32,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
     private controlsContainer: HTMLElement | null = null;
     private searchRow: HTMLElement | null = null;
     private searchTooltipId: string = 'inline-search-tooltip';
+    private keyboardGroupId: string | null = null;
 
     private turkishCharMap: Record<string, string> = {
         'ı': 'i', 'i': 'ı',
@@ -52,6 +54,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         observerServiceInstance: IObserverService,
         private specificTooltipComponent: ITooltipComponent,
         private specificPageUtils: PageUtilsService,
+        private keyboardService: IKeyboardService,
         options?: FeatureComponentOptions
     ) {
         super(domService, cssService, loggingService, observerServiceInstance, iconComponent, options);
@@ -260,6 +263,7 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         this.loggingService.debug('SearchFilterComponent setupUI: Starting UI setup');
         this.injectSearchRowDOM();
         this.createSearchHelpTooltip();
+        this.setupKeyboardShortcuts();
     }
 
     protected setupListeners(): void {
@@ -327,6 +331,35 @@ export class SearchFilterComponent extends BaseFeatureComponent implements ISear
         this.resetVisibility();
         this.clearHighlights();
         this.resetSearch();
+        
+        // Unregister keyboard shortcuts
+        if (this.keyboardGroupId) {
+            this.keyboardService.unregisterShortcuts(this.keyboardGroupId);
+            this.keyboardGroupId = null;
+        }
+    }
+
+    /**
+     * Setup keyboard shortcuts for search functionality
+     */
+    private setupKeyboardShortcuts(): void {
+        this.keyboardGroupId = 'search-filter-component';
+        this.keyboardService.registerShortcuts({
+            id: this.keyboardGroupId,
+            shortcuts: [
+                {
+                    key: 'f',
+                    ctrlKey: true,
+                    description: 'Focus search input',
+                    handler: () => {
+                        if (this.searchInput) {
+                            this.searchInput.focus();
+                        }
+                    },
+                    allowInInputs: false
+                }
+            ]
+        });
     }
 
     /**

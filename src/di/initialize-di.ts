@@ -204,7 +204,8 @@ export function initializeDI(): Container {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         const buttonComponent = container.resolve<ButtonComponent>('ButtonComponent');
         const documentState = container.resolve<IDocumentStateService>('DocumentStateService');
-        return new ModalComponent(domService, cssService, loggingService, buttonComponent, documentState);
+        const keyboardService = container.resolve<IKeyboardService>('KeyboardService');
+        return new ModalComponent(domService, cssService, loggingService, buttonComponent, documentState, keyboardService);
     });
 
     container.register('CountdownComponent', () => {
@@ -553,7 +554,8 @@ export function initializeDI(): Container {
             iconComponent,
             observerService,
             tooltipComponent,
-            pageUtils
+            pageUtils,
+            container.resolve<IKeyboardService>('KeyboardService')
         );
     });
 
