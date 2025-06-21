@@ -5,6 +5,10 @@ import {IDOMService} from "../../interfaces/services/shared/IDOMService";
 import {ILoggingService} from "../../interfaces/services/shared/ILoggingService";
 import {IHtmlParserService} from "../../interfaces/services/shared/IHtmlParserService";
 
+/**
+ * HTML Parser Service - Responsible for parsing HTML content using various methods
+ * Follows Single Responsibility Principle (SRP) - only handles HTML parsing
+ */
 export class HtmlParserService implements IHtmlParserService {
     private useDOMParser: boolean;
 
@@ -16,32 +20,206 @@ export class HtmlParserService implements IHtmlParserService {
     }
 
     /**
-     * Parse HTML and process with provided handler function
+     * Core method: Parse HTML string into a proper Document object using DOMParser
      * @param html HTML string to parse
-     * @param domService Function to process the parsed DOM
+     * @param parseAsDocument Whether to parse as full HTML document (default: true)
+     * @returns Parsed Document object or null if parsing fails
+     */
+    parseHtmlToDocument(html: string, parseAsDocument: boolean = true): Document | null {
+        if (!this.useDOMParser) {
+            this.loggingService.warn('DOMParser is not available in this environment');
+            return null;
+        }
+
+        try {
+            const mimeType = parseAsDocument ? 'text/html' : 'application/xml';
+            const doc = new DOMParser().parseFromString(html, mimeType);
+            
+            // Check for parsing errors
+            const parserError = doc.querySelector('parsererror');
+            if (parserError) {
+                this.loggingService.warn('HTML parsing error detected', {
+                    error: parserError.textContent,
+                    htmlPreview: html.substring(0, 200) + '...'
+                });
+                return null;
+            }
+            
+            return doc;
+        } catch (error) {
+            this.loggingService.error('Failed to parse HTML with DOMParser', {
+                error: error instanceof Error ? error.message : String(error),
+                htmlLength: html.length
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Parse HTML and execute a query selector on the result
+     * @param html HTML string to parse
+     * @param selector CSS selector to query
+     * @returns First matching element or null
+     */
+    parseAndQuerySelector<T extends Element = Element>(html: string, selector: string): T | null {
+        const doc = this.parseHtmlToDocument(html);
+        if (!doc) return null;
+
+        try {
+            return doc.querySelector<T>(selector);
+        } catch (error) {
+            this.loggingService.warn('Failed to execute querySelector on parsed HTML', {
+                selector,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Parse HTML and execute querySelectorAll on the result
+     * @param html HTML string to parse
+     * @param selector CSS selector to query
+     * @returns NodeList of matching elements
+     */
+    parseAndQuerySelectorAll<T extends Element = Element>(html: string, selector: string): NodeListOf<T> | null {
+        const doc = this.parseHtmlToDocument(html);
+        if (!doc) return null;
+
+        try {
+            return doc.querySelectorAll<T>(selector);
+        } catch (error) {
+            this.loggingService.warn('Failed to execute querySelectorAll on parsed HTML', {
+                selector,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Parse HTML using a custom processing function with fallback support
+     * @param html HTML string to parse
+     * @param domProcessor Function to process the parsed DOM
      * @param fallbackHandler Function to use if DOM parsing fails
-     * @returns Result of either the domService or fallbackHandler
+     * @returns Result of either the domProcessor or fallbackHandler
      */
     parseHtml<T>(
         html: string,
-        domService: (doc: Document) => T | null,
+        domProcessor: (doc: Document) => T | null,
         fallbackHandler: (html: string) => T | null
     ): T | null {
-        if (this.useDOMParser) {
+        // Try DOM parsing first
+        const doc = this.parseHtmlToDocument(html);
+        if (doc) {
             try {
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const result = domService(doc);
+                const result = domProcessor(doc);
                 if (result !== null) {
                     return result;
                 }
-                // If domService returns null, fall back to regex
+                // If domProcessor returns null, fall back to regex
             } catch (error) {
-                this.loggingService.debug('DOMParser failed, falling back to regex', error);
+                this.loggingService.debug('DOM processor failed, falling back to regex handler', {
+                    error: error instanceof Error ? error.message : String(error)
+                });
             }
         }
 
-        // Use fallback regex approach
+        // Use fallback handler
+        try {
         return fallbackHandler(html);
+        } catch (error) {
+            this.loggingService.error('Both DOM parser and fallback handler failed', {
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return null;
+        }
+    }
+
+    /**
+     * Extract text content from HTML elements matching a selector
+     * @param html HTML string to parse
+     * @param selector CSS selector
+     * @param getAllMatches Whether to get all matches or just the first
+     * @returns Text content(s) or null/empty array if not found
+     */
+    extractTextContent(html: string, selector: string, getAllMatches: boolean = false): string | string[] | null {
+        const doc = this.parseHtmlToDocument(html);
+        if (!doc) return getAllMatches ? [] : null;
+
+        try {
+            if (getAllMatches) {
+                const elements = doc.querySelectorAll(selector);
+                return Array.from(elements).map(el => el.textContent?.trim() || '');
+            } else {
+                const element = doc.querySelector(selector);
+                return element?.textContent?.trim() || null;
+            }
+        } catch (error) {
+            this.loggingService.warn('Failed to extract text content', {
+                selector,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return getAllMatches ? [] : null;
+        }
+    }
+
+    /**
+     * Extract attribute values from HTML elements matching a selector
+     * @param html HTML string to parse
+     * @param selector CSS selector
+     * @param attribute Attribute name to extract
+     * @param getAllMatches Whether to get all matches or just the first
+     * @returns Attribute value(s) or null/empty array if not found
+     */
+    extractAttributeValues(
+        html: string, 
+        selector: string, 
+        attribute: string, 
+        getAllMatches: boolean = false
+    ): string | string[] | null {
+        const doc = this.parseHtmlToDocument(html);
+        if (!doc) return getAllMatches ? [] : null;
+
+        try {
+            if (getAllMatches) {
+                const elements = doc.querySelectorAll(selector);
+                return Array.from(elements)
+                    .map(el => el.getAttribute(attribute))
+                    .filter((value): value is string => value !== null);
+            } else {
+                const element = doc.querySelector(selector);
+                return element?.getAttribute(attribute) || null;
+            }
+        } catch (error) {
+            this.loggingService.warn('Failed to extract attribute values', {
+                selector,
+                attribute,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return getAllMatches ? [] : null;
+        }
+    }
+
+    /**
+     * Check if HTML contains elements matching a selector
+     * @param html HTML string to parse
+     * @param selector CSS selector
+     * @returns Boolean indicating if elements exist
+     */
+    hasElements(html: string, selector: string): boolean {
+        const doc = this.parseHtmlToDocument(html);
+        if (!doc) return false;
+
+        try {
+            return doc.querySelector(selector) !== null;
+        } catch (error) {
+            this.loggingService.warn('Failed to check for element existence', {
+                selector,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            return false;
+        }
     }
 
     /**
@@ -89,6 +267,27 @@ export class HtmlParserService implements IHtmlParserService {
     }
 
     /**
+     * Parse post title from current page
+     */
+    parsePostTitle(): string {
+        try {
+            const titleElement = this.domService.querySelector<HTMLHeadingElement>('h1#title');
+
+            if (titleElement) {
+                const title = titleElement.innerText.trim();
+                return title.charAt(0).toUpperCase() + title.slice(1);
+            }
+
+            return '';
+        } catch (error) {
+            this.loggingService.debug('Error parsing post title, using empty string', error);
+            return '';
+        }
+    }
+
+    // ===== PRIVATE FALLBACK METHODS =====
+
+    /**
      * Fallback method using regex to parse favorites HTML
      */
     private fallbackParseFavoritesHtml(html: string): string[] {
@@ -111,7 +310,6 @@ export class HtmlParserService implements IHtmlParserService {
 
             return userUrls;
         } catch (error) {
-            // Only log error if all fallbacks fail
             this.loggingService.error('All favorites parsing methods failed', error);
             return [];
         }
@@ -150,31 +348,11 @@ export class HtmlParserService implements IHtmlParserService {
                 }
             }
 
-            // If we get here, all parsing methods failed
-            this.loggingService.error('Failed to extract user ID from profile HTML');
+            this.loggingService.warn('Failed to extract user ID from profile HTML');
             return null;
         } catch (error) {
             this.loggingService.error('All user ID parsing methods failed', error);
             return null;
-        }
-    }
-
-    /**
-     * Parse post title from current page
-     */
-    parsePostTitle(): string {
-        try {
-            const titleElement = this.domService.querySelector<HTMLHeadingElement>('h1#title');
-
-            if (titleElement) {
-                const title = titleElement.innerText.trim();
-                return title.charAt(0).toUpperCase() + title.slice(1);
-            }
-
-            return '';
-        } catch (error) {
-            this.loggingService.debug('Error parsing post title, using empty string', error);
-            return '';
         }
     }
 }

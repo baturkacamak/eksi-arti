@@ -74,10 +74,16 @@ import {AuthorHighlightButtonComponent} from "../components/features/author-high
 import {IAuthorHighlightButtonComponent} from "../interfaces/components/features/IAuthorHighlightButtonComponent";
 import {IAuthorHighlighterService} from "../interfaces/services/features/highlighting/IAuthorHighlighterService";
 import {VoteMonitoringService} from "../services/features/content/vote-monitoring-service";
+import {FollowedThreadsNavigationService} from "../services/features/content/followed-threads-navigation-service";
+import {FollowedThreadsNavComponent} from "../components/features/followed-threads-nav-component";
 import {FontLoaderService} from "../services/shared/font-loader-service";
 import {IFontLoaderService} from "../interfaces/services/shared/IFontLoaderService";
 import {ColorService} from "../services/shared/color-service";
 import {IColorService} from "../interfaces/services/shared/IColorService";
+import {IHtmlParserService} from "../interfaces/services/shared/IHtmlParserService";
+import { KeyboardService } from '../services/shared/keyboard-service';
+import { IKeyboardService } from '../interfaces/services/shared/IKeyboardService';
+import { IFollowedThreadsNavigationService } from "../../types/interfaces/services/features/content/IFollowedThreadsNavigationService";
 
 /**
  * Initialize the dependency injection container
@@ -107,7 +113,12 @@ export function initializeDI(): Container {
         return createPageUtilsService(usernameExtractorService, domService);
     });
     container.register('StorageService', () => storageService);
-    container.register('PreferencesManager', () => preferencesManager);
+    container.register('PreferencesManager', () => {
+        // Set the shared logging service for PreferencesManager
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        PreferencesManager.setSharedLoggingService(loggingService);
+        return preferencesManager;
+    });
     container.register('ContainerThemeService', () => containerThemeService);
     container.register('UsernameExtractorService', () => new UsernameExtractorService());
     
@@ -285,6 +296,7 @@ export function initializeDI(): Container {
         const iconComponent = container.resolve<IIconComponent>('IconComponent');
         const observerService = container.resolve<IObserverService>('ObserverService');
         const pageUtils = container.resolve<PageUtilsService>('PageUtilsService');
+        const htmlParserService = container.resolve<IHtmlParserService>('HtmlParserService');
         const commandFactory = container.resolve<ICommandFactory>('CommandFactory');
         const commandInvoker = container.resolve<ICommandInvoker>('CommandInvoker');
         return new TrashService(
@@ -296,6 +308,7 @@ export function initializeDI(): Container {
             iconComponent,
             observerService,
             pageUtils,
+            htmlParserService,
             commandFactory,
             commandInvoker
         );
@@ -435,6 +448,7 @@ export function initializeDI(): Container {
         const tooltipComponent = container.resolve<ITooltipComponent>('TooltipComponent');
         const queueService = container.resolve<IAsyncQueueService>('AsyncQueueService');
         const usernameExtractorService = container.resolve<IUsernameExtractorService>('UsernameExtractorService');
+        const htmlParserService = container.resolve<IHtmlParserService>('HtmlParserService');
 
         return new UserProfileService(
             domService,
@@ -446,7 +460,8 @@ export function initializeDI(): Container {
             iconComponent,
             tooltipComponent,
             queueService,
-            usernameExtractorService
+            usernameExtractorService,
+            htmlParserService
         );
     });
 
@@ -575,6 +590,33 @@ export function initializeDI(): Container {
         return new VoteMonitoringService(loggingService, domService);
     });
 
+    container.register('FollowedThreadsNavigationService', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const httpService = container.resolve<IHttpService>('HttpService');
+        const htmlParserService = container.resolve<IHtmlParserService>('HtmlParserService');
+        return new FollowedThreadsNavigationService(domService, loggingService, httpService, htmlParserService);
+    });
+
+    container.register('FollowedThreadsNavComponent', () => {
+        const domService = container.resolve<IDOMService>('DOMService');
+        const cssService = container.resolve<ICSSService>('CSSService');
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        const iconComponent = container.resolve<IIconComponent>('IconComponent');
+        const observerService = container.resolve<IObserverService>('ObserverService');
+        const followedThreadsService = container.resolve<IFollowedThreadsNavigationService>('FollowedThreadsNavigationService');
+        const keyboardService = container.resolve<IKeyboardService>('KeyboardService');
+        return new FollowedThreadsNavComponent(
+            domService,
+            cssService,
+            loggingService,
+            iconComponent,
+            observerService,
+            followedThreadsService,
+            keyboardService
+        );
+    });
+
     container.register('CommunicationService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new CommunicationService(loggingService);
@@ -583,6 +625,12 @@ export function initializeDI(): Container {
     container.register('ColorService', () => {
         const loggingService = container.resolve<ILoggingService>('LoggingService');
         return new ColorService(loggingService);
+    });
+
+    // Register keyboard service
+    container.register('KeyboardService', () => {
+        const loggingService = container.resolve<ILoggingService>('LoggingService');
+        return new KeyboardService(loggingService);
     });
 
     initializeCommandDI(container);

@@ -72,6 +72,7 @@ export const PATHS = {
     ENTRY: '/entry/',
     VOTE_HISTORY: '/son-oylananlari',
     RESTORE_ENTRY: '/cop/canlandir',
+    OLAY: '/basliklar/m/olay',
 };
 
 // Endpoints now use the buildUrl function
@@ -84,6 +85,7 @@ export const Endpoints = {
     COP_PAGE: (page: number = 1) => buildUrl(`${PATHS.COP}?p=${page}`),
     RESTORE_ENTRY: (entryId: string) => buildUrl(`${PATHS.RESTORE_ENTRY}?id=${encodeURIComponent(entryId)}`),
     ENTRY_URL: (entryId: string) => buildUrl(`${PATHS.ENTRY}${encodeURIComponent(entryId)}`),
+    OLAY_PAGE: buildUrl(PATHS.OLAY),
 };
 
 // Update this function to rebuild endpoints when domain changes

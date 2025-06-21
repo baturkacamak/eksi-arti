@@ -10,6 +10,7 @@ import {IIconComponent} from "../../../interfaces/components/IIconComponent";
 import {ICSSService} from "../../../interfaces/services/shared/ICSSService";
 import { ICommandFactory } from "../../../commands/interfaces/ICommandFactory";
 import { ICommandInvoker } from "../../../commands/interfaces/ICommandInvoker";
+import {IHtmlParserService} from "../../../interfaces/services/shared/IHtmlParserService";
 
 export class TrashService {
     private isLoading: boolean = false;
@@ -28,6 +29,7 @@ export class TrashService {
         private iconComponent:IIconComponent,
         private observerService: IObserverService,
         private pageUtils: PageUtilsService,
+        private htmlParserService: IHtmlParserService,
         private commandFactory?: ICommandFactory,
         private commandInvoker?: ICommandInvoker
     ) {}
@@ -363,17 +365,18 @@ export class TrashService {
 
             // Fetch and process the next page
             const html = await this.httpService.get(Endpoints.COP_PAGE(nextPage));
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newTrashItems = doc.querySelectorAll('#trash-items li');
+            // Use HtmlParserService instead of direct DOMParser
+            const newTrashItems = this.htmlParserService.parseAndQuerySelectorAll(html, '#trash-items li');
 
             let itemsAdded = 0;
+            if (newTrashItems) {
             newTrashItems.forEach((item) => {
                 const clonedItem = item.cloneNode(true) as HTMLElement;
                 this.addReviveHandler(clonedItem);
                 trashItems.appendChild(clonedItem);
                 itemsAdded++;
             });
+            }
 
             this.currentPage = nextPage;
 

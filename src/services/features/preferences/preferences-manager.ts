@@ -15,11 +15,23 @@ export class PreferencesManager {
     private isInitialized: boolean = false;
     private onChangeCallbacks: Array<(preferences: IExtensionPreferences) => void> = [];
     private loggingService: ILoggingService;
+    private static sharedLoggingService: ILoggingService | null = null;
 
     private constructor() {
         // Private constructor to enforce singleton pattern
         this.preferences = { ...DEFAULT_PREFERENCES };
-        this.loggingService = new LoggingService();
+        // Use shared logging service instance if available, otherwise create new one
+        this.loggingService = PreferencesManager.sharedLoggingService || new LoggingService();
+    }
+
+    /**
+     * Set the shared logging service instance (called by DI container)
+     */
+    public static setSharedLoggingService(loggingService: ILoggingService): void {
+        PreferencesManager.sharedLoggingService = loggingService;
+        if (PreferencesManager.instance) {
+            (PreferencesManager.instance as PreferencesManager).loggingService = loggingService;
+        }
     }
 
     /**

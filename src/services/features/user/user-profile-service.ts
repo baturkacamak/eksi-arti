@@ -10,6 +10,7 @@ import {SELECTORS, Endpoints, PATHS} from "../../../constants";
 import {ITooltipComponent} from "../../../interfaces/components/ITooltipComponent";
 import {IAsyncQueueService} from "../../../interfaces/services/shared/IAsyncQueueService";
 import { IUsernameExtractorService } from "../../../interfaces/services/shared/IUsernameExtractorService";
+import {IHtmlParserService} from "../../../interfaces/services/shared/IHtmlParserService";
 
 export interface IUserProfile {
     username: string;
@@ -51,6 +52,7 @@ export class UserProfileService {
         private tooltipComponent: ITooltipComponent,
         private queueService: IAsyncQueueService,
         private usernameExtractorService: IUsernameExtractorService,
+        private htmlParserService: IHtmlParserService,
     ) {
         this.applyCSSStyles();
     }
@@ -174,9 +176,8 @@ export class UserProfileService {
                     const url = Endpoints.USER_PROFILE(username);
                     const html = await this.httpService.get(url);
 
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const recordDateElement = doc.querySelector('.recorddate');
+                    // Use HtmlParserService instead of direct DOMParser
+                    const recordDateElement = this.htmlParserService.parseAndQuerySelector(html, '.recorddate');
                     if (!recordDateElement) {
                         resolve(null);
                         return;
@@ -197,14 +198,15 @@ export class UserProfileService {
                     const now = new Date();
                     const {years, months} = this.calculateAge(registrationDate, now);
 
-                    const ratingElement = doc.querySelector('p.muted');
+                    // Extract other profile data using HtmlParserService
+                    const ratingElement = this.htmlParserService.parseAndQuerySelector(html, 'p.muted');
                     const rating = ratingElement?.textContent?.trim() || '';
                     const ratingMatch = rating.match(/\((\d+)\)/);
                     const ratingPoints = ratingMatch ? parseInt(ratingMatch[1], 10) : undefined;
 
-                    const entryCountEl = doc.querySelector('#entry-count-total');
-                    const followerCountEl = doc.querySelector('#user-follower-count');
-                    const followingCountEl = doc.querySelector('#user-following-count');
+                    const entryCountEl = this.htmlParserService.parseAndQuerySelector(html, '#entry-count-total');
+                    const followerCountEl = this.htmlParserService.parseAndQuerySelector(html, '#user-follower-count');
+                    const followingCountEl = this.htmlParserService.parseAndQuerySelector(html, '#user-following-count');
 
                     const userProfile: IUserProfile = {
                         username,

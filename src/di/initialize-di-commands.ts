@@ -1,23 +1,26 @@
-import { Container } from "../di/container";
-import { ICommandHistory } from "../commands/interfaces/ICommandHistory";
-import { CommandFactory } from "../commands/CommandFactory";
-import { CommandHistory } from "../commands/CommandHistory";
-import { CommandInvoker } from "../commands/CommandInvoker";
+import { Container } from './container';
+import { CommandInvoker } from '../commands/CommandInvoker';
+import { CommandFactory } from '../commands/CommandFactory';
+import { CommandHistory } from '../commands/CommandHistory';
+import { ICommandHistory } from '../commands/interfaces/ICommandHistory';
+import { BaseSortingStrategy } from "../commands/sorting/BaseSortingStrategy";
+import { BaseUserProfileSortingStrategy } from "../commands/sorting/BaseUserProfileSortingStrategy";
 import { LengthSortingStrategy } from "../commands/sorting/strategies/LengthSortingStrategy";
 import { DateSortingStrategy } from "../commands/sorting/strategies/DateSortingStrategy";
 import { FavoriteCountSortingStrategy } from "../commands/sorting/strategies/FavoriteCountSortingStrategy";
-import {ILoggingService} from "../interfaces/services/shared/ILoggingService";
+import { ILoggingService } from "../interfaces/services/shared/ILoggingService";
 import { IBlockUsersService } from '../interfaces/services/features/blocking/IBlockUsersService';
-import {IDocumentStateService} from "../interfaces/services/shared/IDocumentStateService";
-import {IHtml2Canvas} from "../commands/screenshots/CaptureScreenshotCommand";
+import { IDocumentStateService } from "../interfaces/services/shared/IDocumentStateService";
+import { IHtml2Canvas } from "../commands/screenshots/CaptureScreenshotCommand";
 import { SortingDataExtractor } from "../commands/sorting/SortingDataExtractor";
 import { IDOMService } from "../interfaces/services/shared/IDOMService";
-import { IAuthorHighlighterService } from '../interfaces/services/features/highlighting/IAuthorHighlighterService';
+import { StorageArea } from "../interfaces/services/shared/IStorageService";
 import { IPreferencesManager } from '../interfaces/services/features/preferences/IPreferencesManager';
 import { ITrashService } from '../interfaces/services/features/content/ITrashService';
+import { IAuthorHighlighterService } from '../interfaces/services/features/highlighting/IAuthorHighlighterService';
 
 /**
- * Initialize command-related dependencies in the DI container
+ * Initialize command-related services in the DI container
  */
 export function initializeCommandDI(container: Container): void {
   // Register sorting strategies

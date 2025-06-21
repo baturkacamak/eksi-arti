@@ -1,7 +1,7 @@
 import {RequestHeaders} from '../../types';
 import { LoggingService} from './logging-service';
 import {ILoggingService} from "../../interfaces/services/shared/ILoggingService";
-import {IHttpService} from "../../interfaces/services/shared/IHttpService";
+import {IHttpService, RequestCredentials} from "../../interfaces/services/shared/IHttpService";
 import {IDOMService} from "../../interfaces/services/shared/IDOMService";
 
 export class HttpError extends Error {
@@ -44,7 +44,8 @@ export class HttpService implements IHttpService {
         method: string,
         url: string,
         data: string | null = null,
-        headers: RequestHeaders = {}
+        headers: RequestHeaders = {},
+        credentials: RequestCredentials = 'same-origin'
     ): Promise<string> {
         const browserHeaders = this.getRandomizedBrowserHeaders(headers);
         let lastError: any = null;
@@ -62,7 +63,7 @@ export class HttpService implements IHttpService {
         if (typeof fetch === 'function') {
             try {
                this.loggingService.debug('Using Fetch API for request', {method, url, requestId});
-                const result = await this.makeFetchRequest(method, url, data, browserHeaders);
+                const result = await this.makeFetchRequest(method, url, data, browserHeaders, credentials);
                 this.loggingService.debug('Request completed successfully via fetch', {requestId});
                 return result;
             } catch (error) {
@@ -101,7 +102,7 @@ export class HttpService implements IHttpService {
         if (typeof XMLHttpRequest === 'function') {
             try {
                this.loggingService.debug('Using XMLHttpRequest for request', {method, url, requestId});
-                const result = await this.makeXHRRequest(method, url, data, browserHeaders);
+                const result = await this.makeXHRRequest(method, url, data, browserHeaders, credentials);
                 this.loggingService.debug('Request completed successfully via XMLHttpRequest', {requestId});
                 return result;
             } catch (error) {
@@ -239,10 +240,9 @@ export class HttpService implements IHttpService {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': acceptLanguages[Math.floor(Math.random() * acceptLanguages.length)],
             'Cache-Control': Math.random() > 0.5 ? 'no-cache' : 'max-age=0',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-origin',
-            'Sec-Fetch-User': '?1',
             'Upgrade-Insecure-Requests': '1',
             'sec-ch-ua': `"Not_A Brand";v="8", "Chromium";v="${randomChromeVersion}"`,
             'sec-ch-ua-mobile': '?0',
@@ -273,7 +273,8 @@ export class HttpService implements IHttpService {
         method: string,
         url: string,
         data: string | null = null,
-        headers: RequestHeaders = {}
+        headers: RequestHeaders = {},
+        credentials: RequestCredentials = 'same-origin'
     ): Promise<string> {
         let response: Response;
         
@@ -282,10 +283,9 @@ export class HttpService implements IHttpService {
             const options: RequestInit = {
                 method: method.toUpperCase(),
                 headers: {
-                    'x-requested-with': 'XMLHttpRequest',
                     ...headers
                 },
-                credentials: 'same-origin', // Include cookies for same-origin requests
+                credentials: credentials, // Use configurable credentials
             };
 
             // Add content-type for POST requests if not specified
@@ -404,11 +404,12 @@ export class HttpService implements IHttpService {
         method: string,
         url: string,
         data: string | null = null,
-        headers: RequestHeaders = {}
+        headers: RequestHeaders = {},
+        credentials: RequestCredentials = 'same-origin'
     ): Promise<string> {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            this.setupXHR(xhr, method, url, headers);
+            this.setupXHR(xhr, method, url, headers, credentials);
             this.handleReadyState(xhr, resolve, reject);
 
             xhr.onerror = () => {
@@ -456,9 +457,17 @@ export class HttpService implements IHttpService {
     /**
      * Setup XHR with appropriate headers and settings
      */
-    private setupXHR(xhr: XMLHttpRequest, method: string, url: string, headers: RequestHeaders = {}): void {
+    private setupXHR(xhr: XMLHttpRequest, method: string, url: string, headers: RequestHeaders = {}, credentials: RequestCredentials = 'same-origin'): void {
         xhr.open(method, url, true);
-        xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
+
+        // Set credentials mode for XMLHttpRequest
+        if (credentials === 'include') {
+            xhr.withCredentials = true;
+        } else if (credentials === 'omit') {
+            xhr.withCredentials = false;
+        } else { // 'same-origin' - default behavior
+            xhr.withCredentials = false;
+        }
 
         if (method === 'POST') {
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -739,36 +748,36 @@ export class HttpService implements IHttpService {
     /**
      * Make a GET request
      */
-    async get(url: string, headers: RequestHeaders = {}): Promise<string> {
-        return this.makeRequest('GET', url, null, headers);
+    async get(url: string, headers: RequestHeaders = {}, credentials: RequestCredentials = 'same-origin'): Promise<string> {
+        return this.makeRequest('GET', url, null, headers, credentials);
     }
 
     /**
      * Make a POST request
      */
-    async post(url: string, data: string = '', headers: RequestHeaders = {}): Promise<string> {
-        return this.makeRequest('POST', url, data, headers);
+    async post(url: string, data: string = '', headers: RequestHeaders = {}, credentials: RequestCredentials = 'same-origin'): Promise<string> {
+        return this.makeRequest('POST', url, data, headers, credentials);
     }
 
     /**
      * Make a PUT request
      */
-    async put(url: string, data: string = '', headers: RequestHeaders = {}): Promise<string> {
-        return this.makeRequest('PUT', url, data, headers);
+    async put(url: string, data: string = '', headers: RequestHeaders = {}, credentials: RequestCredentials = 'same-origin'): Promise<string> {
+        return this.makeRequest('PUT', url, data, headers, credentials);
     }
 
     /**
      * Make a DELETE request
      */
-    async delete(url: string, headers: RequestHeaders = {}): Promise<string> {
-        return this.makeRequest('DELETE', url, null, headers);
+    async delete(url: string, headers: RequestHeaders = {}, credentials: RequestCredentials = 'same-origin'): Promise<string> {
+        return this.makeRequest('DELETE', url, null, headers, credentials);
     }
 
     /**
      * Make a PATCH request
      */
-    async patch(url: string, data: string = '', headers: RequestHeaders = {}): Promise<string> {
-        return this.makeRequest('PATCH', url, data, headers);
+    async patch(url: string, data: string = '', headers: RequestHeaders = {}, credentials: RequestCredentials = 'same-origin'): Promise<string> {
+        return this.makeRequest('PATCH', url, data, headers, credentials);
     }
 
     /**

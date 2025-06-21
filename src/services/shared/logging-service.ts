@@ -3,6 +3,7 @@
  * Provides unified logging functionality with debug mode support
  */
 import {ILoggingService} from "../../interfaces/services/shared/ILoggingService";
+import {DEFAULT_PREFERENCES} from "../../constants";
 
 // Log levels
 export enum LogLevel {
@@ -34,9 +35,13 @@ export class LoggingService implements ILoggingService {
             if (preferences) {
                 const parsedPrefs = JSON.parse(preferences);
                 this.isDebugEnabled = parsedPrefs.enableDebugMode || false;
+            } else {
+                // If no preferences in localStorage, use default
+                this.isDebugEnabled = DEFAULT_PREFERENCES.enableDebugMode;
             }
         } catch (error) {
-            // Silently fail if we can't get the debug setting
+            // On error, use default preference
+            this.isDebugEnabled = DEFAULT_PREFERENCES.enableDebugMode;
         }
     }
 

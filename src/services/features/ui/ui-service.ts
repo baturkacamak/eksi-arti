@@ -44,6 +44,8 @@ export class UIService {
     private blockFavoritesButtonComponent: BlockFavoritesButtonComponent;
     private searchFilterComponent: SearchFilterComponent;
     private voteMonitoringService: VoteMonitoringService;
+    private followedThreadsNavigationService: any; // IFollowedThreadsNavigationService
+    private followedThreadsNavComponent: any; // FollowedThreadsNavComponent
 
     constructor(
         private domService: IDOMService,
@@ -72,6 +74,8 @@ export class UIService {
         // Use getInstance for singleton services
         this.authorHighlighterService = container.resolve<IAuthorHighlighterService>('AuthorHighlighterService');
         this.voteMonitoringService = container.resolve<VoteMonitoringService>('VoteMonitoringService');
+        this.followedThreadsNavigationService = container.resolve('FollowedThreadsNavigationService');
+        this.followedThreadsNavComponent = container.resolve('FollowedThreadsNavComponent');
     }
 
     /**
@@ -146,6 +150,17 @@ export class UIService {
                     this.loggingService.debug('Vote monitoring service initialization result', { success: voteInitResult });
                 } catch (error) {
                     this.loggingService.error('Failed to initialize vote monitoring service', {
+                        error: error instanceof Error ? error.message : String(error)
+                    });
+                }
+
+                // Initialize followed threads navigation service and component
+                try {
+                    await this.followedThreadsNavigationService.initialize();
+                    this.followedThreadsNavComponent.initialize();
+                    this.loggingService.debug('Followed threads navigation initialized');
+                } catch (error) {
+                    this.loggingService.error('Failed to initialize followed threads navigation', {
                         error: error instanceof Error ? error.message : String(error)
                     });
                 }
@@ -291,6 +306,10 @@ export class UIService {
 
         if (this.userProfileService) {
             this.userProfileService.destroy();
+        }
+
+        if (this.followedThreadsNavComponent) {
+            this.followedThreadsNavComponent.destroy();
         }
     }
 }
